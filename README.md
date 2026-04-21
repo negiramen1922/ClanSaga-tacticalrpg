@@ -1,0 +1,2 @@
+# ClanSaga-tacticalrpg
+CLANSAGA用URL
