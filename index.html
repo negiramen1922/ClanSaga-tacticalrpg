@@ -211,9 +211,10 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   mix-blend-mode: screen; vertical-align: middle;
   image-rendering: auto;
 }
-.cur-gold { color: var(--gold2); }
-.cur-coin { color: #7bd4ff; }
-.cur-ether { color: #b47dff; }
+.cur-gold    { color: var(--gold2); }
+.cur-coin    { color: #7bd4ff; }
+.cur-ether   { color: #b47dff; }
+.cur-crystal { color: #89e3ff; }
 
 /* CONTENT */
 #content { flex: 1; overflow: hidden; position: relative; }
@@ -2163,6 +2164,7 @@ img.item-icon {
       <div class="cur-item cur-gold"><span class="ico"><img src="assets/images/item-gold.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-gold">0</span></div>
       <div class="cur-item cur-coin"><span class="ico"><img src="assets/images/item-ink.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-coin">0</span></div>
       <div class="cur-item cur-ether"><span class="ico"><img src="assets/images/item-exppot.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-ether">0</span></div>
+      <div class="cur-item cur-crystal"><span class="ico" style="font-size:14px;vertical-align:middle;">💠</span><span id="disp-crystal">0</span></div>
     </div>
     <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="メニュー">
       <span></span><span></span><span></span>
@@ -2407,7 +2409,7 @@ img.item-icon {
           <span class="sec-icon">⚡</span>
           <div>
             <div class="sec-title">即時ダンジョン</div>
-            <div class="sec-sub">マナの雫・ゴールド専用ダンジョン</div>
+            <div class="sec-sub">EXPポット・ゴールド専用ダンジョン</div>
           </div>
           <span class="sec-arrow">▶</span>
         </div>
@@ -3354,6 +3356,7 @@ const ITEM_ICON_INK      = 'assets/images/item-ink.png';
 const ITEM_ICON_EXPPOT   = 'assets/images/item-exppot.png';
 const ITEM_ICON_AWAKEPOT = 'assets/images/item-awakepot.png';
 function itemIconHTML(key, size='18px') {
+  if (key === 'crystal') return `<span style="font-size:${size};vertical-align:middle;line-height:1;display:inline-block;">💠</span>`;
   const src = {gold:ITEM_ICON_GOLD,ink:ITEM_ICON_INK,expPot:ITEM_ICON_EXPPOT,awakePot:ITEM_ICON_AWAKEPOT}[key];
   if (!src) return '';
   return `<img src="${src}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;display:inline-block;mix-blend-mode:screen;image-rendering:auto;">`;
@@ -5967,7 +5970,7 @@ const BEGINNER_MISSIONS = [
     id:'bg_02', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第1章：戦闘の基本',
     text:'バベルタワー S2（一角兎の巣）をクリア',
     desc:'高SPDの敵が登場。ATBゲージの動きに注目しよう。',
-    reward:`${itemIconHTML('expPot','14px')} マナの雫 ×30`,
+    reward:`${itemIconHTML('expPot','14px')} EXPポット ×30`,
     rewardIcon:'expPot', rewardAmt:30, rewardType:'ether',
     cur:()=> gState.progress?.babel?.clearedStages?.['a1s2'] ? 1 : 0, req:1,
   },
@@ -6016,7 +6019,7 @@ const BEGINNER_MISSIONS = [
     id:'bg_06', shortcut:()=>{ closeMissionModal(); openGacha(); }, shortcutLabel:'🃏 ガチャへ', chapter:'第3章：カードを装備する',
     text:'カード召喚を1回行う',
     desc:'スキルカードを引いてユニットを強化しよう。星導インクで引ける。',
-    reward:`${itemIconHTML('expPot','14px')} マナの雫 ×50`,
+    reward:`${itemIconHTML('expPot','14px')} EXPポット ×50`,
     rewardIcon:'expPot', rewardAmt:50, rewardType:'ether',
     cur:()=> (gState.gacha?.cardTotalPulls||0) >= 1 ? 1 : 0, req:1,
   },
@@ -6032,7 +6035,7 @@ const BEGINNER_MISSIONS = [
     id:'bg_07b', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第3章：カードを装備する',
     text:'奇襲成功（索敵フェーズで奇襲を決める）',
     desc:'アーチャーを編成して索敵値を上げると奇襲成功率がアップする。バトル結果で「⚡奇襲」が出ればOK！',
-    reward:`${itemIconHTML('expPot','14px')} マナの雫 ×50`,
+    reward:`${itemIconHTML('expPot','14px')} EXPポット ×50`,
     rewardIcon:'expPot', rewardAmt:50, rewardType:'ether',
     cur:()=> (gState.progress?.surpriseCount||0) >= 1 ? 1 : 0, req:1,
   },
@@ -6049,7 +6052,7 @@ const BEGINNER_MISSIONS = [
     id:'bg_09', shortcut:()=>{ closeMissionModal(); openGacha(); }, shortcutLabel:'🃏 ガチャへ', chapter:'第4章：中ボスに挑む',
     text:'カード召喚を合計5回行う',
     desc:'カードを集めてキャラを強化しよう。ダンジョンをクリアして星導インクを稼ごう。',
-    reward:`${itemIconHTML('expPot','14px')} マナの雫 ×80`,
+    reward:`${itemIconHTML('expPot','14px')} EXPポット ×80`,
     rewardIcon:'expPot', rewardAmt:80, rewardType:'ether',
     cur:()=> Math.min(gState.gacha?.cardTotalPulls||0, 5), req:5,
   },
@@ -6070,7 +6073,7 @@ const BEGINNER_MISSIONS = [
     id:'bg_11', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第4章：中ボスに挑む',
     text:'バベルタワー S8（スカーボア）を撃破',
     desc:'最初の中ボス。HP30,000の強敵。カードをしっかり装備して挑もう。',
-    reward:`${itemIconHTML('ink','14px')} 星導インク ×200 + ${itemIconHTML('expPot','14px')} マナの雫 ×100`,
+    reward:`${itemIconHTML('ink','14px')} 星導インク ×200 + ${itemIconHTML('expPot','14px')} EXPポット ×100`,
     rewardIcon:'ink', rewardAmt:200, rewardType:'clanCoin', bonusEther:100,
     cur:()=> gState.progress?.babel?.clearedStages?.['a1s8'] ? 1 : 0, req:1,
   },
@@ -6087,7 +6090,7 @@ const BEGINNER_MISSIONS = [
     id:'bg_13', shortcut:()=>{ closeMissionModal(); switchTab('chara'); }, shortcutLabel:'👤 キャラへ', chapter:'第5章：カードを強化する',
     text:'いずれかのカードをLv2以上に強化する',
     desc:'カード画面で同じカードを消費して強化できる。スキルの威力や効果が上がる。',
-    reward:`${itemIconHTML('expPot','14px')} マナの雫 ×100`,
+    reward:`${itemIconHTML('expPot','14px')} EXPポット ×100`,
     rewardIcon:'expPot', rewardAmt:100, rewardType:'ether',
     cur:()=> gState.ownedCards?.some(oc=>oc.lv>=2) ? 1 : 0, req:1,
   },
@@ -6104,7 +6107,7 @@ const BEGINNER_MISSIONS = [
     id:'bg_15', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第6章：夜戦を体験する',
     text:'夜戦突入を1回経験する',
     desc:'昼の60秒で倒せなかった場合、夜戦に突入できる。ダメージが上がる！',
-    reward:`${itemIconHTML('expPot','14px')} マナの雫 ×80`,
+    reward:`${itemIconHTML('expPot','14px')} EXPポット ×80`,
     rewardIcon:'expPot', rewardAmt:80, rewardType:'ether',
     cur:()=> (gState.progress?.nightBattles||0) >= 1 ? 1 : 0, req:1,
   },
@@ -6129,7 +6132,7 @@ const BEGINNER_MISSIONS = [
     id:'bg_18', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第7章：第一層を制覇せよ',
     text:'バベルタワー S14（精鋭ホブゴブリン隊）をクリア',
     desc:'3体の強力なホブゴブリン。鼓舞バフが重なると危険。素早く各個撃破しよう。',
-    reward:`${itemIconHTML('expPot','14px')} マナの雫 ×150`,
+    reward:`${itemIconHTML('expPot','14px')} EXPポット ×150`,
     rewardIcon:'expPot', rewardAmt:150, rewardType:'ether',
     cur:()=> gState.progress?.babel?.clearedStages?.['a1s14'] ? 1 : 0, req:1,
   },
@@ -6137,7 +6140,7 @@ const BEGINNER_MISSIONS = [
     id:'bg_19', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第7章：第一層を制覇せよ',
     text:'バベルタワー S15（覇者の試練）を撃破',
     desc:'第一層のボス。HP90,000の強敵。3クラスをフル強化して挑め！',
-    reward:`${itemIconHTML('ink','14px')} 星導インク ×500 + ${itemIconHTML('expPot','14px')} マナの雫 ×200`,
+    reward:`${itemIconHTML('ink','14px')} 星導インク ×500 + ${itemIconHTML('expPot','14px')} EXPポット ×200`,
     rewardIcon:'ink', rewardAmt:500, rewardType:'clanCoin', bonusEther:200,
     cur:()=> gState.progress?.babel?.clearedStages?.['a1s15'] ? 1 : 0, req:1,
   },
@@ -6159,7 +6162,7 @@ const DAILY_MISSIONS = [
   { id:'d_login',  text:'ログインボーナスを受け取る',       reward:`${itemIconHTML('ink','14px')} 星導インク ×50`,  key:'loginBonus',  req:1, cur:()=>gState.missions.daily.loginBonus||0 },
   { id:'d_babel1', text:'バベルタワーを1回クリア',           reward:`${itemIconHTML('ink','14px')} 星導インク ×80`,  key:'babelClears', req:1, cur:()=>gState.missions.daily.babelClears||0 },
   { id:'d_babel3', text:'バベルタワーを3回クリア',           reward:`${itemIconHTML('ink','14px')} 星導インク ×150`, key:'babelClears', req:3, cur:()=>gState.missions.daily.babelClears||0 },
-  { id:'d_class',  text:'クラスをどれかひとつ強化する',     reward:`${itemIconHTML('expPot','14px')} マナの雫 ×100`,   key:'classUpgrade', req:1, cur:()=>gState.missions.daily.classUpgrade||0 },
+  { id:'d_class',  text:'クラスをどれかひとつ強化する',     reward:`${itemIconHTML('expPot','14px')} EXPポット ×100`,   key:'classUpgrade', req:1, cur:()=>gState.missions.daily.classUpgrade||0 },
   { id:'d_mine',   text:'鉱山から報酬を回収',               reward:`${itemIconHTML('gold','14px')} ゴールド ×500`,   key:'mineCollect', req:1, cur:()=>gState.missions.daily.mineCollect||0 },
 ];
 // デイリー全達成ボーナス
@@ -6168,12 +6171,12 @@ const DAILY_ALL_BONUS = { clanCoin:200, label:`${itemIconHTML('ink','14px')} 星
 const WEEKLY_MISSIONS = [
   { id:'w_login5',   text:'5回ログインする',             reward:`${itemIconHTML('ink','14px')} 星導インク ×300`,  key:'loginCount',    req:5,  cur:()=>gState.missions.weekly.loginCount||0 },
   { id:'w_babel10',  text:'バベルタワーを10回クリア',    reward:`${itemIconHTML('ink','14px')} 星導インク ×500`,  key:'babelClears',   req:10, cur:()=>gState.missions.weekly.babelClears||0 },
-  { id:'w_gacha5',   text:'カードガチャを5回引く',       reward:`${itemIconHTML('expPot','14px')} マナの雫 ×300`,    key:'gachaPulls',    req:5,  cur:()=>gState.missions.weekly.gachaPulls||0 },
+  { id:'w_gacha5',   text:'カードガチャを5回引く',       reward:`${itemIconHTML('expPot','14px')} EXPポット ×300`,    key:'gachaPulls',    req:5,  cur:()=>gState.missions.weekly.gachaPulls||0 },
   { id:'w_daily20',  text:'デイリーミッションを20回クリアする', reward:`${itemIconHTML('ink','14px')} 星導インク ×400`, key:'dailyClears', req:20, cur:()=>gState.missions.weekly.dailyClears||0 },
-  { id:'w_cardUp',   text:'カードを1枚強化する',         reward:`${itemIconHTML('expPot','14px')} マナの雫 ×500`,    key:'cardUpgrade',   req:1,  cur:()=>gState.missions.weekly.cardUpgrade||0 },
+  { id:'w_cardUp',   text:'カードを1枚強化する',         reward:`${itemIconHTML('expPot','14px')} EXPポット ×500`,    key:'cardUpgrade',   req:1,  cur:()=>gState.missions.weekly.cardUpgrade||0 },
 ];
 // ウィークリー全達成ボーナス
-const WEEKLY_ALL_BONUS = { clanCoin:1000, ether:2000, label:`${itemIconHTML('ink','14px')} 星導インク ×1000 + ${itemIconHTML('expPot','14px')} マナの雫 ×2000` };
+const WEEKLY_ALL_BONUS = { clanCoin:1000, ether:2000, label:`${itemIconHTML('ink','14px')} 星導インク ×1000 + ${itemIconHTML('expPot','14px')} EXPポット ×2000` };
 
 // ============================================================
 //  GAME STATE
@@ -6187,10 +6190,11 @@ function defaultState(clanName) {
   return {
     player: {
       clanName, level:1, clanExp:0,
-      gold:    500,   // 序盤の雰囲気。カード強化1回分
-      ether:   100,   // ユニット強化数回分
-      clanCoin: 50,   // ガチャ半回分（雰囲気）
-      mithril:   0,
+      gold:        500,  // 序盤の雰囲気。カード強化1回分
+      ether:       100,  // ユニット強化数回分
+      clanCoin:     50,  // ガチャ半回分（雰囲気）
+      starCrystal:   0,  // 星晶石：プレミアムクラス雇用用
+      mithril:       0,
       rankStones:  0,
       rerollStones: 1,  // 初回パッシブリロール1回
       starMapPoints: 0,
@@ -6309,6 +6313,7 @@ function normalizeState() {
   if (!p.gold)          p.gold = 0;
   if (!p.ether)         p.ether = 0;
   if (!p.clanCoin)      p.clanCoin = 0;
+  if (p.starCrystal == null) p.starCrystal = 0;
   if (!p.mithril)       p.mithril = 0;
   if (!p.rankStones)    p.rankStones = 0;
   if (!p.rerollStones)  p.rerollStones = 0;
@@ -6529,16 +6534,16 @@ const ACHIEVEMENTS = [
   { id:'a_gacha300', cat:'gacha', icon:'⭐', name:'召喚の覇者',         desc:'ガチャを合計300回引く',          reward:`${itemIconHTML('ink','14px')}×1000`, rCoin:1000,rEther:0,  cur:()=> Math.min((gState.gacha?.totalPulls||0)+(gState.gacha?.cardTotalPulls||0),300), req:300 },
 
   // ─── カテゴリ: バトル・討伐 ───
-  { id:'a_bat1',     cat:'battle', icon:'🗡️', name:'はじめての戦闘',   desc:'バベルタワーを1回クリアする',     reward:`${itemIconHTML('ink','14px')}×50`,   rCoin:50,  rEther:0,   cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 1),    req:1    },
-  { id:'a_bat10',    cat:'battle', icon:'⚔️', name:'歴戦の冒険者',     desc:'バベルタワーを10回クリアする',    reward:`${itemIconHTML('ink','14px')}×200`,  rCoin:200, rEther:0,   cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 10),   req:10   },
-  { id:'a_bat50',    cat:'battle', icon:'🏆', name:'バベルの覇者',     desc:'バベルタワーを50回クリアする',    reward:`${itemIconHTML('ink','14px')}×500`,  rCoin:500, rEther:0,   cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 50),   req:50   },
-  { id:'a_bat100',   cat:'battle', icon:'🌋', name:'無双の剣豪',       desc:'バベルタワーを100回クリアする',   reward:`${itemIconHTML('ink','14px')}×1000`, rCoin:1000,rEther:0,  cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 100),  req:100  },
+  { id:'a_bat1',     cat:'battle', icon:'🗡️', name:'はじめての戦闘',   desc:'バベルタワーを1回クリアする',     reward:`${itemIconHTML('ink','14px')}×50`,            rCoin:50,   rEther:0, rCrystal:0,   cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 1),    req:1    },
+  { id:'a_bat10',    cat:'battle', icon:'⚔️', name:'歴戦の冒険者',     desc:'バベルタワーを10回クリアする',    reward:`${itemIconHTML('ink','14px')}×200 + 💠×50`,   rCoin:200,  rEther:0, rCrystal:50,  cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 10),   req:10   },
+  { id:'a_bat50',    cat:'battle', icon:'🏆', name:'バベルの覇者',     desc:'バベルタワーを50回クリアする',    reward:`${itemIconHTML('ink','14px')}×500 + 💠×100`,  rCoin:500,  rEther:0, rCrystal:100, cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 50),   req:50   },
+  { id:'a_bat100',   cat:'battle', icon:'🌋', name:'無双の剣豪',       desc:'バベルタワーを100回クリアする',   reward:`${itemIconHTML('ink','14px')}×1000 + 💠×200`, rCoin:1000, rEther:0, rCrystal:200, cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 100),  req:100  },
   { id:'a_slime100', cat:'battle', icon:'🟢', name:'スライム掃討',     desc:'スライム系モンスターを100体討伐する', reward:`${itemIconHTML('ink','14px')}×200`, rCoin:200, rEther:0, cur:()=> Math.min(gState.progress?.stats?.killsByName?.['スライム']||0, 100), req:100 },
   { id:'a_slime300', cat:'battle', icon:'💚', name:'スライム根絶',     desc:'スライム系モンスターを300体討伐する', reward:`${itemIconHTML('expPot','14px')}×300`, rCoin:0,   rEther:300,cur:()=> Math.min(gState.progress?.stats?.killsByName?.['スライム']||0, 300), req:300 },
   { id:'a_goblin50', cat:'battle', icon:'👺', name:'ゴブリンハンター', desc:'ゴブリン系モンスターを50体討伐する',  reward:`${itemIconHTML('ink','14px')}×150`, rCoin:150, rEther:0, cur:()=> Math.min(gState.progress?.stats?.killsByName?.['ゴブリン']||0, 50),  req:50  },
   { id:'a_goblin200',cat:'battle', icon:'👹', name:'亜人殲滅者',       desc:'ゴブリン系モンスターを200体討伐する', reward:`${itemIconHTML('ink','14px')}×500`, rCoin:500, rEther:0, cur:()=> Math.min(gState.progress?.stats?.killsByName?.['ゴブリン']||0, 200), req:200 },
-  { id:'a_boss5',    cat:'battle', icon:'💀', name:'ボスハンター',     desc:'エリアボスを5体討伐する',            reward:`${itemIconHTML('expPot','14px')}×500`, rCoin:0,   rEther:500,cur:()=> Math.min(gState.progress?.stats?.bossKills||0, 5),   req:5   },
-  { id:'a_boss15',   cat:'battle', icon:'🔥', name:'ボスキラー',       desc:'エリアボスを15体討伐する',           reward:`${itemIconHTML('ink','14px')}×800`, rCoin:800, rEther:0,  cur:()=> Math.min(gState.progress?.stats?.bossKills||0, 15),  req:15  },
+  { id:'a_boss5',    cat:'battle', icon:'💀', name:'ボスハンター',     desc:'エリアボスを5体討伐する',            reward:`${itemIconHTML('expPot','14px')}×500 + 💠×100`, rCoin:0,   rEther:500, rCrystal:100, cur:()=> Math.min(gState.progress?.stats?.bossKills||0, 5),   req:5   },
+  { id:'a_boss15',   cat:'battle', icon:'🔥', name:'ボスキラー',       desc:'エリアボスを15体討伐する',           reward:`${itemIconHTML('ink','14px')}×800 + 💠×300`,   rCoin:800, rEther:0,   rCrystal:300, cur:()=> Math.min(gState.progress?.stats?.bossKills||0, 15),  req:15  },
   { id:'a_night5',   cat:'battle', icon:'🌙', name:'夜の戦士',         desc:'夜戦を5回経験する',                  reward:`${itemIconHTML('ink','14px')}×200`, rCoin:200, rEther:0,  cur:()=> Math.min(gState.progress?.nightBattles||0, 5),  req:5   },
   { id:'a_night20',  cat:'battle', icon:'🌌', name:'夜の覇者',         desc:'夜戦を20回経験する',                 reward:`${itemIconHTML('ink','14px')}×500`, rCoin:500, rEther:0,  cur:()=> Math.min(gState.progress?.nightBattles||0, 20), req:20  },
   { id:'a_surp10',   cat:'battle', icon:'⚡', name:'奇襲の名手',       desc:'奇襲成功を10回達成する',             reward:`${itemIconHTML('ink','14px')}×200`, rCoin:200, rEther:0,  cur:()=> Math.min(gState.progress?.surpriseCount||0, 10), req:10  },
@@ -6547,9 +6552,9 @@ const ACHIEVEMENTS = [
   { id:'a_dmg10m',   cat:'battle', icon:'☄️', name:'億越えの破壊神',   desc:'累計ダメージ1000万を突破する',       reward:`${itemIconHTML('ink','14px')}×1000`,rCoin:1000,rEther:0, cur:()=> Math.min(gState.progress?.stats?.totalDamageDealt||0,10000000), req:10000000 },
 
   // ─── カテゴリ: 探索・拠点 ───
-  { id:'a_stage5',   cat:'explore',icon:'🗺️', name:'探索者',           desc:'ステージを5ステージクリアする',   reward:`${itemIconHTML('ink','14px')}×100`,  rCoin:100, rEther:0,   cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 5),  req:5  },
-  { id:'a_stage20',  cat:'explore',icon:'🧭', name:'熟練の探索者',     desc:'ステージを20ステージクリアする',  reward:`${itemIconHTML('ink','14px')}×300`,  rCoin:300, rEther:0,   cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 20), req:20 },
-  { id:'a_stage50',  cat:'explore',icon:'🌍', name:'世界を巡る者',     desc:'ステージを50ステージクリアする',  reward:`${itemIconHTML('ink','14px')}×800`,  rCoin:800, rEther:0,   cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 50), req:50 },
+  { id:'a_stage5',   cat:'explore',icon:'🗺️', name:'探索者',           desc:'ステージを5ステージクリアする',   reward:`${itemIconHTML('ink','14px')}×100 + 💠×50`,   rCoin:100, rEther:0, rCrystal:50,  cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 5),  req:5  },
+  { id:'a_stage20',  cat:'explore',icon:'🧭', name:'熟練の探索者',     desc:'ステージを20ステージクリアする',  reward:`${itemIconHTML('ink','14px')}×300 + 💠×100`,  rCoin:300, rEther:0, rCrystal:100, cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 20), req:20 },
+  { id:'a_stage50',  cat:'explore',icon:'🌍', name:'世界を巡る者',     desc:'ステージを50ステージクリアする',  reward:`${itemIconHTML('ink','14px')}×800 + 💠×200`,  rCoin:800, rEther:0, rCrystal:200, cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 50), req:50 },
   { id:'a_area2',    cat:'explore',icon:'🌿', name:'草原を越えて',     desc:'Area2を解放する',                 reward:`${itemIconHTML('ink','14px')}×200`,  rCoin:200, rEther:0,   cur:()=> isAreaUnlocked('area2')?1:0, req:1 },
   { id:'a_area3',    cat:'explore',icon:'👺', name:'ゴブリン集落攻略', desc:'Area3(深緑の森林)を解放する',     reward:`${itemIconHTML('ink','14px')}×300`,  rCoin:300, rEther:0,   cur:()=> isAreaUnlocked('area2b')?1:0, req:1 },
   { id:'a_area4',    cat:'explore',icon:'🌲', name:'深緑の向こうへ',   desc:'菌糸の深奥を解放する',            reward:`${itemIconHTML('ink','14px')}×400`,  rCoin:400, rEther:0,   cur:()=> isAreaUnlocked('area2c')?1:0, req:1 },
@@ -6761,8 +6766,9 @@ function claimAchievement(id) {
   if (!gState.achievements) gState.achievements = { unlocked:{}, claimed:{} };
   gState.achievements.claimed[id] = true;
   // 報酬付与
-  if (a.rCoin)  gState.player.clanCoin = (gState.player.clanCoin||0) + a.rCoin;
-  if (a.rEther) gState.player.ether    = (gState.player.ether||0)    + a.rEther;
+  if (a.rCoin)    gState.player.clanCoin    = (gState.player.clanCoin||0)    + a.rCoin;
+  if (a.rEther)   gState.player.ether       = (gState.player.ether||0)       + a.rEther;
+  if (a.rCrystal) gState.player.starCrystal = (gState.player.starCrystal||0) + a.rCrystal;
   saveState();
   updateTopBar();
   renderAchievementModal();
@@ -6794,7 +6800,7 @@ const NEWS_DATA = [
 <ul>
   <li>💰 → ゴールドアイコン（G マーク）</li>
   <li>✒️ → 星導インクアイコン（紫のインク瓶）</li>
-  <li>💧 → マナの雫アイコン（青いポーション）</li>
+  <li>💧 → EXPポットアイコン（青いポーション）</li>
   <li>🔴 → 覚醒ポットアイコン（赤いポーション）</li>
 </ul>
 
@@ -6872,7 +6878,7 @@ const NEWS_DATA = [
   <li><b>ホーム画面からも編成画面へ</b>: ホームの「📋 編成」ボタンから直接編成画面に移動できます</li>
   <li><b>陣形システム → 作戦システムへ変更</b>: 陣形の概念を廃止し、クランリーダーが下す「作戦指令」として刷新。定石作戦・総力戦指令・鉄壁防衛令など6種の作戦が選べます</li>
   <li><b>メニューアイコン更新</b>: ナビゲーションのアイコンをゲームに合ったイラストに刷新しました</li>
-  <li><b>アイテムアイコン更新</b>: ゴールド・星導インク・マナの雫・覚醒ポットのアイコンをイラストに更新しました</li>
+  <li><b>アイテムアイコン更新</b>: ゴールド・星導インク・EXPポット・覚醒ポットのアイコンをイラストに更新しました</li>
 </ul>`,
   },
   {
@@ -6919,7 +6925,7 @@ const NEWS_DATA = [
 <div class="highlight">🎁 初回ログインボーナス: <img src="${ITEM_ICON_INK}" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;mix-blend-mode:screen"> 星導インク ×500</div>
 <h4>7日間連続ミッション報酬</h4>
 <ul>
-  <li>1日目: <img src="${ITEM_ICON_EXPPOT}" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;mix-blend-mode:screen"> マナの雫 ×200</li>
+  <li>1日目: <img src="${ITEM_ICON_EXPPOT}" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;mix-blend-mode:screen"> EXPポット ×200</li>
   <li>3日目: <img src="${ITEM_ICON_INK}" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;mix-blend-mode:screen"> 星導インク ×300</li>
   <li>7日目: <img src="${ITEM_ICON_INK}" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;mix-blend-mode:screen"> 星導インク ×1000 + ⛏️ ミスリル ×5</li>
 </ul>
@@ -7092,6 +7098,7 @@ function launchApp() {
   if (!p.lastLoginDate)  p.lastLoginDate  = '';
   if (!p.loginStreak)    p.loginStreak    = 0;
   if (!p.mithril)        p.mithril        = 0;
+  if (p.starCrystal == null) p.starCrystal = 0;
   if (!p.rerollStones)   p.rerollStones   = 0;
   if (!p.rankStones)     p.rankStones     = 0;
 
@@ -7171,9 +7178,10 @@ function updateTopBar() {
   const p = gState.player;
   document.getElementById('topbar-clanname').textContent = p.clanName;
   document.getElementById('topbar-clanlv').textContent = 'Lv.' + p.level;
-  document.getElementById('disp-gold').textContent = fmt(p.gold);
-  document.getElementById('disp-coin').textContent = fmt(p.clanCoin);
-  document.getElementById('disp-ether').textContent = fmt(p.ether);
+  document.getElementById('disp-gold').textContent    = fmt(p.gold);
+  document.getElementById('disp-coin').textContent    = fmt(p.clanCoin);
+  document.getElementById('disp-ether').textContent   = fmt(p.ether);
+  document.getElementById('disp-crystal').textContent = fmt(p.starCrystal || 0);
   const expNeed = clanExpNeed(p.level);
   const pct = Math.min(100, (p.clanExp / expNeed)*100);
   document.getElementById('clan-exp-fill').style.width = pct + '%';
@@ -7643,7 +7651,7 @@ function openUnitDetail(uid) {
       </div>
       <div style="margin-left:auto;text-align:right">
         <div style="font-size:10px;color:var(--text3);margin-bottom:4px">
-          ${itemIconHTML('expPot','13px')} マナの雫: ${fmt(gState.player.ether)}
+          ${itemIconHTML('expPot','13px')} EXPポット: ${fmt(gState.player.ether)}
         </div>
         <div style="font-size:10px;color:var(--text3);margin-bottom:4px">
           ${itemIconHTML('awakePot','13px')} 覚醒ポット: ${gState.player.awakePot}個
@@ -11326,6 +11334,17 @@ function setLogFullscreenFilter(filter, btn) {
   });
 }
 
+function getFirstClearCrystal(stageId) {
+  const m = stageId.match(/^a(\d+)([a-z]*)s(\d+)/);
+  if (!m) return 0;
+  const area = parseInt(m[1]);
+  const sub  = m[2]; // 'b','c' はボーナスエリア
+  if (area === 1) return 40;
+  if (area === 2) return sub ? 30 : 60;
+  if (area === 3) return 80;
+  return 120; // area4以降
+}
+
 function endBattle(victory) {
   if (battleInterval) clearInterval(battleInterval);
   battleRunning = false;
@@ -11434,7 +11453,7 @@ function endBattle(victory) {
 
     drops.push({ name:`<img src="${ITEM_ICON_GOLD}" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;mix-blend-mode:screen"> ゴールド ×${gold}` });
     gState.player.gold += gold;
-    drops.push({ name:`<img src="${ITEM_ICON_EXPPOT}" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;mix-blend-mode:screen"> マナの雫 ×${ether}` });
+    drops.push({ name:`<img src="${ITEM_ICON_EXPPOT}" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;mix-blend-mode:screen"> EXPポット ×${ether}` });
     gState.player.ether += ether;
     addClanExp(clanExp);
 
@@ -11470,7 +11489,16 @@ function endBattle(victory) {
 
     // Save progress
     if (battleContext.type==='babel') {
+      const _isFirstClear = !gState.progress.babel.clearedStages[battleContext.stageId];
       gState.progress.babel.clearedStages[battleContext.stageId] = { rank, clearedAt: Date.now() };
+      // 初回クリア報酬: 星晶石
+      if (_isFirstClear) {
+        const _crystal = getFirstClearCrystal(battleContext.stageId);
+        if (_crystal > 0) {
+          gState.player.starCrystal = (gState.player.starCrystal||0) + _crystal;
+          drops.push({ name:`${itemIconHTML('crystal','14px')} 星晶石 ×${_crystal}（初回クリア）` });
+        }
+      }
       gState.missions.daily.babelClears = (gState.missions.daily.babelClears||0)+1;
       gState.missions.weekly.babelClears = (gState.missions.weekly.babelClears||0)+1;
       // 実績統計
@@ -11646,11 +11674,11 @@ function nextStage() {
 
 // 各クラスの雇用コスト定義
 const RECRUIT_CONFIG = {
-  warrior:  { name:'ウォリアー',  goldCost:500,  etherCost:0,   coinCost:0,   desc:'ATK特化の近接アタッカー' },
-  vanguard: { name:'ヴァンガード',goldCost:800,  etherCost:0,   coinCost:0,   desc:'高HP・高防御のタンク' },
-  archer:   { name:'アーチャー',  goldCost:600,  etherCost:0,   coinCost:0,   desc:'高SPD・会心の遠距離アタッカー' },
-  priest:   { name:'プリースト',  goldCost:700,  etherCost:20,  coinCost:0,   desc:'HP/MP回復・デバフ解除のヒーラー' },
-  assassin: { name:'アサシン',    goldCost:900,  etherCost:30,  coinCost:0,   desc:'最速・最高会心。昼は潜伏、夜は無双の近接アタッカー' },
+  warrior:  { name:'ウォリアー',  costType:'gold',    cost:500,  desc:'ATK特化の近接アタッカー' },
+  vanguard: { name:'ヴァンガード',costType:'gold',    cost:800,  desc:'高HP・高防御のタンク' },
+  archer:   { name:'アーチャー',  costType:'gold',    cost:600,  desc:'高SPD・会心の遠距離アタッカー' },
+  priest:   { name:'プリースト',  costType:'crystal', cost:500,  desc:'HP/MP回復・デバフ解除のヒーラー' },
+  assassin: { name:'アサシン',    costType:'crystal', cost:800,  desc:'最速・最高会心。昼は潜伏、夜は無双の近接アタッカー' },
 };
 
 function openRecruitPanel() {
@@ -11658,8 +11686,8 @@ function openRecruitPanel() {
   ov.id = 'recruit-overlay';
   ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(5,6,8,0.97);overflow-y:auto;padding:16px;';
 
-  const gold  = gState.player.gold || 0;
-  const ether = gState.player.ether || 0;
+  const gold    = gState.player.gold || 0;
+  const crystal = gState.player.starCrystal || 0;
 
   let html = `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
@@ -11667,8 +11695,11 @@ function openRecruitPanel() {
       <span style="font-family:'Cinzel',serif;color:var(--gold);font-size:16px;letter-spacing:2px">⚔️ タヴァーン — 雇用</span>
     </div>
     <div style="background:var(--bg3);border:1px solid var(--border);padding:10px 14px;margin-bottom:14px;display:flex;gap:16px;font-size:13px">
-      <span>💰 ゴールド: <b style="color:var(--gold2)">${fmt(gold)}</b></span>
-      <span>💧 マナの雫: <b style="color:#b47dff">${fmt(ether)}</b></span>
+      <span>${itemIconHTML('gold','14px')} ゴールド: <b style="color:var(--gold2)">${fmt(gold)}</b></span>
+      <span>${itemIconHTML('crystal','14px')} 星晶石: <b style="color:#89e3ff">${fmt(crystal)}</b></span>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">
+      💠 星晶石はバベルの塔 初回クリア報酬・実績で獲得できます
     </div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:10px">クラスを選んで仲間を雇用しましょう。雇用したユニットは「キャラ」タブから確認できます。</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">`;
@@ -11676,10 +11707,11 @@ function openRecruitPanel() {
   Object.entries(RECRUIT_CONFIG).forEach(([classId, cfg]) => {
     const cls = CLASS_DATA[classId];
     if (!cls) return;
-    const canAfford = gold >= cfg.goldCost && ether >= cfg.etherCost;
-    const costHtml = cfg.etherCost > 0
-      ? `${itemIconHTML('gold','13px')}${fmt(cfg.goldCost)} + ${itemIconHTML('expPot','13px')}${cfg.etherCost}`
-      : `${itemIconHTML('gold','13px')}${fmt(cfg.goldCost)}`;
+    const isCrystalClass = cfg.costType === 'crystal';
+    const canAfford = isCrystalClass ? crystal >= cfg.cost : gold >= cfg.cost;
+    const costHtml  = isCrystalClass
+      ? `${itemIconHTML('crystal','13px')} <span style="color:#89e3ff">星晶石 ×${fmt(cfg.cost)}</span>`
+      : `${itemIconHTML('gold','13px')} ${fmt(cfg.cost)}`;
     html += `
       <div style="background:var(--bg3);border:1px solid var(--border);padding:12px;display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;align-items:center;gap:8px">
@@ -11719,11 +11751,13 @@ function closeRecruitPanel() {
 function recruitUnit(classId) {
   const cfg = RECRUIT_CONFIG[classId];
   if (!cfg) return;
-  if ((gState.player.gold||0) < cfg.goldCost) { alert('ゴールドが不足しています'); return; }
-  if ((gState.player.ether||0) < cfg.etherCost) { alert('マナの雫が不足しています'); return; }
-
-  gState.player.gold  -= cfg.goldCost;
-  gState.player.ether -= cfg.etherCost;
+  if (cfg.costType === 'crystal') {
+    if ((gState.player.starCrystal||0) < cfg.cost) { alert('星晶石が不足しています'); return; }
+    gState.player.starCrystal -= cfg.cost;
+  } else {
+    if ((gState.player.gold||0) < cfg.cost) { alert('ゴールドが不足しています'); return; }
+    gState.player.gold -= cfg.cost;
+  }
 
   const uid = 'u_' + Date.now() + '_r';
   const unit = makeUnit(classId, uid);
@@ -14049,7 +14083,7 @@ function renderMineContent() {
   list.style.padding = '0 16px';
   [
     { iconHTML: itemIconHTML('gold','16px'),     label:'ゴールド',   val:y.gold,     cap:y.capGold     },
-    { iconHTML: itemIconHTML('expPot','16px'),   label:'マナの雫',   val:y.ether,    cap:y.capEther    },
+    { iconHTML: itemIconHTML('expPot','16px'),   label:'EXPポット',   val:y.ether,    cap:y.capEther    },
     { icon:'⛏️',                                 label:'ミスリル',   val:y.mithril,  cap:y.capMithril  },
     { iconHTML: itemIconHTML('awakePot','16px'), label:'覚醒ポット', val:y.awakePot, cap:y.capAwakePot },
   ].forEach(r => {
@@ -14442,8 +14476,8 @@ function renderLibraryContent() {
 // ===== ショップ =====
 const SHOP_ITEMS = [
   { id:'reroll_stone', icon:'🎲', name:'パッシブリロール石', desc:'パッシブ2枠を再抽選', price:500, currency:'coin', gives:'rerollStones', amount:1 },
-  { id:'ether_pack_s', icon:'expPot', name:'マナの雫パック(S)',  desc:'マナの雫×500',        price:300, currency:'coin', gives:'ether', amount:500 },
-  { id:'ether_pack_l', icon:'expPot', name:'マナの雫パック(L)',  desc:'マナの雫×2000',       price:1000,currency:'coin', gives:'ether', amount:2000 },
+  { id:'ether_pack_s', icon:'expPot', name:'EXPポットパック(S)',  desc:'EXPポット×500',        price:300, currency:'coin', gives:'ether', amount:500 },
+  { id:'ether_pack_l', icon:'expPot', name:'EXPポットパック(L)',  desc:'EXPポット×2000',       price:1000,currency:'coin', gives:'ether', amount:2000 },
   { id:'mithril_s',    icon:'⛏️', name:'ミスリル×5',        desc:'鍛冶屋で使用',         price:800, currency:'coin', gives:'mithril', amount:5 },
   { id:'starpoint_s',  icon:'⭐', name:'スターポイント×10', desc:'星図盤でノード解放',   price:600, currency:'coin', gives:'starMapPoints', amount:10 },
   { id:'sweep_x5',     icon:'🎫', name:'周回チケット×5',    desc:'バベルステージを即時周回',price:200,currency:'coin',gives:'sweepTicket',amount:5 },
@@ -14525,7 +14559,7 @@ function executeSweep(areaId, stageId, count) {
   addClanExp(Math.floor(ether*0.4)*count);
   saveState();
   updateTopBar();
-  alert(`周回完了！ ×${count}\nゴールド:${fmt(gold)} マナの雫:${fmt(ether)} インク:${coin}`);
+  alert(`周回完了！ ×${count}\nゴールド:${fmt(gold)} EXPポット:${fmt(ether)} インク:${coin}`);
 }
 
 // ===== 拠点タブ更新 =====
@@ -14544,7 +14578,7 @@ function renderBaseTab() {
   if (bar) {
     bar.innerHTML = [
       { icon:'gold',   label:'ゴールド', val:gState.player.gold },
-      { icon:'expPot', label:'マナの雫', val:gState.player.ether },
+      { icon:'expPot', label:'EXPポット', val:gState.player.ether },
       { icon:'⛏️',    label:'ミスリル', val:gState.player.mithril||0 },
       { icon:'⭐',    label:'スターPt', val:gState.player.starMapPoints||0 },
       { icon:'🎫',    label:'周回Chk', val:gState.tickets?.sweep||0 },
