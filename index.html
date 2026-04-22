@@ -8,6 +8,9 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-LJHYV9VBCY');
+  function trackEvent(name, params) {
+    try { gtag('event', name, params || {}); } catch(e) {}
+  }
 </script>
 
 <!-- Firebase SDK (compat版 - CDN) -->
@@ -7178,9 +7181,13 @@ function updateTopBar() {
 function clanExpNeed(lv) { return lv * 100; }
 function addClanExp(exp) {
   const p = gState.player;
+  const _prevLevel = p.level;
   p.clanExp += Math.floor(exp);
   const need = clanExpNeed(p.level);
   if (p.clanExp >= need) { p.clanExp -= need; p.level++; }
+  if (p.level > _prevLevel) {
+    trackEvent('clan_level_up', { new_level: p.level, clan_name: p.clanName || '' });
+  }
   updateTopBar();
 }
 
@@ -9673,6 +9680,12 @@ function startBattle(scoutResult) {
   if (battleRunning) return;
   battleRunning = true;
   document.getElementById('battle-start-btn').disabled = true;
+  trackEvent('battle_start', {
+    stage_id:   (battleContext||{}).stageId || (battleContext||{}).shrineId || String((battleContext||{}).floor||''),
+    stage_name: (battleContext||{}).stageName || '',
+    mode:       (battleContext||{}).type || '',
+    clan_level: (gState&&gState.player&&gState.player.level) || 0
+  });
 
   // スカウトバッジ更新 & battleStateに結果保存
   if (scoutResult) {
@@ -11351,6 +11364,15 @@ function endBattle(victory) {
     document.getElementById('battle-result').classList.add('active');
     updateTopBar();
     console.log('[Night] retreat — gold:', retreatGold);
+    trackEvent('battle_complete', {
+      stage_id:   (battleContext||{}).stageId || (battleContext||{}).shrineId || '',
+      stage_name: (battleContext||{}).stageName || '',
+      mode:       (battleContext||{}).type || '',
+      result:     'retreat',
+      rank:       '',
+      duration_sec: secs,
+      clan_level: (gState&&gState.player&&gState.player.level) || 0
+    });
     return;
   }
 
@@ -11562,6 +11584,15 @@ function endBattle(victory) {
   renderSortieTab();
   renderHomeTab();
   updateTopBar();
+  trackEvent('battle_complete', {
+    stage_id:    (battleContext||{}).stageId || (battleContext||{}).shrineId || String((battleContext||{}).floor||''),
+    stage_name:  (battleContext||{}).stageName || '',
+    mode:        (battleContext||{}).type || '',
+    result:      victory ? 'win' : 'lose',
+    rank:        victory ? rank : '',
+    duration_sec: secs,
+    clan_level:  (gState&&gState.player&&gState.player.level) || 0
+  });
 }
 
 function hasNextStage() {
@@ -11938,6 +11969,7 @@ function doGacha(count) {
   const cost = count===1 ? 300 : 3000;
   const pulls = count===1 ? 1 : 11;
   if (gState.player.clanCoin < cost) { alert('星導インクが不足しています'); return; }
+  const _pityBefore = gState.gacha.pityCount || 0;
   gState.player.clanCoin -= cost;
   gState.gacha.totalPulls += pulls;
   // 実績チェック
@@ -11955,6 +11987,16 @@ function doGacha(count) {
     giveStarterCardsForClass(classId); // ★1カード付与
     results.push(unit);
   }
+  const _goldCount   = results.filter(u => getRarity(u) === 'rare-gold').length;
+  const _purpleCount = results.filter(u => getRarity(u) === 'rare-purple').length;
+  trackEvent('gacha_pull', {
+    pull_count:    pulls,
+    cost:          cost,
+    pity_count:    _pityBefore,
+    gold_units:    _goldCount,
+    purple_units:  _purpleCount,
+    total_pulls:   gState.gacha.totalPulls
+  });
   saveState();
   closeGacha();
   updateTopBar();
@@ -12556,6 +12598,10 @@ function endTutorial() {
     if (!gState.tutorial) gState.tutorial = { completed:{}, skipped:false };
     const alreadyDone = !!gState.tutorial.completed[tutState.id];
     gState.tutorial.completed[tutState.id] = true;
+    trackEvent('tutorial_complete', {
+      tutorial_id:   tutState.id,
+      is_first_time: !alreadyDone
+    });
     saveState();
 
     // 初回完了のみ報酬付与（400星導インク = カード2回分）
@@ -15312,6 +15358,7 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   document.getElementById('nav-'+tab).classList.add('active');
+  trackEvent('screen_view', { screen_name: tab });
   if (tab==='chara') renderCharaTab();
   if (tab==='formation') renderFormationTab();
   if (tab==='sortie') renderSortieTab();
