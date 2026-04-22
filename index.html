@@ -6265,7 +6265,7 @@ function rollPassives() {
   const chosen = [];
   const usedStats = new Set();
   for (const p of pool) {
-    if (chosen.length >= 2) break;
+    if (chosen.length >= 3) break;
     if (p.stats.some(s=>usedStats.has(s))) continue;
     const lv = Math.floor(Math.random()*3)+1;
     const lvData = p.levels[lv-1];
@@ -7381,7 +7381,7 @@ function renderHomeDailyProgress() {
 const LOGIN_BONUS = [
   { day:1, rewards:[{ type:'coin', amount:100, label:`${itemIconHTML('ink','13px')}×100` }] },
   { day:2, rewards:[{ type:'ether', amount:200, label:`${itemIconHTML('expPot','13px')}×200` }] },
-  { day:3, rewards:[{ type:'rerollStones', amount:1, label:'🎲×1' }] },
+  { day:3, rewards:[{ type:'coin', amount:1000, label:`${itemIconHTML('gold','13px')}×1000` }] },
   { day:4, rewards:[{ type:'coin', amount:300, label:`${itemIconHTML('ink','13px')}×300` }] },
   { day:5, rewards:[{ type:'mithril', amount:3, label:'⛏️×3' }] },
   { day:6, rewards:[{ type:'ether', amount:500, label:`${itemIconHTML('expPot','13px')}×500` }] },
@@ -7684,7 +7684,7 @@ function openUnitDetail(uid) {
     <div class="udp-section">
       <div class="udp-section-title">PASSIVES</div>
       <div class="passive-list">${passiveHTML}</div>
-      <button id="udp-reroll-btn" class="btn btn-outline btn-sm" style="margin-top:8px">パッシブリロール（石:${gState.player.rerollStones}）</button>
+      <button id="udp-reroll-btn" class="btn btn-outline btn-sm" style="margin-top:8px">パッシブリロール（${itemIconHTML('gold','12px')}1,000）</button>
     </div>
     <div class="udp-section">
       <div class="udp-section-title">ULTIMATE</div>
@@ -7861,10 +7861,11 @@ function toggleSkill(uid, skillId, rowEl) {
 
 function rerollPassives(uid) {
   const p = gState.player;
-  if (p.rerollStones < 1) { alert('リロール石が不足しています'); return; }
+  const REROLL_COST = 1000;
+  if (p.clanCoin < REROLL_COST) { alert(`ゴールドが不足しています（必要: ${REROLL_COST}G）`); return; }
   const u = gState.ownedUnits.find(x=>x.uid===uid);
   if (!u) return;
-  p.rerollStones--;
+  p.clanCoin -= REROLL_COST;
   u.passives = rollPassives();
   saveState();
   openUnitDetail(uid);
@@ -14476,7 +14477,6 @@ function renderLibraryContent() {
 
 // ===== ショップ =====
 const SHOP_ITEMS = [
-  { id:'reroll_stone', icon:'🎲', name:'パッシブリロール石', desc:'パッシブ2枠を再抽選', price:500, currency:'coin', gives:'rerollStones', amount:1 },
   { id:'ether_pack_s', icon:'expPot', name:'EXPポットパック(S)',  desc:'EXPポット×500',        price:300, currency:'coin', gives:'ether', amount:500 },
   { id:'ether_pack_l', icon:'expPot', name:'EXPポットパック(L)',  desc:'EXPポット×2000',       price:1000,currency:'coin', gives:'ether', amount:2000 },
   { id:'mithril_s',    icon:'⛏️', name:'ミスリル×5',        desc:'鍛冶屋で使用',         price:800, currency:'coin', gives:'mithril', amount:5 },
