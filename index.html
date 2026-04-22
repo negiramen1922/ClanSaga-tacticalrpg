@@ -6534,16 +6534,16 @@ const ACHIEVEMENTS = [
   { id:'a_gacha300', cat:'gacha', icon:'⭐', name:'召喚の覇者',         desc:'ガチャを合計300回引く',          reward:`${itemIconHTML('ink','14px')}×1000`, rCoin:1000,rEther:0,  cur:()=> Math.min((gState.gacha?.totalPulls||0)+(gState.gacha?.cardTotalPulls||0),300), req:300 },
 
   // ─── カテゴリ: バトル・討伐 ───
-  { id:'a_bat1',     cat:'battle', icon:'🗡️', name:'はじめての戦闘',   desc:'バベルタワーを1回クリアする',     reward:`${itemIconHTML('ink','14px')}×50`,   rCoin:50,  rEther:0,   cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 1),    req:1    },
-  { id:'a_bat10',    cat:'battle', icon:'⚔️', name:'歴戦の冒険者',     desc:'バベルタワーを10回クリアする',    reward:`${itemIconHTML('ink','14px')}×200`,  rCoin:200, rEther:0,   cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 10),   req:10   },
-  { id:'a_bat50',    cat:'battle', icon:'🏆', name:'バベルの覇者',     desc:'バベルタワーを50回クリアする',    reward:`${itemIconHTML('ink','14px')}×500`,  rCoin:500, rEther:0,   cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 50),   req:50   },
-  { id:'a_bat100',   cat:'battle', icon:'🌋', name:'無双の剣豪',       desc:'バベルタワーを100回クリアする',   reward:`${itemIconHTML('ink','14px')}×1000`, rCoin:1000,rEther:0,  cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 100),  req:100  },
+  { id:'a_bat1',     cat:'battle', icon:'🗡️', name:'はじめての戦闘',   desc:'バベルタワーを1回クリアする',     reward:`${itemIconHTML('ink','14px')}×50`,            rCoin:50,   rEther:0, rCrystal:0,   cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 1),    req:1    },
+  { id:'a_bat10',    cat:'battle', icon:'⚔️', name:'歴戦の冒険者',     desc:'バベルタワーを10回クリアする',    reward:`${itemIconHTML('ink','14px')}×200 + 💠×50`,   rCoin:200,  rEther:0, rCrystal:50,  cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 10),   req:10   },
+  { id:'a_bat50',    cat:'battle', icon:'🏆', name:'バベルの覇者',     desc:'バベルタワーを50回クリアする',    reward:`${itemIconHTML('ink','14px')}×500 + 💠×100`,  rCoin:500,  rEther:0, rCrystal:100, cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 50),   req:50   },
+  { id:'a_bat100',   cat:'battle', icon:'🌋', name:'無双の剣豪',       desc:'バベルタワーを100回クリアする',   reward:`${itemIconHTML('ink','14px')}×1000 + 💠×200`, rCoin:1000, rEther:0, rCrystal:200, cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 100),  req:100  },
   { id:'a_slime100', cat:'battle', icon:'🟢', name:'スライム掃討',     desc:'スライム系モンスターを100体討伐する', reward:`${itemIconHTML('ink','14px')}×200`, rCoin:200, rEther:0, cur:()=> Math.min(gState.progress?.stats?.killsByName?.['スライム']||0, 100), req:100 },
   { id:'a_slime300', cat:'battle', icon:'💚', name:'スライム根絶',     desc:'スライム系モンスターを300体討伐する', reward:`${itemIconHTML('expPot','14px')}×300`, rCoin:0,   rEther:300,cur:()=> Math.min(gState.progress?.stats?.killsByName?.['スライム']||0, 300), req:300 },
   { id:'a_goblin50', cat:'battle', icon:'👺', name:'ゴブリンハンター', desc:'ゴブリン系モンスターを50体討伐する',  reward:`${itemIconHTML('ink','14px')}×150`, rCoin:150, rEther:0, cur:()=> Math.min(gState.progress?.stats?.killsByName?.['ゴブリン']||0, 50),  req:50  },
   { id:'a_goblin200',cat:'battle', icon:'👹', name:'亜人殲滅者',       desc:'ゴブリン系モンスターを200体討伐する', reward:`${itemIconHTML('ink','14px')}×500`, rCoin:500, rEther:0, cur:()=> Math.min(gState.progress?.stats?.killsByName?.['ゴブリン']||0, 200), req:200 },
-  { id:'a_boss5',    cat:'battle', icon:'💀', name:'ボスハンター',     desc:'エリアボスを5体討伐する',            reward:`${itemIconHTML('expPot','14px')}×500`, rCoin:0,   rEther:500,cur:()=> Math.min(gState.progress?.stats?.bossKills||0, 5),   req:5   },
-  { id:'a_boss15',   cat:'battle', icon:'🔥', name:'ボスキラー',       desc:'エリアボスを15体討伐する',           reward:`${itemIconHTML('ink','14px')}×800`, rCoin:800, rEther:0,  cur:()=> Math.min(gState.progress?.stats?.bossKills||0, 15),  req:15  },
+  { id:'a_boss5',    cat:'battle', icon:'💀', name:'ボスハンター',     desc:'エリアボスを5体討伐する',            reward:`${itemIconHTML('expPot','14px')}×500 + 💠×100`, rCoin:0,   rEther:500, rCrystal:100, cur:()=> Math.min(gState.progress?.stats?.bossKills||0, 5),   req:5   },
+  { id:'a_boss15',   cat:'battle', icon:'🔥', name:'ボスキラー',       desc:'エリアボスを15体討伐する',           reward:`${itemIconHTML('ink','14px')}×800 + 💠×300`,   rCoin:800, rEther:0,   rCrystal:300, cur:()=> Math.min(gState.progress?.stats?.bossKills||0, 15),  req:15  },
   { id:'a_night5',   cat:'battle', icon:'🌙', name:'夜の戦士',         desc:'夜戦を5回経験する',                  reward:`${itemIconHTML('ink','14px')}×200`, rCoin:200, rEther:0,  cur:()=> Math.min(gState.progress?.nightBattles||0, 5),  req:5   },
   { id:'a_night20',  cat:'battle', icon:'🌌', name:'夜の覇者',         desc:'夜戦を20回経験する',                 reward:`${itemIconHTML('ink','14px')}×500`, rCoin:500, rEther:0,  cur:()=> Math.min(gState.progress?.nightBattles||0, 20), req:20  },
   { id:'a_surp10',   cat:'battle', icon:'⚡', name:'奇襲の名手',       desc:'奇襲成功を10回達成する',             reward:`${itemIconHTML('ink','14px')}×200`, rCoin:200, rEther:0,  cur:()=> Math.min(gState.progress?.surpriseCount||0, 10), req:10  },
@@ -6552,9 +6552,9 @@ const ACHIEVEMENTS = [
   { id:'a_dmg10m',   cat:'battle', icon:'☄️', name:'億越えの破壊神',   desc:'累計ダメージ1000万を突破する',       reward:`${itemIconHTML('ink','14px')}×1000`,rCoin:1000,rEther:0, cur:()=> Math.min(gState.progress?.stats?.totalDamageDealt||0,10000000), req:10000000 },
 
   // ─── カテゴリ: 探索・拠点 ───
-  { id:'a_stage5',   cat:'explore',icon:'🗺️', name:'探索者',           desc:'ステージを5ステージクリアする',   reward:`${itemIconHTML('ink','14px')}×100`,  rCoin:100, rEther:0,   cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 5),  req:5  },
-  { id:'a_stage20',  cat:'explore',icon:'🧭', name:'熟練の探索者',     desc:'ステージを20ステージクリアする',  reward:`${itemIconHTML('ink','14px')}×300`,  rCoin:300, rEther:0,   cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 20), req:20 },
-  { id:'a_stage50',  cat:'explore',icon:'🌍', name:'世界を巡る者',     desc:'ステージを50ステージクリアする',  reward:`${itemIconHTML('ink','14px')}×800`,  rCoin:800, rEther:0,   cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 50), req:50 },
+  { id:'a_stage5',   cat:'explore',icon:'🗺️', name:'探索者',           desc:'ステージを5ステージクリアする',   reward:`${itemIconHTML('ink','14px')}×100 + 💠×50`,   rCoin:100, rEther:0, rCrystal:50,  cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 5),  req:5  },
+  { id:'a_stage20',  cat:'explore',icon:'🧭', name:'熟練の探索者',     desc:'ステージを20ステージクリアする',  reward:`${itemIconHTML('ink','14px')}×300 + 💠×100`,  rCoin:300, rEther:0, rCrystal:100, cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 20), req:20 },
+  { id:'a_stage50',  cat:'explore',icon:'🌍', name:'世界を巡る者',     desc:'ステージを50ステージクリアする',  reward:`${itemIconHTML('ink','14px')}×800 + 💠×200`,  rCoin:800, rEther:0, rCrystal:200, cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 50), req:50 },
   { id:'a_area2',    cat:'explore',icon:'🌿', name:'草原を越えて',     desc:'Area2を解放する',                 reward:`${itemIconHTML('ink','14px')}×200`,  rCoin:200, rEther:0,   cur:()=> isAreaUnlocked('area2')?1:0, req:1 },
   { id:'a_area3',    cat:'explore',icon:'👺', name:'ゴブリン集落攻略', desc:'Area3(深緑の森林)を解放する',     reward:`${itemIconHTML('ink','14px')}×300`,  rCoin:300, rEther:0,   cur:()=> isAreaUnlocked('area2b')?1:0, req:1 },
   { id:'a_area4',    cat:'explore',icon:'🌲', name:'深緑の向こうへ',   desc:'菌糸の深奥を解放する',            reward:`${itemIconHTML('ink','14px')}×400`,  rCoin:400, rEther:0,   cur:()=> isAreaUnlocked('area2c')?1:0, req:1 },
@@ -6766,8 +6766,9 @@ function claimAchievement(id) {
   if (!gState.achievements) gState.achievements = { unlocked:{}, claimed:{} };
   gState.achievements.claimed[id] = true;
   // 報酬付与
-  if (a.rCoin)  gState.player.clanCoin = (gState.player.clanCoin||0) + a.rCoin;
-  if (a.rEther) gState.player.ether    = (gState.player.ether||0)    + a.rEther;
+  if (a.rCoin)    gState.player.clanCoin    = (gState.player.clanCoin||0)    + a.rCoin;
+  if (a.rEther)   gState.player.ether       = (gState.player.ether||0)       + a.rEther;
+  if (a.rCrystal) gState.player.starCrystal = (gState.player.starCrystal||0) + a.rCrystal;
   saveState();
   updateTopBar();
   renderAchievementModal();
@@ -11333,6 +11334,17 @@ function setLogFullscreenFilter(filter, btn) {
   });
 }
 
+function getFirstClearCrystal(stageId) {
+  const m = stageId.match(/^a(\d+)([a-z]*)s(\d+)/);
+  if (!m) return 0;
+  const area = parseInt(m[1]);
+  const sub  = m[2]; // 'b','c' はボーナスエリア
+  if (area === 1) return 40;
+  if (area === 2) return sub ? 30 : 60;
+  if (area === 3) return 80;
+  return 120; // area4以降
+}
+
 function endBattle(victory) {
   if (battleInterval) clearInterval(battleInterval);
   battleRunning = false;
@@ -11477,7 +11489,16 @@ function endBattle(victory) {
 
     // Save progress
     if (battleContext.type==='babel') {
+      const _isFirstClear = !gState.progress.babel.clearedStages[battleContext.stageId];
       gState.progress.babel.clearedStages[battleContext.stageId] = { rank, clearedAt: Date.now() };
+      // 初回クリア報酬: 星晶石
+      if (_isFirstClear) {
+        const _crystal = getFirstClearCrystal(battleContext.stageId);
+        if (_crystal > 0) {
+          gState.player.starCrystal = (gState.player.starCrystal||0) + _crystal;
+          drops.push({ name:`${itemIconHTML('crystal','14px')} 星晶石 ×${_crystal}（初回クリア）` });
+        }
+      }
       gState.missions.daily.babelClears = (gState.missions.daily.babelClears||0)+1;
       gState.missions.weekly.babelClears = (gState.missions.weekly.babelClears||0)+1;
       // 実績統計
@@ -11511,11 +11532,6 @@ function endBattle(victory) {
         if (awakePotChance > 0 && Math.random() < awakePotChance) {
           drops.push({ name:`<img src="${ITEM_ICON_AWAKEPOT}" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;mix-blend-mode:screen"> 覚醒ポット ×1` });
           gState.player.awakePot = (gState.player.awakePot||0) + 1;
-        }
-        // 星晶石: エリア2以降・Sランクで低確率ドロップ
-        if (areaNum >= 2 && rank === 'S' && Math.random() < 0.15) {
-          drops.push({ name:`${itemIconHTML('crystal','14px')} 星晶石 ×1` });
-          gState.player.starCrystal = (gState.player.starCrystal||0) + 1;
         }
       }
     }
@@ -11658,11 +11674,11 @@ function nextStage() {
 
 // 各クラスの雇用コスト定義
 const RECRUIT_CONFIG = {
-  warrior:  { name:'ウォリアー',  goldCost:500,  crystalCost:0,  desc:'ATK特化の近接アタッカー' },
-  vanguard: { name:'ヴァンガード',goldCost:800,  crystalCost:0,  desc:'高HP・高防御のタンク' },
-  archer:   { name:'アーチャー',  goldCost:600,  crystalCost:0,  desc:'高SPD・会心の遠距離アタッカー' },
-  priest:   { name:'プリースト',  goldCost:500,  crystalCost:3,  desc:'HP/MP回復・デバフ解除のヒーラー' },
-  assassin: { name:'アサシン',    goldCost:600,  crystalCost:5,  desc:'最速・最高会心。昼は潜伏、夜は無双の近接アタッカー' },
+  warrior:  { name:'ウォリアー',  costType:'gold',    cost:500,  desc:'ATK特化の近接アタッカー' },
+  vanguard: { name:'ヴァンガード',costType:'gold',    cost:800,  desc:'高HP・高防御のタンク' },
+  archer:   { name:'アーチャー',  costType:'gold',    cost:600,  desc:'高SPD・会心の遠距離アタッカー' },
+  priest:   { name:'プリースト',  costType:'crystal', cost:500,  desc:'HP/MP回復・デバフ解除のヒーラー' },
+  assassin: { name:'アサシン',    costType:'crystal', cost:800,  desc:'最速・最高会心。昼は潜伏、夜は無双の近接アタッカー' },
 };
 
 function openRecruitPanel() {
@@ -11682,16 +11698,20 @@ function openRecruitPanel() {
       <span>${itemIconHTML('gold','14px')} ゴールド: <b style="color:var(--gold2)">${fmt(gold)}</b></span>
       <span>${itemIconHTML('crystal','14px')} 星晶石: <b style="color:#89e3ff">${fmt(crystal)}</b></span>
     </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">
+      💠 星晶石はバベルの塔 初回クリア報酬・実績で獲得できます
+    </div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:10px">クラスを選んで仲間を雇用しましょう。雇用したユニットは「キャラ」タブから確認できます。</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">`;
 
   Object.entries(RECRUIT_CONFIG).forEach(([classId, cfg]) => {
     const cls = CLASS_DATA[classId];
     if (!cls) return;
-    const canAfford = gold >= cfg.goldCost && crystal >= cfg.crystalCost;
-    const costHtml = cfg.crystalCost > 0
-      ? `${itemIconHTML('gold','13px')}${fmt(cfg.goldCost)} + ${itemIconHTML('crystal','13px')}星晶石×${cfg.crystalCost}`
-      : `${itemIconHTML('gold','13px')}${fmt(cfg.goldCost)}`;
+    const isCrystalClass = cfg.costType === 'crystal';
+    const canAfford = isCrystalClass ? crystal >= cfg.cost : gold >= cfg.cost;
+    const costHtml  = isCrystalClass
+      ? `${itemIconHTML('crystal','13px')} <span style="color:#89e3ff">星晶石 ×${fmt(cfg.cost)}</span>`
+      : `${itemIconHTML('gold','13px')} ${fmt(cfg.cost)}`;
     html += `
       <div style="background:var(--bg3);border:1px solid var(--border);padding:12px;display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;align-items:center;gap:8px">
@@ -11731,11 +11751,13 @@ function closeRecruitPanel() {
 function recruitUnit(classId) {
   const cfg = RECRUIT_CONFIG[classId];
   if (!cfg) return;
-  if ((gState.player.gold||0) < cfg.goldCost) { alert('ゴールドが不足しています'); return; }
-  if ((gState.player.starCrystal||0) < cfg.crystalCost) { alert('星晶石が不足しています'); return; }
-
-  gState.player.gold        -= cfg.goldCost;
-  gState.player.starCrystal -= cfg.crystalCost;
+  if (cfg.costType === 'crystal') {
+    if ((gState.player.starCrystal||0) < cfg.cost) { alert('星晶石が不足しています'); return; }
+    gState.player.starCrystal -= cfg.cost;
+  } else {
+    if ((gState.player.gold||0) < cfg.cost) { alert('ゴールドが不足しています'); return; }
+    gState.player.gold -= cfg.cost;
+  }
 
   const uid = 'u_' + Date.now() + '_r';
   const unit = makeUnit(classId, uid);
