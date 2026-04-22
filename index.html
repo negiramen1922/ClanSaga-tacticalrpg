@@ -13996,7 +13996,8 @@ function showBonusToast(msg, isHtml=false) {
     z-index:9999; text-align:center; letter-spacing:1px;
     animation:fadeInUp 0.3s ease-out;
   `;
-  t.textContent = msg;
+  if (isHtml) t.innerHTML = msg;
+  else        t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => {
     t.style.transition = 'opacity 0.4s';
@@ -15199,7 +15200,7 @@ function runInstantDungeon(dg) {
   // 小さい通知表示
   const toast = document.createElement('div');
   toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--gold);color:var(--gold2);padding:8px 20px;font-size:13px;z-index:9000;animation:floatUp 2s ease-out forwards;white-space:nowrap;';
-  toast.textContent = `${dg.name} 完了! ${rewStr}`;
+  toast.innerHTML = `${dg.name} 完了! ${rewStr}`;
   document.body.appendChild(toast);
   setTimeout(()=>toast.remove(), 2000);
 }
