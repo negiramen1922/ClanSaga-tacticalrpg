@@ -10626,9 +10626,9 @@ function performUlt(c, enemies, allies) {
   const targetList = (ult.target==='all') ? [...liveEnemies] : liveEnemies.slice(0,1);
   targetList.forEach(t => {
     if (t.dead) return;
-    let dmg = computeDmg(c, t, ult);
+    let { hpDmg: dmg } = computeDmg(c, t, ult);
     const isCrit = ult.forceCrit ? true : rollCrit(c);
-    if (isCrit) { dmg = Math.floor(dmg * c.cridam / 100); battleStats.crits++; }
+    if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
     dmg = Math.max(1, dmg);
     t.hp -= dmg;
     battleStats.totalDmg += dmg;
