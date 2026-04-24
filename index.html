@@ -842,7 +842,11 @@ img.item-icon {
 }
 .status-icon.atk-up { border-color: var(--orange); color: var(--orange); }
 .status-icon.hp-up { border-color: var(--green); color: var(--green); }
+.status-icon.pres-up { border-color: #ff6060; color: #ff6060; }
+.status-icon.mres-up { border-color: #89e3ff; color: #89e3ff; }
+.status-icon.bres-up { border-color: #c088ff; color: #c088ff; }
 .status-icon.pres-down { border-color: var(--red); color: var(--red); }
+.status-icon.debuff { border-color: var(--red); color: var(--red); }
 
 /* ===== BATTLE RESULT ===== */
 #battle-result {
@@ -3838,12 +3842,11 @@ const CARDS = {
     type:'support', rarity:2, cd:9, target:'all_ally',
     effect:{ type:'multi_buff', buffs:[
       { type:'pres_up', val:15, turns:3 },
-      { type:'mres_up', val:10, turns:3 },
-      { type:'mres_up', val:12, turns:3 },
+      { type:'mres_up', val:15, turns:3 },
     ]},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'味方全体 PRES+15%・MRES+10%・WHITE耐性+12%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`全体 PRES+${Math.round(15*m)}%・MRES+${Math.round(10*m)}%・WHITE耐性+${Math.round(12*m)}%(3T)`;},
+    desc:'味方全体 RED耐性+15%・WHITE耐性+15%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`全体 RED耐性+${Math.round(15*m)}%・WHITE耐性+${Math.round(15*m)}%(3T)`;},
   },
 
   'vg_holy_shield': {
@@ -8971,7 +8974,7 @@ function renderBattle() {
         existing.classList.toggle('dead', !!u.dead);
         existing.classList.toggle('staggered', !!u.staggered);
 
-        const buffHtml = [...(u.buffs||[]), ...(u.debuffs||[])].map(b => `<div class="status-icon ${b.cssClass||''}">${b.icon||'?'}</div>`).join('');
+        const buffHtml = buildBuffHtml(u.buffs, u.debuffs);
         const statusIcons = q('.status-icons');
         if (statusIcons) statusIcons.innerHTML = buffHtml;
         else if (buffHtml) { const s = document.createElement('div'); s.className = 'status-icons'; s.innerHTML = buffHtml; existing.appendChild(s); }
@@ -8984,12 +8987,24 @@ function renderBattle() {
   updateTimer();
 }
 
+function buildBuffHtml(buffs, debuffs) {
+  const all = [...(buffs||[]), ...(debuffs||[])];
+  const seen = new Set();
+  return all.map(b => {
+    if (seen.has(b.type)) return '';
+    seen.add(b.type);
+    const count = all.filter(x => x.type === b.type).length;
+    const stack = count > 1 ? `<span style="font-size:8px;opacity:0.85">×${count}</span>` : '';
+    return `<div class="status-icon ${b.cssClass||''}">${b.icon||'?'}${stack}</div>`;
+  }).join('');
+}
+
 function combatantCardHTML(c) {
   const hpPct = c.maxHp > 0 ? Math.max(0,(c.hp/c.maxHp)*100) : 0;
   const mpPct = c.maxMp > 0 ? Math.max(0,((c.mp||0)/c.maxMp)*100) : 0;
   const shieldPct = (c.shield && c.maxHp > 0) ? Math.min(100,(c.shield/c.maxHp)*100) : 0;
   const atbPct = c.atb;
-  const buffHtml = [...(c.buffs||[]),...(c.debuffs||[])].map(b=>`<div class="status-icon ${b.cssClass||''}">${b.icon||'?'}</div>`).join('');
+  const buffHtml = buildBuffHtml(c.buffs, c.debuffs);
   const ultPct = c.ultGauge || 0;
   const ultReady = ultPct >= 100;
   const ultSection = !c.isEnemy ? `
@@ -9630,7 +9645,7 @@ function playOneOpeningSkill(action, callback) {
     const mresTurns = eff.mresTurns || 3;
     buffTargets.forEach(tgt => {
       applyShield(tgt, shAmt);
-      (tgt.buffs=tgt.buffs||[]).push({ type:'mres_up', val:mresVal, turns:mresTurns, icon:'⬆WHITE耐性', cssClass:'mres_up' });
+      (tgt.buffs=tgt.buffs||[]).push({ type:'mres_up', val:mresVal, turns:mresTurns, icon:'🤍WHITE耐性↑', cssClass:'mres-up' });
     });
     effectLines.push(`シールド+${shAmt}`);
     effectLines.push(buffDesc('mres_up', mresVal, mresTurns));
@@ -9675,7 +9690,7 @@ function playOneOpeningSkill(action, callback) {
     allyTargets.forEach(tgt => {
       tgt.hp = Math.min(tgt.maxHp, tgt.hp + finalHeal);
       battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + finalHeal;
-      (tgt.buffs=tgt.buffs||[]).push({ type:'mres_up', val:mresVal, turns:eff.mresTurns||3, icon:'🤍MRES↑', cssClass:'hp-up' });
+      (tgt.buffs=tgt.buffs||[]).push({ type:'mres_up', val:mresVal, turns:eff.mresTurns||3, icon:'🤍WHITE耐性↑', cssClass:'mres-up' });
       spawnFloatNum(tgt.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
     });
     effectLines.push(`💚HP+${fmt(finalHeal)}`);
@@ -10750,16 +10765,17 @@ function applyBuff(c, skill, sourceUnit) {
   if (!skill.effect) return;
   const eff = skill.effect;
   const iconMap = {
-    atk_up:'⬆ATK', hp_up:'⬆HP', pres_up:'🛡PRES', taunt:'👊挑発',
-    cover:'🤝庇う', counter:'↩反撃', fortress:'🏰要塞', eagle_eye:'🦅鷹眼',
+    atk_up:'⬆ATK', hp_up:'⬆HP',
+    pres_up:'🔴RED耐性↑', mres_up:'🤍WHITE耐性↑', bres_up:'🖤BLACK耐性↑', lres_up:'🔵BLUE耐性↑',
+    taunt:'👊挑発', cover:'🤝庇う', counter:'↩反撃', fortress:'🏰要塞', eagle_eye:'🦅鷹眼',
     rampart:'⛩城壁', aegis:'✨盾', atk_buff:'⬆ATK',
     shield:'🛡盾', damage_reduce:'🔽被ダメ↓', cc_immune:'💪CC無効',
     cover_target:'🤝身代わり', hate_up:'🔥ヘイト↑',
     paralysis:'⚡しびれ', flinch:'💧ひるみ',
   };
   const cssMap = {
-    atk_up:'atk-up', pres_up:'hp-up', taunt:'atk-up', fortress:'atk-up',
-    eagle_eye:'atk-up', rampart:'hp-up', aegis:'hp-up',
+    atk_up:'atk-up', pres_up:'pres-up', mres_up:'mres-up', bres_up:'bres-up', lres_up:'mres-up',
+    taunt:'atk-up', fortress:'atk-up', eagle_eye:'atk-up', rampart:'pres-up', aegis:'hp-up',
     shield:'hp-up', damage_reduce:'hp-up', cc_immune:'hp-up',
     cover_target:'hp-up', hate_up:'atk-up',
   };
@@ -10815,7 +10831,7 @@ function applyBuff(c, skill, sourceUnit) {
     const atk = sourceUnit?.atk || c.atk;
     const mpHeal = Math.floor(atk * (eff.mpHealRatio||2.0));
     c.mp = Math.min(c.maxMp||0, (c.mp||0) + mpHeal);
-    c.buffs.push({ type:'mres_up', val:eff.mresVal||15, turns:eff.mresTurns||3, icon:'🤍MRES↑', cssClass:'hp-up' });
+    c.buffs.push({ type:'mres_up', val:eff.mresVal||15, turns:eff.mresTurns||3, icon:'🤍WHITE耐性↑', cssClass:'mres-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
     spawnFloatNum(c.uid, `💙+${fmt(mpHeal)}MP`, 'float-heal');
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💙MP+${fmt(mpHeal)} / WHITE耐性+${eff.mresVal||15}%(${eff.mresTurns||3}T)`, 'trigger');
@@ -10885,7 +10901,7 @@ function applyBuff(c, skill, sourceUnit) {
     const finalHeal = Math.floor(healAmt * healBonus);
     c.hp = Math.min(c.maxHp, c.hp + finalHeal);
     battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
-    c.buffs.push({ type:'mres_up', val:eff.mresVal||10, turns:eff.mresTurns||3, icon:'🤍MRES↑', cssClass:'hp-up' });
+    c.buffs.push({ type:'mres_up', val:eff.mresVal||10, turns:eff.mresTurns||3, icon:'🤍WHITE耐性↑', cssClass:'mres-up' });
     flashCard(c.uid, 'buff');
     spawnFloatNum(c.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(finalHeal)} / WHITE耐性+${eff.mresVal||10}%(${eff.mresTurns||3}T)`, 'trigger');
@@ -11003,7 +11019,7 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'shield_and_mres') {
     const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||0.3));
     applyShield(c, shieldAmt);
-    c.buffs.push({ type:'mres_up', val:eff.mresVal||8, turns:eff.mresTurns||3, icon:'🤍MRES↑', cssClass:'hp-up' });
+    c.buffs.push({ type:'mres_up', val:eff.mresVal||8, turns:eff.mresTurns||3, icon:'🤍WHITE耐性↑', cssClass:'mres-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド+${fmt(shieldAmt)} / WHITE耐性+${eff.mresVal}%(${eff.mresTurns}T)`, 'trigger');
     Audio.buff(); return;
