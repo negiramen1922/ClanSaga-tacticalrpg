@@ -848,6 +848,25 @@ img.item-icon {
 .status-icon.pres-down { border-color: var(--red); color: var(--red); }
 .status-icon.debuff { border-color: var(--red); color: var(--red); }
 
+/* ===== ARTIFACT SYSTEM ===== */
+.af2-card { background:var(--bg3); border:1px solid var(--border); padding:12px; cursor:pointer; transition:border-color 0.15s; }
+.af2-card:hover { border-color:var(--accent); }
+.af2-card.af2-N   { border-color:var(--text3); }
+.af2-card.af2-SR  { border-color:var(--purple); }
+.af2-card.af2-SSR { border-color:var(--gold); box-shadow:0 0 8px rgba(201,168,76,0.25); }
+.af2-rarity-N   { color:var(--text3); font-size:10px; font-weight:700; }
+.af2-rarity-SR  { color:var(--purple); font-size:10px; font-weight:700; }
+.af2-rarity-SSR { color:var(--gold); font-size:10px; font-weight:700; }
+.af2-name  { font-size:13px; font-weight:700; color:var(--text); margin:4px 0 2px; }
+.af2-main  { font-size:11px; color:var(--accent2); }
+.af2-cond  { font-size:10px; color:var(--text3); margin-top:4px; line-height:1.6; }
+.af2-slot  { background:var(--bg3); border:1px solid var(--border); padding:10px 12px; margin-top:6px; display:flex; align-items:center; gap:10px; }
+.af2-slot-empty { border-style:dashed; color:var(--text3); font-size:11px; cursor:pointer; }
+.af2-slot-empty:hover { border-color:var(--accent); }
+.af2-pickup-row { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.af2-pickup-btn { font-size:10px; padding:3px 8px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); cursor:pointer; }
+.af2-pickup-btn.active { border-color:var(--gold); color:var(--gold); background:rgba(201,168,76,0.1); }
+
 /* ===== BATTLE RESULT ===== */
 #battle-result {
   display: none; position: fixed; inset: 0; z-index: 600;
@@ -7140,6 +7159,7 @@ function launchApp() {
       if (cls) u.selectedSkills = cls.skillPool.slice(0,4).map(s=>s.id);
     }
     if (!u.passives) u.passives = rollPassives();
+    if (u.equippedArtifact === undefined) u.equippedArtifact = null;
     if (!gState.unitProgress[u.uid]) gState.unitProgress[u.uid] = {level:1,exp:0};
     // tactics互換補正
     if (!u.tactics || !u.tactics.length) {
@@ -7700,6 +7720,10 @@ function openUnitDetail(uid) {
       <div id="udp-card-slots" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px"></div>
     </div>
     <div class="udp-section">
+      <div class="udp-section-title">ARTIFACT</div>
+      <div id="udp-artifact-slot">${renderUnitArtifactSlot(u)}</div>
+    </div>
+    <div class="udp-section">
       <div class="udp-section-title">PASSIVES</div>
       <div class="passive-list">${passiveHTML}</div>
       <button id="udp-reroll-btn" class="btn btn-outline btn-sm" style="margin-top:8px">${buildRerollLabel(u)}</button>
@@ -7967,6 +7991,17 @@ function calcStats(unit) {
     if (p.id==='cri_inc')  cri   += val;
     if (p.id==='cridam')   cridam += val;
   });
+  // アーティファクト加算
+  const af = getArtifactStats(unit);
+  if (af.atkPct) atk    = Math.floor(atk * (1 + af.atkPct / 100));
+  if (af.hpPct)  hp     = Math.floor(hp  * (1 + af.hpPct  / 100));
+  spd    += af.spd;
+  cri    += af.cri;
+  cridam += af.cridam;
+  pres   += af.pres;
+  mres   += af.mres;
+  bres   += af.bres;
+  lres   += af.lres;
   return {
     atk, hp,
     spd,
@@ -13023,10 +13058,10 @@ function openCardSelector(slotIndex, uid) {
       .map(s => s.cardId)
   );
 
-  // 対象クラス かつ 他スロット未装備のカードに絞る
+  // 対象クラス かつ 他スロット未装備 かつ装備タイプ除外
   const available = ownedCards.filter(oc => {
     const card = CARDS[oc.cardId];
-    return card && (!card.class || card.class === u.classId) && !equippedElsewhere.has(oc.cardId);
+    return card && card.type !== 'equip' && (!card.class || card.class === u.classId) && !equippedElsewhere.has(oc.cardId);
   });
 
   const ov = document.createElement('div');
@@ -14246,16 +14281,141 @@ function upgradeMine(type) {
 }
 
 // ===== 鍛冶屋 =====
-const AF_DATA = [
-  { id:'iron_sword',    name:'アイアンソード',  icon:'⚔️', rarity:1, stats:'ATK+80',  cost:{ mithril:3 },  effect:{ atk:80 } },
-  { id:'mithril_sword', name:'ミスリルソード',  icon:'🗡️', rarity:2, stats:'ATK+200', cost:{ mithril:10 }, effect:{ atk:200 } },
-  { id:'orichalcum_blade',name:'オリハルコン刃',icon:'✨', rarity:3, stats:'ATK+420', cost:{ mithril:30 }, effect:{ atk:420 } },
-  { id:'iron_shield',   name:'アイアンシールド',icon:'🛡️', rarity:1, stats:'PRES+12', cost:{ mithril:3 },  effect:{ pres:12 } },
-  { id:'tower_shield',  name:'タワーシールド',  icon:'🏰', rarity:2, stats:'PRES+28', cost:{ mithril:10 }, effect:{ pres:28 } },
-  { id:'spirit_bow',    name:'スピリットボウ',  icon:'🏹', rarity:1, stats:'ATK+70 CRI+5%', cost:{ mithril:3 }, effect:{ atk:70, cri:5 } },
-  { id:'elven_bow',     name:'エルフの長弓',    icon:'🌿', rarity:2, stats:'ATK+160 CRI+10%', cost:{ mithril:10 }, effect:{ atk:160, cri:10 } },
-  { id:'mana_staff',    name:'マナスタッフ',    icon:'🪄', rarity:1, stats:'MRES+15', cost:{ mithril:3 }, effect:{ mres:15 } },
-  { id:'arcane_tome',   name:'アルケイントーム', icon:'📖', rarity:2, stats:'ATK+150 MRES+12', cost:{ mithril:10 }, effect:{ atk:150, mres:12 } },
+// クラスタグ定義
+const CLASS_TAGS = {
+  warrior:  ['近接DPS'],
+  vanguard: ['近接タンク'],
+  archer:   ['遠距離物理'],
+  assassin: ['近接機動'],
+  priest:   ['支援回復'],
+};
+
+// アーティファクトプール（ガチャ対象）
+// kind:'weapon'→mainStat:'atk', kind:'armor'→mainStat:'hp'
+// conditions[0]は全キャラ適用可, N:1条件, SR:2条件, SSR:3条件
+// req:'all'|'tag:X'|'class:X'
+const ARTIFACT_POOL = [
+  // ===== SSR WEAPON =====
+  { id:'longinusspear',   name:'ロンギヌスの槍', icon:'🏹', kind:'weapon', rarity:'SSR',
+    mainStat:'atk', mainPct:22, subStats:{ pres:6 },
+    conditions:[
+      { req:'all',         stat:'atk',    val:8  },
+      { req:'tag:近接DPS', stat:'atk',    val:15 },
+      { req:'tag:近接DPS', stat:'cri',    val:12 },
+    ]},
+  { id:'excalibur',       name:'エクスカリバー', icon:'⚔️', kind:'weapon', rarity:'SSR',
+    mainStat:'atk', mainPct:25, subStats:{},
+    conditions:[
+      { req:'all',           stat:'atk',    val:10 },
+      { req:'tag:近接DPS',   stat:'cridam', val:25 },
+      { req:'tag:近接タンク', stat:'hp',     val:15 },
+    ]},
+  { id:'apollobow',       name:'アポロンの弓',   icon:'🎯', kind:'weapon', rarity:'SSR',
+    mainStat:'atk', mainPct:22, subStats:{ lres:8 },
+    conditions:[
+      { req:'all',             stat:'atk', val:8  },
+      { req:'tag:遠距離物理',  stat:'atk', val:18 },
+      { req:'tag:遠距離物理',  stat:'cri', val:12 },
+    ]},
+  { id:'caligulablade',   name:'カリグラの刃',   icon:'🗡️', kind:'weapon', rarity:'SSR',
+    mainStat:'atk', mainPct:20, subStats:{},
+    conditions:[
+      { req:'all',           stat:'spd',    val:15  },
+      { req:'tag:近接機動',  stat:'atk',    val:18  },
+      { req:'class:assassin',stat:'cridam', val:30  },
+    ]},
+  // ===== SSR ARMOR =====
+  { id:'aegis',           name:'アイギス',       icon:'🛡️', kind:'armor', rarity:'SSR',
+    mainStat:'hp', mainPct:25, subStats:{ bres:12 },
+    conditions:[
+      { req:'all',            stat:'hp',   val:10 },
+      { req:'tag:近接タンク', stat:'pres', val:20 },
+      { req:'tag:近接タンク', stat:'hp',   val:15 },
+    ]},
+  { id:'valkyriemail',    name:'ヴァルキューレの鎧', icon:'🪖', kind:'armor', rarity:'SSR',
+    mainStat:'hp', mainPct:22, subStats:{ pres:8 },
+    conditions:[
+      { req:'all',            stat:'hp',   val:8  },
+      { req:'tag:近接DPS',    stat:'atk',  val:12 },
+      { req:'tag:近接タンク', stat:'pres', val:12 },
+    ]},
+  { id:'isiscape',        name:'イシスのマント', icon:'🌙', kind:'armor', rarity:'SSR',
+    mainStat:'hp', mainPct:20, subStats:{ mres:10 },
+    conditions:[
+      { req:'all',           stat:'hp',   val:8  },
+      { req:'tag:支援回復',  stat:'mres', val:20 },
+      { req:'class:priest',  stat:'hp',   val:18 },
+    ]},
+  // ===== SR WEAPON =====
+  { id:'gungnir',         name:'グングニル',     icon:'🏹', kind:'weapon', rarity:'SR',
+    mainStat:'atk', mainPct:16, subStats:{},
+    conditions:[
+      { req:'all',         stat:'atk', val:6  },
+      { req:'tag:近接DPS', stat:'cri', val:8  },
+    ]},
+  { id:'sirensbow',       name:'セイレーンの弓', icon:'🎯', kind:'weapon', rarity:'SR',
+    mainStat:'atk', mainPct:15, subStats:{},
+    conditions:[
+      { req:'all',            stat:'atk', val:5  },
+      { req:'tag:遠距離物理', stat:'atk', val:15 },
+    ]},
+  { id:'viperblade',      name:'バイパーの刃',   icon:'🗡️', kind:'weapon', rarity:'SR',
+    mainStat:'atk', mainPct:14, subStats:{},
+    conditions:[
+      { req:'all',          stat:'cri',    val:5  },
+      { req:'tag:近接機動', stat:'cridam', val:20 },
+    ]},
+  { id:'hermesstaff',     name:'ヘルメスの杖',   icon:'🪄', kind:'weapon', rarity:'SR',
+    mainStat:'atk', mainPct:12, subStats:{ mres:8 },
+    conditions:[
+      { req:'all',           stat:'atk',  val:4  },
+      { req:'tag:支援回復',  stat:'mres', val:15 },
+    ]},
+  // ===== SR ARMOR =====
+  { id:'thorgauntlets',   name:'トールの籠手',   icon:'🥊', kind:'armor', rarity:'SR',
+    mainStat:'hp', mainPct:16, subStats:{ pres:8 },
+    conditions:[
+      { req:'all',            stat:'hp',   val:6  },
+      { req:'tag:近接タンク', stat:'pres', val:15 },
+    ]},
+  { id:'poseidonscale',   name:'ポセイドンの鱗鎧', icon:'🪖', kind:'armor', rarity:'SR',
+    mainStat:'hp', mainPct:15, subStats:{ bres:8 },
+    conditions:[
+      { req:'all',            stat:'hp',   val:5  },
+      { req:'tag:遠距離物理', stat:'mres', val:10 },
+    ]},
+  { id:'selenrobe',       name:'セレネの白衣',   icon:'👘', kind:'armor', rarity:'SR',
+    mainStat:'hp', mainPct:14, subStats:{ mres:10 },
+    conditions:[
+      { req:'all',           stat:'hp',   val:5  },
+      { req:'tag:支援回復',  stat:'mres', val:18 },
+    ]},
+  { id:'fenrirfur',       name:'フェンリルの毛皮', icon:'🐺', kind:'armor', rarity:'SR',
+    mainStat:'hp', mainPct:15, subStats:{},
+    conditions:[
+      { req:'all',          stat:'spd', val:10 },
+      { req:'tag:近接機動', stat:'hp',  val:12 },
+    ]},
+  // ===== N WEAPON =====
+  { id:'ironsword',       name:'鉄の直剣',       icon:'⚔️', kind:'weapon', rarity:'N',
+    mainStat:'atk', mainPct:8, subStats:{},
+    conditions:[{ req:'all', stat:'atk', val:5 }]},
+  { id:'bronzearrow',     name:'青銅の矢筒',     icon:'🏹', kind:'weapon', rarity:'N',
+    mainStat:'atk', mainPct:8, subStats:{},
+    conditions:[{ req:'tag:遠距離物理', stat:'atk', val:8 }]},
+  { id:'shortdagger',     name:'修練の短刀',     icon:'🗡️', kind:'weapon', rarity:'N',
+    mainStat:'atk', mainPct:7, subStats:{},
+    conditions:[{ req:'tag:近接機動', stat:'atk', val:8 }]},
+  // ===== N ARMOR =====
+  { id:'leathermail',     name:'皮の胸当て',     icon:'🛡️', kind:'armor', rarity:'N',
+    mainStat:'hp', mainPct:8, subStats:{},
+    conditions:[{ req:'all', stat:'hp', val:5 }]},
+  { id:'woodshield',      name:'木の丸盾',       icon:'🪵', kind:'armor', rarity:'N',
+    mainStat:'hp', mainPct:8, subStats:{ pres:5 },
+    conditions:[{ req:'tag:近接タンク', stat:'pres', val:10 }]},
+  { id:'travelcloak',     name:'旅人のマント',   icon:'🧥', kind:'armor', rarity:'N',
+    mainStat:'hp', mainPct:7, subStats:{ mres:5 },
+    conditions:[{ req:'tag:支援回復', stat:'mres', val:10 }]},
 ];
 
 let smithyActiveTab = 'forge';
@@ -14288,53 +14448,26 @@ function renderSmithyContent() {
   el.appendChild(tabs);
 
   if (smithyActiveTab === 'forge') {
-    const mitEl = document.createElement('div');
-    mitEl.style.cssText = 'padding:0 0 10px;font-size:12px;color:var(--text2);';
-    mitEl.innerHTML = `🔩 ミスリル鉱石: <span style="color:var(--gold);font-family:Rajdhani;font-weight:700">${gState.player.mithril||0}</span>`;
-    el.appendChild(mitEl);
-
-    const grid = document.createElement('div');
-    grid.className = 'af-grid';
-    AF_DATA.forEach(af => {
-      const owned = (gState.artifacts||[]).filter(a=>a.id===af.id).length;
-      const canAfford = (gState.player.mithril||0) >= af.cost.mithril;
-      const stars = '★'.repeat(af.rarity) + '☆'.repeat(3-af.rarity);
-      const card = document.createElement('div');
-      card.className = 'af-card' + (owned?'owned':'');
-      card.innerHTML = `
-        <div style="font-size:20px;margin-bottom:4px">${af.icon}</div>
-        <div class="af-name">${af.name}</div>
-        <div class="af-stats">${af.stats}</div>
-        <div class="af-cost">⛏️ミスリル ×${af.cost.mithril}</div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="color:var(--gold);font-size:11px">${stars}</span>
-          <span style="font-size:10px;color:var(--text3)">所持:${owned}</span>
-        </div>`;
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-sm ' + (canAfford?'btn-blue':'btn-outline');
-      btn.style.cssText = 'width:100%;margin-top:6px;';
-      btn.textContent = '鋳造';
-      btn.disabled = !canAfford;
-      btn.addEventListener('click', ()=>forgeAF(af.id));
-      card.appendChild(btn);
-      grid.appendChild(card);
-    });
-    el.appendChild(grid);
+    renderArtifactForge(el);
   } else if (smithyActiveTab === 'enhance') {
     const owned = gState.artifacts||[];
     if (!owned.length) {
       el.innerHTML += '<div class="empty-hint">所持AFがありません</div>';
     } else {
       owned.forEach((af,i)=>{
-        const data = AF_DATA.find(d=>d.id===af.id);
-        if (!data) return;
+        const def = ARTIFACT_POOL.find(d=>d.id===af.id);
+        if (!def) return;
+        const cost = 1000*(1+(af.enhance||0));
+        const canEnh = gState.player.gold >= cost;
+        const rarityColor = def.rarity==='SSR'?'var(--gold)':def.rarity==='SR'?'var(--purple)':'var(--text3)';
         const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;';
-        row.innerHTML = `<span style="font-size:20px">${data.icon}</span><div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--text)">${data.name} +${af.enhance||0}</div><div style="font-size:10px;color:var(--text3)">${data.stats}</div></div>`;
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:6px;';
+        row.innerHTML = `<span style="font-size:20px">${def.icon}</span><div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--text)">${def.name} <span style="color:${rarityColor}">[${def.rarity}]</span> +${af.enhance||0}</div><div style="font-size:10px;color:var(--text3)">${def.mainStat.toUpperCase()} +${def.mainPct}%</div></div>`;
         const btn = document.createElement('button');
         btn.className = 'btn btn-sm btn-blue';
-        btn.innerHTML = `強化(${itemIconHTML('gold','11px')}${fmt(1000*(1+(af.enhance||0)))})`;
-        btn.addEventListener('click',()=>enhanceAF(i));
+        btn.innerHTML = `強化(${itemIconHTML('gold','11px')}${fmt(cost)})`;
+        btn.disabled = !canEnh;
+        btn.addEventListener('click',()=>enhanceArtifact(i));
         row.appendChild(btn);
         el.appendChild(row);
       });
@@ -14344,17 +14477,19 @@ function renderSmithyContent() {
     if (!owned.length) { el.innerHTML += '<div class="empty-hint">売却できるAFがありません</div>'; }
     else {
       owned.forEach((af,i)=>{
-        const data = AF_DATA.find(d=>d.id===af.id);
-        if (!data) return;
+        const def = ARTIFACT_POOL.find(d=>d.id===af.id);
+        if (!def) return;
+        const refund = Math.floor(200*0.3);
+        const rarityColor = def.rarity==='SSR'?'var(--gold)':def.rarity==='SR'?'var(--purple)':'var(--text3)';
         const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;';
-        row.innerHTML = `<span style="font-size:20px">${data.icon}</span><div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--text)">${data.name}</div></div><span style="font-size:11px;color:var(--gold);margin-right:8px">⛏️+${Math.floor(data.cost.mithril*0.3)}</span>`;
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:6px;';
+        row.innerHTML = `<span style="font-size:20px">${def.icon}</span><div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--text)">${def.name} <span style="color:${rarityColor}">[${def.rarity}]</span></div><div style="font-size:10px;color:var(--text3)">${def.mainStat.toUpperCase()} +${def.mainPct}%</div></div><span style="font-size:11px;color:var(--gold);margin-right:8px">⛏️+${refund}</span>`;
         const btn = document.createElement('button');
         btn.className = 'btn btn-sm btn-red';
         btn.style.background = 'var(--red)';
         btn.style.color = 'white';
         btn.textContent = '売却';
-        btn.addEventListener('click',()=>meltAF(i));
+        btn.addEventListener('click',()=>meltArtifact(i));
         row.appendChild(btn);
         el.appendChild(row);
       });
@@ -14362,34 +14497,13 @@ function renderSmithyContent() {
   }
 }
 
-function forgeAF(afId) {
-  const af = AF_DATA.find(d=>d.id===afId);
-  if (!af || (gState.player.mithril||0) < af.cost.mithril) return;
-  gState.player.mithril -= af.cost.mithril;
-  if (!gState.artifacts) gState.artifacts = [];
-  gState.artifacts.push({ id:afId, enhance:0 });
-  saveState();
-  updateTopBar();
-  renderSmithyContent();
-}
-
-function enhanceAF(idx) {
+function enhanceArtifact(idx) {
   const af = gState.artifacts[idx];
   if (!af) return;
-  const cost = 1000 * (1+(af.enhance||0));
+  const cost = 1000*(1+(af.enhance||0));
   if (gState.player.gold < cost) return;
   gState.player.gold -= cost;
   af.enhance = (af.enhance||0)+1;
-  saveState();
-  updateTopBar();
-  renderSmithyContent();
-}
-
-function meltAF(idx) {
-  const af = gState.artifacts[idx];
-  const data = AF_DATA.find(d=>d.id===af.id);
-  if (data) gState.player.mithril = (gState.player.mithril||0) + Math.floor(data.cost.mithril*0.3);
-  gState.artifacts.splice(idx,1);
   saveState();
   updateTopBar();
   renderSmithyContent();
@@ -14671,6 +14785,240 @@ function renderBaseTab() {
 
 function openSmithyInfo() { openSmithyPanel(); }
 function openLibraryInfo() { openLibraryPanel(); }
+
+// ============================================================
+//  ARTIFACT SYSTEM
+// ============================================================
+
+function getArtifactStats(unit) {
+  const r = { atkPct:0, hpPct:0, spd:0, cri:0, cridam:0, pres:0, mres:0, bres:0, lres:0 };
+  if (!unit.equippedArtifact) return r;
+  const inst = (gState.artifacts||[]).find(a => a.uid === unit.equippedArtifact);
+  if (!inst) return r;
+  const def = ARTIFACT_POOL.find(d => d.id === inst.id);
+  if (!def) return r;
+  // メインステータス
+  if (def.mainStat === 'atk') r.atkPct += def.mainPct;
+  else                         r.hpPct  += def.mainPct;
+  // サブステータス（耐性）
+  if (def.subStats) {
+    if (def.subStats.pres) r.pres += def.subStats.pres;
+    if (def.subStats.mres) r.mres += def.subStats.mres;
+    if (def.subStats.bres) r.bres += def.subStats.bres;
+    if (def.subStats.lres) r.lres += def.subStats.lres;
+  }
+  // 条件付与効果
+  const tags = CLASS_TAGS[unit.classId] || [];
+  (def.conditions||[]).forEach(cond => {
+    let ok = false;
+    if (cond.req === 'all') ok = true;
+    else if (cond.req.startsWith('tag:'))   ok = tags.includes(cond.req.slice(4));
+    else if (cond.req.startsWith('class:')) ok = unit.classId === cond.req.slice(6);
+    if (!ok) return;
+    const v = cond.val;
+    if      (cond.stat === 'atk')    r.atkPct += v;
+    else if (cond.stat === 'hp')     r.hpPct  += v;
+    else if (cond.stat === 'spd')    r.spd    += v;
+    else if (cond.stat === 'cri')    r.cri    += v;
+    else if (cond.stat === 'cridam') r.cridam += v;
+    else if (cond.stat === 'pres')   r.pres   += v;
+    else if (cond.stat === 'mres')   r.mres   += v;
+    else if (cond.stat === 'bres')   r.bres   += v;
+    else if (cond.stat === 'lres')   r.lres   += v;
+  });
+  return r;
+}
+
+function artifactCondLabel(cond) {
+  const reqMap = { 'all':'全クラス', 'tag:近接DPS':'近接DPS', 'tag:近接タンク':'近接タンク',
+    'tag:近接機動':'近接機動', 'tag:遠距離物理':'遠距離物理', 'tag:支援回復':'支援回復' };
+  const req = reqMap[cond.req] || cond.req;
+  const statMap = { atk:'ATK', hp:'HP', spd:'SPD', cri:'会心率', cridam:'会心ダメ',
+    pres:'RED耐性', mres:'WHITE耐性', bres:'BLACK耐性', lres:'BLUE耐性' };
+  const st = statMap[cond.stat] || cond.stat;
+  const unit = ['atk','hp'].includes(cond.stat) ? '%' : '';
+  return `[${req}] ${st}+${cond.val}${unit}`;
+}
+
+function renderUnitArtifactSlot(u) {
+  if (!u.equippedArtifact) {
+    return `<div class="af2-slot af2-slot-empty" onclick="openArtifactEquip('${u.uid}')">＋ アーティファクトを装備する</div>`;
+  }
+  const inst = (gState.artifacts||[]).find(a => a.uid === u.equippedArtifact);
+  const def  = inst ? ARTIFACT_POOL.find(d => d.id === inst.id) : null;
+  if (!def) return `<div class="af2-slot af2-slot-empty" onclick="openArtifactEquip('${u.uid}')">＋ アーティファクトを装備する</div>`;
+  const rarityColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
+  const tags = CLASS_TAGS[u.classId] || [];
+  const condHtml = def.conditions.map(c => {
+    const active = c.req === 'all' || (c.req.startsWith('tag:') && tags.includes(c.req.slice(4))) || (c.req.startsWith('class:') && u.classId === c.req.slice(6));
+    return `<div style="color:${active?'var(--accent2)':'var(--text3)'}">${active?'✓':'✗'} ${artifactCondLabel(c)}</div>`;
+  }).join('');
+  return `<div class="af2-slot" style="border-color:${rarityColor[def.rarity]};flex-direction:column;align-items:flex-start">
+    <div style="display:flex;align-items:center;gap:8px;width:100%">
+      <span style="font-size:22px">${def.icon}</span>
+      <div style="flex:1">
+        <div class="af2-rarity-${def.rarity}">${def.rarity}</div>
+        <div class="af2-name">${def.name}</div>
+        <div class="af2-main">${def.mainStat==='atk'?'ATK':'HP'}+${def.mainPct}%</div>
+      </div>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-sm btn-outline" onclick="openArtifactEquip('${u.uid}')" style="font-size:10px">交換</button>
+        <button class="btn btn-sm" onclick="unequipArtifact('${u.uid}')" style="font-size:10px;background:rgba(224,85,85,0.15);color:var(--red);border-color:rgba(224,85,85,0.3)">外す</button>
+      </div>
+    </div>
+    <div class="af2-cond" style="margin-top:6px;width:100%">${condHtml}</div>
+  </div>`;
+}
+
+function openArtifactEquip(uid) {
+  const u = gState.ownedUnits.find(x => x.uid === uid);
+  if (!u) return;
+  const owned = (gState.artifacts||[]);
+  const ov = document.createElement('div');
+  ov.id = 'artifact-equip-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(5,6,8,0.97);overflow-y:auto;padding:16px;';
+  const rarLabel = { N:'N', SR:'SR', SSR:'SSR' };
+  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
+  let html = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <button onclick="document.getElementById('artifact-equip-overlay').remove()" class="btn btn-outline">← 戻る</button>
+    <h3 style="color:var(--text)">アーティファクト装備 — ${u.name}</h3>
+  </div>`;
+  if (!owned.length) {
+    html += `<div style="color:var(--text3);text-align:center;padding:40px">所持しているアーティファクトがありません<br><small>鍛冶屋でミスリル鋳造しましょう</small></div>`;
+  } else {
+    const tags = CLASS_TAGS[u.classId] || [];
+    html += `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">`;
+    owned.forEach((inst) => {
+      const def = ARTIFACT_POOL.find(d => d.id === inst.id);
+      if (!def) return;
+      const equipped = u.equippedArtifact === inst.uid;
+      const condHtml = def.conditions.map(c => {
+        const active = c.req === 'all' || (c.req.startsWith('tag:') && tags.includes(c.req.slice(4))) || (c.req.startsWith('class:') && u.classId === c.req.slice(6));
+        return `<div style="font-size:10px;color:${active?'var(--accent2)':'var(--text3)'};">${active?'✓':'✗'} ${artifactCondLabel(c)}</div>`;
+      }).join('');
+      html += `<div class="af2-card af2-${def.rarity}" style="cursor:pointer${equipped?';opacity:0.5':''}">
+        <div class="af2-rarity-${def.rarity}">${rarLabel[def.rarity]} ${def.kind==='weapon'?'武器':'防具'}</div>
+        <div style="font-size:20px;margin:4px 0">${def.icon}</div>
+        <div class="af2-name">${def.name}</div>
+        <div class="af2-main">${def.mainStat==='atk'?'ATK':'HP'}+${def.mainPct}%</div>
+        <div class="af2-cond">${condHtml}</div>
+        <button class="btn btn-sm ${equipped?'':'btn-outline'}" onclick="equipArtifact('${uid}','${inst.uid}');document.getElementById('artifact-equip-overlay').remove()" style="width:100%;margin-top:8px;font-size:11px">${equipped?'装備中':'装備する'}</button>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  ov.innerHTML = html;
+  document.body.appendChild(ov);
+}
+
+function equipArtifact(uid, afUid) {
+  const u = gState.ownedUnits.find(x => x.uid === uid);
+  if (!u) return;
+  u.equippedArtifact = afUid;
+  saveState();
+  const slot = document.getElementById('udp-artifact-slot');
+  if (slot) slot.innerHTML = renderUnitArtifactSlot(u);
+}
+
+function unequipArtifact(uid) {
+  const u = gState.ownedUnits.find(x => x.uid === uid);
+  if (!u) return;
+  u.equippedArtifact = null;
+  saveState();
+  const slot = document.getElementById('udp-artifact-slot');
+  if (slot) slot.innerHTML = renderUnitArtifactSlot(u);
+}
+
+// ===== アーティファクト鋳造ガチャ =====
+let af2Pickup = null; // 現在のピックアップ選択
+
+function renderArtifactForge(el) {
+  const mithril = gState.player.mithril || 0;
+  const ssrPool = ARTIFACT_POOL.filter(d => d.rarity === 'SSR');
+  // ピックアップ選択UI
+  let pickupHtml = `<div style="font-size:11px;color:var(--text3);margin-bottom:6px">ピックアップ選択（SSR確率5% / SR確率25% / N確率70%）</div>
+    <div class="af2-pickup-row">
+      <button class="af2-pickup-btn ${af2Pickup===null?'active':''}" onclick="af2Pickup=null;renderArtifactForge(document.getElementById('smithy-content'))">なし</button>`;
+  ssrPool.forEach(d => {
+    pickupHtml += `<button class="af2-pickup-btn ${af2Pickup===d.id?'active':''}" onclick="af2Pickup='${d.id}';renderArtifactForge(document.getElementById('smithy-content'))">${d.icon}${d.name}</button>`;
+  });
+  pickupHtml += `</div>`;
+  // 鋳造ボタン
+  const canForge = mithril >= 200;
+  let forgeHtml = `<div style="font-size:12px;color:var(--text2);margin-bottom:10px">⛏️ ミスリル鉱石: <span style="color:var(--gold);font-family:Rajdhani;font-weight:700">${mithril}</span></div>
+    ${pickupHtml}
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn ${canForge?'btn-blue':'btn-outline'}" onclick="doArtifactGacha()" ${canForge?'':'disabled'} style="flex:1">
+        🔩 鋳造（ミスリル×200）
+      </button>
+    </div>`;
+  // 所持リスト
+  const owned = gState.artifacts || [];
+  forgeHtml += `<div style="font-size:11px;color:var(--text3);margin-bottom:8px">所持アーティファクト（${owned.length}個）</div>`;
+  if (!owned.length) {
+    forgeHtml += `<div style="color:var(--text3);font-size:11px;padding:12px;text-align:center">まだ所持していません</div>`;
+  } else {
+    forgeHtml += `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">`;
+    owned.forEach((inst, idx) => {
+      const def = ARTIFACT_POOL.find(d => d.id === inst.id);
+      if (!def) return;
+      const equippedBy = gState.ownedUnits.find(u => u.equippedArtifact === inst.uid);
+      const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
+      forgeHtml += `<div style="background:var(--bg3);border:1px solid ${rarColor[def.rarity]};padding:8px;font-size:11px">
+        <span style="color:${rarColor[def.rarity]};font-weight:700">${def.rarity}</span>
+        <span style="font-size:16px;margin:0 6px">${def.icon}</span>
+        <span style="font-weight:700">${def.name}</span>
+        ${equippedBy?`<span style="font-size:9px;color:var(--accent2);margin-left:4px">[${equippedBy.name}]</span>`:''}
+        <div style="color:var(--text3);margin-top:2px">${def.mainStat==='atk'?'ATK':'HP'}+${def.mainPct}%</div>
+        <button class="btn btn-sm" onclick="meltArtifact(${idx})" style="margin-top:4px;font-size:9px;background:rgba(224,85,85,0.12);color:var(--red);border-color:rgba(224,85,85,0.3)">売却(⛏️+${Math.floor(200*0.3)})</button>
+      </div>`;
+    });
+    forgeHtml += `</div>`;
+  }
+  el.innerHTML = forgeHtml;
+}
+
+function doArtifactGacha() {
+  if ((gState.player.mithril||0) < 200) return;
+  gState.player.mithril -= 200;
+  // レアリティ抽選
+  const roll = Math.random() * 100;
+  let rarity;
+  if (roll < 5)       rarity = 'SSR';
+  else if (roll < 30) rarity = 'SR';
+  else                rarity = 'N';
+  // ピックアップ処理
+  let pool;
+  if (rarity === 'SSR' && af2Pickup) {
+    pool = [ARTIFACT_POOL.find(d => d.id === af2Pickup)].filter(Boolean);
+  } else {
+    pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
+  }
+  if (!pool.length) pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
+  const def = pool[Math.floor(Math.random() * pool.length)];
+  if (!def) return;
+  if (!gState.artifacts) gState.artifacts = [];
+  const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+  gState.artifacts.push({ id: def.id, uid, enhance: 0 });
+  saveState();
+  updateTopBar();
+  // 結果表示
+  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
+  showBonusToast(`${def.icon} <span style="color:${rarColor[def.rarity]};font-weight:700">${def.rarity}</span> 【${def.name}】 鋳造完了！`, true);
+  renderArtifactForge(document.getElementById('smithy-content'));
+}
+
+function meltArtifact(idx) {
+  const inst = (gState.artifacts||[])[idx];
+  if (!inst) return;
+  // 装備中のユニットから外す
+  gState.ownedUnits.forEach(u => { if (u.equippedArtifact === inst.uid) u.equippedArtifact = null; });
+  gState.player.mithril = (gState.player.mithril||0) + 60;
+  gState.artifacts.splice(idx, 1);
+  saveState();
+  updateTopBar();
+  renderSmithyContent();
+}
 
 // ============================================================
 //  TAB NAVIGATION
