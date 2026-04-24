@@ -14614,13 +14614,6 @@ function unlockStarNode(nodeId, cost) {
 
 // ===== 大図書館 =====
 function openLibraryPanel() {
-  const lv = gState.player.level;
-  const el = document.getElementById('library-content');
-  if (lv < 21) {
-    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3)">🔒 Clan Lv.21 で解放されます<br><br>現在: Lv.${lv}</div>`;
-    document.getElementById('library-modal').classList.add('open');
-    return;
-  }
   renderLibraryContent();
   document.getElementById('library-modal').classList.add('open');
 }
