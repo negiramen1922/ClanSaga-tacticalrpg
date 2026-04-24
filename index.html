@@ -1408,6 +1408,9 @@ img.item-icon {
 .lib-bonus-title { font-size:11px;color:var(--text3);letter-spacing:1px;margin-bottom:8px; }
 .lib-bonus-item { display:flex;justify-content:space-between;font-size:12px;color:var(--text2);padding:3px 0; }
 .lib-bonus-val { color:var(--accent2); }
+.lib-monster-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px; }
+.lib-monster-card { background:var(--bg3);border:1px solid var(--border);padding:8px;text-align:center;cursor:pointer;border-radius:4px; }
+.lib-monster-card:hover { border-color:var(--accent); }
 .shop-item { display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:8px; }
 .shop-item-icon { font-size:24px;flex-shrink:0; }
 .shop-item-info { flex:1; }
@@ -14626,6 +14629,14 @@ function renderLibraryContent() {
   const el = document.getElementById('library-content');
   el.innerHTML = '';
 
+  // モンスター図鑑ボタン
+  const monBtn = document.createElement('button');
+  monBtn.className = 'btn btn-outline btn-sm';
+  monBtn.style.cssText = 'width:100%;margin-bottom:12px;font-size:12px;';
+  monBtn.innerHTML = '🐉 モンスター図鑑を開く';
+  monBtn.addEventListener('click', () => renderLibraryMonsters(el));
+  el.appendChild(monBtn);
+
   const collectedClasses = new Set(gState.ownedUnits.map(u=>u.classId));
   const allClasses = Object.keys(CLASS_DATA);
   const collectedCount = allClasses.filter(c=>collectedClasses.has(c)).length;
@@ -14662,6 +14673,65 @@ function renderLibraryContent() {
     grid.appendChild(card);
   });
   el.appendChild(grid);
+}
+
+// ===== モンスター図鑑 =====
+let _monsterBookList = [];
+
+function renderLibraryMonsters(el) {
+  const seen = new Set();
+  _monsterBookList = [];
+  BABEL_AREAS.forEach(area => area.stages.forEach(stage => {
+    (stage.enemies||[]).forEach(wave => wave.forEach(e => {
+      if (!seen.has(e.name)) { seen.add(e.name); _monsterBookList.push(e); }
+    }));
+  }));
+  ABYSS_ENEMIES.forEach(wave => wave.forEach(e => {
+    if (!seen.has(e.name)) { seen.add(e.name); _monsterBookList.push(e); }
+  }));
+
+  const grid = _monsterBookList.map((m,i) => `
+    <div class="lib-monster-card" onclick="openMonsterDetail(${i})">
+      <div style="font-size:28px">${m.icon||'❓'}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text);margin:4px 0 2px">${m.name}</div>
+      <div style="font-size:10px;color:var(--text3)">HP ${fmt(m.hp)}</div>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <button class="btn btn-outline btn-sm" onclick="renderLibraryContent()" style="margin-bottom:10px">← キャラクター図鑑</button>
+    <div class="lib-bonus-title" style="margin-bottom:8px">モンスター図鑑 (${_monsterBookList.length}種)</div>
+    <div class="lib-monster-grid">${grid}</div>`;
+}
+
+function openMonsterDetail(idx) {
+  const m = _monsterBookList[idx];
+  if (!m) return;
+  const skills = (m.enemySkills||[]).map(s =>
+    `<div style="font-size:11px;color:var(--text2);padding:2px 0">・${s.name} <span style="color:var(--text3)">(${s.type}属性 ×${s.power}${s.target==='all'?' 全体':''})</span></div>`
+  ).join('');
+  const el = document.getElementById('library-content');
+  el.innerHTML = `
+    <button class="btn btn-outline btn-sm" onclick="renderLibraryMonsters(document.getElementById('library-content'))" style="margin-bottom:12px">← 図鑑に戻る</button>
+    <div style="text-align:center;padding:16px 0 12px">
+      <div style="font-size:52px">${m.icon||'❓'}</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin:8px 0 4px">${m.name}</div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);padding:12px;margin-bottom:8px;border-radius:4px">
+      <div class="lib-bonus-title">基本ステータス</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px;color:var(--text2)">
+        <div>HP <span style="color:var(--green);font-weight:700">${fmt(m.hp)}</span></div>
+        <div>ATK <span style="color:var(--orange);font-weight:700">${fmt(m.atk)}</span></div>
+        <div>SPD <span style="color:var(--accent2)">${m.spd||0}</span></div>
+        <div>CRI <span style="color:var(--gold)">${m.cri||0}%</span></div>
+        <div>RED耐性 <span style="color:var(--text)">${m.pres||0}</span></div>
+        <div>WHITE耐性 <span style="color:var(--text)">${m.mres||0}</span></div>
+        <div>BLACK耐性 <span style="color:var(--text)">${m.bres||0}</span></div>
+        <div>BLUE耐性 <span style="color:var(--text)">${m.lres||0}</span></div>
+      </div>
+    </div>
+    ${skills ? `<div style="background:var(--bg3);border:1px solid var(--border);padding:12px;border-radius:4px">
+      <div class="lib-bonus-title">スキル</div>${skills}
+    </div>` : ''}`;
 }
 
 // ===== ショップ =====
