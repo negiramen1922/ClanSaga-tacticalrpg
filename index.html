@@ -8862,11 +8862,8 @@ function initBattle(waveEnemies, stageName) {
     }),
     waveIdx: 0,
     waveEnemies,
-    enemies: waveEnemies[0].map((e, i, arr) => {
-      const c = makeCombatant(null, true, e);
-      // 後半の敵を後衛扱い（3体以上の場合は後半を後衛）
-      c.isBackRow = arr.length >= 3 && i >= Math.ceil(arr.length / 2);
-      return c;
+    enemies: waveEnemies[0].map((e) => {
+      return makeCombatant(null, true, e);
     }),
     startTime: Date.now(),
     elapsed: 0,
@@ -9006,9 +9003,7 @@ function combatantCardHTML(c) {
     : '';
   const atkInfo = `<span class="cc-atk">⚔${fmt(c.atk)}</span>`;
   const staggerClass = c.staggered ? ' staggered' : '';
-  const rowClass = (!c.isEnemy && false) ? ' card-back-row'
-                 : (c.isEnemy && c.isBackRow)        ? ' card-back-row'
-                 : ' card-front-row';
+  const rowClass = ' card-front-row';
   return `
     <div class="combatant-card${staggerClass}${rowClass} ${c.dead?'dead':''}${c.isLeader?' leader-slot':''}" id="cc-${c.uid}">
       <div class="cc-name">
@@ -9892,10 +9887,8 @@ function tickBattle() {
         const phaseWrapW = document.getElementById('phase-timer-wrap');
         if (phaseWrapW) phaseWrapW.className = 'day-mode active';
         // 新しい敵を生成（HP/MP引き継ぎなし）
-        bs.enemies = nextEnemyData.map((e, i, arr) => {
-          const c = makeCombatant(null, true, e);
-          c.isBackRow = arr.length >= 3 && i >= Math.ceil(arr.length / 2);
-          return c;
+        bs.enemies = nextEnemyData.map((e) => {
+          return makeCombatant(null, true, e);
         });
         // 味方のATBをリセット（ULT/HP/MPは引き継ぎ）
         bs.allies.forEach(a => { a.atb = 0; });
