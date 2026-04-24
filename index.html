@@ -4676,8 +4676,8 @@ const PASSIVE_POOL = [
   { id:'hp_inc',   name:'HP増加',     stats:['HP'], levels:[{val:10,desc:'HP+10%'},{val:18,desc:'HP+18%'},{val:28,desc:'HP+28%'}] },
   { id:'atk_inc',  name:'ATK増加',    stats:['ATK'], levels:[{val:10,desc:'ATK+10%'},{val:18,desc:'ATK+18%'},{val:28,desc:'ATK+28%'}] },
   { id:'spd_inc',  name:'SPD増加',    stats:['SPD'], levels:[{val:12,desc:'SPD+12'},{val:20,desc:'SPD+20'},{val:30,desc:'SPD+30'}] },
-  { id:'pres_inc', name:'物理耐性',   stats:['PRES'], levels:[{val:6,desc:'物理耐性+6'},{val:12,desc:'物理耐性+12'},{val:18,desc:'物理耐性+18'}] },
-  { id:'mres_inc', name:'魔法耐性',   stats:['MRES'], levels:[{val:6,desc:'魔法耐性+6'},{val:12,desc:'魔法耐性+12'},{val:18,desc:'魔法耐性+18'}] },
+  { id:'pres_inc', name:'RED耐性',  stats:['PRES'], levels:[{val:6,desc:'RED耐性+6'},{val:12,desc:'RED耐性+12'},{val:18,desc:'RED耐性+18'}] },
+  { id:'mres_inc', name:'WHITE耐性',stats:['MRES'], levels:[{val:6,desc:'WHITE耐性+6'},{val:12,desc:'WHITE耐性+12'},{val:18,desc:'WHITE耐性+18'}] },
   { id:'cri_inc',  name:'会心率',     stats:['CRI'], levels:[{val:8,desc:'会心率+8%'},{val:13,desc:'会心率+13%'},{val:20,desc:'会心率+20%'}] },
   { id:'cridam',   name:'会心ダメージ',stats:['CRIDAM'], levels:[{val:20,desc:'会心ダメ+20%'},{val:32,desc:'会心ダメ+32%'},{val:45,desc:'会心ダメ+45%'}] },
   { id:'reduce',   name:'被ダメ軽減', stats:['RED'], levels:[{val:6,desc:'被ダメ-6%'},{val:10,desc:'被ダメ-10%'},{val:15,desc:'被ダメ-15%'}] },
@@ -7597,12 +7597,20 @@ function openUnitDetail(uid) {
         <div class="stat-val">${stats.spd}</div>
       </div>
       <div class="stat-item">
-        <div class="stat-name">PRES <span style="font-size:8px;color:var(--text3)">固定</span></div>
+        <div class="stat-name">🔴RED耐性 <span style="font-size:8px;color:var(--text3)">固定</span></div>
         <div class="stat-val">${stats.pres}<span style="font-size:11px">%</span></div>
       </div>
       <div class="stat-item">
-        <div class="stat-name">MRES <span style="font-size:8px;color:var(--text3)">固定</span></div>
+        <div class="stat-name">🤍WHITE耐性 <span style="font-size:8px;color:var(--text3)">固定</span></div>
         <div class="stat-val">${stats.mres}<span style="font-size:11px">%</span></div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-name">🖤BLACK耐性 <span style="font-size:8px;color:var(--text3)">固定</span></div>
+        <div class="stat-val">${stats.bres}<span style="font-size:11px">%</span></div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-name">🔵BLUE耐性 <span style="font-size:8px;color:var(--text3)">固定</span></div>
+        <div class="stat-val">${stats.lres}<span style="font-size:11px">%</span></div>
       </div>
       <div class="stat-item">
         <div class="stat-name">CRI <span style="font-size:8px;color:var(--text3)">固定</span></div>
@@ -7935,10 +7943,12 @@ function calcStats(unit) {
   const scale = 1 + (lv-1)*9/99;
   let atk    = Math.floor(base.atk * scale);
   let hp     = Math.floor(base.hp  * scale);
-  // PRES/MRES/SPD/CRI/CRIDAMは固定値（装備・パッシブ・星図盤で強化）
+  // 固定値（装備・パッシブ・星図盤で強化）
   let spd    = base.spd;
   let pres   = base.pres;
   let mres   = base.mres;
+  let bres   = base.bres  || 0;
+  let lres   = base.lres  || 0;
   let cri    = base.cri;
   let cridam = base.cridam;
   // パッシブ加算（すべてフラットまたは%）
@@ -7959,6 +7969,8 @@ function calcStats(unit) {
     spd,
     pres:   Math.min(pres,   99),
     mres:   Math.min(mres,   99),
+    bres:   Math.min(bres,   99),
+    lres:   Math.min(lres,   99),
     cri,
     cridam,
   };
