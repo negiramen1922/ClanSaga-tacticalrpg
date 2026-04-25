@@ -579,7 +579,7 @@ img.item-icon {
   opacity: 0.92;
 }
 .combatant-card .cc-name { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 3px; display: flex; align-items: center; gap: 3px; }
-.combatant-card .cc-name .cc-icon { font-size: 14px; }
+.combatant-card .cc-name .cc-icon { font-size: 14px; line-height:1; display:flex;align-items:center; }
 .combatant-card .cc-name .cc-name-text { flex: 1; }
 .cc-atk { font-family: 'Rajdhani', sans-serif; font-size: 9px; color: var(--orange); font-weight: 700; flex-shrink: 0; }
 .pos-badge { font-family: 'Rajdhani', sans-serif; font-size: 8px; font-weight: 700; padding: 1px 3px; border-radius: 2px; flex-shrink: 0; }
@@ -8986,7 +8986,7 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos) {
     applyPassiveCards(combatant, unit);
     return combatant;
   } else {
-    const defaultSkill = { id:'normalAtk', name:'攻撃', type:'red', target:'single', power:1.0, cd:0 };
+    const defaultSkill = { id:'normalAtk', name:'通常攻撃', type:'red', target:'single', power:1.0, cd:0 };
     const rawSkills = enemyData.enemySkills || [defaultSkill];
     const maxMp = enemyData.mp || Math.floor(enemyData.hp * 0.3);
     return {
@@ -9184,7 +9184,7 @@ function combatantCardHTML(c) {
     <div class="combatant-card${staggerClass}${rowClass} ${c.dead?'dead':''}${c.isLeader?' leader-slot':''}" id="cc-${c.uid}">
       <div class="cc-name">
         ${leaderBadge}
-        <span class="cc-icon">${c.icon}</span>
+        <span class="cc-icon">${c.isEnemy ? c.icon : classIconHTML(c.classId,'20px')}</span>
         <span class="cc-name-text">${c.name}</span>
         ${atkInfo}
       </div>
@@ -10391,7 +10391,7 @@ function showActionBanner(actor, skillName, targetIcon, isUlt, isBuff) {
   const cls = isUlt ? 'is-ult' : isBuff ? 'is-buff' : '';
   banner.innerHTML = `
     <div class="action-banner-inner">
-      <div class="ab-actor">${actor.icon}</div>
+      <div class="ab-actor">${actor.isEnemy ? actor.icon : classIconHTML(actor.classId,'28px')}</div>
       <div class="ab-skill ${cls}">${skillName}</div>
       ${targetIcon ? `<div class="ab-arrow">▼</div><div class="ab-target">${targetIcon}</div>` : ''}
     </div>`;
