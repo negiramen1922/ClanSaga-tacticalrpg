@@ -212,9 +212,10 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   image-rendering: auto;
 }
 .cur-gold    { color: var(--gold2); }
-.cur-coin    { color: #7bd4ff; }
+.cur-coin    { color: #c07fff; }
 .cur-ether   { color: #b47dff; }
 .cur-crystal { color: #89e3ff; }
+.cur-mithril { color: #a8cce8; }
 
 /* CONTENT */
 #content { flex: 1; overflow: hidden; position: relative; }
@@ -2188,9 +2189,9 @@ img.item-icon {
     <div id="clan-exp-bar"><div id="clan-exp-fill" style="width:0%"></div></div>
     <div class="currency-row">
       <div class="cur-item cur-gold"><span class="ico"><img src="assets/images/item-gold.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-gold">0</span></div>
-      <div class="cur-item cur-coin"><span class="ico"><img src="assets/images/item-ink.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-coin">0</span></div>
-      <div class="cur-item cur-ether"><span class="ico"><img src="assets/images/item-exppot.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-ether">0</span></div>
       <div class="cur-item cur-crystal"><span class="ico" style="font-size:14px;vertical-align:middle;">💠</span><span id="disp-crystal">0</span></div>
+      <div class="cur-item cur-coin"><span class="ico"><img src="assets/images/item-ink.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-coin">0</span></div>
+      <div class="cur-item cur-mithril"><span class="ico" style="font-size:14px;vertical-align:middle;">⛏️</span><span id="disp-mithril">0</span></div>
     </div>
     <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="メニュー">
       <span></span><span></span><span></span>
@@ -2474,7 +2475,7 @@ img.item-icon {
         <div class="base-card" id="base-library" onclick="openLibraryPanel()">
           <div class="bc-icon">📚</div>
           <div class="bc-name">大図書館</div>
-          <div class="bc-locked" id="library-locked-txt">Clan Lv.21で解放</div>
+          <div class="bc-locked" id="library-locked-txt"></div>
         </div>
         <div class="base-card" onclick="openShop()">
           <div class="bc-icon">🛒</div>
@@ -7255,9 +7256,9 @@ function updateTopBar() {
   document.getElementById('topbar-clanname').textContent = p.clanName;
   document.getElementById('topbar-clanlv').textContent = 'Lv.' + p.level;
   document.getElementById('disp-gold').textContent    = fmt(p.gold);
-  document.getElementById('disp-coin').textContent    = fmt(p.clanCoin);
-  document.getElementById('disp-ether').textContent   = fmt(p.ether);
   document.getElementById('disp-crystal').textContent = fmt(p.starCrystal || 0);
+  document.getElementById('disp-coin').textContent    = fmt(p.clanCoin);
+  document.getElementById('disp-mithril').textContent = fmt(p.mithril || 0);
   const expNeed = clanExpNeed(p.level);
   const pct = Math.min(100, (p.clanExp / expNeed)*100);
   document.getElementById('clan-exp-fill').style.width = pct + '%';
@@ -14873,7 +14874,7 @@ function renderBaseTab() {
   const libTxt    = document.getElementById('library-locked-txt');
   if (smithyTxt) smithyTxt.textContent = lv>=11 ? '鋳造・強化・売却' : 'Clan Lv.11で解放';
   if (starTxt)   starTxt.textContent   = lv>=11 ? 'ノードを解放して強化' : 'Clan Lv.11で解放';
-  if (libTxt)    libTxt.textContent    = lv>=21 ? `収集: ${new Set(gState.ownedUnits.map(u=>u.classId)).size}/${Object.keys(CLASS_DATA).length}クラス` : 'Clan Lv.21で解放';
+  if (libTxt)    libTxt.textContent    = `収集: ${new Set(gState.ownedUnits.map(u=>u.classId)).size}/${Object.keys(CLASS_DATA).length}クラス`;
 
   // 資源バー
   const bar = document.getElementById('base-resources-bar');
