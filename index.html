@@ -14654,7 +14654,7 @@ function renderSmithyContent() {
         el.appendChild(row);
       });
     }
-  } else {
+  } else if (smithyActiveTab === 'melt') {
     const owned = gState.artifacts||[];
     if (!owned.length) { el.innerHTML += '<div class="empty-hint">売却できるAFがありません</div>'; }
     else {
