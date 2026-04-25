@@ -14055,12 +14055,12 @@ function renderMissionPanel(type, missions, elId, claimedKey) {
       if (type==='daily') {
         p.clanCoin = (p.clanCoin||0) + DAILY_ALL_BONUS.clanCoin;
         gState.missions.dailyClaimed['d_all_bonus'] = true;
-        showBonusToast('🎉 デイリー全達成！ ' + DAILY_ALL_BONUS.label);
+        showBonusToast('🎉 デイリー全達成！ ' + DAILY_ALL_BONUS.label, true);
       } else {
         p.clanCoin = (p.clanCoin||0) + WEEKLY_ALL_BONUS.clanCoin;
         p.ether    = (p.ether||0)    + WEEKLY_ALL_BONUS.ether;
         gState.missions.weeklyClaimed['w_all_bonus'] = true;
-        showBonusToast('🎉 ウィークリー全達成！ ' + WEEKLY_ALL_BONUS.label);
+        showBonusToast('🎉 ウィークリー全達成！ ' + WEEKLY_ALL_BONUS.label, true);
       }
       saveState();
       updateTopBar();
@@ -14203,7 +14203,7 @@ function claimMission(type, id, rewardStr) {
     if (allDone && !gState.missions.dailyClaimed['d_all_bonus']) {
       gState.missions.dailyClaimed['d_all_bonus'] = true;
       p.clanCoin = (p.clanCoin||0) + DAILY_ALL_BONUS.clanCoin;
-      showBonusToast('🎉 デイリー全達成！ ' + DAILY_ALL_BONUS.label);
+      showBonusToast('🎉 デイリー全達成！ ' + DAILY_ALL_BONUS.label, true);
     }
   } else {
     gState.missions.weeklyClaimed[id] = true;
@@ -14215,7 +14215,7 @@ function claimMission(type, id, rewardStr) {
       gState.missions.weeklyClaimed['w_all_bonus'] = true;
       p.clanCoin = (p.clanCoin||0) + WEEKLY_ALL_BONUS.clanCoin;
       p.ether    = (p.ether||0)    + WEEKLY_ALL_BONUS.ether;
-      showBonusToast('🎉 ウィークリー全達成！ ' + WEEKLY_ALL_BONUS.label);
+      showBonusToast('🎉 ウィークリー全達成！ ' + WEEKLY_ALL_BONUS.label, true);
     }
   }
   saveState();
