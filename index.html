@@ -3575,8 +3575,8 @@ const CLASS_DATA = {
     },
     activeSkills: [
       { id:'as_poison_blade', name:'毒刃', type:'black', target:'single',
-        power:1.6, cd:4, desc:'単体 💜 Pw:1.6 + 毒3T（ATK×0.10/T）',
-        poison:{ val:0.10, turns:3 } },
+        power:1.6, cd:4, desc:'単体 💜 Pw:1.6 + 猛毒3T（ATK×10%/T）',
+        debuff:{ type:'lethal_poison', val:10, turns:3 } },
       { id:'as_backstab', name:'バックスタブ', type:'black', target:'single',
         power:2.0, cd:5, desc:'単体 💜 Pw:2.0（CC中強制会心+Pw:1.0）',
         ccBonus:1.0, ccForceCrit:true },
@@ -8638,6 +8638,16 @@ function tickDoTHoT(c) {
     addLog(`${c.name} 🔥燃焼 <span class="tag tag-dmg-red">-${dmg}HP</span>`, 'damage');
     if (c.hp <= 0) { c.hp = 0; c.dead = true; }
   });
+
+  // 猛毒（lethal_poison）: ATKの指定%ダメージ
+  ;(c.debuffs||[]).filter(d=>d.type==='lethal_poison').forEach(d => {
+    const dmg = Math.max(1, Math.floor(c.atk * (d.val||10) / 100));
+    c.hp = Math.max(0, c.hp - dmg);
+    spawnFloatNum(c.uid, '☠☠'+dmg, 'float-debuff');
+    addLog(`${c.name} ☠猛毒 <span class="tag tag-dmg-red">-${dmg}HP</span>`, 'damage');
+    if (c.hp <= 0) { c.hp = 0; c.dead = true; }
+  });
+
   ;(c.buffs||[]).filter(b=>b.type==='regen').forEach(b => {
     const heal = Math.max(1, Math.floor(c.maxHp * (b.val||5) / 100));
     c.hp = Math.min(c.maxHp, c.hp + heal);
@@ -10847,7 +10857,8 @@ function doAttack(attacker, targets, skill) {
       applyDebuff(target, skill.debuff, attacker);
       const debuffLabel = {
         pres_down:'物理耐性↓', mres_down:'魔法耐性↓', bres_down:'黒耐性↓',
-        stun:'💫スタン', poison:'☠毒', bleed:'🩸裂傷', burn:'🔥燃焼',
+        stun:'💫スタン', poison:'☠毒', lethal_poison:'☠☠猛毒', strong_poison:'☠☠猛毒',
+        bleed:'🩸裂傷', burn:'🔥燃焼',
         paralysis:'⚡しびれ', flinch:'💧ひるみ', atk_down:'ATK↓',
         silence:'🔇沈黙', spd_down:'SPD↓', hit_down:'命中↓',
       }[skill.debuff.type] || '⬇弱体';
