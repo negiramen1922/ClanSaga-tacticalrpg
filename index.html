@@ -2186,7 +2186,7 @@ img.item-icon {
   <div id="bottom-nav">
     <button class="nav-btn active" onclick="switchTab('home')" id="nav-home"><img src="assets/images/nav-home.png" style="width:22px;height:22px;object-fit:contain;display:block;margin:0 auto;"><span>ホーム</span></button>
     <button class="nav-btn" onclick="switchTab('chara')" id="nav-chara"><img src="assets/images/nav-chara.png" style="width:22px;height:22px;object-fit:contain;display:block;margin:0 auto;"><span>キャラ</span></button>
-    <button class="nav-btn" onclick="switchTab('cards')" id="nav-cards"><img src="assets/images/nav-cards.png" style="width:22px;height:22px;object-fit:contain;display:block;margin:0 auto;"><span>カード</span></button>
+    <button class="nav-btn" onclick="switchTab('cards')" id="nav-cards" style="display:none"><img src="assets/images/nav-cards.png" style="width:22px;height:22px;object-fit:contain;display:block;margin:0 auto;"><span>カード</span></button>
     <button class="nav-btn" onclick="switchTab('formation')" id="nav-formation"><img src="assets/images/nav-formation.png" style="width:22px;height:22px;object-fit:contain;display:block;margin:0 auto;"><span>編成</span></button>
     <button class="nav-btn" onclick="switchTab('sortie')" id="nav-sortie"><img src="assets/images/nav-sortie.png" style="width:22px;height:22px;object-fit:contain;display:block;margin:0 auto;"><span>出撃</span></button>
     <button class="nav-btn" onclick="switchTab('base')" id="nav-base">🏰<span>拠点</span></button>
@@ -2224,7 +2224,7 @@ img.item-icon {
       <nav id="hm-nav">
         <div class="hm-item" onclick="closeHamburger();switchTab('home')"><img src="assets/images/nav-home.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>ホーム</span></div>
         <div class="hm-item" onclick="closeHamburger();switchTab('chara')"><img src="assets/images/nav-chara.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>キャラ</span></div>
-        <div class="hm-item" onclick="closeHamburger();switchTab('cards')"><img src="assets/images/nav-cards.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>カードリスト</span></div>
+        <div class="hm-item" onclick="closeHamburger();switchTab('cards')" style="display:none"><img src="assets/images/nav-cards.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>カードリスト</span></div>
         <div class="hm-item" onclick="closeHamburger();switchTab('formation')"><img src="assets/images/nav-formation.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>編成</span></div>
         <div class="hm-item" onclick="closeHamburger();switchTab('sortie')"><img src="assets/images/nav-sortie.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>出撃</span></div>
         <div class="hm-item" onclick="closeHamburger();switchTab('base')">🏰<span>拠点</span></div>
@@ -2970,13 +2970,13 @@ img.item-icon {
 
     <!-- タブ（3つ） -->
     <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;">
-      <button id="tac-tab-equip" class="tac-tab active" onclick="switchTacticsTab('equip')">🃏 装備カード</button>
-      <button id="tac-tab-order" class="tac-tab"        onclick="switchTacticsTab('order')">📋 発動順</button>
+      <button id="tac-tab-equip" class="tac-tab" onclick="switchTacticsTab('equip')" style="display:none">🃏 装備カード</button>
+      <button id="tac-tab-order" class="tac-tab active" onclick="switchTacticsTab('order')">📋 発動順</button>
       <button id="tac-tab-stats" class="tac-tab"        onclick="switchTacticsTab('stats')">📊 ステータス</button>
     </div>
 
-    <!-- 装備カードパネル -->
-    <div id="tac-panel-equip" style="flex:1;overflow-y:auto;padding:10px 10px;display:flex;flex-direction:column;gap:5px;">
+    <!-- 装備カードパネル（非表示） -->
+    <div id="tac-panel-equip" style="display:none;flex:1;overflow-y:auto;padding:10px 10px;flex-direction:column;gap:5px;">
       <div id="tactics-card-slots"></div>
     </div>
 
@@ -3438,20 +3438,31 @@ const CLASS_DATA = {
     icon: '⚔️',
     iconImg: 'assets/images/role-warrior.png',
     role: 'アタッカー',
-    baseStats: { atk:820, hp:3200, mp:1800, pres:18, mres:10, bres:5,  lres:0,  spd:80, cri:8, cridam:150 },
+    baseStats: { atk:820, hp:3200, mp:1800, pres:18, mres:10, bres:5, lres:0, spd:80, cri:8, cridam:150 },
     baseSearch:  10,
     baseStealth:  5,
     baseHate:    400,
-    skillPool: [
-      { id:'ws_blade',  name:'ブレードストライク',  type:'red',   target:'single', power:1.0,  cd:0, desc:'通常攻撃と同等の一撃 (Pw:1.0)' },
-      { id:'ws_light',  name:'ライトニングブレード', type:'red',   target:'single', power:1.8,  cd:3, desc:'電光一閃 (Pw:1.8)' },
-      { id:'ws_storm',  name:'ストームクラッシュ',   type:'red',   target:'all',    power:0.75, cd:6, desc:'嵐の一撃で全体攻撃 (Pw:0.75)' },
-      { id:'ws_cry',    name:'バトルクライ',         type:'buff',  target:'self',   power:0,    cd:6, desc:'ATK+35% 3ターン', effect:{type:'atk_up',val:35,turns:3} },
-      { id:'ws_sweep',  name:'グランドスウィープ',   type:'red',   target:'all',    power:0.95, cd:5, desc:'薙ぎ払い全体攻撃 (Pw:0.95)' },
-      { id:'ws_titan',  name:'タイタンスマッシュ',   type:'red',   target:'single', power:2.4,  cd:5, desc:'超重打 (Pw:2.4)' },
-      { id:'ws_armor',  name:'アーマーブレイク',     type:'red',   target:'single', power:1.6,  cd:4, desc:'物理耐性-20% 2T (Pw:1.6)', debuff:{type:'pres_down',val:-20,turns:2} },
-      { id:'ws_will',   name:'アイアンウィル',       type:'buff',  target:'self',   power:0,    cd:7, desc:'HP+20% 3ターン', effect:{type:'hp_up',val:20,turns:3} },
+    openingSkill: {
+      id:'ws_open_cry', name:'バトルクライ', type:'buff', target:'self',
+      desc:'ATK+20% 3T',
+      effect:{ type:'atk_up', val:20, turns:3 }
+    },
+    activeSkills: [
+      { id:'ws_sword_strike', name:'ソードストライク', type:'red', target:'single',
+        power:0.7, hits:3, cd:3, desc:'単体×3回 🔴 Pw:0.7' },
+      { id:'ws_titan_smash', name:'タイタンスマッシュ', type:'black', target:'single',
+        power:2.0, cd:5, desc:'単体 💜 Pw:2.0（HP50%以上+Pw:1.0）',
+        conditionalPower:{ condition:'self_hp_above_50pct', bonusPower:1.0 } },
     ],
+    passiveSkills: [
+      { id:'ws_pass_spirit', name:'戦士の闘志', type:'passive',
+        desc:'攻撃するたびにATK+3%（最大5スタック、WAVE後リセット）',
+        effect:{ type:'atk_stack_on_attack', val:3, maxStacks:5 } },
+      { id:'ws_pass_blood', name:'血戦', type:'passive',
+        desc:'HP50%以下でATK+20%・CRI+10%',
+        effect:{ type:'low_hp_boost', hpThreshold:50, atk:20, cri:10 } },
+    ],
+    skillPool: [],
     ultimates: [
       { id:'wu_ragnarok', name:'ラグナロクスラッシュ',
         effect:'前衛🔴全体 Pw:3.5 強制会心（前衛なし→後衛）+ 自身ATK+50%・CRI+30% 2T',
@@ -3465,25 +3476,47 @@ const CLASS_DATA = {
     icon: '🛡️',
     iconImg: 'assets/images/role-vanguard.png',
     role: 'タンク',
-    baseStats: { atk:600, hp:4500, mp:2800, pres:28, mres:18, bres:12, lres:5,  spd:60, cri:4, cridam:130 },
+    baseStats: { atk:600, hp:4500, mp:2800, pres:28, mres:18, bres:12, lres:5, spd:60, cri:4, cridam:130 },
     baseSearch:   5,
     baseStealth:  3,
     baseHate:    600,
-    skillPool: [
-      { id:'vg_bash',    name:'シールドバッシュ',   type:'red',  target:'single', power:0.9,  cd:0, desc:'盾で殴打 (Pw:0.9)' },
-      { id:'vg_taunt',   name:'プロヴォーク',       type:'buff', target:'self',   power:0,    cd:5, desc:'挑発：敵の攻撃を自分に集める 3T', effect:{type:'taunt',val:1,turns:3} },
-      { id:'vg_wall',    name:'アイアンウォール',   type:'buff', target:'self',   power:0,    cd:6, desc:'物理耐性+25% 3T', effect:{type:'pres_up',val:25,turns:3} },
-      { id:'vg_cover',   name:'カバー',             type:'buff', target:'self',   power:0,    cd:7, desc:'味方の被ダメを30%肩代わり 3T', effect:{type:'cover',val:30,turns:3} },
-      { id:'vg_counter', name:'カウンタースタンス', type:'buff', target:'self',   power:0,    cd:8, desc:'被攻撃時に反撃 Pw:0.8 3T', effect:{type:'counter',val:80,turns:3} },
-      { id:'vg_smash',   name:'グラウンドスマッシュ',type:'red', target:'all',   power:0.6,  cd:5, desc:'地面を叩いて全体🔴 (Pw:0.6)' },
-      { id:'vg_fortress',name:'フォートレス',       type:'buff', target:'self',   power:0,    cd:9, desc:'ATK+15% PRES+15% 4T', effect:{type:'fortress',val:15,turns:4} },
-      { id:'vg_bulwark', name:'ブルワーク',         type:'red',  target:'single', power:1.4,  cd:4, desc:'盾投げ単体 (Pw:1.4)' },
+    openingSkill: {
+      id:'vg_open_provoke', name:'プロヴォーク', type:'buff', target:'self',
+      desc:'挑発 + RED/WHITE耐性+30% 3T',
+      effect:{ type:'multi_buff', buffs:[
+        { type:'taunt',   val:1,  turns:3 },
+        { type:'pres_up', val:30, turns:3 },
+        { type:'mres_up', val:30, turns:3 },
+      ]}
+    },
+    activeSkills: [
+      { id:'vg_iron_wall', name:'アイアンウォール', type:'buff', target:'self',
+        power:0, cd:6, desc:'全耐性+25% 3T',
+        effect:{ type:'multi_buff', buffs:[
+          { type:'pres_up', val:25, turns:3 },
+          { type:'mres_up', val:25, turns:3 },
+          { type:'bres_up', val:25, turns:3 },
+        ]}
+      },
+      { id:'vg_shield_bash', name:'シールドバッシュ', type:'red', target:'single',
+        power:0.8, cd:4, desc:'単体 🔴 Pw:0.8 + 恐怖（ATK-10%）',
+        debuff:{ type:'atk_down', val:-10, turns:3 }
+      },
     ],
+    passiveSkills: [
+      { id:'vg_pass_guardian', name:'鋼の守護', type:'passive',
+        desc:'被ダメ軽減10%（常時）',
+        effect:{ type:'dmg_reduction', val:10 } },
+      { id:'vg_pass_taunt_spirit', name:'挑発の覇気', type:'passive',
+        desc:'挑発中ATK+15%',
+        effect:{ type:'taunt_atk_bonus', val:15 } },
+    ],
+    skillPool: [],
     ultimates: [
       { id:'vu_fortress', name:'アイアンフォートレス',
-        effect:'味方全体に最大HP50%シールド + 自身に完全挑発（3T）+ 自身ATK+30%',
+        effect:'味方全体に最大HP50%シールド + 自身に完全挑発（3T）+ 全耐性+50%',
         power:0, type:'buff', target:'all_ally',
-        shieldRatio:0.5, tauntTurns:3, selfAtkUp:30 },
+        shieldRatio:0.5, tauntTurns:3, allResUp:50 },
     ],
   },
 
@@ -3495,16 +3528,28 @@ const CLASS_DATA = {
     baseSearch:  10,
     baseStealth:  5,
     baseHate:    200,
-    skillPool: [
-      { id:'pr_heal',    name:'ヒールライト',     type:'buff',  target:'single', power:0, cd:3, desc:'味方単体HP回復(ATK×1.5) + ATK+10%(3T)', effect:{type:'heal_and_atk_buff',healRatio:1.5,atkVal:10,atkTurns:3} },
-      { id:'pr_flare',   name:'セイクリッドフレア',type:'red',  target:'single', power:1.0, cd:4, desc:'🔴 Pw:1.0 + ATK-15%(2T)', debuff:{type:'atk_down',val:-15,turns:2} },
-      { id:'pr_area',    name:'エリアヒール',      type:'buff',  target:'all_ally', power:0, cd:6, desc:'全員HP回復(ATK×1.5) + ATK+10%(2T)', effect:{type:'heal_all_and_atk_buff',healRatio:1.5,atkVal:10,atkTurns:2} },
-      { id:'pr_purify',  name:'ピュリファイ',      type:'buff',  target:'single', power:0, cd:4, desc:'全デバフ解除 + ATK+20%(2T)', effect:{type:'dispel_and_atk_buff',atkVal:20,atkTurns:2} },
-      { id:'pr_judge',   name:'ホーリージャッジ',  type:'white', target:'single', power:1.5, cd:5, desc:'🤍 Pw:1.5 + ATK-25%(2T)', debuff:{type:'atk_down',val:-25,turns:2} },
-      { id:'pr_mana',    name:'マナブレッシング',  type:'buff',  target:'single', power:0, cd:5, desc:'MP回復(ATK×2.0) + WHITE耐性+15%(3T)', effect:{type:'heal_mp_and_mres',mpHealRatio:2.0,mresVal:15,mresTurns:3} },
-      { id:'pr_shield',  name:'ディバインシールド',type:'buff',  target:'single', power:0, cd:6, desc:'シールド(ATK×2.0) + BLACK耐性+15%(3T)', effect:{type:'shield_and_bres',shieldVal:2.0,bresVal:15,bresTurns:3} },
-      { id:'pr_regen',   name:'リジェネレーション',type:'buff', target:'single', power:0, cd:5, desc:'HP再生(ATK×0.20/T) + MP再生(ATK×0.10/T) 3T', effect:{type:'regen_hp_mp',hpRegenRatio:0.20,mpRegenRatio:0.10,turns:3} },
+    openingSkill: {
+      id:'pr_open_regen', name:'リジェネレーション', type:'buff', target:'self',
+      desc:'HP再生×0.20/T + MP再生×0.10/T 3T',
+      effect:{ type:'regen_hp_mp', hpRegenRatio:0.20, mpRegenRatio:0.10, turns:3 }
+    },
+    activeSkills: [
+      { id:'pr_heal', name:'ヒールライト', type:'buff', target:'single',
+        power:0, cd:3, desc:'単体HP回復×1.5 + ATK+10% 3T',
+        effect:{ type:'heal_and_atk_buff', healRatio:1.5, atkVal:10, atkTurns:3 } },
+      { id:'pr_area', name:'エリアヒール', type:'buff', target:'all_ally',
+        power:0, cd:6, desc:'全体HP回復×1.5 + ATK+10% 2T',
+        effect:{ type:'heal_all_and_atk_buff', healRatio:1.5, atkVal:10, atkTurns:2 } },
     ],
+    passiveSkills: [
+      { id:'pr_pass_grace', name:'聖なる加護', type:'passive',
+        desc:'回復量+20%（常時）',
+        effect:{ type:'heal_bonus', val:20 } },
+      { id:'pr_pass_goddess', name:'女神の祝福', type:'passive',
+        desc:'味方全体WHITE耐性+10%（常時）',
+        effect:{ type:'team_mres_bonus', val:10 } },
+    ],
+    skillPool: [],
     ultimates: [
       { id:'pu_healing_rain', name:'ヒーリングレイン',
         effect:'HP%最低の味方を優先しATK×100%の回復を10回。毎回対象ATK+5%(永続)。終了後全デバフ解除',
@@ -3521,17 +3566,30 @@ const CLASS_DATA = {
     baseSearch:  48,
     baseStealth: 45,
     baseHate:    150,
-    nightBonus: { atkUp:20, criUp:15, spdUp:15, nightPwUp:15 },
-    skillPool: [
-      { id:'as_dagger',  name:'ダガースラッシュ',   type:'red',    target:'single',  power:1.2, cd:3, desc:'物理Pw1.2。夜戦中Pw+0.5追加', nightPwBonus:0.5 },
-      { id:'as_smoke',   name:'煙玉',               type:'buff',   target:'self',    power:0,   cd:5, desc:'隠密+60%・ヘイト-400・次被ダメ-30%(1回)', effect:{type:'stealth_and_hate',stealthUp:60,hateDown:400,reduceOnce:30} },
-      { id:'as_shadow',  name:'影潜り',             type:'opening',target:'single',  power:3.0, cd:0, desc:'奇襲成功:Pw3.0+ATK+25%・CRI+15%(3T)。通常時Pw1.0', effect:{type:'surprise_burst',normalPw:1.0,surprisePw:3.0} },
-      { id:'as_blade',   name:'暗殺者の短剣',       type:'equip',  target:'self',    power:0,   cd:0, desc:'通常攻撃Pw+0.2・CRI+8%。夜戦中Pw+0.4・BLACK追加' },
-      { id:'as_back',    name:'バックスタブ',       type:'red',    target:'single',  power:2.0, cd:5, desc:'Pw2.0。CC中の敵に強制会心+Pw+0.8', ccBonus:0.8 },
-      { id:'as_poison',  name:'毒刃',               type:'black',  target:'single',  power:1.6, cd:4, desc:'BLACKPw1.6+猛毒(3T・ATK15%/T)。夜戦中Pw+0.5', nightPwBonus:0.5 },
-      { id:'as_triple',  name:'連続斬り',           type:'red',    target:'single',  power:0.9, cd:6, desc:'Pw0.9×3回。夜戦中各+0.3', hits:3, nightPwBonus:0.3 },
-      { id:'as_vital',   name:'急所突き',           type:'red',    target:'single',  power:2.2, cd:7, desc:'Pw2.2+CRIDAM+30%。夜戦中強制会心', criDamBonus:30, nightForceCrit:true },
+    openingSkill: {
+      id:'as_open_shadow', name:'影潜り', type:'opening', target:'single',
+      desc:'ATK+25%・CRI+15% + 奇襲時🔴Pw:3.0（通常時Pw:1.0） 3T',
+      power:3.0,
+      effect:{ type:'surprise_burst', normalPw:1.0, surprisePw:3.0 },
+      surpriseBuff:[ { type:'atk_up', val:25, turns:3 }, { type:'cri_up', val:15, turns:3 } ]
+    },
+    activeSkills: [
+      { id:'as_poison_blade', name:'毒刃', type:'black', target:'single',
+        power:1.6, cd:4, desc:'単体 💜 Pw:1.6 + 猛毒3T（ATK×10%/T）',
+        debuff:{ type:'lethal_poison', val:10, turns:3 } },
+      { id:'as_backstab', name:'バックスタブ', type:'black', target:'single',
+        power:2.0, cd:5, desc:'単体 💜 Pw:2.0（CC中強制会心+Pw:1.0）',
+        ccBonus:1.0, ccForceCrit:true },
     ],
+    passiveSkills: [
+      { id:'as_pass_night', name:'夜の狩人', type:'passive',
+        desc:'夜戦中ATK+20%・CRI+15%・SPD+15%',
+        effect:{ type:'night_bonus', atk:20, cri:15, spd:15 } },
+      { id:'as_pass_shadow', name:'影の達人', type:'passive',
+        desc:'隠密+20%・CRI率常時+8%',
+        effect:{ type:'stealth_cri', stealth:20, cri:8 } },
+    ],
+    skillPool: [],
     ultimates: [
       { id:'asu_hunt', name:'影狩り（シャドウハント）',
         effect:'最もHPの低い敵に🔴Pw4.0(強制会心)+💜Pw2.0。撃破時即再行動(次の最低HP敵を自動追跡)。連続撃破でATK+10%スタック。夜戦中🔴Pw+2.0追加',
@@ -3545,24 +3603,34 @@ const CLASS_DATA = {
     icon: '🏹',
     iconImg: 'assets/images/role-ranger.png',
     role: 'レンジ',
-    baseStats: { atk:780, hp:2600, mp:1400, pres:5, mres:8, bres:3,  lres:0,  spd:85, cri:14, cridam:170 },
+    baseStats: { atk:780, hp:2600, mp:1400, pres:5, mres:8, bres:3, lres:0, spd:85, cri:14, cridam:170 },
     baseSearch:  30,
     baseStealth: 10,
     baseHate:   300,
-    skillPool: [
-      { id:'ar_shot',    name:'クイックショット',   type:'red',   target:'single', power:1.0,  cd:0, desc:'素早い一射 (Pw:1.0)' },
-      { id:'ar_pierce',  name:'ピアシングアロー',   type:'red',   target:'single', power:2.0,  cd:4, desc:'貫通矢 (Pw:2.0)' },
-      { id:'ar_rain',    name:'アローレイン',       type:'red',   target:'all',    power:0.7,  cd:6, desc:'矢の雨 全体攻撃 (Pw:0.7)' },
-      { id:'ar_poison',  name:'ポイズンアロー',     type:'red',   target:'single', power:1.2,  cd:4, desc:'毒矢 Pw:1.2 + MRES-15% 3T', debuff:{type:'mres_down',val:-15,turns:3} },
-      { id:'ar_snipe',   name:'スナイプ',           type:'red',   target:'single', power:3.0,  cd:7, desc:'狙撃 強制会心 (Pw:3.0)', forceCrit:true },
-      { id:'ar_volley',  name:'ボレー',             type:'red',   target:'all',    power:0.85, cd:5, desc:'連射全体 (Pw:0.85)' },
-      { id:'ar_wind',    name:'ウィンドアロー',     type:'white', target:'single', power:1.5,  cd:3, desc:'精神矢 MP削り (Pw:1.5)' },
-      { id:'ar_eagle',   name:'イーグルアイ',       type:'buff',  target:'self',   power:0,    cd:6, desc:'会心率+30% SPD+20 3T', effect:{type:'eagle_eye',val:30,turns:3} },
+    openingSkill: {
+      id:'ar_open_preemptive', name:'先制射撃', type:'red', target:'random_multi',
+      power:0.5, hits:6, cd:0,
+      desc:'ランダム敵×6連射 🔴 Pw:0.5'
+    },
+    activeSkills: [
+      { id:'ar_pierce', name:'ピアシングアロー', type:'red', target:'single',
+        power:2.0, cd:4, desc:'単体 🔴 Pw:2.0 貫通矢' },
+      { id:'ar_rain', name:'アローレイン', type:'red', target:'all',
+        power:0.7, cd:6, desc:'全体 🔴 Pw:0.7 矢の雨' },
     ],
+    passiveSkills: [
+      { id:'ar_pass_eagle', name:'鷹の目', type:'passive',
+        desc:'CRI率常時+8%・ATK+10%',
+        effect:{ type:'cri_atk_bonus', cri:8, atk:10 } },
+      { id:'ar_pass_weak', name:'弱点狙い', type:'passive',
+        desc:'攻撃した敵のRED耐性-5%（最大5スタック）',
+        effect:{ type:'pres_down_on_attack', val:5, maxStacks:5 } },
+    ],
+    skillPool: [],
     ultimates: [
       { id:'au_stormcross', name:'ストームクロス',
-        effect:'ランダムな敵に🔵BLUE×10連射（1発：最大HPの6%）',
-        power:0.06, type:'blue', target:'random_multi', hits:10 },
+        effect:'ランダムな敵に🔵BLUE×10連射（1発：現在HPの4%）',
+        power:0.04, type:'blue', target:'random_multi', hits:10 },
     ],
   },
 };
@@ -6183,7 +6251,7 @@ function makeUnit(classId, uid) {
   const cls = CLASS_DATA[classId];
   const passives = rollPassives();
   const ult = cls.ultimates[Math.floor(Math.random()*cls.ultimates.length)];
-  const defaultSkills = cls.skillPool.slice(0,4).map(s=>s.id);
+  const defaultSkills = (cls.activeSkills||cls.skillPool||[]).map(s=>s.id);
   // tactics: スキルごとに {priority, trigger, enabled}
   const defaultTactics = defaultSkills.map((sid,i) => ({
     skillId: sid, priority: i, trigger: 'none', enabled: true
@@ -6335,7 +6403,7 @@ function normalizeState() {
 
     // 配列フィールドの保証
     if (!Array.isArray(u.passives))       u.passives = [];
-    if (!Array.isArray(u.selectedSkills)) u.selectedSkills = cls.skillPool.slice(0,4).map(s=>s.id);
+    if (!Array.isArray(u.selectedSkills)) u.selectedSkills = (cls.activeSkills||cls.skillPool||[]).map(s=>s.id);
     if (!Array.isArray(u.tactics))        u.tactics = [];
     if (!Array.isArray(u.equippedCards) || u.equippedCards.length < 6) {
       u.equippedCards = Array.from({length:6}, (_,i) =>
@@ -6349,11 +6417,18 @@ function normalizeState() {
       if (slot?.cardId && !CARDS[slot.cardId]) u.equippedCards[i] = null;
     });
 
-    // tactics補正
-    if (u.tactics.length === 0 && u.selectedSkills.length > 0) {
-      u.tactics = u.selectedSkills.map((sid,i) => ({
-        skillId:sid, priority:i, trigger:'none', enabled:true
-      }));
+    // tactics補正: activeSkillsから再構築（固定スキルシステム）
+    {
+      const activeIds = (cls.activeSkills||cls.skillPool||[]).map(s=>s.id);
+      const needsRebuild = u.tactics.length === 0 ||
+        !activeIds.every(id => u.tactics.some(t=>t.skillId===id));
+      if (needsRebuild) {
+        const existing = u.tactics || [];
+        u.tactics = activeIds.map((sid,i) => {
+          const prev = existing.find(t=>t.skillId===sid);
+          return prev || { skillId:sid, priority:i, trigger:'none', enabled:true };
+        });
+      }
     }
 
     // ultimateId — 存在しないIDや未設定を正規化
@@ -7220,11 +7295,12 @@ function launchApp() {
     // 旧スキル選択UIの互換（selectedSkills）
     if (!u.selectedSkills || !u.selectedSkills.length) {
       const cls = CLASS_DATA[u.classId];
-      if (cls) u.selectedSkills = cls.skillPool.slice(0,4).map(s=>s.id);
+      if (cls) u.selectedSkills = (cls.activeSkills||cls.skillPool||[]).map(s=>s.id);
     }
     if (!u.passives) u.passives = rollPassives();
     if (u.equippedArtifact === undefined) u.equippedArtifact = null;
-    if (!u.equippedAccessories) u.equippedAccessories = {A:null,B:null,C:null};
+    if (!u.equippedAccessories) u.equippedAccessories = {A:null,B:null,C:null,D:null,E:null,F:null};
+    else { ['D','E','F'].forEach(s=>{ if(u.equippedAccessories[s]===undefined) u.equippedAccessories[s]=null; }); }
     if (!gState.unitProgress[u.uid]) gState.unitProgress[u.uid] = {level:1,exp:0};
     // tactics互換補正
     if (!u.tactics || !u.tactics.length) {
@@ -7722,6 +7798,34 @@ function openUnitDetail(uid) {
       ★ 固定値は装備・パッシブ・星図盤で強化できます
     </div>`;
 
+  // Fixed Skills HTML
+  const skillTypeLabel = { buff:'バフ', red:'🔴攻撃', black:'💜黒攻撃', white:'🤍白攻撃', opening:'開幕', passive:'パッシブ' };
+  const skillTypeColor = { buff:'var(--accent)', red:'#e06060', black:'#a06080', white:'#9090d0', opening:'var(--gold)', passive:'var(--green)' };
+  const openingSkillHTML = cls.openingSkill ? `
+    <div style="background:var(--bg3);border:1px solid rgba(201,168,76,0.4);padding:8px 10px;margin-bottom:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+        <span style="font-size:12px;font-weight:700;color:var(--text)">${cls.openingSkill.name}</span>
+        <span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 6px;border-radius:3px;">開幕</span>
+      </div>
+      <div style="font-size:11px;color:var(--text2)">${cls.openingSkill.desc || ''}</div>
+    </div>` : '';
+  const activeSkillsHTML = (cls.activeSkills||[]).map(sk => `
+    <div style="background:var(--bg3);border:1px solid var(--border);padding:8px 10px;margin-bottom:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+        <span style="font-size:12px;font-weight:700;color:var(--text)">${sk.name}</span>
+        <span style="font-size:9px;color:var(--text3)">CD:${sk.cd}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text2)">${sk.desc || ''}</div>
+    </div>`).join('');
+  const passiveSkillsHTML = (cls.passiveSkills||[]).map(sk => `
+    <div style="background:var(--bg3);border:1px solid rgba(100,200,100,0.3);padding:8px 10px;margin-bottom:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+        <span style="font-size:12px;font-weight:700;color:var(--text)">${sk.name}</span>
+        <span style="font-size:9px;background:rgba(100,200,100,0.15);color:var(--green,#60c060);padding:1px 6px;border-radius:3px;">パッシブ</span>
+      </div>
+      <div style="font-size:11px;color:var(--text2)">${sk.desc || ''}</div>
+    </div>`).join('');
+
   // Passive HTML
   const ROMAN = ['I','II','III'];
   const passiveHTML = (u.passives||[]).map((p, i) => {
@@ -7787,19 +7891,18 @@ function openUnitDetail(uid) {
       ${statsHTML}
     </div>
     <div class="udp-section">
-      <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>CARD SLOTS</span>
-        <span style="font-size:10px;color:var(--text3)">${(u.equippedCards||[]).filter(Boolean).length} / 6 装備中</span>
-      </div>
-      <div id="udp-card-slots" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px"></div>
-    </div>
-    <div class="udp-section">
       <div class="udp-section-title">ACCESSORIES</div>
       <div id="udp-acc-slots">${renderUnitAccessorySlots(u)}</div>
     </div>
     <div class="udp-section">
       <div class="udp-section-title">ARTIFACT</div>
       <div id="udp-artifact-slot">${renderUnitArtifactSlot(u)}</div>
+    </div>
+    <div class="udp-section">
+      <div class="udp-section-title">CLASS SKILLS</div>
+      ${openingSkillHTML}
+      ${activeSkillsHTML}
+      ${passiveSkillsHTML}
     </div>
     <div class="udp-section">
       <div class="udp-section-title">PASSIVES</div>
@@ -7853,9 +7956,6 @@ function openUnitDetail(uid) {
     });
   });
   document.getElementById('udp-rename-btn')?.addEventListener('click', () => renameUnit(uid));
-
-  // カードスロット描画
-  renderCardSlots(uid);
 
   const lvupBtn = document.getElementById('udp-lvup-btn');
   if (lvupBtn && !lvupBtn.disabled) {
@@ -8538,6 +8638,16 @@ function tickDoTHoT(c) {
     addLog(`${c.name} 🔥燃焼 <span class="tag tag-dmg-red">-${dmg}HP</span>`, 'damage');
     if (c.hp <= 0) { c.hp = 0; c.dead = true; }
   });
+
+  // 猛毒（lethal_poison）: ATKの指定%ダメージ
+  ;(c.debuffs||[]).filter(d=>d.type==='lethal_poison').forEach(d => {
+    const dmg = Math.max(1, Math.floor(c.atk * (d.val||10) / 100));
+    c.hp = Math.max(0, c.hp - dmg);
+    spawnFloatNum(c.uid, '☠☠'+dmg, 'float-debuff');
+    addLog(`${c.name} ☠猛毒 <span class="tag tag-dmg-red">-${dmg}HP</span>`, 'damage');
+    if (c.hp <= 0) { c.hp = 0; c.dead = true; }
+  });
+
   ;(c.buffs||[]).filter(b=>b.type==='regen').forEach(b => {
     const heal = Math.max(1, Math.floor(c.maxHp * (b.val||5) / 100));
     c.hp = Math.min(c.maxHp, c.hp + heal);
@@ -8888,7 +8998,7 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos) {
     const cls = CLASS_DATA[unit.classId];
     const stats = calcStats(unit);
     const ult = cls.ultimates.find(x=>x.id===unit.ultimateId) || cls.ultimates[0];
-    const selectedSkills = (unit.selectedSkills||[]).map(sid=>cls.skillPool.find(s=>s.id===sid)).filter(Boolean);
+    const activeSkillDefs = cls.activeSkills || (unit.selectedSkills||[]).map(sid=>(cls.skillPool||[]).find(s=>s.id===sid)).filter(Boolean);
 
     // 陣形ボーナス適用
     let atk = stats.atk, hp = stats.hp, spd = stats.spd, pres = stats.pres;
@@ -8920,6 +9030,15 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos) {
       spd  += 10;
     }
 
+    // パッシブスキルの静的効果を事前適用
+    let passiveCri = 0, passiveStealth = 0;
+    (cls.passiveSkills||[]).forEach(ps => {
+      const eff = ps.effect;
+      if (!eff) return;
+      if (eff.type === 'cri_atk_bonus') { passiveCri += eff.cri||0; atk = Math.floor(atk*(1+(eff.atk||0)/100)); }
+      if (eff.type === 'stealth_cri')   { passiveCri += eff.cri||0; passiveStealth += eff.stealth||0; }
+    });
+
     const cls2 = CLASS_DATA[unit.classId];
     const prog  = gState.unitProgress[unit.uid] || { level:1 };
     let baseMp = Math.floor((cls2?.baseStats?.mp || 1600) * (1 + (prog.level-1)*9/99));
@@ -8933,21 +9052,43 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos) {
       atk, pres, mres: stats.mres,
       bres: cls2?.baseStats?.bres ?? 0,
       lres: cls2?.baseStats?.lres ?? 0,
-      spd, cri: stats.cri, cridam: stats.cridam,
+      spd, cri: stats.cri + passiveCri, cridam: stats.cridam,
       search:  cls2?.baseSearch  ?? 10,
-      stealth: cls2?.baseStealth ?? 5,
+      stealth: (cls2?.baseStealth ?? 5) + passiveStealth,
       hate:    isLeader ? Math.floor((cls2?.baseHate ?? 400) * 1.5) : (cls2?.baseHate ?? 400),
       atb: 0, isEnemy: false, dead: false,
       staggered: false, staggerUsed: false,
-      skills: selectedSkills, skillCDs: {},
+      skills: activeSkillDefs, skillCDs: {},
       ultimate: ult, ultGauge: 0,
       buffs: [], debuffs: [],
       tacticsList: unit.tactics ? JSON.parse(JSON.stringify(unit.tactics)) : null,
       pos,
-      isLeader,  // リーダーフラグ
+      isLeader,
+      classPassives: cls.passiveSkills || [],
       equippedCardSlots: (unit.equippedCards || []).map(s => s ? { ...s } : null),
       cardTriggers: { ...(unit.cardTriggers || {}) },
     };
+    // パッシブ: 被ダメ軽減（鋼の守護）
+    (cls.passiveSkills||[]).forEach(ps => {
+      if (ps.effect?.type === 'dmg_reduction') {
+        combatant.buffs.push({ type:'damage_reduce', val:ps.effect.val, turns:99999, icon:'🔽被ダメ↓', cssClass:'hp-up', isPassive:true });
+      }
+    });
+    // パッシブ: スタック追跡初期化（戦士の闘志）
+    (cls.passiveSkills||[]).forEach(ps => {
+      if (ps.effect?.type === 'atk_stack_on_attack') {
+        combatant._passiveFightingSpirit = { stacks:0, maxStacks:ps.effect.maxStacks||5, val:ps.effect.val||3 };
+      }
+      if (ps.effect?.type === 'low_hp_boost') {
+        combatant._passiveBloodBattle = { hpThreshold:ps.effect.hpThreshold||50, atk:ps.effect.atk||20, cri:ps.effect.cri||10, active:false };
+      }
+      if (ps.effect?.type === 'taunt_atk_bonus') {
+        combatant._passiveTauntSpirit = { val:ps.effect.val||15, active:false };
+      }
+      if (ps.effect?.type === 'heal_bonus') {
+        combatant._passiveHealBonus = (ps.effect.val||20) / 100;
+      }
+    });
     applyPassiveCards(combatant, unit);
     return combatant;
   } else {
@@ -9373,12 +9514,21 @@ function applyNightModifiers() {
     if (!c.isEnemy) {
       const cls = CLASS_DATA[c.classId];
       if (cls?.role === 'レンジ') {
-        c.nightHitPenalty = -20; // 命中ペナルティ
-        c.nightDamageMult = 1.25; // 追加ボーナスなし
+        c.nightHitPenalty = -20;
+        c.nightDamageMult = 1.25;
         addLog(`${c.name}: 夜戦 遠距離命中-20`, 'trigger');
       } else {
-        c.nightDamageMult = 1.35; // 近接は+35%
+        c.nightDamageMult = 1.35;
         addLog(`${c.name}: 夜戦 ダメージ+35%`, 'trigger');
+      }
+      // パッシブ: 夜の狩人（アサシン: 夜戦ATK+20%・CRI+15%・SPD+15%）
+      const nightPass = (cls?.passiveSkills||[]).find(p=>p.effect?.type==='night_bonus');
+      if (nightPass) {
+        const np = nightPass.effect;
+        c.atk = Math.floor(c.atk * (1 + (np.atk||0)/100));
+        c.cri += (np.cri||0);
+        c.spd += (np.spd||0);
+        addLog(`${c.name}: <span class="tag tag-buff">${nightPass.name}</span> ATK+${np.atk}%・CRI+${np.cri}・SPD+${np.spd}`, 'trigger');
       }
     }
   });
@@ -9887,6 +10037,58 @@ function executeOpeningSkills(side, bonusMult) {
   }
 }
 
+function fireOpeningSkills(allies, enemies) {
+  if (!battleState) return;
+  const scoutOutcome = battleState._scoutOutcome || 'normal';
+  const aliveAllies  = allies.filter(a => !a.dead);
+  const aliveEnemies = enemies.filter(e => !e.dead);
+
+  aliveAllies.forEach(ally => {
+    const cls = CLASS_DATA[ally.classId];
+    const opening = cls?.openingSkill;
+    if (!opening) return;
+
+    const eff = opening.effect;
+
+    if (eff?.type === 'surprise_burst') {
+      // アサシン: 影潜り
+      const isSurprise = scoutOutcome === 'success';
+      (opening.surpriseBuff||[]).forEach(b => {
+        ally.buffs.push({ type:b.type, val:b.val, turns:b.turns,
+          icon: b.type==='atk_up'?'⬆ATK':'⬆CRI', cssClass:'atk-up' });
+      });
+      addLog(`${ally.name} <span class="tag tag-skill">${opening.name}</span> [開幕] ${isSurprise?'⚡奇襲':'通常'}`, 'trigger');
+      spawnSkillNamePop(ally.uid, opening.name, 'buff');
+      if (isSurprise && aliveEnemies.length) {
+        const pw = eff.surprisePw || 3.0;
+        doAttack(ally, aliveEnemies, { ...opening, type:'red', power:pw, target:'single', hits:1 });
+      }
+    } else if (opening.type === 'buff') {
+      // バフ系開幕（バトルクライ、プロヴォーク、リジェネレーション）
+      addLog(`${ally.name} <span class="tag tag-skill">${opening.name}</span> [開幕]`, 'trigger');
+      applyBuff(ally, opening, ally);
+      flashCard(ally.uid, 'buff');
+    } else if (opening.type === 'red' || opening.type === 'black') {
+      // 攻撃系開幕（先制射撃）
+      addLog(`${ally.name} <span class="tag tag-skill">${opening.name}</span> [開幕]`, 'trigger');
+      if (aliveEnemies.length) {
+        if (opening.target === 'random_multi') {
+          const hitCount = opening.hits || 6;
+          for (let i = 0; i < hitCount; i++) {
+            const alive = aliveEnemies.filter(e => !e.dead);
+            if (!alive.length) break;
+            const tgt = alive[Math.floor(Math.random() * alive.length)];
+            doAttack(ally, [tgt], { ...opening, target:'single', hits:1 });
+          }
+        } else {
+          doAttack(ally, aliveEnemies, opening);
+        }
+      }
+    }
+  });
+  updateBattleDisplay();
+}
+
 function startBattle(scoutResult) {
   // scoutResult はオプション引数（デフォルトnull）
   scoutResult = scoutResult || null;
@@ -9912,6 +10114,9 @@ function startBattle(scoutResult) {
     // 開幕スキルの奇襲判定に使うためbattleStateに保存
     if (battleState) battleState._scoutOutcome = scoutResult.outcome;
   }
+
+  // 開幕スキル発動
+  if (battleState) fireOpeningSkills(battleState.allies, battleState.enemies);
 
   runBattleLoop();
   // ボスステージなら重厚BGMに切り替え
@@ -10051,6 +10256,13 @@ function tickBattle() {
               badge.className = scoutResult.outcome;
               badge.style.display = '';
             }
+          }
+          // WAVE開幕スキル発動 + パッシブスタックリセット
+          if (battleState) {
+            battleState.allies.forEach(a => {
+              if (a._passiveFightingSpirit) a._passiveFightingSpirit.stacks = 0;
+            });
+            fireOpeningSkills(battleState.allies, battleState.enemies);
           }
           resumeBattle();
         });
@@ -10504,10 +10716,12 @@ function doAttack(attacker, targets, skill) {
     // Step7c: クリティカル判定（red/white のみ）
     const result = computeDmg(attacker, target, skill);
     let { hpDmg, mpDmg, dmgType } = result;
-    const canCrit = (dmgType === 'red' || dmgType === 'white' || dmgType === 'phys');
-    const forceByLowHp     = skill.effect?.forceCritIfLowHp && (target.hp / target.maxHp) <= 0.5;
-    const forceByShield    = skill.effect?.forceCritIfShield && (attacker.shield||0) > 0;
-    const isCrit = canCrit && (skill.forceCrit || forceByLowHp || forceByShield ? true : rollCrit(attacker));
+    const canCrit = (dmgType === 'red' || dmgType === 'white' || dmgType === 'phys' || dmgType === 'black');
+    const forceByLowHp  = skill.effect?.forceCritIfLowHp && (target.hp / target.maxHp) <= 0.5;
+    const forceByShield = skill.effect?.forceCritIfShield && (attacker.shield||0) > 0;
+    const targetCC = target.staggered || (target.buffs||[]).some(b=>['stun','paralysis','flinch'].includes(b.type));
+    const forceByCC = skill.ccForceCrit && targetCC;
+    const isCrit = canCrit && (skill.forceCrit || forceByLowHp || forceByShield || forceByCC ? true : rollCrit(attacker));
     if (isCrit) {
       const cridam = attacker.cridam + (skill.bonusCridam || 0);
       if (hpDmg) hpDmg = Math.floor(hpDmg * cridam / 100);
@@ -10572,6 +10786,31 @@ function doAttack(attacker, targets, skill) {
     gainUltGauge(attacker, 8);
     updateHate(attacker, calcHateGain('damage', totalDmg));
 
+    // パッシブ: 戦士の闘志（攻撃命中でATKスタック）
+    if (!attacker.isEnemy && attacker._passiveFightingSpirit && totalDmg > 0) {
+      const fs = attacker._passiveFightingSpirit;
+      if (fs.stacks < fs.maxStacks) {
+        fs.stacks++;
+        if (fs.stacks === 1 || fs.stacks === fs.maxStacks) {
+          addLog(`${attacker.name} <span class="tag tag-buff">闘志Lv${fs.stacks}</span> ATK+${fs.val*fs.stacks}%`, 'trigger');
+        }
+      }
+    }
+    // パッシブ: 弱点狙い（攻撃した敵のRED耐性-5%、最大5スタック）
+    if (!attacker.isEnemy && totalDmg > 0) {
+      const weakPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='pres_down_on_attack');
+      if (weakPass) {
+        const maxSt = weakPass.effect.maxStacks || 5;
+        target._weakSpotStacks = (target._weakSpotStacks||0);
+        if (target._weakSpotStacks < maxSt) {
+          target._weakSpotStacks++;
+          target.debuffs = target.debuffs||[];
+          target.debuffs.push({ type:'pres_down', val:-(weakPass.effect.val||5), turns:9999 });
+          setTimeout(() => spawnFloatNum(target.uid, `🔴耐-${weakPass.effect.val||5}%`, 'float-debuff'), 200);
+        }
+      }
+    }
+
     // ダメージカラーマップ
     const dmgColorClass = {
       red:'float-dmg-red', white:'float-dmg-white',
@@ -10618,7 +10857,8 @@ function doAttack(attacker, targets, skill) {
       applyDebuff(target, skill.debuff, attacker);
       const debuffLabel = {
         pres_down:'物理耐性↓', mres_down:'魔法耐性↓', bres_down:'黒耐性↓',
-        stun:'💫スタン', poison:'☠毒', bleed:'🩸裂傷', burn:'🔥燃焼',
+        stun:'💫スタン', poison:'☠毒', lethal_poison:'☠☠猛毒', strong_poison:'☠☠猛毒',
+        bleed:'🩸裂傷', burn:'🔥燃焼',
         paralysis:'⚡しびれ', flinch:'💧ひるみ', atk_down:'ATK↓',
         silence:'🔇沈黙', spd_down:'SPD↓', hit_down:'命中↓',
       }[skill.debuff.type] || '⬇弱体';
@@ -10742,16 +10982,22 @@ function performUlt(c, enemies, allies) {
       setTimeout(() => spawnFloatNum(a.uid, `🛡️+${shieldAmt}`, 'float-buff'), 300);
       addLog(`${a.name}: シールド +${shieldAmt}`, 'trigger');
     });
-    // 自身に挑発バフ（完全ヘイト）
+    // 自身に挑発バフ + 耐性アップ
     if (ult.tauntTurns) {
-      applyBuff(c, { effect:{ type:'multi_buff', buffs:[
-        { type:'hate_up', val:9999, turns:ult.tauntTurns },
-        { type:'atk_up',  val:ult.selfAtkUp||30, turns:ult.tauntTurns },
-      ]}}, c);
-      // 挑発フラグ直接セット
+      const resBuff = ult.allResUp || 0;
+      const buffList = [{ type:'taunt', val:1, turns:ult.tauntTurns }];
+      if (resBuff) {
+        buffList.push({ type:'pres_up', val:resBuff, turns:ult.tauntTurns });
+        buffList.push({ type:'mres_up', val:resBuff, turns:ult.tauntTurns });
+        buffList.push({ type:'bres_up', val:resBuff, turns:ult.tauntTurns });
+      } else if (ult.selfAtkUp) {
+        buffList.push({ type:'atk_up', val:ult.selfAtkUp, turns:ult.tauntTurns });
+      }
+      applyBuff(c, { effect:{ type:'multi_buff', buffs:buffList }}, c);
       c.ultTaunt = ult.tauntTurns;
       spawnFloatNum(c.uid, '挑発！', 'float-buff');
-      addLog(`${c.name}: 完全挑発（${ult.tauntTurns}T）+ ATK+${ult.selfAtkUp||30}%`, 'trigger');
+      const bonusDesc = resBuff ? `全耐性+${resBuff}%` : (ult.selfAtkUp ? `ATK+${ult.selfAtkUp}%` : '');
+      addLog(`${c.name}: 完全挑発（${ult.tauntTurns}T）+ ${bonusDesc}`, 'trigger');
     }
     return;
   }
@@ -10873,6 +11119,8 @@ function performUlt(c, enemies, allies) {
 function getBattleHealBonus(sourceUnit) {
   if (!sourceUnit) return 1.0;
   let bonus = 1.0;
+  // パッシブスキル: 聖なる加護 (+20%)
+  if (sourceUnit._passiveHealBonus) bonus += sourceUnit._passiveHealBonus;
   // 慈愛のオーラ: passiveカードのheal_bonusを確認
   (sourceUnit.equippedCards||[]).forEach(slot => {
     if (!slot) return;
@@ -11313,13 +11561,33 @@ function computeDmg(attacker, target, skill) {
 
   // 共通: 基礎ATK → ATKバフ → スキル倍率
   let base = attacker.atk;
-  const atkBuffPct = attacker.buffs
+  const atkBuffPct = (attacker.buffs||[])
     .filter(b => ['atk_up','fortress'].includes(b.type))
     .reduce((s,b) => s + b.val, 0);
   if (atkBuffPct) base *= (1 + atkBuffPct / 100);
+  // パッシブ: 戦士の闘志スタック ATK
+  if (attacker._passiveFightingSpirit?.stacks > 0) {
+    const fs = attacker._passiveFightingSpirit;
+    base *= (1 + fs.stacks * fs.val / 100);
+  }
+  // パッシブ: 血戦（HP50%以下でATK+%）
+  if (attacker._passiveBloodBattle && attacker.hp <= attacker.maxHp * 0.5) {
+    base *= (1 + attacker._passiveBloodBattle.atk / 100);
+  }
+  // パッシブ: 挑発の覇気（挑発中ATK+%）
+  if (attacker._passiveTauntSpirit && (attacker.buffs||[]).some(b=>b.type==='taunt')) {
+    base *= (1 + attacker._passiveTauntSpirit.val / 100);
+  }
 
   // 後衛ボーナス（スナイパーショット等）
   let power = skill.power || 1.0;
+  // 条件付き追加ダメージ（タイタンスマッシュ: 自身HP50%以上で+Pw）
+  if (skill.conditionalPower?.condition === 'self_hp_above_50pct' && attacker.hp >= attacker.maxHp * 0.5) {
+    power += skill.conditionalPower.bonusPower;
+  }
+  // CC中追加ダメージ（バックスタブ等）
+  const _targetCC = target.staggered || (target.buffs||[]).some(b=>['stun','paralysis','flinch'].includes(b.type));
+  if (skill.ccBonus && _targetCC) power += skill.ccBonus;
   if (skill.effect?.backRowBonus && false) {  // 後衛廃止
     power += skill.effect.backRowBonus;
   }
@@ -11390,7 +11658,11 @@ function computeDmg(attacker, target, skill) {
 }
 
 function rollCrit(attacker) {
-  const cri = (attacker._criOverride !== undefined) ? attacker._criOverride : attacker.cri;
+  let cri = (attacker._criOverride !== undefined) ? attacker._criOverride : attacker.cri;
+  // パッシブ: 血戦（HP50%以下でCRI+%）
+  if (attacker._passiveBloodBattle && attacker.hp <= attacker.maxHp * 0.5) {
+    cri += attacker._passiveBloodBattle.cri;
+  }
   return Math.random() * 100 < cri;
 }
 
@@ -13324,7 +13596,7 @@ function openTactics(uid) {
       </div>
     </div>`;
 
-  switchTacticsTab('equip');
+  switchTacticsTab('order');
   document.getElementById('tactics-modal').classList.add('open');
 }
 
@@ -13360,161 +13632,111 @@ function renderTacticsOrderList() {
   const uid = tacticsTargetUid;
   const u = gState.ownedUnits.find(x=>x.uid===uid);
   if (!u) return;
-  const cls = CLASS_DATA[u.classId];  // ← 必殺技等に使用
+  const cls = CLASS_DATA[u.classId];
+  if (!cls) return;
 
-  if (!u.equippedCards) u.equippedCards = [null,null,null,null,null,null];
-  if (!u.cardTriggers)  u.cardTriggers  = {};
-  if (!u.tactics)       u.tactics       = [];
+  if (!u.tactics) u.tactics = [];
 
-  const rarityColor = { 1:'var(--text3)', 2:'var(--purple)', 3:'var(--gold)' };
-
-  // ── 装備カードを attack/support（発動順あり）と それ以外（自動）に分類 ──
-  const actionCards = [];   // 発動順設定対象
-  const staticCards = [];   // 開幕・装備・パッシブ（自動）
-
-  (u.equippedCards||[]).forEach((slot, slotIdx) => {
-    if (!slot) return;
-    const card = CARDS[slot.cardId];
-    if (!card) return;
-    if (['attack','support'].includes(card.type)) {
-      actionCards.push({ slotIdx, card, slot });
-    } else {
-      staticCards.push({ slotIdx, card, slot });
-    }
-  });
-
-  // ── tactics配列を装備カードに同期（cardIdをキーとして使う）──
-  // 存在しないカードのtacticsエントリを削除
-  const validKeys = new Set(actionCards.map(c => c.card.id));
+  // アクティブスキルをtacticsに同期
+  const activeSkills = cls.activeSkills || [];
+  const validKeys = new Set(activeSkills.map(s=>s.id));
   u.tactics = u.tactics.filter(t => validKeys.has(t.skillId));
-  // 新しく装備されたカードはtacticsに追加
-  actionCards.forEach(({ card }) => {
-    if (!u.tactics.find(t => t.skillId === card.id)) {
-      u.tactics.push({
-        skillId: card.id,
-        priority: u.tactics.length,
-        trigger: 'none',
-        enabled: true,
-      });
+  activeSkills.forEach((sk, i) => {
+    if (!u.tactics.find(t=>t.skillId===sk.id)) {
+      u.tactics.push({ skillId:sk.id, priority:u.tactics.length, trigger:'none', enabled:true });
     }
   });
-  // priorityを0始まりで詰め直し（重複・欠番を解消）
-  u.tactics.sort((a, b) => a.priority - b.priority)
-    .forEach((t, i) => { t.priority = i; });
+  u.tactics.sort((a,b)=>a.priority-b.priority).forEach((t,i)=>{ t.priority=i; });
 
   el.innerHTML = '';
 
   // ────────────────────────────────────────
-  // セクション1: 発動順（攻撃・支援カード）
+  // セクション1: 発動順（アクティブスキル）
   // ────────────────────────────────────────
-  if (actionCards.length === 0) {
+  if (activeSkills.length === 0) {
     const empty = document.createElement('div');
-    empty.style.cssText = 'text-align:center;color:var(--text3);font-size:11px;padding:24px 0;line-height:2;';
-    empty.innerHTML = '攻撃・支援カードが装備されていません。<br><button class="btn btn-blue btn-sm" style="margin-top:8px" onclick="switchTacticsTab(\'equip\')">🃏 装備カードタブへ</button>';
+    empty.style.cssText = 'text-align:center;color:var(--text3);font-size:11px;padding:24px 0;';
+    empty.textContent = 'スキルがありません。';
     el.appendChild(empty);
   } else {
     const secLabel = document.createElement('div');
     secLabel.className = 'tac-section-label';
-    secLabel.textContent = '⚔ 発動順 — 攻撃・支援カード';
+    secLabel.textContent = '⚔ 発動順 — アクティブスキル';
     el.appendChild(secLabel);
 
-    // 優先度順にソート
-    const sorted = [...actionCards].sort((a, b) => {
-      const pa = u.tactics.find(t=>t.skillId===a.card.id)?.priority ?? 99;
-      const pb = u.tactics.find(t=>t.skillId===b.card.id)?.priority ?? 99;
+    const sorted = [...activeSkills].sort((a,b) => {
+      const pa = u.tactics.find(t=>t.skillId===a.id)?.priority ?? 99;
+      const pb = u.tactics.find(t=>t.skillId===b.id)?.priority ?? 99;
       return pa - pb;
     });
     const maxPrio = sorted.length;
 
-    const triggerOpts = TRIGGER_OPTIONS.map(o =>
-      `<option value="${o.value}">${o.label}</option>`
-    ).join('');
-
-    sorted.forEach(({ card, slot, slotIdx }, listIdx) => {
-      const tac = u.tactics.find(t=>t.skillId===card.id);
+    sorted.forEach(sk => {
+      const tac = u.tactics.find(t=>t.skillId===sk.id);
       if (!tac) return;
       const isOn = tac.enabled !== false;
-      const starColor = rarityColor[card.rarity]||'var(--border)';
-      const stars = '★'.repeat(card.rarity)+'☆'.repeat(3-card.rarity);
-
-      const typeBadge = card.type === 'attack'
-        ? `<span class="tac-badge tac-badge-type-atk">攻撃</span>`
-        : `<span class="tac-badge tac-badge-type-sup">支援</span>`;
-      const cdBadge = card.cd ? `<span class="tac-badge tac-badge-cd">CD:${card.cd}</span>` : '';
-      const rarBadge = `<span class="tac-badge tac-badge-src-card" style="color:${starColor}">${stars}</span>`;
-
-      // 優先度プルダウン（1〜N）
-      const prioOptions = Array.from({length: maxPrio}, (_,k) =>
-        `<option value="${k}"${tac.priority===k?' selected':''}>${k+1}</option>`
-      ).join('');
-
-      // トリガー選択（現在値をselectedに）
-      const tOpts = TRIGGER_OPTIONS.map(o =>
-        `<option value="${o.value}"${tac.trigger===o.value?' selected':''}>${o.label}</option>`
-      ).join('');
-
+      const typeColor = { red:'#e06060', black:'#a06080', buff:'var(--accent)' }[sk.type] || 'var(--text2)';
+      const typeBadge = sk.type === 'buff'
+        ? `<span class="tac-badge tac-badge-type-sup">支援</span>`
+        : `<span class="tac-badge tac-badge-type-atk">攻撃</span>`;
+      const cdBadge = sk.cd ? `<span class="tac-badge tac-badge-cd">CD:${sk.cd}</span>` : '';
+      const prioOptions = Array.from({length:maxPrio},(_,k)=>
+        `<option value="${k}"${tac.priority===k?' selected':''}>${k+1}</option>`).join('');
+      const tOpts = TRIGGER_OPTIONS.map(o=>
+        `<option value="${o.value}"${tac.trigger===o.value?' selected':''}>${o.label}</option>`).join('');
       const row = document.createElement('div');
-      row.className = `tac-order-row type-${card.type}${!isOn?' off':''}`;
+      row.className = `tac-order-row${!isOn?' off':''}`;
+      row.style.borderLeft = `3px solid ${typeColor}`;
       row.innerHTML = `
         <div class="tac-prio-col">
           <div class="tac-prio-label">順番</div>
-          <select class="tac-prio-select" data-cardid="${card.id}">${prioOptions}</select>
+          <select class="tac-prio-select" data-cardid="${sk.id}">${prioOptions}</select>
         </div>
         <div class="tac-info-col">
-          <div class="tac-skill-name">${cardTypeIconHTML(card.type,'14px')} ${card.name}
-            <span style="font-size:9px;color:var(--gold);font-weight:400">Lv${slot.cardLv}</span>
-          </div>
-          <div class="tac-skill-desc">${card.descLv ? card.descLv(slot.cardLv) : card.desc}</div>
-          <div class="tac-skill-meta">${typeBadge}${cdBadge}${rarBadge}</div>
+          <div class="tac-skill-name">${sk.name}</div>
+          <div class="tac-skill-desc">${sk.desc||''}</div>
+          <div class="tac-skill-meta">${typeBadge}${cdBadge}</div>
         </div>
         <div class="tac-trigger-col">
           <div class="tac-trigger-label">発動条件</div>
-          <select class="tac-trigger-select" data-cardid="${card.id}">${tOpts}</select>
+          <select class="tac-trigger-select" data-cardid="${sk.id}">${tOpts}</select>
         </div>
         <div class="tac-toggle-col">
-          <button class="tac-toggle-btn ${isOn?'on':'off'}" data-cardid="${card.id}"
-            title="${isOn?'ON（クリックでOFF）':'OFF（クリックでON）'}">${isOn?'✓':'—'}</button>
+          <button class="tac-toggle-btn ${isOn?'on':'off'}" data-cardid="${sk.id}"
+            title="${isOn?'ON':'OFF'}">${isOn?'✓':'—'}</button>
         </div>`;
       el.appendChild(row);
     });
   }
 
   // ────────────────────────────────────────
-  // セクション2: 自動発動（開幕・装備・パッシブ）
+  // セクション2: 自動発動（開幕・パッシブ）
   // ────────────────────────────────────────
-  if (staticCards.length) {
+  const autoSkills = [
+    ...(cls.openingSkill ? [{ ...cls.openingSkill, _kind:'開幕' }] : []),
+    ...(cls.passiveSkills||[]).map(p => ({ ...p, _kind:'パッシブ' })),
+  ];
+  if (autoSkills.length) {
     const sec2 = document.createElement('div');
     sec2.className = 'tac-section-label';
     sec2.style.marginTop = '12px';
-    sec2.textContent = '✦ 自動発動 — 開幕 / 装備 / パッシブ';
+    sec2.textContent = '✦ 自動発動 — 開幕 / パッシブ';
     el.appendChild(sec2);
-
-    const hint = document.createElement('div');
-    hint.style.cssText = 'font-size:9px;color:var(--text3);margin-bottom:6px;line-height:1.5;';
-    hint.textContent = 'バトル開始時・装備時に自動で効果が発動します。順番設定は不要です。';
-    el.appendChild(hint);
-
-    staticCards.forEach(({ card, slot }) => {
-      const starColor = rarityColor[card.rarity]||'var(--border)';
-      const typeBadge = card.type === 'opening' ? `<span class="tac-badge tac-badge-type-opn">開幕</span>`
-        : card.type === 'equip'   ? `<span class="tac-badge tac-badge-type-eqp">装備</span>`
-        : `<span class="tac-badge tac-badge-type-pas">パッシブ</span>`;
+    autoSkills.forEach(sk => {
+      const badgeColor = sk._kind === '開幕' ? 'rgba(201,168,76,0.3)' : 'rgba(100,200,100,0.2)';
+      const textColor  = sk._kind === '開幕' ? 'var(--gold)' : 'var(--green,#60c060)';
       const row = document.createElement('div');
-      row.className = `tac-order-row type-${card.type}`;
-      row.style.minHeight = '46px';
-      row.style.opacity = '0.75';
+      row.className = 'tac-order-row';
+      row.style.cssText = 'opacity:0.8;min-height:46px;';
       row.innerHTML = `
-        <div class="tac-prio-col" style="background:var(--bg2);">
-          ${cardTypeIconHTML(card.type,'18px')}
+        <div class="tac-prio-col" style="background:var(--bg2);justify-content:center;">
+          <span style="font-size:16px">${sk._kind==='開幕'?'🌅':'🔰'}</span>
         </div>
         <div class="tac-info-col">
-          <div class="tac-skill-name" style="font-size:11px;">
-            <span style="color:${starColor}">${'★'.repeat(card.rarity)}</span>
-            ${card.name}
-            <span style="font-size:9px;color:var(--gold);font-weight:400">Lv${slot.cardLv}</span>
+          <div class="tac-skill-name" style="font-size:11px;">${sk.name}
+            <span style="font-size:9px;background:${badgeColor};color:${textColor};padding:1px 5px;border-radius:3px;margin-left:4px;">${sk._kind}</span>
           </div>
-          <div class="tac-skill-desc">${card.descLv?card.descLv(slot.cardLv):card.desc}</div>
-          <div class="tac-skill-meta">${typeBadge}<span class="tac-badge tac-badge-cd">自動</span></div>
+          <div class="tac-skill-desc" style="font-size:10px;">${sk.desc||''}</div>
         </div>`;
       el.appendChild(row);
     });
@@ -15237,16 +15459,18 @@ function getAccessoryStats(unit) {
   const res = {atkPct:0,hpPct:0,atk:0,hp:0,spd:0,cri:0,cridam:0,pres:0,mres:0,bres:0,lres:0,drain:0,heal_up:0};
   if (!unit.equippedAccessories) return res;
   const owned = gState.accessories||[];
-  const slots = ['A','B','C'];
+  const slots = ['A','B','C','D','E','F'];
   const equipped = slots.map(s=>{const uid=unit.equippedAccessories[s]; return uid?owned.find(a=>a.uid===uid):null;});
   equipped.filter(Boolean).forEach(acc=>{
     _applyAccStat(res,acc.mainStat.id,acc.mainStat.val);
     (acc.subStats||[]).forEach(sub=>_applyAccStat(res,sub.id,sub.val));
   });
-  if (equipped.every(a=>a)&&equipped.every(a=>a.setId===equipped[0].setId)) {
-    const set=ACCESSORY_SETS.find(s=>s.id===equipped[0].setId);
-    if (set) _applyAccSetBonus(res,set.bonus);
-  }
+  // セット効果：同星座3枠で発動（最大2セット同時）
+  const setCounts = {};
+  equipped.filter(Boolean).forEach(a=>{ if(a.setId) setCounts[a.setId]=(setCounts[a.setId]||0)+1; });
+  Object.entries(setCounts).forEach(([setId,cnt])=>{
+    if (cnt>=3) { const set=ACCESSORY_SETS.find(s=>s.id===setId); if(set) _applyAccSetBonus(res,set.bonus); }
+  });
   return res;
 }
 function _applyAccStat(res,id,val) {
@@ -15276,10 +15500,8 @@ function _applyAccSetBonus(res,bonus) {
 function renderUnitAccessorySlots(u) {
   const owned = gState.accessories||[];
   const ea = u.equippedAccessories||{};
-  const slots = ['A','B','C'];
+  const slots = ['A','B','C','D','E','F'];
   const equipped = slots.map(s=>{const uid=ea[s];return uid?owned.find(a=>a.uid===uid):null;});
-  const hasSetBonus = equipped.every(a=>a)&&equipped.every(a=>a.setId===equipped[0].setId);
-  const setBonusSet = hasSetBonus?ACCESSORY_SETS.find(s=>s.id===equipped[0].setId):null;
 
   let html='';
   slots.forEach((slot,i)=>{
@@ -15303,7 +15525,15 @@ function renderUnitAccessorySlots(u) {
       </div>`;
     }
   });
-  if (setBonusSet) html+=`<div class="acc-set-bonus">✨ セット効果 [${setBonusSet.icon}${setBonusSet.name}] ${setBonusSet.bonusLabel}</div>`;
+  // アクティブなセット効果を表示
+  const setCounts={};
+  equipped.filter(Boolean).forEach(a=>{if(a.setId) setCounts[a.setId]=(setCounts[a.setId]||0)+1;});
+  Object.entries(setCounts).forEach(([setId,cnt])=>{
+    if (cnt>=3) {
+      const set=ACCESSORY_SETS.find(s=>s.id===setId);
+      if(set) html+=`<div class="acc-set-bonus">✨ セット効果 [${set.icon}${set.name}] ${set.bonusLabel}</div>`;
+    }
+  });
   return html;
 }
 
@@ -15349,7 +15579,7 @@ function openAccessoryEquip(uid, slot) {
 function equipAccessory(uid, slot, accUid) {
   const u=gState.ownedUnits.find(u=>u.uid===uid);
   if (!u) return;
-  if (!u.equippedAccessories) u.equippedAccessories={A:null,B:null,C:null};
+  if (!u.equippedAccessories) u.equippedAccessories={A:null,B:null,C:null,D:null,E:null,F:null};
   u.equippedAccessories[slot]=accUid;
   saveState();
   document.querySelectorAll('.modal-overlay[style*="z-index: 700"], .modal-overlay[style*="z-index:700"]').forEach(el=>el.remove());
