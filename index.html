@@ -2186,7 +2186,7 @@ img.item-icon {
   <div id="bottom-nav">
     <button class="nav-btn active" onclick="switchTab('home')" id="nav-home"><img src="assets/images/nav-home.png" style="width:22px;height:22px;object-fit:contain;display:block;margin:0 auto;"><span>ホーム</span></button>
     <button class="nav-btn" onclick="switchTab('chara')" id="nav-chara"><img src="assets/images/nav-chara.png" style="width:22px;height:22px;object-fit:contain;display:block;margin:0 auto;"><span>キャラ</span></button>
-    <button class="nav-btn" onclick="switchTab('cards')" id="nav-cards"><img src="assets/images/nav-cards.png" style="width:22px;height:22px;object-fit:contain;display:block;margin:0 auto;"><span>カード</span></button>
+    <button class="nav-btn" onclick="switchTab('cards')" id="nav-cards" style="display:none"><img src="assets/images/nav-cards.png" style="width:22px;height:22px;object-fit:contain;display:block;margin:0 auto;"><span>カード</span></button>
     <button class="nav-btn" onclick="switchTab('formation')" id="nav-formation"><img src="assets/images/nav-formation.png" style="width:22px;height:22px;object-fit:contain;display:block;margin:0 auto;"><span>編成</span></button>
     <button class="nav-btn" onclick="switchTab('sortie')" id="nav-sortie"><img src="assets/images/nav-sortie.png" style="width:22px;height:22px;object-fit:contain;display:block;margin:0 auto;"><span>出撃</span></button>
     <button class="nav-btn" onclick="switchTab('base')" id="nav-base">🏰<span>拠点</span></button>
@@ -2224,7 +2224,7 @@ img.item-icon {
       <nav id="hm-nav">
         <div class="hm-item" onclick="closeHamburger();switchTab('home')"><img src="assets/images/nav-home.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>ホーム</span></div>
         <div class="hm-item" onclick="closeHamburger();switchTab('chara')"><img src="assets/images/nav-chara.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>キャラ</span></div>
-        <div class="hm-item" onclick="closeHamburger();switchTab('cards')"><img src="assets/images/nav-cards.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>カードリスト</span></div>
+        <div class="hm-item" onclick="closeHamburger();switchTab('cards')" style="display:none"><img src="assets/images/nav-cards.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>カードリスト</span></div>
         <div class="hm-item" onclick="closeHamburger();switchTab('formation')"><img src="assets/images/nav-formation.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>編成</span></div>
         <div class="hm-item" onclick="closeHamburger();switchTab('sortie')"><img src="assets/images/nav-sortie.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>出撃</span></div>
         <div class="hm-item" onclick="closeHamburger();switchTab('base')">🏰<span>拠点</span></div>
@@ -2970,13 +2970,13 @@ img.item-icon {
 
     <!-- タブ（3つ） -->
     <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;">
-      <button id="tac-tab-equip" class="tac-tab active" onclick="switchTacticsTab('equip')">🃏 装備カード</button>
-      <button id="tac-tab-order" class="tac-tab"        onclick="switchTacticsTab('order')">📋 発動順</button>
+      <button id="tac-tab-equip" class="tac-tab" onclick="switchTacticsTab('equip')" style="display:none">🃏 装備カード</button>
+      <button id="tac-tab-order" class="tac-tab active" onclick="switchTacticsTab('order')">📋 発動順</button>
       <button id="tac-tab-stats" class="tac-tab"        onclick="switchTacticsTab('stats')">📊 ステータス</button>
     </div>
 
-    <!-- 装備カードパネル -->
-    <div id="tac-panel-equip" style="flex:1;overflow-y:auto;padding:10px 10px;display:flex;flex-direction:column;gap:5px;">
+    <!-- 装備カードパネル（非表示） -->
+    <div id="tac-panel-equip" style="display:none;flex:1;overflow-y:auto;padding:10px 10px;flex-direction:column;gap:5px;">
       <div id="tactics-card-slots"></div>
     </div>
 
@@ -7224,7 +7224,8 @@ function launchApp() {
     }
     if (!u.passives) u.passives = rollPassives();
     if (u.equippedArtifact === undefined) u.equippedArtifact = null;
-    if (!u.equippedAccessories) u.equippedAccessories = {A:null,B:null,C:null};
+    if (!u.equippedAccessories) u.equippedAccessories = {A:null,B:null,C:null,D:null,E:null,F:null};
+    else { ['D','E','F'].forEach(s=>{ if(u.equippedAccessories[s]===undefined) u.equippedAccessories[s]=null; }); }
     if (!gState.unitProgress[u.uid]) gState.unitProgress[u.uid] = {level:1,exp:0};
     // tactics互換補正
     if (!u.tactics || !u.tactics.length) {
@@ -7787,13 +7788,6 @@ function openUnitDetail(uid) {
       ${statsHTML}
     </div>
     <div class="udp-section">
-      <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>CARD SLOTS</span>
-        <span style="font-size:10px;color:var(--text3)">${(u.equippedCards||[]).filter(Boolean).length} / 6 装備中</span>
-      </div>
-      <div id="udp-card-slots" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px"></div>
-    </div>
-    <div class="udp-section">
       <div class="udp-section-title">ACCESSORIES</div>
       <div id="udp-acc-slots">${renderUnitAccessorySlots(u)}</div>
     </div>
@@ -7853,9 +7847,6 @@ function openUnitDetail(uid) {
     });
   });
   document.getElementById('udp-rename-btn')?.addEventListener('click', () => renameUnit(uid));
-
-  // カードスロット描画
-  renderCardSlots(uid);
 
   const lvupBtn = document.getElementById('udp-lvup-btn');
   if (lvupBtn && !lvupBtn.disabled) {
@@ -13324,7 +13315,7 @@ function openTactics(uid) {
       </div>
     </div>`;
 
-  switchTacticsTab('equip');
+  switchTacticsTab('order');
   document.getElementById('tactics-modal').classList.add('open');
 }
 
@@ -13410,7 +13401,7 @@ function renderTacticsOrderList() {
   if (actionCards.length === 0) {
     const empty = document.createElement('div');
     empty.style.cssText = 'text-align:center;color:var(--text3);font-size:11px;padding:24px 0;line-height:2;';
-    empty.innerHTML = '攻撃・支援カードが装備されていません。<br><button class="btn btn-blue btn-sm" style="margin-top:8px" onclick="switchTacticsTab(\'equip\')">🃏 装備カードタブへ</button>';
+    empty.innerHTML = 'スキルがありません。';
     el.appendChild(empty);
   } else {
     const secLabel = document.createElement('div');
@@ -15237,16 +15228,18 @@ function getAccessoryStats(unit) {
   const res = {atkPct:0,hpPct:0,atk:0,hp:0,spd:0,cri:0,cridam:0,pres:0,mres:0,bres:0,lres:0,drain:0,heal_up:0};
   if (!unit.equippedAccessories) return res;
   const owned = gState.accessories||[];
-  const slots = ['A','B','C'];
+  const slots = ['A','B','C','D','E','F'];
   const equipped = slots.map(s=>{const uid=unit.equippedAccessories[s]; return uid?owned.find(a=>a.uid===uid):null;});
   equipped.filter(Boolean).forEach(acc=>{
     _applyAccStat(res,acc.mainStat.id,acc.mainStat.val);
     (acc.subStats||[]).forEach(sub=>_applyAccStat(res,sub.id,sub.val));
   });
-  if (equipped.every(a=>a)&&equipped.every(a=>a.setId===equipped[0].setId)) {
-    const set=ACCESSORY_SETS.find(s=>s.id===equipped[0].setId);
-    if (set) _applyAccSetBonus(res,set.bonus);
-  }
+  // セット効果：同星座3枠で発動（最大2セット同時）
+  const setCounts = {};
+  equipped.filter(Boolean).forEach(a=>{ if(a.setId) setCounts[a.setId]=(setCounts[a.setId]||0)+1; });
+  Object.entries(setCounts).forEach(([setId,cnt])=>{
+    if (cnt>=3) { const set=ACCESSORY_SETS.find(s=>s.id===setId); if(set) _applyAccSetBonus(res,set.bonus); }
+  });
   return res;
 }
 function _applyAccStat(res,id,val) {
@@ -15276,10 +15269,8 @@ function _applyAccSetBonus(res,bonus) {
 function renderUnitAccessorySlots(u) {
   const owned = gState.accessories||[];
   const ea = u.equippedAccessories||{};
-  const slots = ['A','B','C'];
+  const slots = ['A','B','C','D','E','F'];
   const equipped = slots.map(s=>{const uid=ea[s];return uid?owned.find(a=>a.uid===uid):null;});
-  const hasSetBonus = equipped.every(a=>a)&&equipped.every(a=>a.setId===equipped[0].setId);
-  const setBonusSet = hasSetBonus?ACCESSORY_SETS.find(s=>s.id===equipped[0].setId):null;
 
   let html='';
   slots.forEach((slot,i)=>{
@@ -15303,7 +15294,15 @@ function renderUnitAccessorySlots(u) {
       </div>`;
     }
   });
-  if (setBonusSet) html+=`<div class="acc-set-bonus">✨ セット効果 [${setBonusSet.icon}${setBonusSet.name}] ${setBonusSet.bonusLabel}</div>`;
+  // アクティブなセット効果を表示
+  const setCounts={};
+  equipped.filter(Boolean).forEach(a=>{if(a.setId) setCounts[a.setId]=(setCounts[a.setId]||0)+1;});
+  Object.entries(setCounts).forEach(([setId,cnt])=>{
+    if (cnt>=3) {
+      const set=ACCESSORY_SETS.find(s=>s.id===setId);
+      if(set) html+=`<div class="acc-set-bonus">✨ セット効果 [${set.icon}${set.name}] ${set.bonusLabel}</div>`;
+    }
+  });
   return html;
 }
 
@@ -15349,7 +15348,7 @@ function openAccessoryEquip(uid, slot) {
 function equipAccessory(uid, slot, accUid) {
   const u=gState.ownedUnits.find(u=>u.uid===uid);
   if (!u) return;
-  if (!u.equippedAccessories) u.equippedAccessories={A:null,B:null,C:null};
+  if (!u.equippedAccessories) u.equippedAccessories={A:null,B:null,C:null,D:null,E:null,F:null};
   u.equippedAccessories[slot]=accUid;
   saveState();
   document.querySelectorAll('.modal-overlay[style*="z-index: 700"], .modal-overlay[style*="z-index:700"]').forEach(el=>el.remove());
