@@ -8933,7 +8933,7 @@ function checkPassiveCardTrigger(target, attacker, dmg, bs) {
       spawnFloatNum(target.uid, '✨輪廻発動！', 'float-ult');
       addLog(`${target.name}: [輪廻の祈り] 致死ダメを耐えた！全員HP+${fmt(healAmt)}/MP+${fmt(mpHeal)}`, 'trigger');
       Audio.buff();
-      updateBattleDisplay();
+      renderBattle();
     }
   }
 }
@@ -10129,7 +10129,7 @@ function fireOpeningSkills(allies, enemies) {
       }
     }
   });
-  updateBattleDisplay();
+  renderBattle();
 }
 
 function startBattle(scoutResult) {
@@ -10461,7 +10461,7 @@ function combatantAct(c, bs) {
           setTimeout(()=>spawnFloatNum(target.uid, `💚+${fmt(finalHeal)}`, 'float-heal'), 200);
           addLog(`${c.name}: 祈祷師の杖 → ${target.name} 💚+${fmt(finalHeal)}`, 'trigger');
           gainUltGauge(c, 5);
-          updateBattleDisplay();
+          renderBattle();
           return;
         }
       }
@@ -10478,7 +10478,7 @@ function combatantAct(c, bs) {
         });
         addLog(`${c.name}: 聖者のランタン → 全体回復 💚+${fmt(finalHeal2)} ×${aliveAllies2.length}`, 'trigger');
         gainUltGauge(c, 5);
-        updateBattleDisplay();
+        renderBattle();
         return;
       }
     }
@@ -11115,7 +11115,7 @@ function performUlt(c, enemies, allies) {
         });
         spawnFloatNum(c.uid, '✨浄化完了', 'float-buff');
         addLog(`${c.name}: ヒーリングレイン — 全味方デバフ解除`, 'trigger');
-        updateBattleDisplay();
+        renderBattle();
       }, delay + 300);
     }
     addLog(`${c.name} 【ヒーリングレイン】→ 最低HP%の味方を10回回復 + ATK強化`, 'trigger');
@@ -11360,7 +11360,7 @@ function applyBuff(c, skill, sourceUnit) {
     spawnFloatNum(target.uid, '✨REVIVE!', 'float-ult');
     addLog(`${sourceUnit?.name||c.name} <span class="tag tag-buff">${skill.name}</span> ${target.name} 復活！HP${Math.round((eff.hpRatio||0.5)*100)}%`, 'trigger');
     Audio.buff();
-    updateBattleDisplay();
+    renderBattle();
     return;
   }
 
