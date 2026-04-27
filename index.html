@@ -3575,25 +3575,18 @@ const CARDS = {
 
   // ===== ウォリアー ★1カード =====
 
-  'warrior_heavy_blade': {
-    id:'warrior_heavy_blade', name:'ヘビーブレード', class:'warrior', role:'attacker',
-    type:'equip', rarity:1,
-    effect:{ type:'normalAttackMod', powerBonus:0.3 },
-    lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'通常攻撃Pw+0.3',
-    descLv:(lv)=>`通常攻撃Pw+${(0.3*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(2)}`,
-  },
 
   'warrior_war_cry': {
     id:'warrior_war_cry', name:'ウォークライ', class:'warrior', role:'attacker',
-    type:'support', rarity:1, cd:8, target:'all_ally',
+    type:'support', rarity:1, cd:6, target:'self',
     effect:{ type:'multi_buff', buffs:[
-      { type:'atk_up',   val:15, turns:2 },
-      { type:'mres_up',  val:8,  turns:2 },
+      { type:'atk_up',  val:30, turns:3 },
+      { type:'pres_up', val:15, turns:3 },
+      { type:'mres_up', val:15, turns:3 },
     ]},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'味方全体 ATK+15%・WHITE耐性+8%(2T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`味方全体 ATK+${Math.round(15*m)}%・WHITE耐性+${Math.round(8*m)}%(2T)`;},
+    desc:'自身 ATK+30%・RED耐性+15%・WHITE耐性+15%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`ATK+${Math.round(30*m)}%・RED耐性+${Math.round(15*m)}%・WHITE耐性+${Math.round(15*m)}%(3T)`;},
   },
 
   'warrior_battle_ready': {
@@ -3628,26 +3621,7 @@ const CARDS = {
     descLv:(lv)=>`🔴単体 Pw${(2.2*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}`,
   },
 
-  'warrior_storm_crash': {
-    id:'warrior_storm_crash', name:'ストームクラッシュ', class:'warrior', role:'attacker',
-    type:'attack', rarity:2, cd:5, target:'all',
-    effect:{ type:'damage', power:0.8, damageType:'red' },
-    lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴全体 Pw0.8',
-    descLv:(lv)=>`🔴全体 Pw${(0.8*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}`,
-  },
 
-  'warrior_armor_break': {
-    id:'warrior_armor_break', name:'アーマーブレイク', class:'warrior', role:'attacker',
-    type:'attack', rarity:2, cd:4, target:'single',
-    effect:{ type:'damage', power:1.6, damageType:'red',
-      debuff:{ type:'pres_down', val:-20, turns:2 },
-      extraDebuff:{ type:'bres_down', val:-10, turns:2 },
-    },
-    lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw1.6 + PRES-20%・BLACK耐性-10%(2T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴単体 Pw${(1.6*m).toFixed(1)} + PRES-${Math.round(20*m)}%・BLACK耐性-${Math.round(10*m)}%(2T)`;},
-  },
 
   'warrior_grand_sweep': {
     id:'warrior_grand_sweep', name:'グランドスウィープ', class:'warrior', role:'attacker',
@@ -3660,18 +3634,6 @@ const CARDS = {
     descLv:(lv)=>`🔴全体 Pw${(1.0*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + ひるみ(1T)`,
   },
 
-  'warrior_battle_cry': {
-    id:'warrior_battle_cry', name:'バトルクライ', class:'warrior', role:'attacker',
-    type:'support', rarity:2, cd:6, target:'self',
-    effect:{ type:'multi_buff', buffs:[
-      { type:'atk_up',  val:35, turns:3 },
-      { type:'bres_up', val:12, turns:3 },
-    ]},
-    lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'自身 ATK+35%・BLACK耐性+12%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`ATK+${Math.round(35*m)}%・BLACK耐性+${Math.round(12*m)}%(3T)`;},
-  },
-
   'warrior_iron_will': {
     id:'warrior_iron_will', name:'アイアンウィル', class:'warrior', role:'attacker',
     type:'support', rarity:2, cd:7, target:'self',
@@ -3681,16 +3643,6 @@ const CARDS = {
     descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`HP+${Math.round(20*m)}%・MP+${Math.round(15*m)}%(3T)。HP50%以下→被ダメ-${Math.round(15*m)}%`;},
   },
 
-  'warrior_passive_counter': {
-    id:'warrior_passive_counter', name:'カウンターブロウ', class:'warrior', role:'attacker',
-    type:'passive', rarity:2,
-    effect:{ trigger:'on_damaged', condition:'self_hp_50',
-      action:{ type:'damage', target:'attacker', power:0.5, damageType:'red' },
-    },
-    lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'HP50%以下で被ダメ時、攻撃者にPw0.5🔴反撃',
-    descLv:(lv)=>`HP50%以下で被ダメ時、攻撃者にPw${(0.5*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}🔴反撃`,
-  },
 
   'warrior_passive_tenacity': {
     id:'warrior_passive_tenacity', name:'戦士の執念', class:'warrior', role:'attacker',
@@ -3714,46 +3666,9 @@ const CARDS = {
     descLv:(lv)=>`🔴単体 Pw${(2.8*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}。対象HP50%以下で強制会心`,
   },
 
-  'warrior_counter_stance': {
-    id:'warrior_counter_stance', name:'カウンタースタンス', class:'warrior', role:'attacker',
-    type:'attack', rarity:3, cd:5, target:'self',
-    effect:{ type:'counter', val:80, turns:2 },
-    lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'2T間、被ダメ時に攻撃者へPw0.8🔴反撃',
-    descLv:(lv)=>`${[1.0,1.2,1.4,1.7,2.0][lv-1]>=2?'2':'2'}T間 被ダメ時Pw${(0.8*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}🔴反撃`,
-  },
 
-  'warrior_blood_smash': {
-    id:'warrior_blood_smash', name:'ブラッドスマッシュ', class:'warrior', role:'attacker',
-    type:'attack', rarity:3, cd:6, target:'single',
-    effect:{ type:'damage', power:2.0, damageType:'black', stunBonus:1.0 },
-    lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'💜単体 Pw2.0(HP+MP)。スタン中の敵にPw+1.0追加',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`💜単体 Pw${(2.0*m).toFixed(1)} スタン中+Pw${(1.0*m).toFixed(1)}`;},
-  },
 
-  'warrior_terror_shout': {
-    id:'warrior_terror_shout', name:'テラーシャウト', class:'warrior', role:'attacker',
-    type:'attack', rarity:3, cd:8, target:'all',
-    effect:{ type:'damage', power:0.9, damageType:'black',
-      debuff:{ type:'mres_down', val:-15, turns:2 },
-      extraDebuff:{ type:'flinch', val:1, turns:1 },
-    },
-    lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'💜全体 Pw0.9 + WHITE耐性-15%(2T) + ひるみ(1T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`💜全体 Pw${(0.9*m).toFixed(1)} + WHITE耐性-${Math.round(15*m)}%(2T) + ひるみ(1T)`;},
-  },
 
-  'warrior_shield_bash_3': {
-    id:'warrior_shield_bash_3', name:'シールドバッシュ', class:'warrior', role:'attacker',
-    type:'support', rarity:3, cd:4, target:'single',
-    effect:{ type:'damage', power:1.0, damageType:'red',
-      debuff:{ type:'flinch', val:1, turns:1 },
-    },
-    lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw1.0 + 次行動ひるみ妨害',
-    descLv:(lv)=>`🔴単体 Pw${(1.0*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + ひるみ`,
-  },
 
   'warrior_opening_assault': {
     id:'warrior_opening_assault', name:'突撃の号令', class:'warrior', role:'attacker',
@@ -3767,26 +3682,7 @@ const CARDS = {
     descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：全体 ATK+${Math.round(20*m)}%・BLACK耐性+${Math.round(10*m)}%(3T)・ULT+${Math.round(15*m)}%`;},
   },
 
-  'warrior_opening_roar': {
-    id:'warrior_opening_roar', name:'先駆けの咆哮', class:'warrior', role:'attacker',
-    type:'opening', rarity:3, target:'self',
-    effect:{ type:'multi_buff', buffs:[
-      { type:'atk_up',  val:12, turns:3 },
-      { type:'mres_up', val:15, turns:3 },
-    ]},
-    lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'開幕：ATK+12%・WHITE耐性+15%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：ATK+${Math.round(12*m)}%・WHITE耐性+${Math.round(15*m)}%(3T)`;},
-  },
 
-  'warrior_campfire_bow': {
-    id:'warrior_campfire_bow', name:'戦士の篝火', class:'warrior', role:'attacker',
-    type:'equip', rarity:3,
-    effect:{ type:'normalAttackMod', powerBonus:0.2, nightLight:true, nightHateBonus:600 },
-    lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'通常攻撃Pw+0.2。夜戦中に照明発動可(命中+25%・ヘイト+600)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`Pw+${(0.2*m).toFixed(2)}。夜戦照明(命中+${Math.round(25*m)}%・ヘイト+${Math.round(600*m)})`;},
-  },
 
   'warrior_passive_blood_surge': {
     id:'warrior_passive_blood_surge', name:'血の滾り', class:'warrior', role:'attacker',
