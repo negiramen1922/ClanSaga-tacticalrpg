@@ -375,11 +375,18 @@ img.item-icon {
 
 /* ULTIMATE */
 .ultimate-card {
-  background: linear-gradient(135deg, rgba(155,107,222,0.1), rgba(74,127,255,0.1));
-  border: 1px solid var(--purple); padding: 12px;
+  background: linear-gradient(135deg, rgba(155,107,222,0.12), rgba(74,127,255,0.08));
+  border: 1px solid rgba(180,125,255,0.5); padding: 12px; border-radius: 4px;
+  border-left: 3px solid var(--purple);
 }
+.ultimate-card-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:7px; border-bottom:1px solid rgba(180,125,255,0.2); }
 .ultimate-name { font-family: 'Cinzel', serif; color: var(--purple); font-size: 14px; font-weight: 600; }
-.ultimate-effect { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.ultimate-effect { font-size: 12px; color: var(--text); line-height: 1.6; letter-spacing: 0.01em; }
+.sk-card { background:var(--bg3); border:1px solid var(--border); border-radius:4px; padding:10px 12px; margin-bottom:5px; }
+.sk-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding-bottom:5px; border-bottom:1px solid rgba(255,255,255,0.05); }
+.sk-card-name { font-size:13px; font-weight:700; color:var(--text); }
+.sk-card-desc { font-size:12px; color:var(--text); line-height:1.6; letter-spacing:0.01em; margin-bottom:6px; word-break:break-word; }
+.sk-card-meta { display:flex; align-items:center; gap:4px; }
 
 /* ===== FORMATION TAB ===== */
 .formation-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
@@ -7815,20 +7822,22 @@ function openUnitDetail(uid) {
     return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;color:${dmgColor};font-weight:700;">${_skTypeImg(type,12)} ${dmgLabel}</span>${cdStr}`;
   };
   const _skillBorderColor = { red:'#e06060', black:'#a06080', white:'#9090d0', blue:'#4a7fff', buff:'var(--accent)' };
+  const _typeIcon = (src, label, cls) => `
+    <span style="display:inline-flex;align-items:center;gap:3px;">
+      <img src="${src}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">
+      <span class="tac-badge ${cls}" style="font-size:9px;">${label}</span>
+    </span>`;
   const openingSkillHTML = cls.openingSkill ? (() => {
     const sk = cls.openingSkill;
     const bColor = _skillBorderColor[sk.type] || 'var(--gold)';
     return `
-    <div style="background:var(--bg3);border:1px solid rgba(201,168,76,0.4);border-left:3px solid ${bColor};padding:8px 10px;margin-bottom:4px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-        <span style="font-size:12px;font-weight:700;color:var(--text)">${sk.name}</span>
-        <span style="display:inline-flex;align-items:center;gap:3px;">
-          <img src="assets/images/card-type-opening.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">
-          <span class="tac-badge tac-badge-type-opn" style="font-size:9px;">開幕</span>
-        </span>
+    <div class="sk-card" style="border-color:rgba(201,168,76,0.4);border-left-color:${bColor};">
+      <div class="sk-card-header">
+        <span class="sk-card-name">${sk.name}</span>
+        ${_typeIcon('assets/images/card-type-opening.png','開幕','tac-badge-type-opn')}
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:3px;">${sk.desc || ''}</div>
-      <div>${_skillTypeBadge(sk.type)}</div>
+      <div class="sk-card-desc">${sk.desc || ''}</div>
+      <div class="sk-card-meta">${_skillTypeBadge(sk.type)}</div>
     </div>`;
   })() : '';
   const activeSkillsHTML = (cls.activeSkills||[]).map(sk => {
@@ -7838,28 +7847,22 @@ function openUnitDetail(uid) {
     const typeLabelText = isSupport ? '支援' : '攻撃';
     const typeLabelCls  = isSupport ? 'tac-badge-type-sup' : 'tac-badge-type-atk';
     return `
-    <div style="background:var(--bg3);border:1px solid var(--border);border-left:3px solid ${bColor};padding:8px 10px;margin-bottom:4px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-        <span style="font-size:12px;font-weight:700;color:var(--text)">${sk.name}</span>
-        <span style="display:inline-flex;align-items:center;gap:3px;">
-          <img src="${typeImgSrc}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">
-          <span class="tac-badge ${typeLabelCls}" style="font-size:9px;">${typeLabelText}</span>
-        </span>
+    <div class="sk-card" style="border-left:3px solid ${bColor};">
+      <div class="sk-card-header">
+        <span class="sk-card-name">${sk.name}</span>
+        ${_typeIcon(typeImgSrc, typeLabelText, typeLabelCls)}
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:3px;">${sk.desc || ''}</div>
-      <div>${_skillTypeBadge(sk.type, sk.cd)}</div>
+      <div class="sk-card-desc">${sk.desc || ''}</div>
+      <div class="sk-card-meta">${_skillTypeBadge(sk.type, sk.cd)}</div>
     </div>`;
   }).join('');
   const passiveSkillsHTML = (cls.passiveSkills||[]).map(sk => `
-    <div style="background:var(--bg3);border:1px solid rgba(100,200,100,0.3);border-left:3px solid var(--green,#60c060);padding:8px 10px;margin-bottom:4px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-        <span style="font-size:12px;font-weight:700;color:var(--text)">${sk.name}</span>
-        <span style="display:inline-flex;align-items:center;gap:3px;">
-          <img src="assets/images/card-type-passive.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">
-          <span class="tac-badge tac-badge-type-pas" style="font-size:9px;">パッシブ</span>
-        </span>
+    <div class="sk-card" style="border-color:rgba(100,200,100,0.3);border-left:3px solid var(--green,#60c060);">
+      <div class="sk-card-header">
+        <span class="sk-card-name">${sk.name}</span>
+        ${_typeIcon('assets/images/card-type-passive.png','パッシブ','tac-badge-type-pas')}
       </div>
-      <div style="font-size:11px;color:var(--text2)">${sk.desc || ''}</div>
+      <div class="sk-card-desc">${sk.desc || ''}</div>
     </div>`).join('');
 
   // Passive HTML
@@ -7948,7 +7951,11 @@ function openUnitDetail(uid) {
     <div class="udp-section">
       <div class="udp-section-title">ULTIMATE</div>
       <div class="ultimate-card">
-        <div class="ultimate-name">【${ult.name}】</div>
+        <div class="ultimate-card-header">
+          <img src="assets/images/card-type-ultimate.png" style="width:28px;height:28px;object-fit:contain;">
+          <div class="ultimate-name">【${ult.name}】</div>
+          <span class="tac-badge" style="margin-left:auto;background:rgba(180,125,255,0.15);color:var(--purple);border:1px solid rgba(180,125,255,0.4);">ゲージ100%</span>
+        </div>
         <div class="ultimate-effect">${ult.effect}</div>
       </div>
     </div>
@@ -13798,12 +13805,12 @@ function renderTacticsOrderList() {
       padding:8px 10px;
     `;
     ultRow.innerHTML = `
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-        <span style="font-size:13px;">⚡</span>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid rgba(180,125,255,0.2);">
+        <img src="assets/images/card-type-ultimate.png" style="width:20px;height:20px;object-fit:contain;">
         <span style="font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:var(--purple);">【${ult.name}】</span>
-        <span style="font-size:9px;color:var(--text3);margin-left:auto;">ゲージ100%で発動</span>
+        <span class="tac-badge" style="margin-left:auto;background:rgba(180,125,255,0.12);color:var(--purple);border:1px solid rgba(180,125,255,0.3);">ゲージ100%</span>
       </div>
-      <div style="font-size:10px;color:var(--text2);line-height:1.5;">${ult.effect||'—'}</div>`;
+      <div style="font-size:11px;color:var(--text);line-height:1.6;letter-spacing:0.01em;">${ult.effect||'—'}</div>`;
     el.appendChild(ultRow);
   }
 
