@@ -2265,6 +2265,7 @@ img.item-icon {
         <div class="hm-item" onclick="closeHamburger();openAchievementModal()"><img src="assets/images/nav-achievement.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>実績<span id="hm-ach-badge" style="display:none;background:var(--red);color:white;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px;">!</span></span></div>
         <div class="hm-item" onclick="closeHamburger();openMissionModal()"><img src="assets/images/nav-mission.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>ミッション</span></div>
         <div class="hm-item" onclick="closeHamburger();openMine()"><img src="assets/images/nav-mine.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>鉱山</span></div>
+        <div class="hm-item" onclick="closeHamburger();openSmithyPanel()">🔨<span>鍛冶屋</span></div>
         <div class="hm-item" onclick="closeHamburger();openGacha()">✨<span>召喚</span></div>
         <div class="hm-item" onclick="closeHamburger();openHelpModal()"><img src="assets/images/nav-help.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>チュートリアル・ヘルプ</span></div>
         <div class="hm-divider"></div>
@@ -2509,7 +2510,7 @@ img.item-icon {
         <div class="base-card" id="base-smithy" onclick="openSmithyPanel()">
           <div class="bc-icon">🔨</div>
           <div class="bc-name">鍛冶屋</div>
-          <div class="bc-locked" id="smithy-locked-txt">Clan Lv.11で解放</div>
+          <div class="bc-locked" id="smithy-locked-txt">鋳造・強化・売却</div>
         </div>
         <div class="base-card" id="base-starmap" onclick="openStarMapPanel()">
           <div class="bc-icon">🌟</div>
@@ -12101,6 +12102,16 @@ function endBattle(victory) {
   // Drops
   const drops = [];
   if (victory) {
+    // モンスター図鑑: 討伐した敵を発見済みリストに追加
+    {
+      if (!gState.library) gState.library = { discovered: [] };
+      if (!gState.library.discovered) gState.library.discovered = [];
+      const disc = new Set(gState.library.discovered);
+      (battleState.waveEnemies || []).forEach(wave =>
+        wave.forEach(e => { if (e.name) disc.add(e.name); })
+      );
+      gState.library.discovered = [...disc];
+    }
     // ステージに応じた報酬スケール計算
     let goldBase = 150, etherBase = 40, unitExpBase = 20, clanExpMult = 0.5;
     if (battleContext.type === 'babel') {
@@ -12171,12 +12182,25 @@ function endBattle(victory) {
     if (battleContext.type==='babel') {
       const _isFirstClear = !gState.progress.babel.clearedStages[battleContext.stageId];
       gState.progress.babel.clearedStages[battleContext.stageId] = { rank, clearedAt: Date.now() };
-      // 初回クリア報酬: 星晶石
+      // 初回クリア報酬: 星晶石 + アーティファクト
       if (_isFirstClear) {
         const _crystal = getFirstClearCrystal(battleContext.stageId);
         if (_crystal > 0) {
           gState.player.starCrystal = (gState.player.starCrystal||0) + _crystal;
           drops.push({ name:`${itemIconHTML('crystal','14px')} 星晶石 ×${_crystal}（初回クリア）` });
+        }
+        // アーティファクト初回クリアドロップ（エリア1-2はN、エリア3以降はSR）
+        const _fcMatch = (battleContext.stageId||'').match(/a(\d+)/);
+        const _fcArea  = _fcMatch ? parseInt(_fcMatch[1]) : 1;
+        const _fcRarity = _fcArea >= 3 ? 'SR' : 'N';
+        const _fcPool = ARTIFACT_POOL.filter(d => d.rarity === _fcRarity);
+        if (_fcPool.length) {
+          const _fcDef = _fcPool[Math.floor(Math.random() * _fcPool.length)];
+          const _fcUid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+          if (!gState.artifacts) gState.artifacts = [];
+          gState.artifacts.push({ id: _fcDef.id, uid: _fcUid, level: 0, rank: 0 });
+          const _rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
+          drops.push({ name:`${_fcDef.icon} <span style="color:${_rarColor[_fcRarity]};font-weight:700">${_fcRarity}</span> 【${_fcDef.name}】（初回クリア）` });
         }
       }
       gState.missions.daily.babelClears = (gState.missions.daily.babelClears||0)+1;
@@ -15252,13 +15276,6 @@ function generateAccessory(rarity, setId) {
 let smithyActiveTab = 'forge';
 
 function openSmithyPanel() {
-  const lv = gState.player.level;
-  const el = document.getElementById('smithy-content');
-  if (lv < 11) {
-    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3)">🔒 Clan Lv.11 で解放されます<br><br>現在: Lv.${lv}</div>`;
-    document.getElementById('smithy-modal').classList.add('open');
-    return;
-  }
   renderSmithyContent();
   document.getElementById('smithy-modal').classList.add('open');
 }
@@ -15617,20 +15634,35 @@ function renderLibraryMonsters(el) {
     if (!seen.has(e.name)) { seen.add(e.name); _monsterBookList.push(e); }
   }));
 
-  const grid = _monsterBookList.map((m,i) => {
-    const sp = m.species || ENEMY_SPECIES_MAP[m.name] || null;
-    return `
-    <div class="lib-monster-card" onclick="openMonsterDetail(${i})">
-      <div style="font-size:28px">${m.icon||'❓'}</div>
-      <div style="font-size:11px;font-weight:700;color:var(--text);margin:4px 0 2px">${m.name}</div>
-      ${sp ? `<div style="margin:2px 0">${speciesBadgeHTML(sp)}</div>` : ''}
-      <div style="font-size:10px;color:var(--text3)">HP ${fmt(m.hp)}</div>
-    </div>`;
+  const discovered = new Set(gState.library?.discovered || []);
+  const total = _monsterBookList.length;
+  const foundCount = _monsterBookList.filter(m => discovered.has(m.name)).length;
+
+  const grid = _monsterBookList.map((m, i) => {
+    const isFound = discovered.has(m.name);
+    const sp = isFound ? (m.species || ENEMY_SPECIES_MAP[m.name] || null) : null;
+    if (isFound) {
+      return `
+      <div class="lib-monster-card" onclick="openMonsterDetail(${i})">
+        <div style="font-size:28px">${m.icon||'❓'}</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text);margin:4px 0 2px">${m.name}</div>
+        ${sp ? `<div style="margin:2px 0">${speciesBadgeHTML(sp)}</div>` : ''}
+        <div style="font-size:10px;color:var(--text3)">HP ${fmt(m.hp)}</div>
+      </div>`;
+    } else {
+      return `
+      <div class="lib-monster-card" style="opacity:0.35;cursor:default;filter:grayscale(1)">
+        <div style="font-size:28px">❓</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin:4px 0 2px">???</div>
+        <div style="font-size:10px;color:var(--text3)">未発見</div>
+      </div>`;
+    }
   }).join('');
 
   el.innerHTML = `
     <button class="btn btn-outline btn-sm" onclick="renderLibraryContent()" style="margin-bottom:10px">← キャラクター図鑑</button>
-    <div class="lib-bonus-title" style="margin-bottom:8px">モンスター図鑑 (${_monsterBookList.length}種)</div>
+    <div class="lib-bonus-title" style="margin-bottom:8px">モンスター図鑑 ${foundCount}/${total}種 発見済み</div>
+    ${foundCount === 0 ? '<div style="color:var(--text3);font-size:11px;padding:8px 0 12px">まだモンスターを倒していません。バトルで倒したモンスターが登録されます。</div>' : ''}
     <div class="lib-monster-grid">${grid}</div>`;
 }
 
@@ -15797,7 +15829,7 @@ function renderBaseTab() {
   const smithyTxt = document.getElementById('smithy-locked-txt');
   const starTxt   = document.getElementById('starmap-locked-txt');
   const libTxt    = document.getElementById('library-locked-txt');
-  if (smithyTxt) smithyTxt.textContent = lv>=11 ? '鋳造・強化・売却' : 'Clan Lv.11で解放';
+  if (smithyTxt) smithyTxt.textContent = '鋳造・強化・売却';
   if (starTxt)   starTxt.textContent   = lv>=11 ? 'ノードを解放して強化' : 'Clan Lv.11で解放';
   if (libTxt)    libTxt.textContent    = `収集: ${new Set(gState.ownedUnits.map(u=>u.classId)).size}/${Object.keys(CLASS_DATA).length}クラス`;
 
