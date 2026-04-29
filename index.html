@@ -6341,6 +6341,9 @@ function defaultState(clanName) {
       starMapPoints: 0,
       lastLoginDate: '',
       loginStreak: 0,
+      // アーティファクト強化素材
+      atomStone: { t1:5, t2:0, t3:0 },   // アトム秘石T1-T3
+      atomCore:  { t1:0, t2:0, t3:0 },   // アトミックコアT1-T3
     },
     ownedUnits: [warrior0],
     unitProgress: {
@@ -6464,7 +6467,23 @@ function normalizeState() {
   if (!p.premiumCoin)   p.premiumCoin = 0; // プレミアム通貨（課金向け）
   if (!p.lastLoginDate) p.lastLoginDate = '';
   if (!p.loginStreak)   p.loginStreak = 0;
+  // アーティファクト強化素材
+  if (!p.atomStone) p.atomStone = { t1:0, t2:0, t3:0 };
+  if (!p.atomCore)  p.atomCore  = { t1:0, t2:0, t3:0 };
   gState.player = p;
+
+  // アーティファクトインスタンスのフォーマット正規化（旧フォーマット→新フォーマット）
+  if (Array.isArray(gState.artifacts)) {
+    gState.artifacts = gState.artifacts.map(af => {
+      // 旧フォーマット（enhance番号のみ）を新フォーマットに変換
+      if (typeof af.enhance === 'number' && af.level === undefined) {
+        return { uid: af.uid, id: af.id, level: af.enhance || 0, rank: 0 };
+      }
+      if (af.level === undefined) af.level = 0;
+      if (af.rank  === undefined) af.rank  = 0;
+      return af;
+    });
+  }
 
   // 配列系
   if (!Array.isArray(gState.ownedUnits))  gState.ownedUnits = [];
@@ -8339,8 +8358,10 @@ function calcStats(unit) {
     if (p.id==='cri_inc')  cri   += val;
     if (p.id==='cridam')   cridam += val;
   });
-  // アーティファクト加算
+  // アーティファクト加算（メイン平坦値 → 先に加算、条件効果は後で%加算）
   const af = getArtifactStats(unit);
+  atk += af.atkFlat || 0;
+  hp  += af.hpFlat  || 0;
   if (af.atkPct) atk    = Math.floor(atk * (1 + af.atkPct / 100));
   if (af.hpPct)  hp     = Math.floor(hp  * (1 + af.hpPct  / 100));
   spd    += af.spd;
@@ -12180,6 +12201,47 @@ function endBattle(victory) {
         drops.push({ name:`⛏️ ミスリル ×${mit}` });
         gState.player.mithril = (gState.player.mithril||0) + mit;
       }
+      // ランダムドロップ: アトム秘石・アトミックコア
+      {
+        const _sid = battleContext.stageId || '';
+        const _am = _sid.match(/a(\d+)s(\d+)/);
+        const _area = _am ? parseInt(_am[1]) : 1;
+        const _stone = gState.player.atomStone || { t1:0, t2:0, t3:0 };
+        const _core  = gState.player.atomCore  || { t1:0, t2:0, t3:0 };
+        // T1石: 25%（全エリア）
+        if (Math.random() < 0.25) {
+          const n = Math.floor(Math.random()*2)+1;
+          _stone.t1 += n;
+          drops.push({ name:`🔩 アトム秘石T1 ×${n}` });
+        }
+        // T2石: 8%（エリア2以降）
+        if (_area >= 2 && Math.random() < 0.08) {
+          _stone.t2 += 1;
+          drops.push({ name:`🔩 アトム秘石T2 ×1` });
+        }
+        // T3石: 2%（エリア3以降）
+        if (_area >= 3 && Math.random() < 0.02) {
+          _stone.t3 += 1;
+          drops.push({ name:`🔩 アトム秘石T3 ×1` });
+        }
+        // T1核: 4%（エリア2以降）
+        if (_area >= 2 && Math.random() < 0.04) {
+          _core.t1 += 1;
+          drops.push({ name:`💎 アトミックコアT1 ×1` });
+        }
+        // T2核: 1.5%（エリア3以降）
+        if (_area >= 3 && Math.random() < 0.015) {
+          _core.t2 += 1;
+          drops.push({ name:`💎 アトミックコアT2 ×1` });
+        }
+        // T3核: 0.5%（エリア4以降）
+        if (_area >= 4 && Math.random() < 0.005) {
+          _core.t3 += 1;
+          drops.push({ name:`💎 アトミックコアT3 ×1` });
+        }
+        gState.player.atomStone = _stone;
+        gState.player.atomCore  = _core;
+      }
       // ランダムドロップ: 覚醒ポット（深層ステージで低確率）
       const stageId = battleContext.stageId || '';
       const areaMatch = stageId.match(/a(\d+)s(\d+)/);
@@ -14818,11 +14880,196 @@ const CLASS_TAGS = {
   priest:   ['支援回復'],
 };
 
-// アーティファクトプール（ガチャ対象）
-// kind:'weapon'→mainStat:'atk', kind:'armor'→mainStat:'hp'
-// conditions[0]は全キャラ適用可, N:1条件, SR:2条件, SSR:3条件
-// req:'all'|'tag:X'|'class:X'
+// ============================================================
+//  アーティファクトプール（仕様書確定版）
+//  mainStat: Lv1時の平坦値。Lv100で×10。
+//  conditions: N×1 / SR×2 / SSR×3
+//    type:'A'=全キャラ, 'B'=ロール, 'C'=クラス, 'D'=種族, 'E'=攻撃タイプ, 'F'=戦況
+//    req: ロール名 / classId / speciesId / 攻撃タイプ文字 / 戦況キー
+//    stats: [{key, min, max}] — condLv(0~10)で線形補間
+// ============================================================
 const ARTIFACT_POOL = [
+
+  // ===== SSR 近接アタッカー向け =====
+  { id:'gram', name:'グラム', icon:'⚔️', kind:'大剣', rarity:'SSR',
+    mainStat:{ atk:130, hp:60 },
+    conditions:[
+      { type:'A', req:null,       desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'アタッカー', desc:'アタッカー ATK+10~20%・CRI+5~10%',
+        stats:[{key:'atkPct',min:10,max:20},{key:'cri',min:5,max:10}] },
+      { type:'E', req:'斬',       desc:'斬タグ スキルPw+8~15%・CRIDAM+10~20%',
+        stats:[{key:'skillPw',min:8,max:15},{key:'cridam',min:10,max:20}] },
+    ]},
+
+  { id:'durandal', name:'デュランダル', icon:'🗡️', kind:'大剣', rarity:'SSR',
+    mainStat:{ atk:140, hp:40 },
+    conditions:[
+      { type:'A', req:null,        desc:'全キャラ ATK+8~16%・CRI+3~8%',
+        stats:[{key:'atkPct',min:8,max:16},{key:'cri',min:3,max:8}] },
+      { type:'C', req:'warrior',   desc:'ウォリアー専用 スタック上限+2~4・スタック時ATK追加+2~4%',
+        stats:[{key:'atkPct',min:2,max:4}] },
+      { type:'F', req:'hp_below50',desc:'HP50%以下 ATK+15~25%・スキルPw+10~18%',
+        stats:[{key:'atkPct',min:15,max:25},{key:'skillPw',min:10,max:18}] },
+    ]},
+
+  { id:'caladbolg', name:'カラドボルグ', icon:'🌀', kind:'大剣', rarity:'SSR',
+    mainStat:{ atk:125, hp:50 },
+    conditions:[
+      { type:'A', req:null,        desc:'全キャラ 複数回攻撃スキルPw+8~15%',
+        stats:[{key:'skillPw',min:8,max:15}] },
+      { type:'B', req:'アタッカー', desc:'アタッカー 攻撃ヒットでATK+2~4%スタック（最大5）',
+        stats:[{key:'atkPct',min:2,max:4}] },
+      { type:'E', req:'裂',        desc:'裂タグ 出血ダメ+15~25%・CRIDAM+5~10%',
+        stats:[{key:'cridam',min:5,max:10}] },
+    ]},
+
+  // ===== SSR タンク向け =====
+  { id:'aegis', name:'イージス', icon:'🛡️', kind:'大盾', rarity:'SSR',
+    mainStat:{ atk:40, hp:200 },
+    conditions:[
+      { type:'A', req:null,        desc:'全キャラ HP+8~15%・全耐性+3~8',
+        stats:[{key:'hpPct',min:8,max:15},{key:'pres',min:3,max:8},{key:'mres',min:3,max:8},{key:'bres',min:3,max:8}] },
+      { type:'B', req:'タンク',     desc:'タンク 被ダメ-8~15%・ヘイト+100~300',
+        stats:[{key:'dmgReduce',min:8,max:15}] },
+      { type:'D', req:'celestia',  desc:'セレスティア シールド量+15~25%・WHITE耐性+8~15',
+        stats:[{key:'mres',min:8,max:15}] },
+    ]},
+
+  { id:'dainsleif', name:'ダインスレイフ', icon:'🔱', kind:'大盾', rarity:'SSR',
+    mainStat:{ atk:60, hp:180 },
+    conditions:[
+      { type:'A', req:null,        desc:'全キャラ 被ダメ時カウンターゲージ+5~10',
+        stats:[{key:'hpPct',min:3,max:5}] },
+      { type:'C', req:'vanguard',  desc:'ヴァンガード専用 カウンターダメ×1.2~1.5',
+        stats:[{key:'atkPct',min:5,max:15}] },
+      { type:'F', req:'taunting',  desc:'挑発中 ATK+15~25%・反撃Pw+0.3~0.6',
+        stats:[{key:'atkPct',min:15,max:25}] },
+    ]},
+
+  // ===== SSR レンジ向け =====
+  { id:'gungnir', name:'ガンニョール', icon:'🏹', kind:'弓槍', rarity:'SSR',
+    mainStat:{ atk:150, hp:40 },
+    conditions:[
+      { type:'A', req:null,       desc:'全キャラ ATK+8~15%・CRI+3~8%',
+        stats:[{key:'atkPct',min:8,max:15},{key:'cri',min:3,max:8}] },
+      { type:'B', req:'レンジ',    desc:'レンジ 後衛配置時ATK追加+10~20%・スキルPw+8~15%',
+        stats:[{key:'atkPct',min:10,max:20},{key:'skillPw',min:8,max:15}] },
+      { type:'E', req:'貫',        desc:'貫タグ RED耐性無視+10~20%・対象PRES-5~10%',
+        stats:[{key:'atkPct',min:5,max:10}] },
+    ]},
+
+  { id:'caduceus', name:'カドゥケウス', icon:'🪄', kind:'杖', rarity:'SSR',
+    mainStat:{ atk:80, hp:120 },
+    conditions:[
+      { type:'A', req:null,       desc:'全キャラ 回復効果+10~20%・MP回復効果+10~20%',
+        stats:[{key:'hpPct',min:5,max:10}] },
+      { type:'B', req:'サポート',  desc:'サポート ヘイト発生-10~20%・全スキルCD-1~2',
+        stats:[{key:'mres',min:5,max:10}] },
+      { type:'E', req:'魔',        desc:'魔タグ 魔法スキルPw+8~15%・MRES-5~10%付与',
+        stats:[{key:'skillPw',min:8,max:15},{key:'mres',min:3,max:8}] },
+    ]},
+
+  // ===== SSR スカウト向け =====
+  { id:'sleipnir', name:'スレイプニル', icon:'🐎', kind:'軽鎧', rarity:'SSR',
+    mainStat:{ atk:100, hp:80 },
+    conditions:[
+      { type:'A', req:null,       desc:'全キャラ SPD+10~20・索敵+8~15',
+        stats:[{key:'spd',min:10,max:20}] },
+      { type:'B', req:'スカウト',  desc:'スカウト 奇襲時ダメ+15~30%・夜戦ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20},{key:'skillPw',min:8,max:15}] },
+      { type:'D', req:'specter',  desc:'スペクター 隠密+15~25%・夜戦スキルPw+8~15%',
+        stats:[{key:'atkPct',min:8,max:15},{key:'spd',min:5,max:10}] },
+    ]},
+
+  // ===== SSR コントロール向け =====
+  { id:'morrigan', name:'モリガン', icon:'🌑', kind:'大鎌', rarity:'SSR',
+    mainStat:{ atk:110, hp:70 },
+    conditions:[
+      { type:'A', req:null,          desc:'全キャラ デバフ付与率+10~20%・状態異常時間+1T',
+        stats:[{key:'atkPct',min:5,max:10}] },
+      { type:'B', req:'コントロール', desc:'コントロール 呪い系スキルPw+10~18%・BLACK耐性-5~10%付与',
+        stats:[{key:'skillPw',min:10,max:18},{key:'bres',min:3,max:8}] },
+      { type:'E', req:'呪',           desc:'呪タグ 敵のWHITE耐性スタック（最大3・命中時）',
+        stats:[{key:'mres',min:5,max:10}] },
+    ]},
+
+  // ===== SR =====
+  { id:'caliburn', name:'カリバーン', icon:'⚔️', kind:'大剣', rarity:'SR',
+    mainStat:{ atk:80, hp:30 },
+    conditions:[
+      { type:'A', req:null,         desc:'全キャラ ATK+5~12%',
+        stats:[{key:'atkPct',min:5,max:12}] },
+      { type:'B', req:'アタッカー', desc:'アタッカー CRI+5~10%・CRIDAM+10~18%',
+        stats:[{key:'cri',min:5,max:10},{key:'cridam',min:10,max:18}] },
+    ]},
+
+  { id:'minotaur_shield', name:'ミノタウロスの盾', icon:'🛡️', kind:'大盾', rarity:'SR',
+    mainStat:{ atk:25, hp:110 },
+    conditions:[
+      { type:'A', req:null,     desc:'全キャラ HP+5~12%・PRES+3~8',
+        stats:[{key:'hpPct',min:5,max:12},{key:'pres',min:3,max:8}] },
+      { type:'B', req:'タンク', desc:'タンク PRES+8~15・被ダメ-5~10%',
+        stats:[{key:'pres',min:8,max:15},{key:'dmgReduce',min:5,max:10}] },
+    ]},
+
+  { id:'artemis_bow', name:'アルテミスの弓', icon:'🎯', kind:'弓', rarity:'SR',
+    mainStat:{ atk:90, hp:25 },
+    conditions:[
+      { type:'A', req:null,     desc:'全キャラ ATK+5~10%・CRI+3~6%',
+        stats:[{key:'atkPct',min:5,max:10},{key:'cri',min:3,max:6}] },
+      { type:'B', req:'レンジ', desc:'レンジ ATK+8~16%・スキルPw+5~10%',
+        stats:[{key:'atkPct',min:8,max:16},{key:'skillPw',min:5,max:10}] },
+    ]},
+
+  { id:'shadow_dagger', name:'シャドウダガー', icon:'🗡️', kind:'短刀', rarity:'SR',
+    mainStat:{ atk:85, hp:20 },
+    conditions:[
+      { type:'A', req:null,      desc:'全キャラ SPD+8~15・CRI+3~6%',
+        stats:[{key:'spd',min:8,max:15},{key:'cri',min:3,max:6}] },
+      { type:'B', req:'スカウト', desc:'スカウト ATK+8~15%・CRIDAM+8~15%',
+        stats:[{key:'atkPct',min:8,max:15},{key:'cridam',min:8,max:15}] },
+    ]},
+
+  { id:'hermes_cloak', name:'ヘルメスのマント', icon:'🧥', kind:'軽鎧', rarity:'SR',
+    mainStat:{ atk:40, hp:70 },
+    conditions:[
+      { type:'A', req:null,       desc:'全キャラ HP+5~10%・MRES+3~8',
+        stats:[{key:'hpPct',min:5,max:10},{key:'mres',min:3,max:8}] },
+      { type:'B', req:'サポート', desc:'サポート MRES+8~15・HP+5~10%',
+        stats:[{key:'mres',min:8,max:15},{key:'hpPct',min:5,max:10}] },
+    ]},
+
+  // ===== N =====
+  { id:'iron_sword', name:'鉄の直剣', icon:'⚔️', kind:'直剣', rarity:'N',
+    mainStat:{ atk:40, hp:10 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+3~8%',
+        stats:[{key:'atkPct',min:3,max:8}] },
+    ]},
+
+  { id:'leather_shield', name:'革の円盾', icon:'🛡️', kind:'盾', rarity:'N',
+    mainStat:{ atk:10, hp:60 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ HP+3~8%',
+        stats:[{key:'hpPct',min:3,max:8}] },
+    ]},
+
+  { id:'wooden_bow', name:'木の弓', icon:'🏹', kind:'弓', rarity:'N',
+    mainStat:{ atk:35, hp:10 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ CRI+2~5%',
+        stats:[{key:'cri',min:2,max:5}] },
+    ]},
+
+  { id:'travel_robe', name:'旅人のローブ', icon:'👘', kind:'軽鎧', rarity:'N',
+    mainStat:{ atk:15, hp:50 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ MRES+3~8',
+        stats:[{key:'mres',min:3,max:8}] },
+    ]},
+];
+
   // ===== SSR WEAPON =====
   { id:'longinusspear',   name:'ロンギヌスの槍', icon:'🏹', kind:'weapon', rarity:'SSR',
     mainStat:'atk', mainPct:22, subStats:{ pres:6 },
@@ -15034,65 +15281,169 @@ function renderSmithyContent() {
   if (smithyActiveTab === 'forge') {
     renderArtifactForge(el);
   } else if (smithyActiveTab === 'enhance') {
-    const owned = gState.artifacts||[];
-    if (!owned.length) {
-      el.innerHTML += '<div class="empty-hint">所持AFがありません</div>';
-    } else {
-      owned.forEach((af,i)=>{
-        const def = ARTIFACT_POOL.find(d=>d.id===af.id);
-        if (!def) return;
-        const cost = 1000*(1+(af.enhance||0));
-        const canEnh = gState.player.gold >= cost;
-        const rarityColor = def.rarity==='SSR'?'var(--gold)':def.rarity==='SR'?'var(--purple)':'var(--text3)';
-        const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:6px;';
-        row.innerHTML = `<span style="font-size:20px">${def.icon}</span><div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--text)">${def.name} <span style="color:${rarityColor}">[${def.rarity}]</span> +${af.enhance||0}</div><div style="font-size:10px;color:var(--text3)">${def.mainStat.toUpperCase()} +${def.mainPct}%</div></div>`;
-        const btn = document.createElement('button');
-        btn.className = 'btn btn-sm btn-blue';
-        btn.innerHTML = `強化(${itemIconHTML('gold','11px')}${fmt(cost)})`;
-        btn.disabled = !canEnh;
-        btn.addEventListener('click',()=>enhanceArtifact(i));
-        row.appendChild(btn);
-        el.appendChild(row);
-      });
-    }
+    renderArtifactEnhance(el);
   } else if (smithyActiveTab === 'melt') {
-    const owned = gState.artifacts||[];
-    if (!owned.length) { el.innerHTML += '<div class="empty-hint">売却できるAFがありません</div>'; }
-    else {
-      owned.forEach((af,i)=>{
-        const def = ARTIFACT_POOL.find(d=>d.id===af.id);
-        if (!def) return;
-        const refund = Math.floor(200*0.3);
-        const rarityColor = def.rarity==='SSR'?'var(--gold)':def.rarity==='SR'?'var(--purple)':'var(--text3)';
-        const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:6px;';
-        row.innerHTML = `<span style="font-size:20px">${def.icon}</span><div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--text)">${def.name} <span style="color:${rarityColor}">[${def.rarity}]</span></div><div style="font-size:10px;color:var(--text3)">${def.mainStat.toUpperCase()} +${def.mainPct}%</div></div><span style="font-size:11px;color:var(--gold);margin-right:8px">⛏️+${refund}</span>`;
-        const btn = document.createElement('button');
-        btn.className = 'btn btn-sm btn-red';
-        btn.style.background = 'var(--red)';
-        btn.style.color = 'white';
-        btn.textContent = '売却';
-        btn.addEventListener('click',()=>meltArtifact(i));
-        row.appendChild(btn);
-        el.appendChild(row);
-      });
-    }
+    renderArtifactMelt(el);
   } else if (smithyActiveTab === 'acc') {
     renderAccessoryShop(el);
   }
 }
 
+// ===== アーティファクト強化タブ =====
+function renderArtifactEnhance(el) {
+  const owned = gState.artifacts||[];
+  const p = gState.player;
+  const atomStone = p.atomStone || { t1:0, t2:0, t3:0 };
+  const atomCore  = p.atomCore  || { t1:0, t2:0, t3:0 };
+
+  // 素材所持数表示
+  const matDiv = document.createElement('div');
+  matDiv.style.cssText = 'padding:10px 12px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);';
+  matDiv.innerHTML = `<b>🔩 アトム秘石</b> T1:${atomStone.t1} / T2:${atomStone.t2} / T3:${atomStone.t3}
+    &nbsp;&nbsp;<b>💎 アトミックコア</b> T1:${atomCore.t1} / T2:${atomCore.t2} / T3:${atomCore.t3}`;
+  el.appendChild(matDiv);
+
+  if (!owned.length) {
+    const hint = document.createElement('div');
+    hint.className = 'empty-hint';
+    hint.textContent = '所持AFがありません';
+    el.appendChild(hint);
+    return;
+  }
+
+  owned.forEach((af, idx) => {
+    const def = ARTIFACT_POOL.find(d => d.id === af.id);
+    if (!def) return;
+    const lv     = af.level || 0;
+    const rank   = af.rank  || 0;
+    const maxLv  = AF_RANK_MAX[rank];
+    const atMax  = lv >= maxLv;
+    const atRankMax = rank >= 3;
+    const rarityColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' }[def.rarity];
+
+    const cost = afEnhanceCost(lv);
+    const hasStone = !atMax && (
+      (cost.t1 > 0 && atomStone.t1 >= cost.t1) ||
+      (cost.t2 > 0 && atomStone.t2 >= cost.t2) ||
+      (cost.t3 > 0 && atomStone.t3 >= cost.t3)
+    );
+
+    const row = document.createElement('div');
+    row.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;';
+
+    const costLabel = atMax ? 'Lv上限達成' :
+      `T${cost.t1?'1':cost.t2?'2':'3'}×${cost.t1||cost.t2||cost.t3}`;
+
+    // ランクアップ可否
+    const rkCost = AF_RANKUP_COST[rank];
+    const canRankUp = !atRankMax && lv >= maxLv && rkCost &&
+      (atomCore.t1 >= (rkCost.t1||0) && atomCore.t2 >= (rkCost.t2||0) && atomCore.t3 >= (rkCost.t3||0));
+    const rkLabel = atRankMax ? '' :
+      `コアT${rkCost?.t1?'1':rkCost?.t2?'2':'3'}×${rkCost?.t1||rkCost?.t2||rkCost?.t3}`;
+
+    row.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:20px">${def.icon}</span>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:700;color:var(--text)">${def.name} <span style="color:${rarityColor}">[${def.rarity}]</span></div>
+          <div style="font-size:10px;color:var(--text3)">Lv${lv}/${maxLv} (Rank${rank}) · ATK+${afMainScale(def.mainStat.atk||0,lv)} HP+${afMainScale(def.mainStat.hp||0,lv)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-blue af-enh-btn" data-idx="${idx}" ${atMax||!hasStone?'disabled':''}>
+          強化 (秘石${costLabel})
+        </button>
+        ${!atRankMax ? `<button class="btn btn-sm af-rank-btn" data-idx="${idx}" ${!canRankUp?'disabled':''} style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid var(--gold);">
+          ランクUP (${rkLabel})
+        </button>` : '<span style="font-size:10px;color:var(--gold);padding:4px">★ 最大ランク</span>'}
+      </div>`;
+    el.appendChild(row);
+  });
+
+  // ボタンイベント
+  el.querySelectorAll('.af-enh-btn').forEach(btn => {
+    btn.addEventListener('click', () => { enhanceArtifact(parseInt(btn.dataset.idx)); });
+  });
+  el.querySelectorAll('.af-rank-btn').forEach(btn => {
+    btn.addEventListener('click', () => { rankUpArtifact(parseInt(btn.dataset.idx)); });
+  });
+}
+
 function enhanceArtifact(idx) {
   const af = gState.artifacts[idx];
   if (!af) return;
-  const cost = 1000*(1+(af.enhance||0));
-  if (gState.player.gold < cost) return;
-  gState.player.gold -= cost;
-  af.enhance = (af.enhance||0)+1;
+  const lv   = af.level || 0;
+  const rank = af.rank  || 0;
+  const maxLv = AF_RANK_MAX[rank];
+  if (lv >= maxLv) return;
+  const cost = afEnhanceCost(lv);
+  const stone = gState.player.atomStone || { t1:0, t2:0, t3:0 };
+  if (cost.t1 && stone.t1 < cost.t1) return;
+  if (cost.t2 && stone.t2 < cost.t2) return;
+  if (cost.t3 && stone.t3 < cost.t3) return;
+  stone.t1 -= cost.t1 || 0;
+  stone.t2 -= cost.t2 || 0;
+  stone.t3 -= cost.t3 || 0;
+  gState.player.atomStone = stone;
+  af.level = lv + 1;
   saveState();
-  updateTopBar();
   renderSmithyContent();
+}
+
+function rankUpArtifact(idx) {
+  const af = gState.artifacts[idx];
+  if (!af) return;
+  const rank = af.rank || 0;
+  if (rank >= 3) return;
+  const lv  = af.level || 0;
+  if (lv < AF_RANK_MAX[rank]) return;  // 上限まで強化してからランクアップ
+  const cost = AF_RANKUP_COST[rank];
+  const core = gState.player.atomCore || { t1:0, t2:0, t3:0 };
+  if (core.t1 < (cost.t1||0) || core.t2 < (cost.t2||0) || core.t3 < (cost.t3||0)) return;
+  core.t1 -= cost.t1 || 0;
+  core.t2 -= cost.t2 || 0;
+  core.t3 -= cost.t3 || 0;
+  gState.player.atomCore = core;
+  af.rank = rank + 1;
+  saveState();
+  toast(`${ARTIFACT_POOL.find(d=>d.id===af.id)?.name||'AF'} をRank${af.rank}にランクアップ！`);
+  renderSmithyContent();
+}
+
+// ===== アーティファクト売却タブ =====
+function renderArtifactMelt(el) {
+  const owned = gState.artifacts||[];
+  if (!owned.length) {
+    const h = document.createElement('div');
+    h.className = 'empty-hint';
+    h.textContent = '売却できるAFがありません';
+    el.appendChild(h);
+    return;
+  }
+  owned.forEach((af, i) => {
+    const def = ARTIFACT_POOL.find(d => d.id === af.id);
+    if (!def) return;
+    const lv = af.level || 0;
+    // 売却還元: ミスリル（ランクと強化段階に応じて）
+    const baseRefund = { N:20, SR:50, SSR:100 }[def.rarity] || 20;
+    const refund = baseRefund + Math.floor(lv / 5);
+    const rarityColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' }[def.rarity];
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:6px;';
+    row.innerHTML = `<span style="font-size:20px">${def.icon}</span>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--text)">${def.name} <span style="color:${rarityColor}">[${def.rarity}]</span></div>
+        <div style="font-size:10px;color:var(--text3)">Lv${lv} · ATK+${afMainScale(def.mainStat.atk||0,lv)} HP+${afMainScale(def.mainStat.hp||0,lv)}</div>
+      </div>
+      <span style="font-size:11px;color:var(--gold);margin-right:8px">⛏️+${refund}</span>`;
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-sm';
+    btn.style.cssText = 'background:rgba(224,85,85,0.15);color:var(--red);border:1px solid rgba(224,85,85,0.3);';
+    btn.textContent = '売却';
+    btn.addEventListener('click', () => meltArtifact(i));
+    row.appendChild(btn);
+    el.appendChild(row);
+  });
 }
 
 // ===== 星図盤 =====
@@ -15325,6 +15676,12 @@ const SHOP_ITEMS = [
   { id:'mithril_s',    icon:'⛏️', name:'ミスリル×5',        desc:'鍛冶屋で使用',         price:800, currency:'coin', gives:'mithril', amount:5 },
   { id:'starpoint_s',  icon:'⭐', name:'スターポイント×10', desc:'星図盤でノード解放',   price:600, currency:'coin', gives:'starMapPoints', amount:10 },
   { id:'sweep_x5',     icon:'🎫', name:'周回チケット×5',    desc:'バベルステージを即時周回',price:200,currency:'coin',gives:'sweepTicket',amount:5 },
+  { id:'atom_stone_t1', icon:'🔩', name:'アトム秘石T1×5',   desc:'AF Lv1〜29強化素材',    price:300, currency:'coin', gives:'atomStone_t1', amount:5 },
+  { id:'atom_stone_t2', icon:'🔩', name:'アトム秘石T2×3',   desc:'AF Lv30〜59強化素材',   price:600, currency:'coin', gives:'atomStone_t2', amount:3 },
+  { id:'atom_stone_t3', icon:'🔩', name:'アトム秘石T3×1',   desc:'AF Lv60〜強化素材',     price:500, currency:'coin', gives:'atomStone_t3', amount:1 },
+  { id:'atom_core_t1',  icon:'💎', name:'アトミックコアT1', desc:'AFランクアップ素材（Rank0→1）', price:800,  currency:'coin', gives:'atomCore_t1', amount:1 },
+  { id:'atom_core_t2',  icon:'💎', name:'アトミックコアT2', desc:'AFランクアップ素材（Rank1→2）', price:1500, currency:'coin', gives:'atomCore_t2', amount:1 },
+  { id:'atom_core_t3',  icon:'💎', name:'アトミックコアT3', desc:'AFランクアップ素材（Rank2→3）', price:3000, currency:'coin', gives:'atomCore_t3', amount:1 },
 ];
 
 function openShop() {
@@ -15363,6 +15720,16 @@ function buyShopItem(item) {
     gState.tickets.sweep = (gState.tickets.sweep||0) + item.amount;
   } else if (item.gives === 'starMapPoints') {
     gState.player.starMapPoints = (gState.player.starMapPoints||0) + item.amount;
+  } else if (item.gives.startsWith('atomStone_')) {
+    const tier = item.gives.split('_')[1]; // t1/t2/t3
+    const bag = gState.player.atomStone || { t1:0, t2:0, t3:0 };
+    bag[tier] = (bag[tier]||0) + item.amount;
+    gState.player.atomStone = bag;
+  } else if (item.gives.startsWith('atomCore_')) {
+    const tier = item.gives.split('_')[1];
+    const bag = gState.player.atomCore || { t1:0, t2:0, t3:0 };
+    bag[tier] = (bag[tier]||0) + item.amount;
+    gState.player.atomCore = bag;
   } else {
     gState.player[item.gives] = (gState.player[item.gives]||0) + item.amount;
   }
@@ -15390,20 +15757,37 @@ function openSweepUI(areaId, stageId) {
 function executeSweep(areaId, stageId, count) {
   gState.tickets.sweep -= count;
   let gold=0, ether=0, coin=0;
+  const areaMatch = (stageId||'').match(/a(\d+)/);
+  const areaNum = areaMatch ? parseInt(areaMatch[1]) : 1;
+  const stone = gState.player.atomStone || { t1:0, t2:0, t3:0 };
+  const core  = gState.player.atomCore  || { t1:0, t2:0, t3:0 };
+  let st1=0, st2=0, st3=0, co1=0, co2=0, co3=0;
   for (let i=0;i<count;i++) {
     gold  += Math.floor(Math.random()*200)+100;
     ether += Math.floor(Math.random()*50)+30;
     coin  += 10;
+    if (Math.random() < 0.25) { const n=Math.floor(Math.random()*2)+1; st1+=n; stone.t1+=n; }
+    if (areaNum >= 2 && Math.random() < 0.08) { st2++; stone.t2++; }
+    if (areaNum >= 3 && Math.random() < 0.02) { st3++; stone.t3++; }
+    if (areaNum >= 2 && Math.random() < 0.04) { co1++; core.t1++; }
+    if (areaNum >= 3 && Math.random() < 0.015) { co2++; core.t2++; }
+    if (areaNum >= 4 && Math.random() < 0.005) { co3++; core.t3++; }
   }
   gState.player.gold   += gold;
   gState.player.ether  += ether;
   gState.player.clanCoin += coin;
+  gState.player.atomStone = stone;
+  gState.player.atomCore  = core;
   gState.missions.daily.babelClears = (gState.missions.daily.babelClears||0)+count;
   gState.missions.weekly.babelClears = (gState.missions.weekly.babelClears||0)+count;
   addClanExp(Math.floor(ether*0.4)*count);
   saveState();
   updateTopBar();
-  alert(`周回完了！ ×${count}\nゴールド:${fmt(gold)} EXPポット:${fmt(ether)} インク:${coin}`);
+  const matStr = [
+    st1?`🔩T1×${st1}`:'', st2?`T2×${st2}`:'', st3?`T3×${st3}`:'',
+    co1?`💎コアT1×${co1}`:'', co2?`コアT2×${co2}`:'', co3?`コアT3×${co3}`:''
+  ].filter(Boolean).join(' ');
+  alert(`周回完了！ ×${count}\nゴールド:${fmt(gold)} EXPポット:${fmt(ether)} インク:${coin}${matStr?'\nAF素材: '+matStr:''}`);
 }
 
 // ===== 拠点タブ更新 =====
@@ -15439,81 +15823,128 @@ function openSmithyInfo() { openSmithyPanel(); }
 function openLibraryInfo() { openLibraryPanel(); }
 
 // ============================================================
-//  ARTIFACT SYSTEM
+//  ARTIFACT SYSTEM（仕様書確定版）
 // ============================================================
 
+// アーティファクトランク上限テーブル（rank 0~3 → maxLevel）
+const AF_RANK_MAX = [30, 60, 80, 100];
+
+// 強化素材消費テーブル
+// level 0-29: アトム秘石T1, 30-59: T2, 60-79: T3×2, 80-99: T3×5
+function afEnhanceCost(level) {
+  if (level < 30)  return { t1:1, t2:0, t3:0 };
+  if (level < 60)  return { t1:0, t2:1, t3:0 };
+  if (level < 80)  return { t1:0, t2:0, t3:2 };
+  return                  { t1:0, t2:0, t3:5 };
+}
+// ランクアップ素材
+const AF_RANKUP_COST = [
+  { t1:3, t2:0, t3:0 },  // rank 0→1
+  { t1:0, t2:3, t3:0 },  // rank 1→2
+  { t1:0, t2:0, t3:3 },  // rank 2→3
+];
+
+// 条件が満たされているか判定
+function artifactCondMatch(cond, unit) {
+  const cls = CLASS_DATA[unit.classId];
+  switch (cond.type) {
+    case 'A': return true;
+    case 'B': return cls?.role === cond.req;
+    case 'C': return unit.classId === cond.req;
+    case 'D': return cls?.species === cond.req;
+    case 'E': return (cls?.attackTypes||[]).includes(cond.req);
+    case 'F': return false;   // 戦況条件：基本stat計算では不適用
+    case 'G': return false;   // 編成条件：基本stat計算では不適用
+    default:  return false;
+  }
+}
+
+// 条件Lvの実値を計算 (condLv 0~10, min/maxを線形補間)
+function afCondValue(stat, level) {
+  const condLv = Math.min(10, Math.floor(level / 10));
+  return Math.round(stat.min + (stat.max - stat.min) * condLv / 10);
+}
+
+// アーティファクトのメイン平坦値（Lv1基礎 × スケール倍率）
+function afMainScale(baseVal, level) {
+  return Math.floor(baseVal * (1 + level * 9 / 100));
+}
+
 function getArtifactStats(unit) {
-  const r = { atkPct:0, hpPct:0, spd:0, cri:0, cridam:0, pres:0, mres:0, bres:0, lres:0 };
+  const r = { atkFlat:0, hpFlat:0, atkPct:0, hpPct:0,
+              spd:0, cri:0, cridam:0, pres:0, mres:0, bres:0, lres:0,
+              skillPw:0, dmgReduce:0 };
   if (!unit.equippedArtifact) return r;
   const inst = (gState.artifacts||[]).find(a => a.uid === unit.equippedArtifact);
   if (!inst) return r;
   const def = ARTIFACT_POOL.find(d => d.id === inst.id);
   if (!def) return r;
-  // メインステータス
-  if (def.mainStat === 'atk') r.atkPct += def.mainPct;
-  else                         r.hpPct  += def.mainPct;
-  // サブステータス（耐性）
-  if (def.subStats) {
-    if (def.subStats.pres) r.pres += def.subStats.pres;
-    if (def.subStats.mres) r.mres += def.subStats.mres;
-    if (def.subStats.bres) r.bres += def.subStats.bres;
-    if (def.subStats.lres) r.lres += def.subStats.lres;
-  }
+  const lv = inst.level || 0;
+
+  // メインステータス（平坦値）
+  r.atkFlat += afMainScale(def.mainStat.atk || 0, lv);
+  r.hpFlat  += afMainScale(def.mainStat.hp  || 0, lv);
+
   // 条件付与効果
-  const tags = CLASS_TAGS[unit.classId] || [];
   (def.conditions||[]).forEach(cond => {
-    let ok = false;
-    if (cond.req === 'all') ok = true;
-    else if (cond.req.startsWith('tag:'))   ok = tags.includes(cond.req.slice(4));
-    else if (cond.req.startsWith('class:')) ok = unit.classId === cond.req.slice(6);
-    if (!ok) return;
-    const v = cond.val;
-    if      (cond.stat === 'atk')    r.atkPct += v;
-    else if (cond.stat === 'hp')     r.hpPct  += v;
-    else if (cond.stat === 'spd')    r.spd    += v;
-    else if (cond.stat === 'cri')    r.cri    += v;
-    else if (cond.stat === 'cridam') r.cridam += v;
-    else if (cond.stat === 'pres')   r.pres   += v;
-    else if (cond.stat === 'mres')   r.mres   += v;
-    else if (cond.stat === 'bres')   r.bres   += v;
-    else if (cond.stat === 'lres')   r.lres   += v;
+    if (!artifactCondMatch(cond, unit)) return;
+    (cond.stats||[]).forEach(s => {
+      const v = afCondValue(s, lv);
+      if      (s.key === 'atkPct')   r.atkPct   += v;
+      else if (s.key === 'hpPct')    r.hpPct    += v;
+      else if (s.key === 'spd')      r.spd      += v;
+      else if (s.key === 'cri')      r.cri      += v;
+      else if (s.key === 'cridam')   r.cridam   += v;
+      else if (s.key === 'pres')     r.pres     += v;
+      else if (s.key === 'mres')     r.mres     += v;
+      else if (s.key === 'bres')     r.bres     += v;
+      else if (s.key === 'lres')     r.lres     += v;
+      else if (s.key === 'skillPw')  r.skillPw  += v;
+      else if (s.key === 'dmgReduce')r.dmgReduce+= v;
+    });
   });
   return r;
 }
 
-function artifactCondLabel(cond) {
-  const reqMap = { 'all':'全クラス', 'tag:近接DPS':'近接DPS', 'tag:近接タンク':'近接タンク',
-    'tag:近接機動':'近接機動', 'tag:遠距離物理':'遠距離物理', 'tag:支援回復':'支援回復' };
-  const req = reqMap[cond.req] || cond.req;
-  const statMap = { atk:'ATK', hp:'HP', spd:'SPD', cri:'会心率', cridam:'会心ダメ',
-    pres:'RED耐性', mres:'WHITE耐性', bres:'BLACK耐性', lres:'BLUE耐性' };
-  const st = statMap[cond.stat] || cond.stat;
-  const unit = ['atk','hp'].includes(cond.stat) ? '%' : '';
-  return `[${req}] ${st}+${cond.val}${unit}`;
+// 条件ラベル生成
+function artifactCondLabel(cond, level) {
+  const typeLabel = { A:'全キャラ', B:'ロール', C:'クラス', D:'種族', E:'攻撃タイプ', F:'戦況', G:'編成' };
+  const statKeyLabel = { atkPct:'ATK%', hpPct:'HP%', spd:'SPD', cri:'CRI%', cridam:'CRIDAM%',
+    pres:'RED耐性', mres:'WHITE耐性', bres:'BLACK耐性', lres:'BLUE耐性',
+    skillPw:'スキルPw%', dmgReduce:'被ダメ減%' };
+  const reqDisplay = cond.req ? (SPECIES_LABELS[cond.req] || cond.req) : '—';
+  const lv = level || 0;
+  const statsStr = (cond.stats||[]).map(s => {
+    const v = afCondValue(s, lv);
+    return `${statKeyLabel[s.key]||s.key}+${v}`;
+  }).join('・');
+  return `[${typeLabel[cond.type]||cond.type}: ${reqDisplay}] ${statsStr}`;
 }
 
 function renderUnitArtifactSlot(u) {
-  if (!u.equippedArtifact) {
+  if (!u.equippedArtifact)
     return `<div class="af2-slot af2-slot-empty" onclick="openArtifactEquip('${u.uid}')">＋ アーティファクトを装備する</div>`;
-  }
   const inst = (gState.artifacts||[]).find(a => a.uid === u.equippedArtifact);
   const def  = inst ? ARTIFACT_POOL.find(d => d.id === inst.id) : null;
-  if (!def) return `<div class="af2-slot af2-slot-empty" onclick="openArtifactEquip('${u.uid}')">＋ アーティファクトを装備する</div>`;
+  if (!def)
+    return `<div class="af2-slot af2-slot-empty" onclick="openArtifactEquip('${u.uid}')">＋ アーティファクトを装備する</div>`;
   const rarityColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
-  const tags = CLASS_TAGS[u.classId] || [];
+  const lv    = inst.level || 0;
+  const rank  = inst.rank  || 0;
   const condHtml = def.conditions.map(c => {
-    const active = c.req === 'all' || (c.req.startsWith('tag:') && tags.includes(c.req.slice(4))) || (c.req.startsWith('class:') && u.classId === c.req.slice(6));
-    return `<div style="color:${active?'var(--accent2)':'var(--text3)'}">${active?'✓':'✗'} ${artifactCondLabel(c)}</div>`;
+    const active = artifactCondMatch(c, u);
+    return `<div style="color:${active?'var(--accent2)':'var(--text3)'};">${active?'✓':'✗'} ${artifactCondLabel(c, lv)}</div>`;
   }).join('');
   return `<div class="af2-slot" style="border-color:${rarityColor[def.rarity]};flex-direction:column;align-items:flex-start">
     <div style="display:flex;align-items:center;gap:8px;width:100%">
       <span style="font-size:22px">${def.icon}</span>
       <div style="flex:1">
-        <div class="af2-rarity-${def.rarity}">${def.rarity}</div>
+        <div class="af2-rarity-${def.rarity}">${def.rarity} ${def.kind}</div>
         <div class="af2-name">${def.name}</div>
-        <div class="af2-main">${def.mainStat==='atk'?'ATK':'HP'}+${def.mainPct}%</div>
+        <div class="af2-main">Lv${lv} <span style="color:var(--text3);font-size:9px">(Rank${rank} / 上限Lv${AF_RANK_MAX[rank]})</span></div>
+        <div class="af2-main">ATK+${afMainScale(def.mainStat.atk||0,lv)} / HP+${afMainScale(def.mainStat.hp||0,lv)}</div>
       </div>
-      <div style="display:flex;gap:4px">
+      <div style="display:flex;gap:4px;flex-direction:column">
         <button class="btn btn-sm btn-outline" onclick="openArtifactEquip('${u.uid}')" style="font-size:10px">交換</button>
         <button class="btn btn-sm" onclick="unequipArtifact('${u.uid}')" style="font-size:10px;background:rgba(224,85,85,0.15);color:var(--red);border-color:rgba(224,85,85,0.3)">外す</button>
       </div>
@@ -15529,7 +15960,6 @@ function openArtifactEquip(uid) {
   const ov = document.createElement('div');
   ov.id = 'artifact-equip-overlay';
   ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(5,6,8,0.97);overflow-y:auto;padding:16px;';
-  const rarLabel = { N:'N', SR:'SR', SSR:'SSR' };
   const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
   let html = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
     <button onclick="document.getElementById('artifact-equip-overlay').remove()" class="btn btn-outline">← 戻る</button>
@@ -15538,21 +15968,21 @@ function openArtifactEquip(uid) {
   if (!owned.length) {
     html += `<div style="color:var(--text3);text-align:center;padding:40px">所持しているアーティファクトがありません<br><small>鍛冶屋でミスリル鋳造しましょう</small></div>`;
   } else {
-    const tags = CLASS_TAGS[u.classId] || [];
     html += `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">`;
-    owned.forEach((inst) => {
+    owned.forEach(inst => {
       const def = ARTIFACT_POOL.find(d => d.id === inst.id);
       if (!def) return;
       const equipped = u.equippedArtifact === inst.uid;
+      const lv = inst.level || 0;
       const condHtml = def.conditions.map(c => {
-        const active = c.req === 'all' || (c.req.startsWith('tag:') && tags.includes(c.req.slice(4))) || (c.req.startsWith('class:') && u.classId === c.req.slice(6));
-        return `<div style="font-size:10px;color:${active?'var(--accent2)':'var(--text3)'};">${active?'✓':'✗'} ${artifactCondLabel(c)}</div>`;
+        const active = artifactCondMatch(c, u);
+        return `<div style="font-size:10px;color:${active?'var(--accent2)':'var(--text3)'};">${active?'✓':'✗'} ${artifactCondLabel(c,lv)}</div>`;
       }).join('');
-      html += `<div class="af2-card af2-${def.rarity}" style="cursor:pointer${equipped?';opacity:0.5':''}">
-        <div class="af2-rarity-${def.rarity}">${rarLabel[def.rarity]} ${def.kind==='weapon'?'武器':'防具'}</div>
+      html += `<div class="af2-card af2-${def.rarity}" style="cursor:pointer${equipped?';opacity:0.6':''}">
+        <div class="af2-rarity-${def.rarity}">${def.rarity} ${def.kind}</div>
         <div style="font-size:20px;margin:4px 0">${def.icon}</div>
         <div class="af2-name">${def.name}</div>
-        <div class="af2-main">${def.mainStat==='atk'?'ATK':'HP'}+${def.mainPct}%</div>
+        <div class="af2-main" style="font-size:10px">Lv${lv} · ATK+${afMainScale(def.mainStat.atk||0,lv)} HP+${afMainScale(def.mainStat.hp||0,lv)}</div>
         <div class="af2-cond">${condHtml}</div>
         <button class="btn btn-sm ${equipped?'':'btn-outline'}" onclick="equipArtifact('${uid}','${inst.uid}');document.getElementById('artifact-equip-overlay').remove()" style="width:100%;margin-top:8px;font-size:11px">${equipped?'装備中':'装備する'}</button>
       </div>`;
@@ -15621,8 +16051,8 @@ function renderArtifactForge(el) {
         <span style="font-size:16px;margin:0 6px">${def.icon}</span>
         <span style="font-weight:700">${def.name}</span>
         ${equippedBy?`<span style="font-size:9px;color:var(--accent2);margin-left:4px">[${equippedBy.name}]</span>`:''}
-        <div style="color:var(--text3);margin-top:2px">${def.mainStat==='atk'?'ATK':'HP'}+${def.mainPct}%</div>
-        <button class="btn btn-sm" onclick="meltArtifact(${idx})" style="margin-top:4px;font-size:9px;background:rgba(224,85,85,0.12);color:var(--red);border-color:rgba(224,85,85,0.3)">売却(⛏️+${Math.floor(200*0.3)})</button>
+        <div style="color:var(--text3);margin-top:2px">Lv.${inst.level||0} / Rank${inst.rank||0}</div>
+        <button class="btn btn-sm" onclick="meltArtifact(${idx})" style="margin-top:4px;font-size:9px;background:rgba(224,85,85,0.12);color:var(--red);border-color:rgba(224,85,85,0.3)">売却(⛏️+${{N:20,SR:50,SSR:100}[def.rarity]||20})</button>
       </div>`;
     });
     forgeHtml += `</div>`;
@@ -15651,7 +16081,7 @@ function doArtifactGacha() {
   if (!def) return;
   if (!gState.artifacts) gState.artifacts = [];
   const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
-  gState.artifacts.push({ id: def.id, uid, enhance: 0 });
+  gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0 });
   saveState();
   updateTopBar();
   // 結果表示
@@ -15663,9 +16093,13 @@ function doArtifactGacha() {
 function meltArtifact(idx) {
   const inst = (gState.artifacts||[])[idx];
   if (!inst) return;
+  const def = ARTIFACT_POOL.find(d => d.id === inst.id);
+  const baseRefund = def ? ({ N:20, SR:50, SSR:100 }[def.rarity] || 20) : 20;
+  const lv = inst.level || 0;
+  const refund = baseRefund + Math.floor(lv / 5);
   // 装備中のユニットから外す
   gState.ownedUnits.forEach(u => { if (u.equippedArtifact === inst.uid) u.equippedArtifact = null; });
-  gState.player.mithril = (gState.player.mithril||0) + 60;
+  gState.player.mithril = (gState.player.mithril||0) + refund;
   gState.artifacts.splice(idx, 1);
   saveState();
   updateTopBar();
