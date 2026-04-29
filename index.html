@@ -15149,47 +15149,70 @@ const ACCESSORY_SETS = [
     label2:'RED耐性+10 / ATK+8%',            bonus2:[{t:'pres',v:10},{t:'atkPct',v:8}],
     label4:'さらにCRI+8% / CRIダメ+15%',     bonus4:[{t:'cri',v:8},{t:'cridam',v:15}] },
 ];
-// mainStat: min/max indexed by [★1,★2,★3,★4]
-const ACC_MAIN_POOL = [
-  { id:'atk_pct', label:'ATK%',     min:[8,11,14,17],  max:[11,14,18,22] },
-  { id:'hp_pct',  label:'HP%',      min:[8,11,14,17],  max:[11,14,18,22] },
-  { id:'spd',     label:'SPD',      min:[15,20,26,32], max:[22,30,40,50] },
-  { id:'cri',     label:'CRI率',    min:[6,8,11,13],   max:[9,12,16,20] },
-  { id:'cridam',  label:'CRIダメ%', min:[12,16,21,26], max:[18,24,30,38] },
-  { id:'pres',    label:'RED耐性',  min:[8,12,16,20],  max:[14,18,24,30] },
-  { id:'mres',    label:'WHITE耐性',min:[8,12,16,20],  max:[14,18,24,30] },
-  { id:'bres',    label:'BLACK耐性',min:[8,12,16,20],  max:[14,18,24,30] },
-  { id:'lres',    label:'BLUE耐性', min:[8,12,16,20],  max:[14,18,24,30] },
-];
-const ACC_SUB_POOL = [
-  { id:'atk',     label:'ATK',      min:[80,120,160,220],  max:[160,240,320,440] },
-  { id:'hp',      label:'HP',       min:[250,400,550,750], max:[500,800,1050,1450] },
-  { id:'atk_pct', label:'ATK%',     min:[2,3,4,5],   max:[5,7,9,12] },
-  { id:'hp_pct',  label:'HP%',      min:[2,3,4,5],   max:[5,7,9,12] },
-  { id:'spd',     label:'SPD',      min:[5,8,11,14], max:[12,18,23,28] },
-  { id:'cri',     label:'CRI率',    min:[2,3,4,5],   max:[5,7,9,11] },
-  { id:'cridam',  label:'CRIダメ%', min:[4,6,8,10],  max:[9,13,17,22] },
-  { id:'pres',    label:'RED耐性',  min:[2,3,4,5],   max:[6,8,10,13] },
-  { id:'mres',    label:'WHITE耐性',min:[2,3,4,5],   max:[6,8,10,13] },
-  { id:'bres',    label:'BLACK耐性',min:[2,3,4,5],   max:[6,8,10,13] },
-  { id:'lres',    label:'BLUE耐性', min:[2,3,4,5],   max:[6,8,10,13] },
+// 部位定義: 各スロットに対応する部位と部位専用メインStat候補
+const ACC_PARTS = [
+  { id:'pierce',    name:'ピアス',       slot:'A', mainPool:['cri','cridam','spd'] },
+  { id:'necklace',  name:'ネックレス',   slot:'B', mainPool:['atk_pct','hp_pct'] },
+  { id:'brooch',    name:'ブローチ',     slot:'C', mainPool:['pres','mres','bres','lres'] },
+  { id:'bracelet',  name:'ブレスレット', slot:'D', mainPool:['atk_pct','atk'] },
+  { id:'ring',      name:'リング',       slot:'E', mainPool:['cri','skillPw','drain'] },
+  { id:'anklet',    name:'アンクレット', slot:'F', mainPool:['spd','hp_pct','dmgReduce'] },
 ];
 
-function generateAccessory(rarity, setId) {
+// メインStat全定義 (部位絞り込みに使用)
+const ACC_MAIN_POOL = [
+  { id:'atk_pct',   label:'ATK%',      min:[8,11,14,17],  max:[11,14,18,22] },
+  { id:'hp_pct',    label:'HP%',       min:[8,11,14,17],  max:[11,14,18,22] },
+  { id:'atk',       label:'ATK',       min:[100,150,200,270], max:[180,250,340,450] },
+  { id:'spd',       label:'SPD',       min:[15,20,26,32], max:[22,30,40,50] },
+  { id:'cri',       label:'CRI率',     min:[6,8,11,13],   max:[9,12,16,20] },
+  { id:'cridam',    label:'CRIダメ%',  min:[12,16,21,26], max:[18,24,30,38] },
+  { id:'pres',      label:'RED耐性',   min:[8,12,16,20],  max:[14,18,24,30] },
+  { id:'mres',      label:'WHITE耐性', min:[8,12,16,20],  max:[14,18,24,30] },
+  { id:'bres',      label:'BLACK耐性', min:[8,12,16,20],  max:[14,18,24,30] },
+  { id:'lres',      label:'BLUE耐性',  min:[8,12,16,20],  max:[14,18,24,30] },
+  { id:'skillPw',   label:'スキルPw%', min:[6,8,10,13],   max:[9,12,16,20] },
+  { id:'drain',     label:'吸血%',     min:[4,6,8,10],    max:[8,11,15,20] },
+  { id:'dmgReduce', label:'被ダメ軽減%',min:[4,5,7,9],    max:[7,10,13,17] },
+];
+const ACC_SUB_POOL = [
+  { id:'atk',      label:'ATK',       min:[80,120,160,220],  max:[160,240,320,440] },
+  { id:'hp',       label:'HP',        min:[250,400,550,750], max:[500,800,1050,1450] },
+  { id:'atk_pct',  label:'ATK%',      min:[2,3,4,5],   max:[5,7,9,12] },
+  { id:'hp_pct',   label:'HP%',       min:[2,3,4,5],   max:[5,7,9,12] },
+  { id:'spd',      label:'SPD',       min:[5,8,11,14], max:[12,18,23,28] },
+  { id:'cri',      label:'CRI率',     min:[2,3,4,5],   max:[5,7,9,11] },
+  { id:'cridam',   label:'CRIダメ%',  min:[4,6,8,10],  max:[9,13,17,22] },
+  { id:'pres',     label:'RED耐性',   min:[2,3,4,5],   max:[6,8,10,13] },
+  { id:'mres',     label:'WHITE耐性', min:[2,3,4,5],   max:[6,8,10,13] },
+  { id:'bres',     label:'BLACK耐性', min:[2,3,4,5],   max:[6,8,10,13] },
+  { id:'lres',     label:'BLUE耐性',  min:[2,3,4,5],   max:[6,8,10,13] },
+  { id:'skillPw',  label:'スキルPw%', min:[2,3,4,5],   max:[5,7,9,11] },
+  { id:'drain',    label:'吸血%',     min:[2,2,3,4],   max:[4,5,7,9] },
+  { id:'dmgReduce',label:'被ダメ軽減%',min:[2,2,3,3],  max:[4,5,6,8] },
+];
+
+function generateAccessory(rarity, setId, partId) {
   const r = (rarity||1) - 1;
   const set = setId ? ACCESSORY_SETS.find(s=>s.id===setId)
                     : ACCESSORY_SETS[Math.floor(Math.random()*ACCESSORY_SETS.length)];
-  const mainDef = ACC_MAIN_POOL[Math.floor(Math.random()*ACC_MAIN_POOL.length)];
+  const part = partId ? ACC_PARTS.find(p=>p.id===partId)
+                      : ACC_PARTS[Math.floor(Math.random()*ACC_PARTS.length)];
+  // メインstatを部位専用プールから選ぶ
+  const partMainIds = part.mainPool;
+  const partMainPool = ACC_MAIN_POOL.filter(m=>partMainIds.includes(m.id));
+  const mainDef = partMainPool[Math.floor(Math.random()*partMainPool.length)];
   const mainVal = mainDef.min[r] + Math.floor(Math.random()*(mainDef.max[r]-mainDef.min[r]+1));
   const subCount = Math.min(rarity, 3);
-  const subPool = [...ACC_SUB_POOL]; shuffle(subPool);
+  // サブstatはメインstatを除外したプールから選ぶ
+  const subPool = ACC_SUB_POOL.filter(s=>s.id!==mainDef.id); shuffle(subPool);
   const subStats = subPool.slice(0, subCount).map(s => ({
     id:s.id, label:s.label,
     val: s.min[r] + Math.floor(Math.random()*(s.max[r]-s.min[r]+1))
   }));
   return {
     uid: 'acc_'+Date.now()+'_'+Math.floor(Math.random()*99999),
-    setId: set.id, rarity, level: 0,
+    setId: set.id, partId: part.id, rarity, level: 0,
     mainStat: { id:mainDef.id, label:mainDef.label, val:mainVal },
     subStats,
   };
@@ -16103,8 +16126,10 @@ function _applyAccStat(res,id,val) {
   else if (id==='mres')    res.mres    += val;
   else if (id==='bres')    res.bres    += val;
   else if (id==='lres')    res.lres    += val;
-  else if (id==='drain')   res.drain   += val;
-  else if (id==='heal_up') res.heal_up += val;
+  else if (id==='drain')    res.drain    += val;
+  else if (id==='heal_up')  res.heal_up  += val;
+  else if (id==='skillPw')  res.skillPw  += val;
+  else if (id==='dmgReduce') res.dmgReduce += val;
 }
 function _applyAccBonusArr(res, bonuses) {
   for (const b of bonuses) {
@@ -16136,6 +16161,8 @@ function renderUnitAccessorySlots(u) {
   let html='';
   slots.forEach((slot,i)=>{
     const acc=equipped[i];
+    const part=ACC_PARTS.find(p=>p.slot===slot);
+    const partName=part?part.name:slot;
     if (acc) {
       const set=ACCESSORY_SETS.find(s=>s.id===acc.setId);
       const subTxt=(acc.subStats||[]).map(s=>`${s.label}+${s.val}`).join(' / ');
@@ -16146,12 +16173,12 @@ function renderUnitAccessorySlots(u) {
           <div style="font-size:10px;color:var(--accent2)">${acc.mainStat.label}+${acc.mainStat.val}</div>
           ${subTxt?`<div style="font-size:10px;color:var(--text3)">${subTxt}</div>`:''}
         </div>
-        <div style="font-size:10px;color:var(--text3)">枠${slot}</div>
+        <div style="font-size:10px;color:var(--text3)">${partName}</div>
       </div>`;
     } else {
       html+=`<div class="acc-slot" onclick="openAccessoryEquip('${u.uid}','${slot}')">
         <div style="font-size:18px;color:var(--text3)">✦</div>
-        <div style="flex:1;font-size:11px;color:var(--text3)">枠${slot} — 空き</div>
+        <div style="flex:1;font-size:11px;color:var(--text3)">${partName} — 空き</div>
       </div>`;
     }
   });
@@ -16170,7 +16197,11 @@ function renderUnitAccessorySlots(u) {
 function openAccessoryEquip(uid, slot) {
   const u=gState.ownedUnits.find(u=>u.uid===uid);
   if (!u) return;
-  const owned=gState.accessories||[];
+  const allOwned=gState.accessories||[];
+  const part=ACC_PARTS.find(p=>p.slot===slot);
+  const partName=part?part.name:slot;
+  // 部位でフィルタ（partIdが未設定の古いアクセサリーは全スロットに装備可能）
+  const owned=allOwned.filter(a=>!a.partId||a.partId===(part&&part.id));
   const ov=document.createElement('div');
   ov.className='modal-overlay open';
   ov.style.zIndex='700';
@@ -16193,14 +16224,18 @@ function openAccessoryEquip(uid, slot) {
     </div>`;
   }).join('');
 
+  const emptyMsg=allOwned.length&&!owned.length
+    ?`<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">${partName}用のアクセサリーがありません<br><br>鍛冶屋で購入するか、アビスで入手してください</div>`
+    :`<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">所持アクセサリーがありません<br><br>鍛冶屋のアクセサリータブから入手できます</div>`;
+
   ov.innerHTML=`<div class="modal-panel" style="max-width:480px">
     <div class="modal-header">
-      <h3>✦ 枠${slot} アクセサリー選択</h3>
+      <h3>✦ ${partName} アクセサリー選択</h3>
       <button class="close-btn" onclick="this.closest('.modal-overlay').remove();refreshUnitAccessoryUI('${uid}')">✕</button>
     </div>
     <div class="modal-body">
       ${unequipHtml}
-      ${owned.length?`<div class="acc-grid">${cards}</div>`:'<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">所持アクセサリーがありません<br><br>鍛冶屋のアクセサリータブから入手できます</div>'}
+      ${owned.length?`<div class="acc-grid">${cards}</div>`:emptyMsg}
     </div>
   </div>`;
   document.body.appendChild(ov);
@@ -16280,7 +16315,7 @@ function _renderAccBuy(el) {
     row.innerHTML = `<div style="font-size:20px;color:${ACC_RARITY_COLOR[item.rarity]}">✦</div>
       <div style="flex:1">
         <div style="font-size:12px;font-weight:700;color:${ACC_RARITY_COLOR[item.rarity]}">${accStars(item.rarity)} アクセサリー</div>
-        <div style="font-size:10px;color:var(--text3)">ランダムセット・ランダムステータス</div>
+        <div style="font-size:10px;color:var(--text3)">ランダム部位・ランダムセット・ランダムStat</div>
       </div>
       <button class="btn btn-sm btn-blue" ${canBuy?'':'disabled'} onclick="buyAccWithCoin(${item.rarity},${item.cost})">${itemIconHTML('ink','12px')}${item.cost}</button>`;
     el.appendChild(row);
@@ -16300,7 +16335,7 @@ function _renderAccBuy(el) {
     row.innerHTML = `<div style="font-size:20px;color:${ACC_RARITY_COLOR[item.rarity]}">✦</div>
       <div style="flex:1">
         <div style="font-size:12px;font-weight:700;color:${ACC_RARITY_COLOR[item.rarity]}">${accStars(item.rarity)} アクセサリー</div>
-        <div style="font-size:10px;color:var(--text3)">${unlocked?'ランダムセット・ランダムステータス':`アビス${item.unlock}F到達で解放`}</div>
+        <div style="font-size:10px;color:var(--text3)">${unlocked?'ランダム部位・ランダムセット・ランダムStat':`アビス${item.unlock}F到達で解放`}</div>
       </div>
       <button class="btn btn-sm btn-blue" ${canBuy?'':'disabled'} onclick="buyAccessory(${item.rarity},${item.cost})">💠${item.cost}</button>`;
     el.appendChild(row);
@@ -16323,8 +16358,10 @@ function _renderAccBuy(el) {
       const subTxt = (acc.subStats||[]).map(s=>`${s.label}+${s.val}`).join(' ');
       const card = document.createElement('div');
       card.className = `acc-card ${cls}`;
+      const bPart = ACC_PARTS.find(p=>p.id===acc.partId);
       card.innerHTML = `<div style="font-size:16px">${set?.icon||'✦'} <span style="font-size:10px;color:${ACC_RARITY_COLOR[acc.rarity]}">${accStars(acc.rarity)}</span></div>
         <div style="font-size:11px;font-weight:700;color:var(--text)">${set?.name||'?'}</div>
+        ${bPart?`<div style="font-size:9px;color:var(--text3)">[${bPart.name}]</div>`:''}
         <div style="font-size:10px;color:var(--accent2)">${acc.mainStat.label}+${acc.mainStat.val}${lv?` <span style="color:var(--gold)">(Lv${lv})</span>`:''}</div>
         ${subTxt?`<div style="font-size:10px;color:var(--text3)">${subTxt}</div>`:''}`;
       grid.appendChild(card);
@@ -16354,10 +16391,11 @@ function _renderAccEnhance(el) {
     const scale = 1 + lv*0.1;
     const row = document.createElement('div');
     row.style.cssText = 'padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:4px;';
+    const ePart = ACC_PARTS.find(p=>p.id===acc.partId);
     row.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
         <span style="font-size:18px">${set?.icon||'✦'}</span>
         <div style="flex:1">
-          <div style="font-size:12px;font-weight:700;color:${ACC_RARITY_COLOR[acc.rarity]}">${accStars(acc.rarity)} ${set?.name||'?'}</div>
+          <div style="font-size:12px;font-weight:700;color:${ACC_RARITY_COLOR[acc.rarity]}">${accStars(acc.rarity)} ${set?.name||'?'}${ePart?` <span style="font-size:10px;color:var(--text3)">[${ePart.name}]</span>`:''}</div>
           <div style="font-size:10px;color:var(--text3)">${acc.mainStat.label}+${Math.floor(acc.mainStat.val*scale)} / Lv${lv}/10</div>
         </div>
         <button class="btn btn-sm btn-blue" ${canUp?'':'disabled'} onclick="enhanceAccessory(${idx})">
@@ -16386,9 +16424,10 @@ function _renderAccMelt(el) {
     const inUse    = gState.ownedUnits.some(u=>u.equippedAccessories&&Object.values(u.equippedAccessories).includes(acc.uid));
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:4px;';
+    const mPart = ACC_PARTS.find(p=>p.id===acc.partId);
     row.innerHTML = `<span style="font-size:20px">${set?.icon||'✦'}</span>
       <div style="flex:1">
-        <div style="font-size:12px;font-weight:700;color:${ACC_RARITY_COLOR[acc.rarity]}">${accStars(acc.rarity)} ${set?.name||'?'} ${lv?`<span style="color:var(--gold);font-size:10px">Lv${lv}</span>`:''}</div>
+        <div style="font-size:12px;font-weight:700;color:${ACC_RARITY_COLOR[acc.rarity]}">${accStars(acc.rarity)} ${set?.name||'?'}${mPart?` <span style="font-size:10px;color:var(--text3)">[${mPart.name}]</span>`:''} ${lv?`<span style="color:var(--gold);font-size:10px">Lv${lv}</span>`:''}</div>
         <div style="font-size:10px;color:var(--text3)">${acc.mainStat.label}+${acc.mainStat.val}</div>
       </div>
       <span style="font-size:11px;color:var(--accent2);margin-right:6px">✨+${refund}</span>`;
