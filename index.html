@@ -6345,6 +6345,7 @@ function defaultState(clanName) {
       // アーティファクト強化素材
       atomStone: { t1:5, t2:0, t3:0 },   // アトム秘石T1-T3
       atomCore:  { t1:0, t2:0, t3:0 },   // アトミックコアT1-T3
+      stardust:  5,                        // 星屑の砂（アクセサリー強化）
     },
     ownedUnits: [warrior0],
     unitProgress: {
@@ -6470,6 +6471,7 @@ function normalizeState() {
   if (!p.loginStreak)   p.loginStreak = 0;
   // アーティファクト強化素材
   if (!p.atomStone) p.atomStone = { t1:0, t2:0, t3:0 };
+  if (p.stardust === undefined) p.stardust = 0;
   if (!p.atomCore)  p.atomCore  = { t1:0, t2:0, t3:0 };
   gState.player = p;
 
@@ -12279,6 +12281,20 @@ function endBattle(victory) {
           gState.player.awakePot = (gState.player.awakePot||0) + 1;
         }
       }
+      // ランダムドロップ: 星屑の砂（15%）
+      if (Math.random() < 0.15) {
+        const sd = Math.floor(Math.random()*2)+1;
+        gState.player.stardust = (gState.player.stardust||0) + sd;
+        drops.push({ name:`✨ 星屑の砂 ×${sd}` });
+      }
+      // ランダムドロップ: ★1アクセサリー（5%）
+      if (Math.random() < 0.05) {
+        if (!gState.accessories) gState.accessories = [];
+        const _newAcc = generateAccessory(1);
+        gState.accessories.push(_newAcc);
+        const _aSet = ACCESSORY_SETS.find(s=>s.id===_newAcc.setId);
+        drops.push({ name:`${_aSet?.icon||'✦'} ★ アクセサリー [${_aSet?.name||'?'}] (${_newAcc.mainStat.label}+${_newAcc.mainStat.val})` });
+      }
     }
     if (battleContext.type==='shrine') {
       gState.progress.shrine.clearedToday[battleContext.shrineId] = true;
@@ -15096,13 +15112,42 @@ const ARTIFACT_POOL = [
 
 // ===== 星辰アクセサリー =====
 const ACCESSORY_SETS = [
-  { id:'leo',     name:'獅子座', icon:'♌', bonus:{type:'atk_pct',val:15},           bonusLabel:'ATK+15%' },
-  { id:'taurus',  name:'牡牛座', icon:'♉', bonus:{type:'hp_pct', val:20},           bonusLabel:'HP+20%' },
-  { id:'sagit',   name:'射手座', icon:'♐', bonus:{type:'cri_set',cri:12,cridam:20}, bonusLabel:'CRI+12% / CRIダメ+20%' },
-  { id:'libra',   name:'天秤座', icon:'♎', bonus:{type:'all_res',val:15},           bonusLabel:'全耐性+15' },
-  { id:'gemini',  name:'双子座', icon:'♊', bonus:{type:'spd',    val:30},           bonusLabel:'SPD+30' },
-  { id:'scorpio', name:'蠍座',   icon:'♏', bonus:{type:'drain',  val:10},           bonusLabel:'吸血+10%' },
-  { id:'pisces',  name:'魚座',   icon:'♓', bonus:{type:'heal_up',val:25},           bonusLabel:'回復効果+25%' },
+  { id:'orion',      name:'オリオン',      icon:'🏹',
+    label2:'ATK+12% / CRI+6%',              bonus2:[{t:'atkPct',v:12},{t:'cri',v:6}],
+    label4:'さらにスキルPw+10%',             bonus4:[{t:'skillPw',v:10}] },
+  { id:'argo',       name:'アルゴ',         icon:'⚓',
+    label2:'RED耐性+10 / WHITE耐性+10',      bonus2:[{t:'pres',v:10},{t:'mres',v:10}],
+    label4:'さらに被ダメ-10%',               bonus4:[{t:'dmgReduce',v:10}] },
+  { id:'perseus',    name:'ペルセウス',      icon:'🌟',
+    label2:'SPD+18',                         bonus2:[{t:'spd',v:18}],
+    label4:'さらにSPD+15 / CRI+5%',          bonus4:[{t:'spd',v:15},{t:'cri',v:5}] },
+  { id:'scorpio',    name:'スコルピオ',      icon:'🦂',
+    label2:'吸血+8% / CRIダメ+15%',          bonus2:[{t:'drain',v:8},{t:'cridam',v:15}],
+    label4:'さらに吸血+8% / CRIダメ+10%',    bonus4:[{t:'drain',v:8},{t:'cridam',v:10}] },
+  { id:'hermes',     name:'ヘルメス',        icon:'🌿',
+    label2:'SPD+10 / CRI+5%',               bonus2:[{t:'spd',v:10},{t:'cri',v:5}],
+    label4:'さらにATK+10% / CRI+5%',         bonus4:[{t:'atkPct',v:10},{t:'cri',v:5}] },
+  { id:'selene',     name:'セレーネ',        icon:'🌙',
+    label2:'CRI+10% / CRIダメ+15%',          bonus2:[{t:'cri',v:10},{t:'cridam',v:15}],
+    label4:'さらにATK+12%',                  bonus4:[{t:'atkPct',v:12}] },
+  { id:'asclepius',  name:'アスクレピオス', icon:'🐍',
+    label2:'回復効果+15%',                   bonus2:[{t:'healUp',v:15}],
+    label4:'さらに回復効果+15% / HP+8%',      bonus4:[{t:'healUp',v:15},{t:'hpPct',v:8}] },
+  { id:'athena',     name:'アテナ',          icon:'🦉',
+    label2:'WHITE耐性+12 / BLACK耐性+12',    bonus2:[{t:'mres',v:12},{t:'bres',v:12}],
+    label4:'さらにBLUE耐性+10 / HP+10%',     bonus4:[{t:'lres',v:10},{t:'hpPct',v:10}] },
+  { id:'ares',       name:'アレス',          icon:'⚔️',
+    label2:'ATK+8% / CRI+8%',               bonus2:[{t:'atkPct',v:8},{t:'cri',v:8}],
+    label4:'さらにATK+10% / CRIダメ+15%',    bonus4:[{t:'atkPct',v:10},{t:'cridam',v:15}] },
+  { id:'kronos',     name:'クロノス',        icon:'⏳',
+    label2:'SPD+15',                         bonus2:[{t:'spd',v:15}],
+    label4:'さらにCRI+8% / ATK+8%',          bonus4:[{t:'cri',v:8},{t:'atkPct',v:8}] },
+  { id:'poseidon',   name:'ポセイドン',      icon:'🌊',
+    label2:'BLUE耐性+18 / HP+12%',           bonus2:[{t:'lres',v:18},{t:'hpPct',v:12}],
+    label4:'さらにHP+10% / ATK+10%',         bonus4:[{t:'hpPct',v:10},{t:'atkPct',v:10}] },
+  { id:'hephaestus', name:'ヘファイストス',  icon:'🔥',
+    label2:'RED耐性+10 / ATK+8%',            bonus2:[{t:'pres',v:10},{t:'atkPct',v:8}],
+    label4:'さらにCRI+8% / CRIダメ+15%',     bonus4:[{t:'cri',v:8},{t:'cridam',v:15}] },
 ];
 // mainStat: min/max indexed by [★1,★2,★3,★4]
 const ACC_MAIN_POOL = [
@@ -15144,7 +15189,7 @@ function generateAccessory(rarity, setId) {
   }));
   return {
     uid: 'acc_'+Date.now()+'_'+Math.floor(Math.random()*99999),
-    setId: set.id, rarity,
+    setId: set.id, rarity, level: 0,
     mainStat: { id:mainDef.id, label:mainDef.label, val:mainVal },
     subStats,
   };
@@ -15591,6 +15636,8 @@ const SHOP_ITEMS = [
   { id:'atom_core_t1',  icon:'💎', name:'アトミックコアT1', desc:'AFランクアップ素材（Rank0→1）', price:800,  currency:'coin', gives:'atomCore_t1', amount:1 },
   { id:'atom_core_t2',  icon:'💎', name:'アトミックコアT2', desc:'AFランクアップ素材（Rank1→2）', price:1500, currency:'coin', gives:'atomCore_t2', amount:1 },
   { id:'atom_core_t3',  icon:'💎', name:'アトミックコアT3', desc:'AFランクアップ素材（Rank2→3）', price:3000, currency:'coin', gives:'atomCore_t3', amount:1 },
+  { id:'stardust_s',    icon:'✨', name:'星屑の砂×10',      desc:'アクセサリー強化素材',          price:200,  currency:'coin', gives:'stardust',     amount:10 },
+  { id:'stardust_l',    icon:'✨', name:'星屑の砂×30',      desc:'アクセサリー強化素材（まとめ買い）', price:500, currency:'coin', gives:'stardust', amount:30 },
 ];
 
 function openShop() {
@@ -15639,6 +15686,8 @@ function buyShopItem(item) {
     const bag = gState.player.atomCore || { t1:0, t2:0, t3:0 };
     bag[tier] = (bag[tier]||0) + item.amount;
     gState.player.atomCore = bag;
+  } else if (item.gives === 'stardust') {
+    gState.player.stardust = (gState.player.stardust||0) + item.amount;
   } else {
     gState.player[item.gives] = (gState.player[item.gives]||0) + item.amount;
   }
@@ -16020,46 +16069,63 @@ const ACC_RARITY_COLOR = ['','var(--text3)','var(--green)','var(--purple)','var(
 const accStars = r => '★'.repeat(r)+'☆'.repeat(4-r);
 
 function getAccessoryStats(unit) {
-  const res = {atkPct:0,hpPct:0,atk:0,hp:0,spd:0,cri:0,cridam:0,pres:0,mres:0,bres:0,lres:0,drain:0,heal_up:0};
+  const res = {atkPct:0,hpPct:0,atk:0,hp:0,spd:0,cri:0,cridam:0,pres:0,mres:0,bres:0,lres:0,drain:0,heal_up:0,dmgReduce:0,skillPw:0};
   if (!unit.equippedAccessories) return res;
   const owned = gState.accessories||[];
   const slots = ['A','B','C','D','E','F'];
   const equipped = slots.map(s=>{const uid=unit.equippedAccessories[s]; return uid?owned.find(a=>a.uid===uid):null;});
   equipped.filter(Boolean).forEach(acc=>{
-    _applyAccStat(res,acc.mainStat.id,acc.mainStat.val);
-    (acc.subStats||[]).forEach(sub=>_applyAccStat(res,sub.id,sub.val));
+    const lv = acc.level || 0;
+    const scale = 1 + lv * 0.1; // Lv10 = 2×
+    _applyAccStat(res, acc.mainStat.id, Math.floor(acc.mainStat.val * scale));
+    (acc.subStats||[]).forEach(sub=>_applyAccStat(res, sub.id, Math.floor(sub.val * scale)));
   });
-  // セット効果：同星座3枠で発動（最大2セット同時）
+  // セット効果: 2枚・4枚それぞれ発動
   const setCounts = {};
   equipped.filter(Boolean).forEach(a=>{ if(a.setId) setCounts[a.setId]=(setCounts[a.setId]||0)+1; });
   Object.entries(setCounts).forEach(([setId,cnt])=>{
-    if (cnt>=3) { const set=ACCESSORY_SETS.find(s=>s.id===setId); if(set) _applyAccSetBonus(res,set.bonus); }
+    const set = ACCESSORY_SETS.find(s=>s.id===setId);
+    if (!set) return;
+    if (cnt >= 2 && set.bonus2) _applyAccBonusArr(res, set.bonus2);
+    if (cnt >= 4 && set.bonus4) _applyAccBonusArr(res, set.bonus4);
   });
   return res;
 }
 function _applyAccStat(res,id,val) {
-  if (id==='atk_pct') res.atkPct+=val;
-  else if (id==='hp_pct') res.hpPct+=val;
-  else if (id==='atk')  res.atk+=val;
-  else if (id==='hp')   res.hp+=val;
-  else if (id==='spd')  res.spd+=val;
-  else if (id==='cri')  res.cri+=val;
-  else if (id==='cridam') res.cridam+=val;
-  else if (id==='pres') res.pres+=val;
-  else if (id==='mres') res.mres+=val;
-  else if (id==='bres') res.bres+=val;
-  else if (id==='lres') res.lres+=val;
+  if      (id==='atk_pct') res.atkPct  += val;
+  else if (id==='hp_pct')  res.hpPct   += val;
+  else if (id==='atk')     res.atk     += val;
+  else if (id==='hp')      res.hp      += val;
+  else if (id==='spd')     res.spd     += val;
+  else if (id==='cri')     res.cri     += val;
+  else if (id==='cridam')  res.cridam  += val;
+  else if (id==='pres')    res.pres    += val;
+  else if (id==='mres')    res.mres    += val;
+  else if (id==='bres')    res.bres    += val;
+  else if (id==='lres')    res.lres    += val;
+  else if (id==='drain')   res.drain   += val;
+  else if (id==='heal_up') res.heal_up += val;
 }
-function _applyAccSetBonus(res,bonus) {
-  const t=bonus.type;
-  if (t==='atk_pct') res.atkPct+=bonus.val;
-  else if (t==='hp_pct') res.hpPct+=bonus.val;
-  else if (t==='spd') res.spd+=bonus.val;
-  else if (t==='all_res') {res.pres+=bonus.val;res.mres+=bonus.val;res.bres+=bonus.val;res.lres+=bonus.val;}
-  else if (t==='cri_set') {res.cri+=bonus.cri;res.cridam+=bonus.cridam;}
-  else if (t==='drain') res.drain+=bonus.val;
-  else if (t==='heal_up') res.heal_up+=bonus.val;
+function _applyAccBonusArr(res, bonuses) {
+  for (const b of bonuses) {
+    switch (b.t) {
+      case 'atkPct':    res.atkPct    += b.v; break;
+      case 'hpPct':     res.hpPct     += b.v; break;
+      case 'spd':       res.spd       += b.v; break;
+      case 'cri':       res.cri       += b.v; break;
+      case 'cridam':    res.cridam    += b.v; break;
+      case 'pres':      res.pres      += b.v; break;
+      case 'mres':      res.mres      += b.v; break;
+      case 'bres':      res.bres      += b.v; break;
+      case 'lres':      res.lres      += b.v; break;
+      case 'drain':     res.drain     += b.v; break;
+      case 'healUp':    res.heal_up   += b.v; break;
+      case 'dmgReduce': res.dmgReduce += b.v; break;
+      case 'skillPw':   res.skillPw   += b.v; break;
+    }
+  }
 }
+function _applyAccSetBonus(res,bonus) { /* legacy shim - unused */ }
 
 function renderUnitAccessorySlots(u) {
   const owned = gState.accessories||[];
@@ -16093,10 +16159,10 @@ function renderUnitAccessorySlots(u) {
   const setCounts={};
   equipped.filter(Boolean).forEach(a=>{if(a.setId) setCounts[a.setId]=(setCounts[a.setId]||0)+1;});
   Object.entries(setCounts).forEach(([setId,cnt])=>{
-    if (cnt>=3) {
-      const set=ACCESSORY_SETS.find(s=>s.id===setId);
-      if(set) html+=`<div class="acc-set-bonus">✨ セット効果 [${set.icon}${set.name}] ${set.bonusLabel}</div>`;
-    }
+    const set=ACCESSORY_SETS.find(s=>s.id===setId);
+    if (!set) return;
+    if (cnt>=2) html+=`<div class="acc-set-bonus">✨ [${set.icon}${set.name}] 2枚: ${set.label2}</div>`;
+    if (cnt>=4) html+=`<div class="acc-set-bonus" style="color:var(--gold)">✦ [${set.icon}${set.name}] 4枚: ${set.label4}</div>`;
   });
   return html;
 }
@@ -16165,19 +16231,73 @@ function refreshUnitAccessoryUI(uid) {
   if (el&&u) el.innerHTML=renderUnitAccessorySlots(u);
 }
 
+let accShopSubTab = 'buy'; // 'buy' | 'enhance' | 'melt'
+
 function renderAccessoryShop(el) {
-  const bestDepth=gState.progress?.abyss?.bestDepth||0;
-  const crystals=gState.player.starCrystal||0;
-  el.innerHTML='';
-  const header=document.createElement('div');
-  header.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:12px">💠 星晶石: <span style="color:#89e3ff;font-weight:700;font-size:16px">${fmt(crystals)}</span>　アビス最深部: ${bestDepth}F</div>`;
-  el.appendChild(header);
-  [{rarity:1,cost:20,unlock:0},{rarity:2,cost:50,unlock:1},{rarity:3,cost:100,unlock:5},{rarity:4,cost:200,unlock:9}].forEach(item=>{
-    const unlocked=bestDepth>=item.unlock;
-    const canBuy=unlocked&&crystals>=item.cost;
-    const row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:8px;border-radius:4px;';
-    row.innerHTML=`<div style="font-size:22px;color:${ACC_RARITY_COLOR[item.rarity]}">✦</div>
+  el.innerHTML = '';
+
+  // サブタブ
+  const tabRow = document.createElement('div');
+  tabRow.className = 'smithy-tabs';
+  [['buy','購入'],['enhance','強化'],['melt','分解']].forEach(([id,lbl])=>{
+    const t = document.createElement('div');
+    t.className = 'smithy-tab' + (accShopSubTab===id?' active':'');
+    t.textContent = lbl;
+    t.addEventListener('click', ()=>{ accShopSubTab=id; renderSmithyContent(); });
+    tabRow.appendChild(t);
+  });
+  el.appendChild(tabRow);
+
+  if (accShopSubTab === 'buy')     _renderAccBuy(el);
+  else if (accShopSubTab === 'enhance') _renderAccEnhance(el);
+  else                             _renderAccMelt(el);
+}
+
+function _renderAccBuy(el) {
+  const bestDepth = gState.progress?.abyss?.bestDepth||0;
+  const crystals  = gState.player.starCrystal||0;
+  const coin      = gState.player.clanCoin||0;
+  const stardust  = gState.player.stardust||0;
+
+  el.appendChild(Object.assign(document.createElement('div'), {
+    style: 'padding:8px 0;font-size:11px;color:var(--text3)',
+    innerHTML: `${itemIconHTML('ink','13px')} 星導インク: <b style="color:var(--gold)">${fmt(coin)}</b>
+      &nbsp;&nbsp;💠 星晶石: <b style="color:#89e3ff">${fmt(crystals)}</b>
+      &nbsp;&nbsp;✨ 星屑の砂: <b style="color:var(--accent2)">${fmt(stardust)}</b>
+      &nbsp;&nbsp;🌑 アビス最深部: ${bestDepth}F`
+  }));
+
+  // ★1・★2 → 星導インクで即購入
+  const coinShop = [{rarity:1, cost:50},{rarity:2, cost:200}];
+  const secTitle1 = document.createElement('div');
+  secTitle1.className = 'lib-bonus-title';
+  secTitle1.textContent = '★1-★2 (星導インクで購入)';
+  el.appendChild(secTitle1);
+  coinShop.forEach(item=>{
+    const canBuy = coin >= item.cost;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:4px;';
+    row.innerHTML = `<div style="font-size:20px;color:${ACC_RARITY_COLOR[item.rarity]}">✦</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:${ACC_RARITY_COLOR[item.rarity]}">${accStars(item.rarity)} アクセサリー</div>
+        <div style="font-size:10px;color:var(--text3)">ランダムセット・ランダムステータス</div>
+      </div>
+      <button class="btn btn-sm btn-blue" ${canBuy?'':'disabled'} onclick="buyAccWithCoin(${item.rarity},${item.cost})">${itemIconHTML('ink','12px')}${item.cost}</button>`;
+    el.appendChild(row);
+  });
+
+  // ★3・★4 → 星晶石＋アビス到達
+  const secTitle2 = document.createElement('div');
+  secTitle2.className = 'lib-bonus-title';
+  secTitle2.style.marginTop = '10px';
+  secTitle2.textContent = '★3-★4 (星晶石で購入・アビス解放)';
+  el.appendChild(secTitle2);
+  [{rarity:3,cost:100,unlock:5},{rarity:4,cost:300,unlock:15}].forEach(item=>{
+    const unlocked = bestDepth >= item.unlock;
+    const canBuy   = unlocked && crystals >= item.cost;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:4px;';
+    row.innerHTML = `<div style="font-size:20px;color:${ACC_RARITY_COLOR[item.rarity]}">✦</div>
       <div style="flex:1">
         <div style="font-size:12px;font-weight:700;color:${ACC_RARITY_COLOR[item.rarity]}">${accStars(item.rarity)} アクセサリー</div>
         <div style="font-size:10px;color:var(--text3)">${unlocked?'ランダムセット・ランダムステータス':`アビス${item.unlock}F到達で解放`}</div>
@@ -16185,55 +16305,159 @@ function renderAccessoryShop(el) {
       <button class="btn btn-sm btn-blue" ${canBuy?'':'disabled'} onclick="buyAccessory(${item.rarity},${item.cost})">💠${item.cost}</button>`;
     el.appendChild(row);
   });
-  // 所持アクセサリー一覧
-  const owned=gState.accessories||[];
+
+  // 所持一覧
+  const owned = gState.accessories||[];
   if (owned.length) {
-    const title=document.createElement('div');
-    title.className='lib-bonus-title';
-    title.style.marginTop='14px';
-    title.textContent=`所持アクセサリー (${owned.length})`;
+    const title = document.createElement('div');
+    title.className = 'lib-bonus-title';
+    title.style.marginTop = '12px';
+    title.textContent = `所持アクセサリー (${owned.length})`;
     el.appendChild(title);
-    const grid=document.createElement('div');
-    grid.className='acc-grid';
+    const grid = document.createElement('div');
+    grid.className = 'acc-grid';
     owned.forEach((acc,i)=>{
-      const set=ACCESSORY_SETS.find(s=>s.id===acc.setId);
-      const cls=acc.rarity>=4?'acc-r4':acc.rarity>=3?'acc-r3':acc.rarity>=2?'acc-r2':'';
-      const subTxt=(acc.subStats||[]).map(s=>`${s.label}+${s.val}`).join(' ');
-      const card=document.createElement('div');
-      card.className=`acc-card ${cls}`;
-      card.innerHTML=`<div style="font-size:16px">${set?.icon||'✦'} <span style="font-size:10px;color:${ACC_RARITY_COLOR[acc.rarity]}">${accStars(acc.rarity)}</span></div>
+      const set = ACCESSORY_SETS.find(s=>s.id===acc.setId);
+      const cls = acc.rarity>=4?'acc-r4':acc.rarity>=3?'acc-r3':acc.rarity>=2?'acc-r2':'';
+      const lv  = acc.level||0;
+      const subTxt = (acc.subStats||[]).map(s=>`${s.label}+${s.val}`).join(' ');
+      const card = document.createElement('div');
+      card.className = `acc-card ${cls}`;
+      card.innerHTML = `<div style="font-size:16px">${set?.icon||'✦'} <span style="font-size:10px;color:${ACC_RARITY_COLOR[acc.rarity]}">${accStars(acc.rarity)}</span></div>
         <div style="font-size:11px;font-weight:700;color:var(--text)">${set?.name||'?'}</div>
-        <div style="font-size:10px;color:var(--accent2)">${acc.mainStat.label}+${acc.mainStat.val}</div>
-        ${subTxt?`<div style="font-size:10px;color:var(--text3)">${subTxt}</div>`:''}
-        <button class="btn btn-sm" style="margin-top:4px;font-size:9px;background:rgba(224,85,85,0.12);color:var(--red);border-color:rgba(224,85,85,0.3)" onclick="discardAccessory(${i},event)">売却</button>`;
+        <div style="font-size:10px;color:var(--accent2)">${acc.mainStat.label}+${acc.mainStat.val}${lv?` <span style="color:var(--gold)">(Lv${lv})</span>`:''}</div>
+        ${subTxt?`<div style="font-size:10px;color:var(--text3)">${subTxt}</div>`:''}`;
       grid.appendChild(card);
     });
     el.appendChild(grid);
   }
 }
 
-function buyAccessory(rarity, cost) {
-  if ((gState.player.starCrystal||0)<cost) return;
-  gState.player.starCrystal-=cost;
-  if (!gState.accessories) gState.accessories=[];
+function _renderAccEnhance(el) {
+  const stardust = gState.player.stardust||0;
+  el.appendChild(Object.assign(document.createElement('div'), {
+    style: 'padding:8px 0;font-size:11px;color:var(--text2)',
+    innerHTML: `✨ 星屑の砂: <b style="color:var(--accent2)">${fmt(stardust)}</b>`
+  }));
+
+  const owned = gState.accessories||[];
+  if (!owned.length) {
+    el.appendChild(Object.assign(document.createElement('div'),{className:'empty-hint',textContent:'所持アクセサリーがありません'}));
+    return;
+  }
+  owned.forEach((acc,idx)=>{
+    const set   = ACCESSORY_SETS.find(s=>s.id===acc.setId);
+    const lv    = acc.level||0;
+    const cost  = accEnhanceCost(acc.rarity, lv);
+    const maxed = lv >= 10;
+    const canUp = !maxed && stardust >= cost;
+    const scale = 1 + lv*0.1;
+    const row = document.createElement('div');
+    row.style.cssText = 'padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:4px;';
+    row.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:18px">${set?.icon||'✦'}</span>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:700;color:${ACC_RARITY_COLOR[acc.rarity]}">${accStars(acc.rarity)} ${set?.name||'?'}</div>
+          <div style="font-size:10px;color:var(--text3)">${acc.mainStat.label}+${Math.floor(acc.mainStat.val*scale)} / Lv${lv}/10</div>
+        </div>
+        <button class="btn btn-sm btn-blue" ${canUp?'':'disabled'} onclick="enhanceAccessory(${idx})">
+          ${maxed?'MAX':'✨'+cost+' 強化'}
+        </button>
+      </div>
+      <div style="background:var(--bg2);border-radius:2px;height:4px"><div style="background:var(--accent2);width:${lv*10}%;height:100%;border-radius:2px"></div></div>`;
+    el.appendChild(row);
+  });
+}
+
+function _renderAccMelt(el) {
+  const owned = gState.accessories||[];
+  if (!owned.length) {
+    el.appendChild(Object.assign(document.createElement('div'),{className:'empty-hint',textContent:'分解できるアクセサリーがありません'}));
+    return;
+  }
+  el.appendChild(Object.assign(document.createElement('div'), {
+    style: 'font-size:11px;color:var(--text3);padding:8px 0 10px',
+    textContent: '分解すると星屑の砂を獲得できます。装備中のものは分解できません。'
+  }));
+  owned.forEach((acc,i)=>{
+    const set      = ACCESSORY_SETS.find(s=>s.id===acc.setId);
+    const lv       = acc.level||0;
+    const refund   = accMeltRefund(acc.rarity, lv);
+    const inUse    = gState.ownedUnits.some(u=>u.equippedAccessories&&Object.values(u.equippedAccessories).includes(acc.uid));
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:4px;';
+    row.innerHTML = `<span style="font-size:20px">${set?.icon||'✦'}</span>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:${ACC_RARITY_COLOR[acc.rarity]}">${accStars(acc.rarity)} ${set?.name||'?'} ${lv?`<span style="color:var(--gold);font-size:10px">Lv${lv}</span>`:''}</div>
+        <div style="font-size:10px;color:var(--text3)">${acc.mainStat.label}+${acc.mainStat.val}</div>
+      </div>
+      <span style="font-size:11px;color:var(--accent2);margin-right:6px">✨+${refund}</span>`;
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-sm';
+    btn.style.cssText = 'background:rgba(224,85,85,0.12);color:var(--red);border:1px solid rgba(224,85,85,0.3);';
+    btn.textContent = inUse ? '装備中' : '分解';
+    btn.disabled = inUse;
+    btn.addEventListener('click', ()=> meltAccessory(i));
+    row.appendChild(btn);
+    el.appendChild(row);
+  });
+}
+
+// 強化コスト: ★1=1/Lv, ★2=2/Lv, ★3=4/Lv, ★4=8/Lv (Lv0→1 が 1段)
+function accEnhanceCost(rarity, level) {
+  return Math.ceil([1,2,4,8][rarity-1] * (1 + Math.floor(level/3)));
+}
+// 分解還元: レアリティ×3 + Lv×2
+function accMeltRefund(rarity, level) {
+  return rarity * 3 + (level||0) * 2;
+}
+
+function buyAccWithCoin(rarity, cost) {
+  if ((gState.player.clanCoin||0) < cost) return;
+  gState.player.clanCoin -= cost;
+  if (!gState.accessories) gState.accessories = [];
   gState.accessories.push(generateAccessory(rarity));
-  saveState();
-  updateTopBar();
-  renderSmithyContent();
+  saveState(); updateTopBar(); renderSmithyContent();
+}
+
+function buyAccessory(rarity, cost) {
+  if ((gState.player.starCrystal||0) < cost) return;
+  gState.player.starCrystal -= cost;
+  if (!gState.accessories) gState.accessories = [];
+  gState.accessories.push(generateAccessory(rarity));
+  saveState(); updateTopBar(); renderSmithyContent();
+}
+
+function enhanceAccessory(idx) {
+  const acc = (gState.accessories||[])[idx];
+  if (!acc) return;
+  const lv = acc.level||0;
+  if (lv >= 10) return;
+  const cost = accEnhanceCost(acc.rarity, lv);
+  if ((gState.player.stardust||0) < cost) { toast('星屑の砂が不足しています'); return; }
+  gState.player.stardust -= cost;
+  acc.level = lv + 1;
+  saveState(); updateTopBar(); renderSmithyContent();
+}
+
+function meltAccessory(idx) {
+  const acc = (gState.accessories||[])[idx];
+  if (!acc) return;
+  const inUse = gState.ownedUnits.some(u=>u.equippedAccessories&&Object.values(u.equippedAccessories).includes(acc.uid));
+  if (inUse) return;
+  gState.player.stardust = (gState.player.stardust||0) + accMeltRefund(acc.rarity, acc.level||0);
+  gState.ownedUnits.forEach(u=>{
+    if (u.equippedAccessories) Object.keys(u.equippedAccessories).forEach(s=>{
+      if (u.equippedAccessories[s]===acc.uid) u.equippedAccessories[s]=null;
+    });
+  });
+  gState.accessories.splice(idx, 1);
+  saveState(); updateTopBar(); renderSmithyContent();
 }
 
 function discardAccessory(idx, e) {
-  e.stopPropagation();
-  const inst=(gState.accessories||[])[idx];
-  if (!inst) return;
-  gState.ownedUnits.forEach(u=>{
-    if (u.equippedAccessories) Object.keys(u.equippedAccessories).forEach(s=>{
-      if (u.equippedAccessories[s]===inst.uid) u.equippedAccessories[s]=null;
-    });
-  });
-  gState.accessories.splice(idx,1);
-  saveState();
-  renderSmithyContent();
+  if (e) e.stopPropagation();
+  meltAccessory(idx);
 }
 
 // ============================================================
