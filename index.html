@@ -1297,6 +1297,28 @@ img.item-icon {
 .tac-badge-type-pas { background: rgba(180,125,255,0.12);color: var(--purple); border: 1px solid rgba(180,125,255,0.3); }
 .tac-badge-src-card { background: rgba(201,168,76,0.08); color: var(--gold2);  border: 1px solid rgba(201,168,76,0.2); }
 
+/* 種族バッジ */
+.species-badge {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+  padding: 1px 5px; border-radius: 2px;
+}
+.species-hume      { background: rgba(80,160,220,0.15); color: #80c4e8; border: 1px solid rgba(80,160,220,0.35); }
+.species-beast     { background: rgba(180,120,60,0.15);  color: #d4945a; border: 1px solid rgba(180,120,60,0.35); }
+.species-elemental { background: rgba(80,200,160,0.15); color: #60c8a8; border: 1px solid rgba(80,200,160,0.35); }
+.species-specter   { background: rgba(150,100,200,0.15); color: #b884e8; border: 1px solid rgba(150,100,200,0.35); }
+.species-machia    { background: rgba(200,180,60,0.15);  color: #d4c44a; border: 1px solid rgba(200,180,60,0.35); }
+.species-celestia  { background: rgba(220,200,120,0.15); color: #f0d870; border: 1px solid rgba(220,200,120,0.35); }
+.species-daemon    { background: rgba(200,60,80,0.15);   color: #e05060; border: 1px solid rgba(200,60,80,0.35); }
+
+/* 攻撃タイプバッジ */
+.atk-type-badge {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+  padding: 1px 4px; border-radius: 2px;
+  background: rgba(255,255,255,0.06); color: var(--text2); border: 1px solid var(--border);
+}
+
 /* トリガー列 */
 .tac-trigger-col {
   width: 108px; flex-shrink: 0; display: flex; flex-direction: column;
@@ -3448,6 +3470,8 @@ const CLASS_DATA = {
     icon: '⚔️',
     iconImg: 'assets/images/role-warrior.png',
     role: 'アタッカー',
+    species: 'hume',
+    attackTypes: ['斬','打'],
     baseStats: { atk:820, hp:3200, mp:1800, pres:18, mres:10, bres:5, lres:0, spd:80, cri:8, cridam:150 },
     baseSearch:  10,
     baseStealth:  5,
@@ -3486,6 +3510,8 @@ const CLASS_DATA = {
     icon: '🛡️',
     iconImg: 'assets/images/role-vanguard.png',
     role: 'タンク',
+    species: 'hume',
+    attackTypes: ['打'],
     baseStats: { atk:600, hp:4500, mp:2800, pres:28, mres:18, bres:12, lres:5, spd:60, cri:4, cridam:130 },
     baseSearch:   5,
     baseStealth:  3,
@@ -3534,6 +3560,8 @@ const CLASS_DATA = {
     name: 'プリースト',
     icon: '✨',
     role: 'ヒーラー',
+    species: 'celestia',
+    attackTypes: ['魔'],
     baseStats: { atk:700, hp:3000, mp:3000, pres:5, mres:15, bres:10, lres:0, spd:70, cri:5, cridam:140 },
     baseSearch:  10,
     baseStealth:  5,
@@ -3572,6 +3600,8 @@ const CLASS_DATA = {
     name: 'アサシン',
     icon: '🗡️',
     role: 'スカウト',
+    species: 'specter',
+    attackTypes: ['斬','裂'],
     baseStats: { atk:950, hp:2000, mp:1800, pres:5, mres:5, bres:8, lres:0, spd:118, cri:22, cridam:180 },
     baseSearch:  48,
     baseStealth: 45,
@@ -3613,6 +3643,8 @@ const CLASS_DATA = {
     icon: '🏹',
     iconImg: 'assets/images/role-ranger.png',
     role: 'レンジ',
+    species: 'hume',
+    attackTypes: ['貫'],
     baseStats: { atk:780, hp:2600, mp:1400, pres:5, mres:8, bres:3, lres:0, spd:85, cri:14, cridam:170 },
     baseSearch:  30,
     baseStealth: 10,
@@ -3643,6 +3675,99 @@ const CLASS_DATA = {
         power:0.04, type:'blue', target:'random_multi', hits:10 },
     ],
   },
+};
+
+// ============================================================
+//  種族・攻撃タイプシステム
+// ============================================================
+
+// 種族表示名
+const SPECIES_LABELS = {
+  hume:      'ヒューム',
+  beast:     'ビースト',
+  elemental: 'エレメンタル',
+  specter:   'スペクター',
+  machia:    'マキア',
+  celestia:  'セレスティア',
+  daemon:    'デーモン',
+};
+
+// 種族アイコン
+const SPECIES_ICONS = {
+  hume:      '👤',
+  beast:     '🐾',
+  elemental: '✦',
+  specter:   '👁️',
+  machia:    '⚙️',
+  celestia:  '☀️',
+  daemon:    '🔥',
+};
+
+// 有利関係：attacker → defender で攻撃側+20%
+// 循環: hume→beast→elemental→specter→machia→hume
+// 特別: celestia↔daemon（相互有利）, celestia→specter, daemon→elemental, machia→daemon
+const SPECIES_ADV_SET = new Set([
+  'hume→beast', 'beast→elemental', 'elemental→specter',
+  'specter→machia', 'machia→hume',
+  'celestia→specter', 'celestia→daemon', 'daemon→celestia',
+  'daemon→elemental', 'machia→daemon',
+]);
+
+// 攻撃側種族vs防御側種族の与ダメ倍率
+function getSpeciesMultiplier(atkSpecies, defSpecies) {
+  if (!atkSpecies || !defSpecies || atkSpecies === defSpecies) return 1.0;
+  const key    = `${atkSpecies}→${defSpecies}`;
+  const revKey = `${defSpecies}→${atkSpecies}`;
+  if (SPECIES_ADV_SET.has(key))    return 1.2;  // 有利: +20%
+  if (SPECIES_ADV_SET.has(revKey)) return 0.8;  // 不利: -20%
+  return 1.0;
+}
+
+// 種族バッジHTML
+function speciesBadgeHTML(speciesId, size='small') {
+  if (!speciesId) return '';
+  const label = SPECIES_LABELS[speciesId] || speciesId;
+  const icon  = SPECIES_ICONS[speciesId]  || '';
+  const px    = size === 'large' ? '10px' : '9px';
+  return `<span class="species-badge species-${speciesId}" style="font-size:${px}">${icon} ${label}</span>`;
+}
+
+// 攻撃タイプバッジHTML
+function attackTypesBadgeHTML(types) {
+  if (!types || !types.length) return '';
+  return types.map(t => `<span class="atk-type-badge">${t}</span>`).join('');
+}
+
+// モンスター名→種族マップ（enemyData.speciesが未設定の場合のフォールバック）
+const ENEMY_SPECIES_MAP = {
+  // エレメンタル
+  'スライム':           'elemental',
+  'グリーンスライム':   'elemental',
+  // ビースト
+  'ホーンラビット':     'beast',
+  'グレイウルフ':       'beast',
+  'ワイルドボア':       'beast',
+  'アイアンホーン':     'beast',
+  'ゴブリンライダー':   'beast',
+  '深淵狼':             'beast',
+  '深淵ドラゴン':       'beast',
+  // ヒューム
+  'ゴブリン':           'hume',
+  'ゴブリンアーチャー': 'hume',
+  'ゴブリンハンター':   'hume',
+  'ゴブリンチャンピオン': 'hume',
+  'ホブゴブリン':       'hume',
+  'オーク':             'hume',
+  '奈落コボルト':       'hume',
+  '深淵騎士':           'hume',
+  // スペクター
+  'スケルトン':         'specter',
+  '奈落番人':           'specter',
+  '星辰の亡霊':         'specter',
+  '深淵の支配者':       'specter',
+  '虚無の君主':         'specter',
+  // エレメンタル（魔法系）
+  '奈落魔導師':         'elemental',
 };
 
 // ============================================================
@@ -7703,6 +7828,7 @@ function renderCharaTab() {
       <div class="class-icon-big">${classIconHTML(u.classId,"56px")}</div>
       <div class="unit-name">${u.name}</div>
       <div class="unit-class" style="display:flex;align-items:center;justify-content:center;gap:5px">${roleIconHTML(u.classId,'16px')} ${cls.role} / ${cls.name}</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:3px;">${speciesBadgeHTML(cls.species)}</div>
       <div class="unit-lv">Lv.${prog.level}</div>
       <div class="passive-dots">${dotHtml}</div>
       ${sellMode ? `<div style="font-size:10px;color:var(--red);margin-top:4px">💰${fmt(100*prog.level)}</div>` : ''}`;
@@ -7902,6 +8028,7 @@ function openUnitDetail(uid) {
           <button id="udp-rename-btn" style="background:none;border:1px solid var(--border);color:var(--text3);font-size:10px;padding:2px 6px;cursor:pointer">✏️</button>
         </div>
         <div class="class" style="display:flex;align-items:center;gap:6px">${roleIconHTML(u.classId,'18px')} <span>${cls.role} / ${cls.name}</span></div>
+        <div style="display:flex;align-items:center;gap:4px;margin-top:3px">${speciesBadgeHTML(cls.species,'large')} ${attackTypesBadgeHTML(cls.attackTypes)}</div>
         <div class="lv-badge">Lv.${prog.level} / ${awakeLimit}</div>
       </div>
       <div style="margin-left:auto;text-align:right">
@@ -9090,6 +9217,8 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos) {
     const combatant = {
       uid: unit.uid, name: unit.name, icon: cls.icon,
       classId: unit.classId,
+      species: cls.species || null,
+      attackTypes: cls.attackTypes || [],
       maxHp: hp, hp: hp,
       maxMp: baseMp, mp: baseMp,
       atk, pres, mres: stats.mres,
@@ -9141,6 +9270,7 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos) {
     return {
       uid: 'e_' + Math.random().toString(36).slice(2),
       name: enemyData.name, icon: enemyData.icon,
+      species: enemyData.species || ENEMY_SPECIES_MAP[enemyData.name] || null,
       maxHp: enemyData.hp, hp: enemyData.hp,
       maxMp, mp: maxMp,
       atk: enemyData.atk, pres: enemyData.pres||0, mres: enemyData.mres||0,
@@ -9335,6 +9465,7 @@ function combatantCardHTML(c) {
         ${leaderBadge}
         <span class="cc-icon">${c.isEnemy ? c.icon : classIconHTML(c.classId,'20px')}</span>
         <span class="cc-name-text">${c.name}</span>
+        ${c.species ? `<span class="species-badge species-${c.species}" style="font-size:8px;padding:1px 3px;">${SPECIES_ICONS[c.species]||''}</span>` : ''}
         ${atkInfo}
       </div>
       <div class="hp-bar-wrap">
@@ -10759,6 +10890,13 @@ function doAttack(attacker, targets, skill) {
     // Step7c: クリティカル判定（red/white のみ）
     const result = computeDmg(attacker, target, skill);
     let { hpDmg, mpDmg, dmgType } = result;
+    // 種族相性ログ（有利/不利時のみ）
+    const _specMult = getSpeciesMultiplier(attacker.species, target.species);
+    if (_specMult > 1.0) {
+      addLog(`${SPECIES_LABELS[attacker.species]||''} <span class="tag tag-buff">種族有利 +20%</span> vs ${SPECIES_LABELS[target.species]||''}`, 'trigger');
+    } else if (_specMult < 1.0) {
+      addLog(`${SPECIES_LABELS[attacker.species]||''} <span class="tag tag-debuff">種族不利 -20%</span> vs ${SPECIES_LABELS[target.species]||''}`, 'trigger');
+    }
     const canCrit = (dmgType === 'red' || dmgType === 'white' || dmgType === 'phys' || dmgType === 'black');
     const forceByLowHp  = skill.effect?.forceCritIfLowHp && (target.hp / target.maxHp) <= 0.5;
     const forceByShield = skill.effect?.forceCritIfShield && (attacker.shield||0) > 0;
@@ -11661,6 +11799,10 @@ function computeDmg(attacker, target, skill) {
 
   // 夜戦補正
   const nightMult = (attacker.nightDamageMult && attacker.nightDamageMult !== 1.0) ? attacker.nightDamageMult : 1.0;
+
+  // 種族相性補正
+  const speciesMult = getSpeciesMultiplier(attacker.species, target.species);
+  base *= speciesMult;
 
   const minDmg = Math.max(1, Math.floor(attacker.atk * (skill.power||1) * 0.03));
 
@@ -13057,6 +13199,34 @@ MPが0になると発生→次の行動をスキップ→MP30%で復活。
 
 ■ 耐性の上限
 各耐性は最大90%まで。完全無効化はできません。`
+  },
+  {
+    id:'sys_species', icon:'🧬', title:'種族と相性システム',
+    content:`■ 種族一覧
+各クラス・モンスターには種族が設定されています。
+
+ヒューム（👤）：ウォリアー・ヴァンガード・アーチャー など
+スペクター（👁️）：アサシン・スケルトン など
+セレスティア（☀️）：プリースト など
+ビースト（🐾）：狼・猪・ライダー系モンスター
+エレメンタル（✦）：スライム・魔導師系 など
+マキア（⚙️）：機械系（未実装予定）
+デーモン（🔥）：悪魔系（未実装予定）
+
+■ 種族相性（循環チェーン）
+ヒューム → ビースト → エレメンタル → スペクター → マキア → ヒューム
+（→は有利方向。不利側は与ダメ-20%）
+
+■ 特別関係
+セレスティア ⇔ デーモン：お互いに有利（双方+20%）
+セレスティア → スペクター：有利（+20%）
+デーモン → エレメンタル：有利（+20%）
+マキア → デーモン：有利（+20%）
+
+■ ダメージ補正
+有利時：与ダメ +20%
+不利時：与ダメ -20%
+（戦闘ログに「種族有利/不利」と表示されます）`
   },
   {
     id:'sys_formation', icon:'⚔️', title:'編成と陣形',
@@ -15096,12 +15266,16 @@ function renderLibraryMonsters(el) {
     if (!seen.has(e.name)) { seen.add(e.name); _monsterBookList.push(e); }
   }));
 
-  const grid = _monsterBookList.map((m,i) => `
+  const grid = _monsterBookList.map((m,i) => {
+    const sp = m.species || ENEMY_SPECIES_MAP[m.name] || null;
+    return `
     <div class="lib-monster-card" onclick="openMonsterDetail(${i})">
       <div style="font-size:28px">${m.icon||'❓'}</div>
       <div style="font-size:11px;font-weight:700;color:var(--text);margin:4px 0 2px">${m.name}</div>
+      ${sp ? `<div style="margin:2px 0">${speciesBadgeHTML(sp)}</div>` : ''}
       <div style="font-size:10px;color:var(--text3)">HP ${fmt(m.hp)}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   el.innerHTML = `
     <button class="btn btn-outline btn-sm" onclick="renderLibraryContent()" style="margin-bottom:10px">← キャラクター図鑑</button>
@@ -15116,11 +15290,13 @@ function openMonsterDetail(idx) {
     `<div style="font-size:11px;color:var(--text2);padding:2px 0">・${s.name} <span style="color:var(--text3)">(${s.type}属性 ×${s.power}${s.target==='all'?' 全体':''})</span></div>`
   ).join('');
   const el = document.getElementById('library-content');
+  const mSpecies = m.species || ENEMY_SPECIES_MAP[m.name] || null;
   el.innerHTML = `
     <button class="btn btn-outline btn-sm" onclick="renderLibraryMonsters(document.getElementById('library-content'))" style="margin-bottom:12px">← 図鑑に戻る</button>
     <div style="text-align:center;padding:16px 0 12px">
       <div style="font-size:52px">${m.icon||'❓'}</div>
       <div style="font-size:18px;font-weight:700;color:var(--text);margin:8px 0 4px">${m.name}</div>
+      ${mSpecies ? `<div style="margin-top:4px">${speciesBadgeHTML(mSpecies,'large')}</div>` : ''}
     </div>
     <div style="background:var(--bg3);border:1px solid var(--border);padding:12px;margin-bottom:8px;border-radius:4px">
       <div class="lib-bonus-title">基本ステータス</div>
