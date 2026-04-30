@@ -7456,11 +7456,8 @@ function renderHomeTab() {
 
   // 編成プレビュー
   const preset = gState.presets[gState.activePreset];
-  const ft = null; // imagine system: no formation type
   const ftLabel = document.getElementById('home-formation-type');
-  if (ftLabel) {
-    ftLabel.innerHTML = `<span>${ft.icon} ${ft.name}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">${ft.bonus.map(b=>b.label).join(' / ')}</span>`;
-  }
+  if (ftLabel) ftLabel.innerHTML = '';
   const frontEl = document.getElementById('home-front');
   const backEl  = document.getElementById('home-back');
   frontEl.innerHTML = '';
