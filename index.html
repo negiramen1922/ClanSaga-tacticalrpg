@@ -3274,6 +3274,44 @@ const SVG_ICONS = {
   runeT3: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="r3g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#c080f0"/><stop offset="50%" stop-color="#7030c0"/><stop offset="100%" stop-color="#280860"/></linearGradient></defs><ellipse cx="50" cy="50" rx="47" ry="20" fill="none" stroke="#c080f0" stroke-width="2" opacity="0.35" transform="rotate(45,50,50)"/><ellipse cx="50" cy="50" rx="47" ry="20" fill="none" stroke="#c080f0" stroke-width="2" opacity="0.35" transform="rotate(-45,50,50)"/><polygon points="8,50 22,38 22,62" fill="#a060e0" stroke="#280860" stroke-width="1.5"/><polygon points="92,50 78,38 78,62" fill="#a060e0" stroke="#280860" stroke-width="1.5"/><polygon points="50,4 56,18 44,18" fill="#d0a0ff" stroke="#5020a0" stroke-width="1.5"/><polygon points="50,96 56,82 44,82" fill="#c080f0" stroke="#5020a0" stroke-width="1.5"/><polygon points="50,8 88,50 50,92 12,50" fill="url(#r3g)" stroke="#280860" stroke-width="2.5"/><polygon points="50,22 76,50 50,78 24,50" fill="#280860" opacity="0.55"/><polygon points="50,32 68,50 50,68 32,50" fill="none" stroke="#d0a0ff" stroke-width="1.5" opacity="0.5"/><path d="M42,36 L42,64 M42,36 L55,36 Q64,36 64,47 Q64,57 55,57 L42,57" stroke="#e8d0ff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M42,36 L42,64 M42,36 L55,36 Q64,36 64,47 Q64,57 55,57 L42,57" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.75"/></svg>')}`,
 };
 
+// [ロール]の響典 T1-T3 SVGアイコン生成（スキルLvアップ素材）
+(function() {
+  function kyoSVG(bg, sp, co, em, tier) {
+    const tc = tier===1 ? '#38a848' : tier===2 ? '#2068d0' : '#8828c8';
+    const gems = tier===1
+      ? `<circle cx="51" cy="81" r="6.5" fill="${tc}" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>`
+      : tier===2
+      ? `<circle cx="44" cy="81" r="5.5" fill="${tc}" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/><circle cx="58" cy="81" r="5.5" fill="${tc}" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>`
+      : `<circle cx="39" cy="81" r="5" fill="${tc}" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/><circle cx="51" cy="81" r="5" fill="${tc}" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/><circle cx="63" cy="81" r="5" fill="${tc}" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">`+
+      `<rect x="73" y="16" width="4" height="68" rx="1" fill="#f0e8d8"/>`+
+      `<rect x="70" y="18" width="4" height="64" rx="1" fill="#e0d0c0"/>`+
+      `<rect x="15" y="13" width="60" height="74" rx="7" fill="${bg}" stroke="${tc}" stroke-width="2.5"/>`+
+      `<rect x="15" y="13" width="12" height="74" rx="5" fill="${sp}"/>`+
+      `<rect x="27" y="13" width="48" height="74" fill="${co}"/>`+
+      `<rect x="69" y="13" width="6" height="74" rx="4" fill="${co}"/>`+
+      `<ellipse cx="39" cy="35" rx="8" ry="14" fill="rgba(255,255,255,0.15)" transform="rotate(-8,39,35)"/>`+
+      em+gems+`</svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  }
+  const war = `<line x1="51" y1="27" x2="51" y2="65" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="40" y1="42" x2="62" y2="42" stroke="white" stroke-width="5" stroke-linecap="round"/><ellipse cx="51" cy="25" rx="4" ry="3" fill="white"/>`;
+  const vg  = `<path d="M51,28 L66,36 L66,51 Q66,63 51,69 Q36,63 36,51 L36,36 Z" fill="none" stroke="white" stroke-width="4" stroke-linejoin="round"/><line x1="51" y1="38" x2="51" y2="61" stroke="white" stroke-width="2.5" opacity="0.7"/><line x1="44" y1="50" x2="58" y2="50" stroke="white" stroke-width="2.5" opacity="0.7"/>`;
+  const rng = `<line x1="51" y1="26" x2="51" y2="65" stroke="white" stroke-width="4" stroke-linecap="round"/><path d="M51,26 L43,38 M51,26 L59,38" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M46,58 L42,66 L51,62 L60,66 L56,58" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const sup = `<line x1="51" y1="26" x2="51" y2="68" stroke="white" stroke-width="7" stroke-linecap="round"/><line x1="34" y1="42" x2="68" y2="42" stroke="white" stroke-width="7" stroke-linecap="round"/>`;
+  const trk = `<path d="M38,36 Q38,26 51,26 Q64,26 64,36 L64,54 Q58,65 51,65 Q44,65 38,54 Z" fill="none" stroke="white" stroke-width="3.5"/><circle cx="44" cy="42" r="4" fill="none" stroke="white" stroke-width="2.5"/><circle cx="58" cy="42" r="4" fill="none" stroke="white" stroke-width="2.5"/><path d="M44,54 Q48,58 51,58 Q54,58 58,54" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+  const sct = `<circle cx="51" cy="47" r="19" fill="none" stroke="white" stroke-width="3"/><polygon points="51,29 54,47 51,65 48,47" fill="white" opacity="0.95"/><line x1="51" y1="28" x2="51" y2="33" stroke="white" stroke-width="3" stroke-linecap="round"/><line x1="51" y1="61" x2="51" y2="66" stroke="white" stroke-width="3" stroke-linecap="round"/><line x1="32" y1="47" x2="37" y2="47" stroke="white" stroke-width="3" stroke-linecap="round"/><line x1="65" y1="47" x2="70" y2="47" stroke="white" stroke-width="3" stroke-linecap="round"/>`;
+  [
+    ['Warrior',   '#6a1a04', '#b03818', '#c85020', war],
+    ['Vanguard',  '#0a3a18', '#187030', '#259048', vg ],
+    ['Ranger',    '#0a1e6a', '#1840b0', '#2055c8', rng],
+    ['Support',   '#5a3e00', '#a07010', '#c09030', sup],
+    ['Trickster', '#2e0858', '#6025a0', '#8035c0', trk],
+    ['Scout',     '#023830', '#086860', '#12a880', sct],
+  ].forEach(([k, bg, sp, co, em]) => {
+    for (let t = 1; t <= 3; t++) SVG_ICONS[`kyoten${k}T${t}`] = kyoSVG(bg, sp, co, em, t);
+  });
+})();
+
 function itemIconHTML(key, size='18px') {
   const resolvedKey = key === 'expPot' ? 'expPotT1' : key; // expPot → T1 デフォルト
   const svgSrc = SVG_ICONS[resolvedKey];
@@ -6337,6 +6375,7 @@ function normalizeState() {
   // アーティファクト強化素材
   if (!p.atomStone)  p.atomStone  = { t1:0, t2:0, t3:0 };
   if (!p.runeStone)  p.runeStone  = { t1:0, t2:0, t3:0 };   // 神刻ルーン
+  if (!p.kyoten) p.kyoten = { warrior:{t1:0,t2:0,t3:0}, vanguard:{t1:0,t2:0,t3:0}, ranger:{t1:0,t2:0,t3:0}, support:{t1:0,t2:0,t3:0}, trickster:{t1:0,t2:0,t3:0}, scout:{t1:0,t2:0,t3:0} }; // 響典
   if (p.stardust === undefined) p.stardust = 0;
   if (p.cryptoSoulT1 === undefined) p.cryptoSoulT1 = 0;
   if (p.cryptoSoulT2 === undefined) p.cryptoSoulT2 = 0;
@@ -6527,6 +6566,7 @@ function openItemsMenu() {
   const iH = (key, sz='26px') => itemIconHTML(key, sz);
   const stone = p.atomStone || {};
   const core  = p.atomCore  || {};
+  const ky    = p.kyoten    || {};
 
   function section(title, rows, wide=false) {
     const cells = rows.map(([icon, name, val, cls]) => `
@@ -6577,6 +6617,26 @@ function openItemsMenu() {
       [iH('runeT2'), 'ルーンT2', (p.runeStone||{}).t2||0, 'blue'],
       [iH('runeT3'), 'ルーンT3', (p.runeStone||{}).t3||0, 'purple'],
     ])}
+    ${section('響典（スキルLv素材）', [
+      [iH('kyotenWarriorT1'),   'ATK T1', (ky.warrior  ||{}).t1||0, 'amber'],
+      [iH('kyotenWarriorT2'),   'ATK T2', (ky.warrior  ||{}).t2||0, 'amber'],
+      [iH('kyotenWarriorT3'),   'ATK T3', (ky.warrior  ||{}).t3||0, 'amber'],
+      [iH('kyotenVanguardT1'),  'VG T1',  (ky.vanguard ||{}).t1||0, 'green'],
+      [iH('kyotenVanguardT2'),  'VG T2',  (ky.vanguard ||{}).t2||0, 'green'],
+      [iH('kyotenVanguardT3'),  'VG T3',  (ky.vanguard ||{}).t3||0, 'green'],
+      [iH('kyotenRangerT1'),    'RNG T1', (ky.ranger   ||{}).t1||0, 'blue'],
+      [iH('kyotenRangerT2'),    'RNG T2', (ky.ranger   ||{}).t2||0, 'blue'],
+      [iH('kyotenRangerT3'),    'RNG T3', (ky.ranger   ||{}).t3||0, 'blue'],
+      [iH('kyotenSupportT1'),   'SUP T1', (ky.support  ||{}).t1||0, 'amber'],
+      [iH('kyotenSupportT2'),   'SUP T2', (ky.support  ||{}).t2||0, 'amber'],
+      [iH('kyotenSupportT3'),   'SUP T3', (ky.support  ||{}).t3||0, 'amber'],
+      [iH('kyotenTricksterT1'), 'TRK T1', (ky.trickster||{}).t1||0, 'purple'],
+      [iH('kyotenTricksterT2'), 'TRK T2', (ky.trickster||{}).t2||0, 'purple'],
+      [iH('kyotenTricksterT3'), 'TRK T3', (ky.trickster||{}).t3||0, 'purple'],
+      [iH('kyotenScoutT1'),     'SCT T1', (ky.scout    ||{}).t1||0, ''],
+      [iH('kyotenScoutT2'),     'SCT T2', (ky.scout    ||{}).t2||0, ''],
+      [iH('kyotenScoutT3'),     'SCT T3', (ky.scout    ||{}).t3||0, ''],
+    ], true)}
     ${section('その他', [
       [`<span style="font-size:22px">⭐</span>`, 'スターPt', p.starMapPoints||0, 'amber'],
       [`<span style="font-size:22px">🎫</span>`, '周回チケット', p.sweepTicket||0, ''],
@@ -7929,20 +7989,35 @@ function openUnitDetail(uid) {
       <div class="sk-card-meta">${_skillTypeBadge(sk.type)}</div>
     </div>`;
   })() : '';
+  const _kyoRoleKey = {'アタッカー':'Warrior','タンク':'Vanguard','レンジ':'Ranger','サポート':'Support','スカウト':'Scout','トリックスター':'Trickster'}[cls.role] || 'Warrior';
+  const _kyoBag = (gState.player.kyoten||{})[_kyoRoleKey.toLowerCase()] || {t1:0,t2:0,t3:0};
+  const _KSCOST = [{t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1}];
   const activeSkillsHTML = (cls.activeSkills||[]).map(sk => {
     const bColor = _skillBorderColor[sk.type] || 'var(--border)';
     const isSupport = sk.type === 'buff';
     const typeImgSrc = isSupport ? 'assets/images/card-type-support.png' : 'assets/images/card-type-attack.png';
     const typeLabelText = isSupport ? '支援' : '攻撃';
     const typeLabelCls  = isSupport ? 'tac-badge-type-sup' : 'tac-badge-type-atk';
+    const skLv = (prog.skillLevels||{})[sk.id] || 1;
+    const atSkMax = skLv >= 4;
+    const skCost = atSkMax ? null : _KSCOST[skLv - 1];
+    const canSkUp = skCost && _kyoBag.t1>=(skCost.t1||0) && _kyoBag.t2>=(skCost.t2||0) && _kyoBag.t3>=(skCost.t3||0);
+    const skIconKey = `kyoten${_kyoRoleKey}T${skLv <= 3 ? skLv : 3}`;
+    const skCostStr = skCost ? (skCost.t1 ? `T1×${skCost.t1}` : skCost.t2 ? `T2×${skCost.t2}` : `T3×${skCost.t3}`) : '';
+    const skUpBtn = atSkMax
+      ? `<span style="font-size:9px;color:var(--green);font-weight:700">MAX</span>`
+      : `<button onclick="skillUpChar('${uid}','${sk.id}')" style="font-size:10px;padding:2px 7px;display:inline-flex;align-items:center;gap:3px;background:${canSkUp?'rgba(200,160,40,0.2)':'rgba(60,60,60,0.2)'};color:${canSkUp?'var(--gold)':'var(--text3)'};border:1px solid ${canSkUp?'rgba(200,160,40,0.4)':'var(--border)'};border-radius:4px;cursor:${canSkUp?'pointer':'default'}" ${canSkUp?'':'disabled'}>${itemIconHTML(skIconKey,'11px')} ${skCostStr} →Lv.${skLv+1}</button>`;
     return `
     <div class="sk-card" style="border-left:3px solid ${bColor};">
       <div class="sk-card-header">
         <span class="sk-card-name">${sk.name}</span>
-        ${_typeIcon(typeImgSrc, typeLabelText, typeLabelCls)}
+        <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          ${_typeIcon(typeImgSrc, typeLabelText, typeLabelCls)}
+          <span style="font-size:9px;font-weight:700;color:var(--gold);font-family:'Rajdhani'">Lv.${skLv}</span>
+        </span>
       </div>
       <div class="sk-card-desc">${sk.desc || ''}</div>
-      <div class="sk-card-meta">${_skillTypeBadge(sk.type, sk.cd)}</div>
+      <div class="sk-card-meta" style="display:flex;align-items:center;justify-content:space-between;gap:4px">${_skillTypeBadge(sk.type, sk.cd)} ${skUpBtn}</div>
     </div>`;
   }).join('');
   const passiveSkillsHTML = (cls.passiveSkills||[]).map(sk => `
@@ -8103,6 +8178,33 @@ function openUnitDetail(uid) {
 
 function closeUnitDetail() {
   document.getElementById('unit-detail-modal').classList.remove('open');
+}
+
+function skillUpChar(uid, skillId) {
+  const u = gState.ownedUnits.find(x => x.uid === uid);
+  if (!u) return;
+  const cls = CLASS_DATA[u.classId];
+  if (!cls) return;
+  const prog = gState.unitProgress[uid] || {level:1};
+  if (!prog.skillLevels) prog.skillLevels = {};
+  const skLv = prog.skillLevels[skillId] || 1;
+  if (skLv >= 4) return;
+  const KSCOST = [{t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1}];
+  const cost = KSCOST[skLv - 1];
+  const kyoKey = {'アタッカー':'warrior','タンク':'vanguard','レンジ':'ranger','サポート':'support','スカウト':'scout','トリックスター':'trickster'}[cls.role] || 'warrior';
+  if (!gState.player.kyoten) gState.player.kyoten = {};
+  const bag = gState.player.kyoten[kyoKey] || {t1:0,t2:0,t3:0};
+  if (bag.t1 < (cost.t1||0) || bag.t2 < (cost.t2||0) || bag.t3 < (cost.t3||0)) return;
+  bag.t1 -= cost.t1 || 0;
+  bag.t2 -= cost.t2 || 0;
+  bag.t3 -= cost.t3 || 0;
+  gState.player.kyoten[kyoKey] = bag;
+  prog.skillLevels[skillId] = skLv + 1;
+  gState.unitProgress[uid] = prog;
+  const sk = (cls.activeSkills||[]).find(s => s.id === skillId);
+  saveState();
+  toast(`${u.name} 【${sk?.name||'スキル'}】 Lv.${skLv + 1} に上昇！`);
+  openUnitDetail(uid);
 }
 
 function calcPower(stats) {
@@ -15938,6 +16040,25 @@ const SHOP_ITEMS = [
   { id:'crypto_t1',      icon:'cryptoT1', name:'クリプトソウルT1×3',    desc:'イマジン強化素材（低Lv）',           price:100,  currency:'crystal', gives:'cryptoSoulT1',  amount:3 },
   { id:'crypto_t2',      icon:'cryptoT2', name:'クリプトソウルT2×3',    desc:'イマジン強化素材（中Lv）',           price:300,  currency:'crystal', gives:'cryptoSoulT2',  amount:3 },
   { id:'crypto_t3',      icon:'cryptoT3', name:'クリプトソウルT3×3',    desc:'イマジン強化素材（高Lv）',           price:800,  currency:'crystal', gives:'cryptoSoulT3',  amount:3 },
+  // [ロール]の響典 T1-T3（キャラスキルLvアップ素材）
+  { id:'kyoten_warrior_t1',   icon:'kyotenWarriorT1',   name:'アタッカーの響典T1×3', desc:'アタッカー系スキルLv2解放素材', price:300,  currency:'crystal', gives:'kyoten_warrior_t1',   amount:3 },
+  { id:'kyoten_warrior_t2',   icon:'kyotenWarriorT2',   name:'アタッカーの響典T2×2', desc:'アタッカー系スキルLv3解放素材', price:700,  currency:'crystal', gives:'kyoten_warrior_t2',   amount:2 },
+  { id:'kyoten_warrior_t3',   icon:'kyotenWarriorT3',   name:'アタッカーの響典T3×1', desc:'アタッカー系スキルLv4解放素材', price:1800, currency:'crystal', gives:'kyoten_warrior_t3',   amount:1 },
+  { id:'kyoten_vanguard_t1',  icon:'kyotenVanguardT1',  name:'タンクの響典T1×3',     desc:'タンク系スキルLv2解放素材',     price:300,  currency:'crystal', gives:'kyoten_vanguard_t1',  amount:3 },
+  { id:'kyoten_vanguard_t2',  icon:'kyotenVanguardT2',  name:'タンクの響典T2×2',     desc:'タンク系スキルLv3解放素材',     price:700,  currency:'crystal', gives:'kyoten_vanguard_t2',  amount:2 },
+  { id:'kyoten_vanguard_t3',  icon:'kyotenVanguardT3',  name:'タンクの響典T3×1',     desc:'タンク系スキルLv4解放素材',     price:1800, currency:'crystal', gives:'kyoten_vanguard_t3',  amount:1 },
+  { id:'kyoten_ranger_t1',    icon:'kyotenRangerT1',    name:'レンジの響典T1×3',     desc:'レンジ系スキルLv2解放素材',     price:300,  currency:'crystal', gives:'kyoten_ranger_t1',    amount:3 },
+  { id:'kyoten_ranger_t2',    icon:'kyotenRangerT2',    name:'レンジの響典T2×2',     desc:'レンジ系スキルLv3解放素材',     price:700,  currency:'crystal', gives:'kyoten_ranger_t2',    amount:2 },
+  { id:'kyoten_ranger_t3',    icon:'kyotenRangerT3',    name:'レンジの響典T3×1',     desc:'レンジ系スキルLv4解放素材',     price:1800, currency:'crystal', gives:'kyoten_ranger_t3',    amount:1 },
+  { id:'kyoten_support_t1',   icon:'kyotenSupportT1',   name:'サポートの響典T1×3',   desc:'サポート系スキルLv2解放素材',   price:300,  currency:'crystal', gives:'kyoten_support_t1',   amount:3 },
+  { id:'kyoten_support_t2',   icon:'kyotenSupportT2',   name:'サポートの響典T2×2',   desc:'サポート系スキルLv3解放素材',   price:700,  currency:'crystal', gives:'kyoten_support_t2',   amount:2 },
+  { id:'kyoten_support_t3',   icon:'kyotenSupportT3',   name:'サポートの響典T3×1',   desc:'サポート系スキルLv4解放素材',   price:1800, currency:'crystal', gives:'kyoten_support_t3',   amount:1 },
+  { id:'kyoten_trickster_t1', icon:'kyotenTricksterT1', name:'トリックスターの響典T1×3', desc:'トリックスター系スキルLv2解放素材', price:300, currency:'crystal', gives:'kyoten_trickster_t1', amount:3 },
+  { id:'kyoten_trickster_t2', icon:'kyotenTricksterT2', name:'トリックスターの響典T2×2', desc:'トリックスター系スキルLv3解放素材', price:700, currency:'crystal', gives:'kyoten_trickster_t2', amount:2 },
+  { id:'kyoten_trickster_t3', icon:'kyotenTricksterT3', name:'トリックスターの響典T3×1', desc:'トリックスター系スキルLv4解放素材', price:1800, currency:'crystal', gives:'kyoten_trickster_t3', amount:1 },
+  { id:'kyoten_scout_t1',     icon:'kyotenScoutT1',     name:'スカウトの響典T1×3',   desc:'スカウト系スキルLv2解放素材',   price:300,  currency:'crystal', gives:'kyoten_scout_t1',     amount:3 },
+  { id:'kyoten_scout_t2',     icon:'kyotenScoutT2',     name:'スカウトの響典T2×2',   desc:'スカウト系スキルLv3解放素材',   price:700,  currency:'crystal', gives:'kyoten_scout_t2',     amount:2 },
+  { id:'kyoten_scout_t3',     icon:'kyotenScoutT3',     name:'スカウトの響典T3×1',   desc:'スカウト系スキルLv4解放素材',   price:1800, currency:'crystal', gives:'kyoten_scout_t3',     amount:1 },
 ];
 
 function openShop() {
@@ -15993,6 +16114,14 @@ function buyShopItem(item) {
     gState.player.runeStone = bag;
   } else if (item.gives === 'stardust') {
     gState.player.stardust = (gState.player.stardust||0) + item.amount;
+  } else if (item.gives.startsWith('kyoten_')) {
+    const parts = item.gives.split('_'); // ['kyoten','warrior','t1'] or ['kyoten','trickster','t1']
+    const rk = parts.slice(1, -1).join('_'); // handle 'trickster'
+    const tier = parts[parts.length - 1]; // 't1'/'t2'/'t3'
+    if (!gState.player.kyoten) gState.player.kyoten = {};
+    const bag = gState.player.kyoten[rk] || {t1:0,t2:0,t3:0};
+    bag[tier] = (bag[tier]||0) + item.amount;
+    gState.player.kyoten[rk] = bag;
   } else {
     gState.player[item.gives] = (gState.player[item.gives]||0) + item.amount;
   }
