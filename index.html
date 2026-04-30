@@ -856,6 +856,20 @@ img.item-icon {
 .status-icon.pres-down { border-color: var(--red); color: var(--red); }
 .status-icon.debuff { border-color: var(--red); color: var(--red); }
 
+/* ===== SPECIES BADGES ===== */
+.species-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 1px 6px; border-radius: 10px;
+  font-weight: 600; font-family: 'Rajdhani', sans-serif; white-space: nowrap;
+}
+.species-hume      { background: rgba(245,200,66,0.15); color: #f5c842; border: 1px solid rgba(245,200,66,0.35); }
+.species-beast     { background: rgba(100,200,80,0.15); color: #70c850; border: 1px solid rgba(100,200,80,0.35); }
+.species-elemental { background: rgba(30,184,216,0.15); color: #1cb8d8; border: 1px solid rgba(30,184,216,0.35); }
+.species-specter   { background: rgba(160,80,240,0.15); color: #c084fc; border: 1px solid rgba(160,80,240,0.35); }
+.species-machia    { background: rgba(100,180,220,0.15); color: #7ab8d8; border: 1px solid rgba(100,180,220,0.35); }
+.species-celestia  { background: rgba(255,220,80,0.15); color: #ffd040; border: 1px solid rgba(255,220,80,0.35); }
+.species-daemon    { background: rgba(220,50,50,0.15); color: #f87171; border: 1px solid rgba(220,50,50,0.35); }
+
 /* ===== ARTIFACT SYSTEM ===== */
 .af2-card { background:var(--bg3); border:1px solid var(--border); padding:12px; cursor:pointer; transition:border-color 0.15s; }
 .af2-card:hover { border-color:var(--accent); }
@@ -3518,6 +3532,23 @@ const SPECIES_ICONS = {
   daemon:    '🔥',
 };
 
+// 種族SVGアイコン（ダイヤモンドフレームスタイルで統一）
+const SPECIES_SVG_ICONS = {
+  hume: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="hg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d060"/><stop offset="100%" stop-color="#c47f10"/></linearGradient></defs><rect x="15" y="15" width="70" height="70" rx="10" fill="#3e3e3e" stroke="white" stroke-width="5" transform="rotate(45,50,50)"/><circle cx="50" cy="36" r="13" fill="url(#hg)" stroke="#7a4800" stroke-width="2"/><path d="M26,74 Q26,57 50,52 Q74,57 74,74Z" fill="url(#hg)" stroke="#7a4800" stroke-width="2"/></svg>')}`,
+  elemental: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="eg" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#7ee8ff"/><stop offset="50%" stop-color="#1cb8d8"/><stop offset="100%" stop-color="#0a5a70"/></linearGradient></defs><rect x="15" y="15" width="70" height="70" rx="10" fill="#3e3e3e" stroke="white" stroke-width="5" transform="rotate(45,50,50)"/><polygon points="50,22 72,38 72,62 50,78 28,62 28,38" fill="url(#eg)" stroke="#0a5a70" stroke-width="2"/><polygon points="50,22 72,38 50,50" fill="#ffffff" opacity="0.22"/><polygon points="28,62 50,78 50,50" fill="#000000" opacity="0.18"/><circle cx="50" cy="50" r="9" fill="#ffffff" opacity="0.32"/></svg>')}`,
+  specter: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="sg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#4c1d95"/></linearGradient></defs><rect x="15" y="15" width="70" height="70" rx="10" fill="#3e3e3e" stroke="white" stroke-width="5" transform="rotate(45,50,50)"/><path d="M50,22 Q68,22 70,38 L70,68 Q64,76 58,66 Q54,60 50,66 Q46,60 42,66 Q36,76 30,68 L30,38 Q32,22 50,22Z" fill="url(#sg)" stroke="#2e0063" stroke-width="2"/><ellipse cx="42" cy="44" rx="5" ry="6" fill="#1a0030"/><ellipse cx="42" cy="43" rx="3" ry="4" fill="#d8b4fe"/><ellipse cx="58" cy="44" rx="5" ry="6" fill="#1a0030"/><ellipse cx="58" cy="43" rx="3" ry="4" fill="#d8b4fe"/></svg>')}`,
+  machia: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="mg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#94c8e0"/><stop offset="100%" stop-color="#1e4a68"/></linearGradient></defs><rect x="15" y="15" width="70" height="70" rx="10" fill="#3e3e3e" stroke="white" stroke-width="5" transform="rotate(45,50,50)"/><rect x="46" y="22" width="8" height="14" rx="3" fill="url(#mg)" stroke="#1e4a68" stroke-width="1.5" transform="rotate(0,50,50)"/><rect x="46" y="22" width="8" height="14" rx="3" fill="url(#mg)" stroke="#1e4a68" stroke-width="1.5" transform="rotate(45,50,50)"/><rect x="46" y="22" width="8" height="14" rx="3" fill="url(#mg)" stroke="#1e4a68" stroke-width="1.5" transform="rotate(90,50,50)"/><rect x="46" y="22" width="8" height="14" rx="3" fill="url(#mg)" stroke="#1e4a68" stroke-width="1.5" transform="rotate(135,50,50)"/><rect x="46" y="22" width="8" height="14" rx="3" fill="url(#mg)" stroke="#1e4a68" stroke-width="1.5" transform="rotate(180,50,50)"/><rect x="46" y="22" width="8" height="14" rx="3" fill="url(#mg)" stroke="#1e4a68" stroke-width="1.5" transform="rotate(225,50,50)"/><rect x="46" y="22" width="8" height="14" rx="3" fill="url(#mg)" stroke="#1e4a68" stroke-width="1.5" transform="rotate(270,50,50)"/><rect x="46" y="22" width="8" height="14" rx="3" fill="url(#mg)" stroke="#1e4a68" stroke-width="1.5" transform="rotate(315,50,50)"/><circle cx="50" cy="50" r="20" fill="url(#mg)" stroke="#1e4a68" stroke-width="2"/><circle cx="50" cy="50" r="9" fill="#1e4a68" stroke="#94c8e0" stroke-width="1.5"/><line x1="50" y1="42" x2="50" y2="58" stroke="#94c8e0" stroke-width="2" opacity="0.8"/><line x1="42" y1="50" x2="58" y2="50" stroke="#94c8e0" stroke-width="2" opacity="0.8"/></svg>')}`,
+  daemon: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="dg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f87171"/><stop offset="100%" stop-color="#7f1d1d"/></linearGradient></defs><rect x="15" y="15" width="70" height="70" rx="10" fill="#3e3e3e" stroke="white" stroke-width="5" transform="rotate(45,50,50)"/><path d="M34,46 Q24,18 32,14 Q42,28 42,44Z" fill="#7f1d1d" stroke="#450d0d" stroke-width="1.5"/><path d="M66,46 Q76,18 68,14 Q58,28 58,44Z" fill="#7f1d1d" stroke="#450d0d" stroke-width="1.5"/><ellipse cx="50" cy="62" rx="22" ry="24" fill="url(#dg)" stroke="#7f1d1d" stroke-width="2"/><ellipse cx="41" cy="58" rx="5" ry="6" fill="#ff6600"/><ellipse cx="41" cy="58" rx="2.5" ry="3" fill="#1a0000"/><ellipse cx="59" cy="58" rx="5" ry="6" fill="#ff6600"/><ellipse cx="59" cy="58" rx="2.5" ry="3" fill="#1a0000"/><path d="M40,74 Q50,82 60,74" stroke="#450d0d" stroke-width="2" fill="none"/></svg>')}`,
+  celestia: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="clg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f8e060"/><stop offset="100%" stop-color="#c47f10"/></linearGradient></defs><rect x="15" y="15" width="70" height="70" rx="10" fill="#3e3e3e" stroke="white" stroke-width="5" transform="rotate(45,50,50)"/><path d="M50,68 C47,60 36,54 24,46 C21,39 25,35 31,40 C27,32 31,27 37,34 C33,23 39,20 45,30 C43,19 48,18 50,31 L50,68Z" fill="url(#clg)" stroke="#3a2000" stroke-width="2.5" stroke-linejoin="round"/><path d="M50,68 C53,60 64,54 76,46 C79,39 75,35 69,40 C73,32 69,27 63,34 C67,23 61,20 55,30 C57,19 52,18 50,31 L50,68Z" fill="url(#clg)" stroke="#3a2000" stroke-width="2.5" stroke-linejoin="round"/></svg>')}`,
+  beast: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="btg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e07830"/><stop offset="100%" stop-color="#a04010"/></linearGradient></defs><rect x="15" y="15" width="70" height="70" rx="10" fill="#3e3e3e" stroke="white" stroke-width="5" transform="rotate(45,50,50)"/><ellipse cx="50" cy="66" rx="17" ry="14" fill="url(#btg)" stroke="#3a1a00" stroke-width="2.5"/><ellipse cx="33" cy="51" rx="8" ry="9" fill="url(#btg)" stroke="#3a1a00" stroke-width="2.5"/><ellipse cx="44" cy="43" rx="8" ry="9" fill="url(#btg)" stroke="#3a1a00" stroke-width="2.5"/><ellipse cx="56" cy="43" rx="8" ry="9" fill="url(#btg)" stroke="#3a1a00" stroke-width="2.5"/><ellipse cx="67" cy="51" rx="8" ry="9" fill="url(#btg)" stroke="#3a1a00" stroke-width="2.5"/></svg>')}`,
+};
+
+function speciesIconHTML(sp, size='14px') {
+  const src = SPECIES_SVG_ICONS[sp];
+  if (src) return `<img src="${src}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;display:inline-block;">`;
+  return SPECIES_ICONS[sp] || '';
+}
+
 // 有利関係：attacker → defender で攻撃側+20%
 // 循環: hume→beast→elemental→specter→machia→hume
 // 特別: celestia↔daemon（相互有利）, celestia→specter, daemon→elemental, machia→daemon
@@ -3541,10 +3572,11 @@ function getSpeciesMultiplier(atkSpecies, defSpecies) {
 // 種族バッジHTML
 function speciesBadgeHTML(speciesId, size='small') {
   if (!speciesId) return '';
-  const label = SPECIES_LABELS[speciesId] || speciesId;
-  const icon  = SPECIES_ICONS[speciesId]  || '';
-  const px    = size === 'large' ? '10px' : '9px';
-  return `<span class="species-badge species-${speciesId}" style="font-size:${px}">${icon} ${label}</span>`;
+  const label   = SPECIES_LABELS[speciesId] || speciesId;
+  const px      = size === 'large' ? '10px' : '9px';
+  const iconSz  = size === 'large' ? '14px' : '12px';
+  const iconHtml = speciesIconHTML(speciesId, iconSz);
+  return `<span class="species-badge species-${speciesId}" style="font-size:${px}">${iconHtml}${label}</span>`;
 }
 
 // 攻撃タイプバッジHTML
@@ -7456,11 +7488,8 @@ function renderHomeTab() {
 
   // 編成プレビュー
   const preset = gState.presets[gState.activePreset];
-  const ft = null; // imagine system: no formation type
   const ftLabel = document.getElementById('home-formation-type');
-  if (ftLabel) {
-    ftLabel.innerHTML = `<span>${ft.icon} ${ft.name}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">${ft.bonus.map(b=>b.label).join(' / ')}</span>`;
-  }
+  if (ftLabel) ftLabel.innerHTML = '';
   const frontEl = document.getElementById('home-front');
   const backEl  = document.getElementById('home-back');
   frontEl.innerHTML = '';
@@ -9649,7 +9678,7 @@ function combatantCardHTML(c) {
         ${leaderBadge}
         <span class="cc-icon">${c.isEnemy ? c.icon : classIconHTML(c.classId,'20px')}</span>
         <span class="cc-name-text">${c.name}</span>
-        ${c.species ? `<span class="species-badge species-${c.species}" style="font-size:8px;padding:1px 3px;">${SPECIES_ICONS[c.species]||''}</span>` : ''}
+        ${c.species ? `<span class="species-badge species-${c.species}" style="font-size:8px;padding:1px 3px;">${speciesIconHTML(c.species,'10px')}</span>` : ''}
         ${atkInfo}
       </div>
       <div class="hp-bar-wrap">
