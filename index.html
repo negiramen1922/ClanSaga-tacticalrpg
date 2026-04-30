@@ -2249,7 +2249,6 @@ img.item-icon {
       </div>
       <div id="party-slots" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px"></div>
 
-      <div id="synergy-display" style="margin-bottom:10px"></div>
       <button class="btn btn-gold" style="width:100%" onclick="switchTab('sortie')">⚔️ この編成で出撃</button>
     </div>
 
@@ -8333,8 +8332,40 @@ const IMAGINES = [
   },
 ];
 
+// エリアクリア報酬でアンロックされるイマジン
+// unlockAreaId: そのエリアの全ステージクリアで入手
+const IMAGINE_AREA_UNLOCKS = [
+  { imagineId: 'unicorn',   unlockAreaId: 'area1',  areaName: '翠緑の草原' },
+  { imagineId: 'garuda',    unlockAreaId: 'area2',  areaName: 'ゴブリン集落' },
+  { imagineId: 'phoenix',   unlockAreaId: 'area2b', areaName: '深緑の森林' },
+  { imagineId: 'leviathan', unlockAreaId: 'area2c', areaName: '菌糸の深奥' },
+  { imagineId: 'chimera',   unlockAreaId: 'area3',  areaName: '峡谷（断崖の険路）' },
+];
+
 function getImagineEntry(imagineId) {
   return IMAGINES.find(im => im.id === imagineId) || null;
+}
+
+// プレイヤーが使用可能なイマジン一覧（フェンリルは最初から取得済み扱い）
+function getUnlockedImagines() {
+  if (!gState.imagines) gState.imagines = [];
+  // フェンリルは最初から保持
+  if (!gState.imagines.find(s=>s.id==='fenrir')) {
+    gState.imagines.push({ id:'fenrir', level:1, resonance:0 });
+  }
+  return gState.imagines;
+}
+
+// エリアクリア時に新しいイマジンをアンロックする（initBabelBattle後の勝利処理から呼ぶ）
+function checkImagineAreaUnlock(clearedAreaId) {
+  const unlock = IMAGINE_AREA_UNLOCKS.find(u=>u.unlockAreaId===clearedAreaId);
+  if (!unlock) return null;
+  if (!gState.imagines) gState.imagines = [];
+  if (gState.imagines.find(s=>s.id===unlock.imagineId)) return null; // すでに持っている
+  const def = getImagineEntry(unlock.imagineId);
+  if (!def) return null;
+  gState.imagines.push({ id:unlock.imagineId, level:1, resonance:0 });
+  return def; // 新規取得したイマジンを返す
 }
 
 // presetsのimagineIdに対応するimagineStateを返す
@@ -8425,8 +8456,8 @@ function renderFormationTab() {
   if (!Array.isArray(preset.formation.slots)) preset.formation.slots = [];
   renderImagineSection(preset);
   renderFormationSlots('party-slots', preset.formation.slots, 'party', 6);
-  renderSynergyDisplay(preset);
 }
+// renderSynergyDisplay removed
 
 function renderFormationSlots(elId, uids, row, maxSlots) {
   const el = document.getElementById(elId);
@@ -8442,6 +8473,8 @@ function renderFormationSlots(elId, uids, row, maxSlots) {
       const rarity = getRarity(u);
       const div = document.createElement('div');
       div.className = `formation-slot filled ${rarity}${isLeader?' leader-slot':''}`;
+      div.style.cursor = 'pointer';
+      div.addEventListener('click', () => openUnitDetail(u.uid));
       div.innerHTML = `
         ${isLeader ? '<div class="leader-badge">👑 リーダー</div>' : ''}
         <div class="slot-icon">${classIconHTML(u.classId,"40px")}</div>
@@ -8539,15 +8572,27 @@ function openImagineSelect() {
   ov.className = 'modal-overlay open';
   ov.style.zIndex = '700';
 
+  const unlockedIds = new Set((gState.imagines||[]).map(s=>s.id));
   const cards = IMAGINES.map(im => {
+    const isUnlocked = unlockedIds.has(im.id);
     const state = (gState.imagines||[]).find(s=>s.id===im.id);
-    const lv  = state?.level||0;
+    const lv  = state?.level||1;
     const res = state?.resonance||0;
     const sel = preset.imagineId === im.id;
+    if (!isUnlocked) {
+      const unlockInfo = IMAGINE_AREA_UNLOCKS.find(u=>u.imagineId===im.id);
+      const hint = unlockInfo ? `${unlockInfo.areaName}クリアで入手` : '特定条件で入手';
+      return `<div class="imagine-select-card" style="opacity:0.45;cursor:not-allowed;pointer-events:none">
+        <div class="isc-icon" style="filter:grayscale(1)">${im.icon}</div>
+        <div class="isc-name" style="color:var(--text3)">${im.name}</div>
+        <div class="isc-lv" style="color:var(--text3)">🔒 未入手</div>
+        <div class="isc-res" style="color:var(--text3);font-size:8px">${hint}</div>
+      </div>`;
+    }
     return `<div class="imagine-select-card ${sel?'selected':''}" onclick="equipImagine('${im.id}');this.closest('.modal-overlay').remove();renderFormationTab()">
       <div class="isc-icon">${im.icon}</div>
       <div class="isc-name">${im.name}</div>
-      <div class="isc-lv">${lv>0?'Lv'+lv:'未取得'}</div>
+      <div class="isc-lv">Lv${lv}</div>
       <div class="isc-res">${res>0?'共鳴'+res+'%':''}</div>
     </div>`;
   }).join('');
@@ -8658,61 +8703,7 @@ function addEmptySlot(el, row, i, isLeader) {
   div.addEventListener('click', () => openUnitSelect('party', i));
   el.appendChild(div);
 }
-function renderSynergyDisplay(preset) {
-  const el = document.getElementById('synergy-display');
-  if (!el) return;
-
-  const allUids = (preset.formation.slots||[]).filter(Boolean);
-  const units = allUids.map(uid=>gState.ownedUnits.find(u=>u.uid===uid)).filter(Boolean);
-
-  if (!units.length) { el.innerHTML=''; return; }
-
-  // ロール別カウント
-  const roleCounts = {};
-  units.forEach(u => {
-    const cls = CLASS_DATA[u.classId];
-    if (!cls) return;
-    roleCounts[cls.role] = (roleCounts[cls.role]||0)+1;
-  });
-
-  // クラス別カウント
-  const classCounts = {};
-  units.forEach(u => { classCounts[u.classId] = (classCounts[u.classId]||0)+1; });
-
-  const synergies = [];
-
-  // 同クラス2体
-  Object.entries(classCounts).forEach(([cid, cnt]) => {
-    if (cnt >= 2) {
-      const cls = CLASS_DATA[cid];
-      synergies.push({ label:`${cls.icon}${cls.name} ×${cnt}`, effect:'ATK+10%', color:'var(--gold)' });
-    }
-  });
-
-  // タンク+アタッカー
-  if ((roleCounts['タンク']||0)>=1 && (roleCounts['アタッカー']||0)>=1) {
-    synergies.push({ label:'前線連携', effect:'全体HP+5%', color:'var(--green)' });
-  }
-  // レンジ+アタッカー
-  if ((roleCounts['レンジ']||0)>=1 && (roleCounts['アタッカー']||0)>=1) {
-    synergies.push({ label:'攻撃連携', effect:'ATK+8%', color:'var(--orange)' });
-  }
-  // 全ロール異なる
-  if (Object.keys(roleCounts).length >= 3) {
-    synergies.push({ label:'多様な編成', effect:'SPD+10', color:'var(--accent2)' });
-  }
-
-  if (!synergies.length) { el.innerHTML=''; return; }
-
-  el.innerHTML = `<div style="font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:6px;">SYNERGY</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;">
-      ${synergies.map(s=>`
-        <div style="background:var(--bg3);border:1px solid ${s.color};padding:4px 8px;display:flex;gap:6px;align-items:center;">
-          <span style="font-size:11px;color:${s.color};font-weight:700">${s.label}</span>
-          <span style="font-size:10px;color:var(--text2)">${s.effect}</span>
-        </div>`).join('')}
-    </div>`;
-}
+// renderSynergyDisplay: removed
 
 function switchPreset(idx) {
   gState.activePreset = idx;
@@ -12206,7 +12197,7 @@ function endBattle(victory) {
   }
 
   // イマジン共鳴度アップ
-  if (victory) addImagineResonance(10);
+  if (victory) addImagineResonance(1);
 
   // Drops
   const drops = [];
@@ -12310,6 +12301,20 @@ function endBattle(victory) {
           gState.artifacts.push({ id: _fcDef.id, uid: _fcUid, level: 0, rank: 0 });
           const _rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
           drops.push({ name:`${_fcDef.icon} <span style="color:${_rarColor[_fcRarity]};font-weight:700">${_fcRarity}</span> 【${_fcDef.name}】（初回クリア）` });
+        }
+      }
+      // エリアクリア時のイマジンアンロック判定
+      {
+        const _areaObj = BABEL_AREAS.find(a=>a.id===battleContext.areaId);
+        if (_areaObj) {
+          const _allCleared = _areaObj.stages.every(s => gState.progress.babel.clearedStages[s.id]);
+          if (_allCleared) {
+            const _newIm = checkImagineAreaUnlock(battleContext.areaId);
+            if (_newIm) {
+              drops.push({ name:`✨ 守護精霊【${_newIm.icon} ${_newIm.name}】を入手！（エリアクリア報酬）` });
+              saveState();
+            }
+          }
         }
       }
       gState.missions.daily.babelClears = (gState.missions.daily.babelClears||0)+1;
