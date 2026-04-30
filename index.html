@@ -3245,8 +3245,6 @@ const CARD_TYPE_ICONS = {
 // ── アイテムアイコン base64 ──
 const ITEM_ICON_GOLD     = 'assets/images/item-gold.png';
 const ITEM_ICON_INK      = 'assets/images/item-ink.png';
-const ITEM_ICON_EXPPOT   = 'assets/images/item-exppot.png';
-const ITEM_ICON_AWAKEPOT = 'assets/images/item-awakepot.png';
 
 // SVG data-URI icons (transparent background, inline)
 const SVG_ICONS = {
@@ -3255,13 +3253,21 @@ const SVG_ICONS = {
   atomT2:  `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="t2g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#60a5fa"/><stop offset="50%" stop-color="#1d4ed8"/><stop offset="100%" stop-color="#1e1b4b"/></linearGradient></defs><ellipse cx="50" cy="50" rx="47" ry="13" fill="none" stroke="#3b82f6" stroke-width="4.5" opacity="0.9"/><polygon points="50,8 90,50 50,92 10,50" fill="url(#t2g)" stroke="#1e3a8a" stroke-width="2.5"/><polygon points="50,8 90,50 50,50" fill="#60a5fa" opacity="0.2"/><line x1="50" y1="8" x2="50" y2="92" stroke="#93c5fd" stroke-width="1.5" opacity="0.5"/><line x1="10" y1="50" x2="90" y2="50" stroke="#93c5fd" stroke-width="1.5" opacity="0.5"/></svg>')}`,
   atomT3:  `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="t3g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#c084fc"/><stop offset="50%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#2e1065"/></linearGradient></defs><ellipse cx="50" cy="50" rx="47" ry="13" fill="none" stroke="#a855f7" stroke-width="4" opacity="0.85"/><ellipse cx="50" cy="50" rx="13" ry="47" fill="none" stroke="#a855f7" stroke-width="4" opacity="0.7"/><polygon points="50,8 90,50 50,92 10,50" fill="url(#t3g)" stroke="#4c1d95" stroke-width="2.5"/><polygon points="50,8 90,50 50,50" fill="#c084fc" opacity="0.18"/><line x1="50" y1="8" x2="50" y2="92" stroke="#d8b4fe" stroke-width="1.5" opacity="0.5"/><line x1="10" y1="50" x2="90" y2="50" stroke="#d8b4fe" stroke-width="1.5" opacity="0.5"/></svg>')}`,
   atomT4:  `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="t4g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde68a"/><stop offset="50%" stop-color="#d97706"/><stop offset="100%" stop-color="#78350f"/></linearGradient></defs><ellipse cx="50" cy="50" rx="47" ry="11" fill="none" stroke="#f59e0b" stroke-width="4.5" opacity="0.9"/><ellipse cx="50" cy="50" rx="30" ry="47" fill="none" stroke="#fbbf24" stroke-width="3.5" opacity="0.8"/><ellipse cx="50" cy="50" rx="47" ry="27" transform="rotate(50 50 50)" fill="none" stroke="#f59e0b" stroke-width="3" opacity="0.65"/><polygon points="50,8 90,50 50,92 10,50" fill="url(#t4g)" stroke="#92400e" stroke-width="2.5"/><polygon points="50,8 90,50 50,50" fill="#fde68a" opacity="0.25"/><line x1="50" y1="8" x2="50" y2="92" stroke="#fde68a" stroke-width="1.5" opacity="0.6"/><line x1="10" y1="50" x2="90" y2="50" stroke="#fde68a" stroke-width="1.5" opacity="0.6"/></svg>')}`,
+  // エーテルポット T1-T4（レベルアップアイテム）
+  expPotT1: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="p1g" cx="38%" cy="35%" r="70%"><stop offset="0%" stop-color="#a0f0a0"/><stop offset="55%" stop-color="#28c828"/><stop offset="100%" stop-color="#0a5a0a"/></radialGradient></defs><rect x="38" y="5" width="24" height="11" rx="4" fill="#c8a020" stroke="#8a6808" stroke-width="1.5"/><rect x="43" y="15" width="14" height="12" rx="2" fill="#3a7a3a" stroke="#1a4a1a" stroke-width="1.5"/><circle cx="50" cy="63" r="31" fill="url(#p1g)" stroke="#0a5a0a" stroke-width="2.5"/><ellipse cx="37" cy="48" rx="7" ry="11" fill="#ffffff" opacity="0.28"/><circle cx="50" cy="65" r="11" fill="none" stroke="#80e880" stroke-width="2" opacity="0.6"/><circle cx="50" cy="65" r="4" fill="#80e880" opacity="0.5"/></svg>')}`,
+  expPotT2: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="p2g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#80c8f0"/><stop offset="50%" stop-color="#1a78c8"/><stop offset="100%" stop-color="#0a2870"/></linearGradient></defs><rect x="38" y="3" width="24" height="10" rx="4" fill="#c8a020" stroke="#8a6808" stroke-width="1.5"/><rect x="43" y="12" width="14" height="18" rx="2" fill="#2858a8" stroke="#183880" stroke-width="1.5"/><polygon points="50,13 56,19 50,25 44,19" fill="#60c0f8" stroke="#1848a0" stroke-width="1.5"/><rect x="22" y="29" width="56" height="60" rx="14" fill="url(#p2g)" stroke="#0a2870" stroke-width="2.5"/><ellipse cx="34" cy="43" rx="6" ry="14" fill="#ffffff" opacity="0.25"/><polygon points="50,49 58,59 50,69 42,59" fill="none" stroke="#80d8f8" stroke-width="2" opacity="0.6"/><circle cx="50" cy="59" r="3.5" fill="#80d8f8" opacity="0.55"/></svg>')}`,
+  expPotT3: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="p3g" cx="42%" cy="38%" r="65%"><stop offset="0%" stop-color="#e8b0f8"/><stop offset="55%" stop-color="#9030d0"/><stop offset="100%" stop-color="#380870"/></radialGradient></defs><rect x="38" y="2" width="24" height="10" rx="4" fill="#c8a020" stroke="#8a6808" stroke-width="1.5"/><rect x="42" y="11" width="16" height="12" rx="2" fill="#7030b0" stroke="#4a1880" stroke-width="1.5"/><path d="M50,88 C30,73 10,58 10,40 C10,26 20,18 30,18 C38,18 46,25 50,31 C54,25 62,18 70,18 C80,18 90,26 90,40 C90,58 70,73 50,88Z" fill="url(#p3g)" stroke="#380870" stroke-width="2.5"/><path d="M50,83 C33,69 16,56 16,40 C16,29 24,23 32,23 C39,23 46,29 50,35 C54,29 61,23 68,23 C76,23 84,29 84,40 C84,56 67,69 50,83Z" fill="none" stroke="#c8a020" stroke-width="2.5" opacity="0.7"/><ellipse cx="36" cy="36" rx="7" ry="11" fill="#ffffff" opacity="0.22"/><path d="M50,44 L52,50 L58,50 L53,55 L55,61 L50,57 L45,61 L47,55 L42,50 L48,50Z" fill="#f0d0f8" opacity="0.75"/></svg>')}`,
+  expPotT4: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="p4g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde68a"/><stop offset="50%" stop-color="#d97706"/><stop offset="100%" stop-color="#78350f"/></linearGradient><linearGradient id="p4s" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e8e8f0"/><stop offset="100%" stop-color="#8888a0"/></linearGradient></defs><path d="M28,46 C18,38 8,38 6,44 C8,50 18,52 28,50 C22,55 14,58 12,63 C18,65 26,60 34,52Z" fill="url(#p4s)" stroke="#606080" stroke-width="1.5"/><path d="M72,46 C82,38 92,38 94,44 C92,50 82,52 72,50 C78,55 86,58 88,63 C82,65 74,60 66,52Z" fill="url(#p4s)" stroke="#606080" stroke-width="1.5"/><path d="M28,20 Q26,56 38,63 Q50,69 62,63 Q74,56 72,20Z" fill="url(#p4g)" stroke="#92400e" stroke-width="2.5"/><polygon points="50,7 55,14 50,21 45,14" fill="#90d0f8" stroke="#2060a0" stroke-width="1.5"/><path d="M34,24 Q32,52 42,59 Q50,63 58,59 Q68,52 66,24Z" fill="#fde68a" opacity="0.35"/><polygon points="50,36 52,43 59,43 53,48 55,55 50,51 45,55 47,48 41,43 48,43" fill="#ffffff" opacity="0.85"/><rect x="45" y="68" width="10" height="14" rx="2" fill="url(#p4g)" stroke="#92400e" stroke-width="1.5"/><rect x="33" y="81" width="34" height="10" rx="4" fill="url(#p4g)" stroke="#92400e" stroke-width="2"/></svg>')}`,
+  // 覚醒エーテル（レベル上限解放アイテム）
+  awakePot: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="awg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffd060"/><stop offset="40%" stop-color="#ff6010"/><stop offset="100%" stop-color="#600000" stop-opacity="0"/></radialGradient><linearGradient id="awc" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff8080"/><stop offset="100%" stop-color="#8b0000"/></linearGradient></defs><line x1="50" y1="50" x2="50" y2="6" stroke="#ff8020" stroke-width="3" opacity="0.6"/><line x1="50" y1="50" x2="92" y2="18" stroke="#ff6010" stroke-width="2.5" opacity="0.5"/><line x1="50" y1="50" x2="8" y2="20" stroke="#ff6010" stroke-width="2.5" opacity="0.5"/><line x1="50" y1="50" x2="96" y2="60" stroke="#ff8020" stroke-width="2" opacity="0.45"/><line x1="50" y1="50" x2="4" y2="58" stroke="#ff8020" stroke-width="2" opacity="0.45"/><circle cx="50" cy="50" r="22" fill="url(#awg)"/><polygon points="50,28 67,50 50,72 33,50" fill="url(#awc)" stroke="#4a0000" stroke-width="2.5"/><polygon points="50,28 67,50 50,50" fill="#ff9090" opacity="0.4"/><polygon points="22,22 30,17 27,28" fill="#6a1818" stroke="#3a0808" stroke-width="1"/><polygon points="75,14 83,22 73,24" fill="#6a1818" stroke="#3a0808" stroke-width="1"/><polygon points="16,72 24,78 15,82" fill="#6a1818" stroke="#3a0808" stroke-width="1"/><polygon points="82,74 90,70 86,83" fill="#6a1818" stroke="#3a0808" stroke-width="1"/><rect x="42" y="2" width="16" height="10" rx="4" fill="#a08040" stroke="#705820" stroke-width="1.5"/></svg>')}`,
 };
 
 function itemIconHTML(key, size='18px') {
-  const svgSrc = SVG_ICONS[key];
+  const resolvedKey = key === 'expPot' ? 'expPotT1' : key; // expPot → T1 デフォルト
+  const svgSrc = SVG_ICONS[resolvedKey];
   if (svgSrc) return `<img src="${svgSrc}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;display:inline-block;image-rendering:auto;">`;
   if (key === 'passiveKey') return `<span style="font-size:${size};vertical-align:middle;line-height:1;display:inline-block;">🔑</span>`;
-  const src = {gold:ITEM_ICON_GOLD,ink:ITEM_ICON_INK,expPot:ITEM_ICON_EXPPOT,awakePot:ITEM_ICON_AWAKEPOT}[key];
+  const src = {gold:ITEM_ICON_GOLD,ink:ITEM_ICON_INK}[key];
   if (!src) return '';
   return `<img src="${src}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;display:inline-block;mix-blend-mode:screen;image-rendering:auto;">`;
 }
@@ -7166,7 +7172,7 @@ const NEWS_DATA = [
 <div class="highlight">🎁 初回ログインボーナス: <img src="${ITEM_ICON_INK}" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;mix-blend-mode:screen"> 星導インク ×500</div>
 <h4>7日間連続ミッション報酬</h4>
 <ul>
-  <li>1日目: <img src="${ITEM_ICON_EXPPOT}" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;mix-blend-mode:screen"> EXPポット ×200</li>
+  <li>1日目: ${itemIconHTML('expPot','14px')} EXPポット ×200</li>
   <li>3日目: <img src="${ITEM_ICON_INK}" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;mix-blend-mode:screen"> 星導インク ×300</li>
   <li>7日目: <img src="${ITEM_ICON_INK}" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;mix-blend-mode:screen"> 星導インク ×1000 + ⛏️ ミスリル ×5</li>
 </ul>
@@ -12338,7 +12344,7 @@ function endBattle(victory) {
 
     drops.push({ name:`<img src="${ITEM_ICON_GOLD}" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;mix-blend-mode:screen"> ゴールド ×${gold}` });
     gState.player.gold += gold;
-    drops.push({ name:`<img src="${ITEM_ICON_EXPPOT}" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;mix-blend-mode:screen"> EXPポット ×${ether}` });
+    drops.push({ name:`${itemIconHTML('expPot','18px')} EXPポット ×${ether}` });
     gState.player.ether += ether;
     addClanExp(clanExp);
 
@@ -12483,7 +12489,7 @@ function endBattle(victory) {
         // エリア2以降・深いステージほど確率UP（最大5%）
         const awakePotChance = Math.min(0.05, (areaNum - 1) * 0.01 + stageNum * 0.003);
         if (awakePotChance > 0 && Math.random() < awakePotChance) {
-          drops.push({ name:`<img src="${ITEM_ICON_AWAKEPOT}" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;mix-blend-mode:screen"> 覚醒ポット ×1` });
+          drops.push({ name:`${itemIconHTML('awakePot','18px')} 覚醒ポット ×1` });
           gState.player.awakePot = (gState.player.awakePot||0) + 1;
         }
       }
