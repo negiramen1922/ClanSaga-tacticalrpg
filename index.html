@@ -1139,226 +1139,60 @@ img.item-icon {
 @keyframes floatUp { 0%{transform:translateY(0);opacity:1} 100%{transform:translateY(-40px);opacity:0} }
 
 /* ===== TACTICS MODAL ===== */
-.tactics-modal {
-  display: none; position: fixed; inset: 0; z-index: 3000;
-  background: rgba(5,6,8,0.95); align-items: center; justify-content: center; padding: 8px;
+/* ===== IMAGINE SYSTEM ===== */
+.imagine-section {
+  background: linear-gradient(135deg,rgba(180,125,255,0.06),rgba(74,127,255,0.04));
+  border: 1px solid rgba(180,125,255,0.3); padding: 10px 12px; margin-bottom: 12px;
 }
-.tactics-modal.open { display: flex; }
-.tactics-panel {
-  background: var(--panel); border: 1px solid var(--border);
-  width: 100%; max-width: 700px; max-height: 94vh;
-  display: flex; flex-direction: column;
+.imagine-section-title {
+  font-size: 10px; color: var(--text3); letter-spacing: 2px; margin-bottom: 8px;
 }
-.tactics-header {
-  padding: 12px 16px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-}
-.tactics-header h3 { font-family: 'Cinzel', serif; color: var(--gold); font-size: 14px; }
-.tactics-unit-info {
+.imagine-card {
   display: flex; align-items: center; gap: 10px;
-  padding: 10px 16px; background: var(--bg3); border-bottom: 1px solid var(--border);
+  background: var(--bg3); border: 1px solid rgba(180,125,255,0.4);
+  padding: 10px 12px; cursor: pointer; transition: border-color 0.15s;
 }
-.tactics-unit-icon { font-size: 28px; }
-.tactics-unit-name { font-size: 14px; font-weight: 700; color: var(--text); }
-.tactics-unit-class { font-size: 11px; color: var(--text3); }
+.imagine-card:hover { border-color: var(--purple); }
+.imagine-card.empty { border-style: dashed; opacity: 0.6; justify-content: center; }
+.imagine-icon { font-size: 26px; }
+.imagine-info { flex: 1; min-width: 0; }
+.imagine-name { font-size: 13px; font-weight: 700; color: var(--purple); }
+.imagine-flavor { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.imagine-stats { font-size: 10px; color: var(--accent2); margin-top: 2px; }
+.imagine-resonance-bar {
+  height: 4px; background: var(--bg2); border-radius: 2px; margin-top: 4px; overflow: hidden;
+}
+.imagine-resonance-fill { height: 100%; background: linear-gradient(90deg,var(--purple),var(--accent2)); border-radius: 2px; }
+.imagine-skills { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.imagine-skill-row {
+  display: flex; gap: 6px; align-items: flex-start; font-size: 10px;
+  padding: 5px 8px; background: var(--bg2); border: 1px solid var(--border);
+}
+.imagine-skill-cond { color: var(--text3); flex-shrink: 0; }
+.imagine-skill-eff  { color: var(--text2); }
+.imagine-resonance-milestones { margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap; }
+.imagine-milestone {
+  font-size: 10px; padding: 3px 7px;
+  border: 1px solid; border-radius: 2px;
+}
+.imagine-milestone.reached { color: var(--gold); border-color: rgba(201,168,76,0.4); background: rgba(201,168,76,0.08); }
+.imagine-milestone.locked  { color: var(--text3); border-color: var(--border); }
 
-/* スキル行（ドラッグ対応） */
-.tactics-skill-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
-.tactics-skill-row {
-  background: var(--bg3); border: 1px solid var(--border);
-  display: flex; align-items: stretch; min-height: 68px;
-  transition: border-color 0.15s;
+/* イマジン選択モーダル */
+.imagine-select-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 2px;
 }
-.tactics-skill-row.dragging { opacity: 0.4; border-color: var(--accent); }
-.tactics-skill-row.drag-over { border-color: var(--gold); border-style: dashed; }
-.tactics-skill-row.inactive { opacity: 0.35; }
-
-/* 左：優先度ハンドル */
-.tsr-priority {
-  width: 36px; background: var(--bg2); display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 2px; flex-shrink: 0;
-  border-right: 1px solid var(--border); cursor: grab; padding: 4px 0;
+.imagine-select-card {
+  background: var(--bg3); border: 1px solid rgba(180,125,255,0.3);
+  padding: 10px; cursor: pointer; transition: border-color 0.15s;
+  display: flex; flex-direction: column; gap: 4px;
 }
-.tsr-priority:active { cursor: grabbing; }
-.tsr-priority-num {
-  font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700;
-  color: var(--gold); line-height: 1;
-}
-.tsr-priority-icon { font-size: 12px; color: var(--text3); }
-
-/* 中：スキル情報 */
-.tsr-info { flex: 1; padding: 8px 10px; min-width: 0; }
-.tsr-skill-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
-.tsr-skill-desc { font-size: 10px; color: var(--text3); margin-bottom: 6px; }
-.tsr-skill-meta { display: flex; gap: 6px; flex-wrap: wrap; }
-.tsr-badge {
-  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
-  padding: 1px 5px; border: 1px solid;
-}
-.tsr-badge-phys { color: var(--orange); border-color: rgba(224,122,58,0.4); background: rgba(224,122,58,0.08); }
-.tsr-badge-buff { color: var(--green);  border-color: rgba(76,175,110,0.4); background: rgba(76,175,110,0.08); }
-.tsr-badge-all  { color: var(--accent2);border-color: rgba(74,127,255,0.4); background: rgba(74,127,255,0.08); }
-.tsr-badge-cd   { color: var(--text3);  border-color: var(--border); }
-
-/* トリガー選択 */
-.tsr-trigger { padding: 6px 8px; border-left: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; justify-content: center; min-width: 110px; flex-shrink: 0; }
-.tsr-trigger-label { font-size: 9px; color: var(--text3); letter-spacing: 1px; }
-.tsr-trigger-select {
-  background: var(--bg2); border: 1px solid var(--border); color: var(--text);
-  font-size: 11px; padding: 3px 4px; outline: none; cursor: pointer;
-  font-family: 'Noto Sans JP', sans-serif; width: 100%;
-}
-.tsr-trigger-select:focus { border-color: var(--accent); }
-
-/* 右：ON/OFFトグル */
-.tsr-toggle {
-  width: 36px; display: flex; align-items: center; justify-content: center;
-  border-left: 1px solid var(--border); flex-shrink: 0;
-}
-.toggle-btn {
-  width: 22px; height: 22px; border-radius: 50%; border: none; cursor: pointer;
-  font-size: 12px; display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
-}
-.toggle-btn.on  { background: var(--green);  color: white; }
-.toggle-btn.off { background: var(--bg2); color: var(--text3); border: 1px solid var(--border); }
-
-/* 未選択スキル（プール） */
-.tactics-pool-section { padding: 10px 12px; border-top: 1px solid var(--border); }
-.tactics-pool-label { font-size: 10px; color: var(--text3); letter-spacing: 2px; margin-bottom: 8px; }
-.tactics-pool-list { display: flex; flex-direction: column; gap: 4px; }
-.pool-skill-row {
-  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
-  background: var(--bg2); border: 1px solid var(--border); opacity: 0.6;
-}
-.pool-skill-name { font-size: 12px; color: var(--text2); flex: 1; }
-.pool-add-btn {
-  background: var(--accent); border: none; color: white;
-  font-size: 11px; font-family: 'Rajdhani'; font-weight: 700;
-  padding: 3px 8px; cursor: pointer; transition: all 0.15s;
-}
-.pool-add-btn:hover { background: var(--accent2); }
-.pool-add-btn:disabled { background: var(--bg3); color: var(--text3); cursor: default; }
-
-/* 戦術タブ */
-.tac-tab {
-  flex: 1; padding: 9px 4px; background: none; border: none;
-  color: var(--text3); font-size: 12px; font-family: 'Rajdhani', sans-serif;
-  font-weight: 700; cursor: pointer; border-bottom: 2px solid transparent;
-  letter-spacing: 1px; transition: all 0.15s;
-}
-.tac-tab.active { color: var(--gold); border-bottom-color: var(--gold); background: rgba(201,168,76,0.05); }
-.tac-tab:hover:not(.active) { color: var(--text); }
-
-/* 発動順リスト行 */
-.tac-order-row {
-  display: flex; align-items: stretch; min-height: 58px;
-  background: var(--bg3); border: 1px solid var(--border);
-  margin-bottom: 5px; transition: border-color 0.15s, opacity 0.15s;
-}
-.tac-order-row.off { opacity: 0.42; }
-.tac-order-row.type-opening { border-left: 3px solid var(--gold); }
-.tac-order-row.type-equip   { border-left: 3px solid var(--accent2); }
-.tac-order-row.type-passive { border-left: 3px solid var(--purple); }
-.tac-order-row.type-attack  { border-left: 3px solid var(--orange); }
-.tac-order-row.type-support { border-left: 3px solid var(--green); }
-
-/* 優先度プルダウン列 */
-.tac-prio-col {
-  width: 44px; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 2px; background: var(--bg2);
-  border-right: 1px solid var(--border); flex-shrink: 0; padding: 4px 2px;
-}
-.tac-prio-select {
-  width: 36px; background: var(--bg3); border: 1px solid var(--gold);
-  color: var(--gold); font-family: 'Rajdhani', sans-serif; font-size: 16px;
-  font-weight: 700; text-align: center; padding: 2px 0; cursor: pointer;
-  outline: none; appearance: none; -webkit-appearance: none;
-}
-.tac-prio-label { font-size: 8px; color: var(--text3); letter-spacing: 1px; }
-
-/* スキル情報列 */
-.tac-info-col { flex: 1; padding: 8px 10px; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-.tac-skill-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; display: flex; align-items: center; gap: 5px; }
-.tac-skill-desc { font-size: 10px; color: var(--text3); line-height: 1.4; }
-.tac-skill-meta { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
-.tac-badge {
-  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
-  padding: 1px 5px; border-radius: 2px;
-}
-.tac-badge-cd      { background: rgba(255,255,255,0.06); color: var(--text3); border: 1px solid var(--border); }
-.tac-badge-type-atk { background: rgba(224,96,96,0.12);  color: #e08080; border: 1px solid rgba(224,96,96,0.3); }
-.tac-badge-type-blk { background: rgba(160,96,128,0.12); color: #c090b0; border: 1px solid rgba(160,96,128,0.3); }
-.tac-badge-type-wht { background: rgba(144,144,208,0.12);color: #a8a8e0; border: 1px solid rgba(144,144,208,0.3); }
-.tac-badge-type-blu { background: rgba(74,127,255,0.12); color: var(--accent2);border:1px solid rgba(74,127,255,0.3); }
-.tac-badge-type-sup { background: rgba(76,175,110,0.12); color: var(--green);  border: 1px solid rgba(76,175,110,0.3); }
-.tac-badge-type-opn { background: rgba(201,168,76,0.12); color: var(--gold);   border: 1px solid rgba(201,168,76,0.3); }
-.tac-badge-type-eqp { background: rgba(74,127,255,0.12); color: var(--accent2);border: 1px solid rgba(74,127,255,0.3); }
-.tac-badge-type-pas { background: rgba(180,125,255,0.12);color: var(--purple); border: 1px solid rgba(180,125,255,0.3); }
-.tac-badge-src-card { background: rgba(201,168,76,0.08); color: var(--gold2);  border: 1px solid rgba(201,168,76,0.2); }
-
-/* 種族バッジ */
-.species-badge {
-  display: inline-flex; align-items: center; gap: 2px;
-  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
-  padding: 1px 5px; border-radius: 2px;
-}
-.species-hume      { background: rgba(80,160,220,0.15); color: #80c4e8; border: 1px solid rgba(80,160,220,0.35); }
-.species-beast     { background: rgba(180,120,60,0.15);  color: #d4945a; border: 1px solid rgba(180,120,60,0.35); }
-.species-elemental { background: rgba(80,200,160,0.15); color: #60c8a8; border: 1px solid rgba(80,200,160,0.35); }
-.species-specter   { background: rgba(150,100,200,0.15); color: #b884e8; border: 1px solid rgba(150,100,200,0.35); }
-.species-machia    { background: rgba(200,180,60,0.15);  color: #d4c44a; border: 1px solid rgba(200,180,60,0.35); }
-.species-celestia  { background: rgba(220,200,120,0.15); color: #f0d870; border: 1px solid rgba(220,200,120,0.35); }
-.species-daemon    { background: rgba(200,60,80,0.15);   color: #e05060; border: 1px solid rgba(200,60,80,0.35); }
-
-/* 攻撃タイプバッジ */
-.atk-type-badge {
-  display: inline-flex; align-items: center; gap: 2px;
-  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
-  padding: 1px 4px; border-radius: 2px;
-  background: rgba(255,255,255,0.06); color: var(--text2); border: 1px solid var(--border);
-}
-
-/* トリガー列 */
-.tac-trigger-col {
-  width: 108px; flex-shrink: 0; display: flex; flex-direction: column;
-  justify-content: center; gap: 3px; padding: 6px 7px;
-  border-left: 1px solid var(--border);
-}
-.tac-trigger-label { font-size: 8px; color: var(--text3); letter-spacing: 1px; }
-.tac-trigger-select {
-  background: var(--bg2); border: 1px solid var(--border); color: var(--text);
-  font-size: 10px; padding: 3px 4px; outline: none; cursor: pointer;
-  font-family: 'Noto Sans JP', sans-serif; width: 100%;
-}
-.tac-trigger-select:focus { border-color: var(--accent); }
-
-/* ON/OFFトグル列 */
-.tac-toggle-col {
-  width: 34px; flex-shrink: 0; display: flex; align-items: center;
-  justify-content: center; border-left: 1px solid var(--border);
-}
-.tac-toggle-btn {
-  width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;
-  font-size: 11px; display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
-}
-.tac-toggle-btn.on  { background: var(--green); color: white; }
-.tac-toggle-btn.off { background: var(--bg2); color: var(--text3); border: 1px solid var(--border); }
-
-/* 区切りラベル */
-.tac-section-label {
-  font-size: 9px; letter-spacing: 2px; color: var(--text3); padding: 6px 2px 4px;
-  text-transform: uppercase;
-}
-
-/* 編成スロット内の戦術ボタン */
-.slot-tactics-btn {
-  margin-top: 4px; background: rgba(74,127,255,0.15); border: 1px solid rgba(74,127,255,0.3);
-  color: var(--accent2); font-size: 10px; padding: 2px 6px; cursor: pointer; width: 100%;
-  font-family: 'Noto Sans JP'; transition: all 0.15s;
-}
-.slot-tactics-btn:hover { background: rgba(74,127,255,0.3); }
+.imagine-select-card:hover { border-color: var(--purple); }
+.imagine-select-card.selected { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+.imagine-select-card .isc-icon { font-size: 24px; text-align: center; }
+.imagine-select-card .isc-name { font-size: 12px; font-weight: 700; color: var(--purple); text-align: center; }
+.imagine-select-card .isc-lv   { font-size: 10px; color: var(--text3); text-align: center; }
+.imagine-select-card .isc-res  { font-size: 9px; color: var(--accent2); text-align: center; }
 
 /* ===== HOME ENHANCEMENTS ===== */
 #login-bonus-banner {
@@ -1471,17 +1305,9 @@ img.item-icon {
 .mine-badge { display:inline-block;background:var(--red);color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px; }
 
 /* ===== FORMATION SYSTEM ===== */
-.formation-type-bar { display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px; }
-.formation-type-btn { background:var(--bg3);border:1px solid var(--border);padding:10px 8px;cursor:pointer;text-align:center;transition:all 0.15s; }
-.formation-type-btn:hover { border-color:var(--accent); }
-.formation-type-btn.active { border-color:var(--gold);background:rgba(201,168,76,0.08); }
-.ftb-icon { font-size:18px;margin-bottom:3px; }
-.ftb-name { font-family:'Cinzel',serif;font-size:12px;color:var(--gold); }
+
 .ftb-slots { font-size:10px;color:var(--text3);margin-top:2px; }
-.ftb-bonus { font-size:10px;color:var(--accent2);margin-top:3px;line-height:1.4; }
-.formation-bonus-bar { background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(74,127,255,0.05));border:1px solid rgba(201,168,76,0.3);padding:10px 12px;margin-bottom:10px; }
-.fbb-title { font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:6px; }
-.fbb-bonuses { display:flex;gap:6px;flex-wrap:wrap; }
+
 .fbb-item { font-size:11px;padding:2px 8px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);color:var(--gold2); }
 /* ===== FORMATION SYSTEM ===== */
 
@@ -2413,15 +2239,8 @@ img.item-icon {
     <div id="tab-formation" class="tab-panel">
       <div class="preset-bar" id="preset-bar"></div>
 
-      <!-- 作戦指令選択 -->
-      <div style="font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:6px;padding:0 2px">📋 作戦指令を選択</div>
-      <div class="formation-type-bar" id="formation-type-bar"></div>
-
-      <!-- 作戦指令詳細 -->
-      <div class="formation-bonus-bar" id="formation-bonus-bar" style="display:none">
-        <div class="fbb-title">TACTICS BONUS</div>
-        <div class="fbb-bonuses" id="fbb-bonuses"></div>
-      </div>
+      <!-- イマジン選択 -->
+      <div id="imagine-section"></div>
 
       <!-- パーティスロット（6人） -->
       <div style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
@@ -2991,8 +2810,8 @@ img.item-icon {
   </div>
 </div>
 
-<!-- TACTICS MODAL -->
-<div class="tactics-modal" id="tactics-modal">
+<!-- (tactics modal removed) -->
+<div id="tactics-modal" style="display:none">
   <div class="tactics-panel" style="max-width:480px;width:98%;">
 
     <!-- ヘッダー -->
@@ -6353,14 +6172,14 @@ function defaultState(clanName) {
     },
     presets: Array.from({length:10},(_,i)=>({
       id:i,
-      formationType: 'standard',
+      imagineId: null,
       formation:{
         slots: i===0 ? [uid0] : [],
       },
       tactics:{}
     })),
     activePreset: 0,
-    artifacts:[], runes:[], celestial:[],
+    artifacts:[], runes:[], celestial:[], imagines:[],
     ownedCards: [],   // フェーズ1: 所持スキルカード一覧
     mine:{ lastCollected:Date.now(), level:{ speed:1, cap:1 } },
     starMap:{ unlockedNodes:[] },
@@ -6472,7 +6291,11 @@ function normalizeState() {
   // アーティファクト強化素材
   if (!p.atomStone) p.atomStone = { t1:0, t2:0, t3:0 };
   if (p.stardust === undefined) p.stardust = 0;
+  if (p.cryptoSoulT1 === undefined) p.cryptoSoulT1 = 0;
+  if (p.cryptoSoulT2 === undefined) p.cryptoSoulT2 = 0;
+  if (p.cryptoSoulT3 === undefined) p.cryptoSoulT3 = 0;
   if (!p.atomCore)  p.atomCore  = { t1:0, t2:0, t3:0 };
+  if (!gState.imagines) gState.imagines = [];
   gState.player = p;
 
   // アーティファクトインスタンスのフォーマット正規化（旧フォーマット→新フォーマット）
@@ -6539,10 +6362,11 @@ function normalizeState() {
 
   // presets正規化
   while (gState.presets.length < 10) {
-    gState.presets.push({ id: gState.presets.length, formationType:'standard', formation:{slots:[]}, tactics:{} });
+    gState.presets.push({ id: gState.presets.length, imagineId:null, formation:{slots:[]}, tactics:{} });
   }
+  gState.presets.forEach(pr => { if (!('imagineId' in pr)) pr.imagineId = null; });
   gState.presets.forEach(pr => {
-    if (!pr.formationType || !FORMATION_TYPES[pr.formationType]) pr.formationType = 'standard';
+    // formationType removed (imagine system)
     if (!pr.formation || typeof pr.formation !== 'object') pr.formation = { slots:[] };
     if (!pr.formation.slots) { pr.formation.slots = [...(pr.formation.front||[]), ...(pr.formation.back||[])].filter(Boolean); }
     if (!Array.isArray(pr.formation.slots)) pr.formation.slots = [];
@@ -7428,7 +7252,7 @@ function launchApp() {
 
   // プリセット
   gState.presets.forEach(pr => {
-    if (!pr.formationType || !FORMATION_TYPES[pr.formationType]) pr.formationType = 'standard';
+    // formationType removed (imagine system)
     if (!pr.formation) pr.formation = { slots:[] };
     if (!pr.formation.slots) {
       // 旧データ互換: front/backをslotsに統合
@@ -7568,7 +7392,7 @@ function renderHomeTab() {
 
   // 編成プレビュー
   const preset = gState.presets[gState.activePreset];
-  const ft = FORMATION_TYPES[preset.formationType || 'standard'] || FORMATION_TYPES['standard'];
+  const ft = null; // imagine system: no formation type
   const ftLabel = document.getElementById('home-formation-type');
   if (ftLabel) {
     ftLabel.innerHTML = `<span>${ft.icon} ${ft.name}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">${ft.bonus.map(b=>b.label).join(' / ')}</span>`;
@@ -8406,50 +8230,189 @@ function calcStats(unit) {
 let selectingSlot = null; // {row:'front'|'back', idx:Number}
 
 // ============================================================
-//  FORMATION TYPES (陣形)
+// ============================================================
+//  IMAGINES (守護精霊) システム
 // ============================================================
 
+const IMAGINES = [
+  {
+    id: 'fenrir', name: 'フェンリル', icon: '🐺',
+    flavor: '暗闇に潜む巨狼。戦場の熱気に呼応してその牙は研ぎ澄まされる。',
+    baseHp: 200, baseAtk: 120,
+    imagineSkills: [
+      { condLabel: 'アタッカー2人以上', cond: 'role_gte:attacker:2', effectLabel: 'アタッカーATK+5%',
+        effect: { type:'role_atk_pct', role:'attacker', val:5 } },
+      { condLabel: 'バトル開始時（常時）', cond: 'always', effectLabel: '全体CRI+3%',
+        effect: { type:'all_cri', val:3 } },
+    ],
+    resonanceSkills: [
+      { threshold:100,  label: '全体HP+2%',                    effect:{hpPct:2} },
+      { threshold:500,  label: '全体ATK+5% / HP+5%',          effect:{atkPct:5, hpPct:5} },
+      { threshold:1000, label: '全体ATK+10% / HP+10% / CRI+3%', effect:{atkPct:10, hpPct:10, cri:3} },
+    ],
+  },
+  {
+    id: 'unicorn', name: 'ユニコーン', icon: '🦄',
+    flavor: '白銀の聖獣。その存在だけで傷ついた者の心と体を癒す。',
+    baseHp: 280, baseAtk: 60,
+    imagineSkills: [
+      { condLabel: 'サポート1人以上', cond: 'role_gte:support:1', effectLabel: '回復効果+10%',
+        effect: { type:'all_healUp', val:10 } },
+      { condLabel: 'タンク1人以上', cond: 'role_gte:tank:1', effectLabel: '全体被ダメ-5%',
+        effect: { type:'all_dmgReduce', val:5 } },
+    ],
+    resonanceSkills: [
+      { threshold:100,  label: '全体HP+3%',                      effect:{hpPct:3} },
+      { threshold:500,  label: '全体HP+8% / 回復効果+5%',        effect:{hpPct:8, healUp:5} },
+      { threshold:1000, label: '全体HP+15% / 回復効果+10% / CRI+2%', effect:{hpPct:15, healUp:10, cri:2} },
+    ],
+  },
+  {
+    id: 'phoenix', name: 'フェニックス', icon: '🔥',
+    flavor: '不死の炎鳥。何度倒れようとも炎の翼で再び舞い上がる。',
+    baseHp: 220, baseAtk: 100,
+    imagineSkills: [
+      { condLabel: '3ロール以上混成', cond: 'roles_gte:3', effectLabel: '全体ATK+3% / HP+3%',
+        effect: { type:'all_atk_hp_pct', atk:3, hp:3 } },
+      { condLabel: '常時', cond: 'always', effectLabel: 'スキルPw+5%',
+        effect: { type:'all_skillPw', val:5 } },
+    ],
+    resonanceSkills: [
+      { threshold:100,  label: '全体ATK+2% / HP+2%',           effect:{atkPct:2, hpPct:2} },
+      { threshold:500,  label: '全体ATK+5% / HP+5%',           effect:{atkPct:5, hpPct:5} },
+      { threshold:1000, label: '全体ATK+8% / HP+8% / SPD+10',  effect:{atkPct:8, hpPct:8, spd:10} },
+    ],
+  },
+  {
+    id: 'leviathan', name: 'リヴァイアサン', icon: '🐉',
+    flavor: '深海の支配者。その鱗は嵐をも弾き返す鉄壁の守護を与える。',
+    baseHp: 350, baseAtk: 40,
+    imagineSkills: [
+      { condLabel: 'タンク1人以上', cond: 'role_gte:tank:1', effectLabel: '全体被ダメ-8%',
+        effect: { type:'all_dmgReduce', val:8 } },
+      { condLabel: '常時', cond: 'always', effectLabel: '全体HP+5%',
+        effect: { type:'all_hp_pct', val:5 } },
+    ],
+    resonanceSkills: [
+      { threshold:100,  label: '全体HP+3%',                          effect:{hpPct:3} },
+      { threshold:500,  label: '全体HP+8% / 被ダメ-3%',             effect:{hpPct:8, dmgReduce:3} },
+      { threshold:1000, label: '全体HP+15% / 被ダメ-5% / CRI+2%',  effect:{hpPct:15, dmgReduce:5, cri:2} },
+    ],
+  },
+  {
+    id: 'garuda', name: 'ガルーダ', icon: '🦅',
+    flavor: '天空の覇者。その翼がもたらす疾風は仲間の足を加速させる。',
+    baseHp: 180, baseAtk: 130,
+    imagineSkills: [
+      { condLabel: 'スカウト1人以上', cond: 'role_gte:scout:1', effectLabel: '全体SPD+12 / 索敵+15',
+        effect: { type:'all_spd', val:12 } },
+      { condLabel: '常時', cond: 'always', effectLabel: '全体SPD+8',
+        effect: { type:'all_spd', val:8 } },
+    ],
+    resonanceSkills: [
+      { threshold:100,  label: '全体SPD+5',                        effect:{spd:5} },
+      { threshold:500,  label: '全体SPD+10 / ATK+5%',             effect:{spd:10, atkPct:5} },
+      { threshold:1000, label: '全体SPD+20 / ATK+8% / CRI+5%',   effect:{spd:20, atkPct:8, cri:5} },
+    ],
+  },
+  {
+    id: 'chimera', name: 'キメラ', icon: '🦁',
+    flavor: '異形の幻獣。様々な力を組み合わせてパーティを支援する。',
+    baseHp: 210, baseAtk: 110,
+    imagineSkills: [
+      { condLabel: 'コントロール1人以上', cond: 'role_gte:control:1', effectLabel: 'デバフ付与率+10%',
+        effect: { type:'all_skillPw', val:5 } },
+      { condLabel: '常時', cond: 'always', effectLabel: '全体ATK+5%',
+        effect: { type:'all_atk_pct', val:5 } },
+    ],
+    resonanceSkills: [
+      { threshold:100,  label: '全体ATK+2%',                          effect:{atkPct:2} },
+      { threshold:500,  label: '全体ATK+5% / スキルPw+5%',           effect:{atkPct:5, skillPw:5} },
+      { threshold:1000, label: '全体ATK+10% / スキルPw+10% / CRI+3%', effect:{atkPct:10, skillPw:10, cri:3} },
+    ],
+  },
+];
 
+function getImagineEntry(imagineId) {
+  return IMAGINES.find(im => im.id === imagineId) || null;
+}
 
-const FORMATION_TYPES = {
-  standard: {
-    id:'standard', name:'定石作戦', icon:'📋', slots:6,
-    flavor:'基本に忠実に。安定した戦闘で着実に勝利を掴め。',
-    bonus:[{label:'全員ATK+5% / 獲得EXP+10%'}],
-    expBonus: 0.10,
-  },
-  assault: {
-    id:'assault',  name:'総力戦指令', icon:'⚔️', slots:6,
-    flavor:'全員で一点突破。速攻で敵を叩き潰せ。守りは不要だ。',
-    bonus:[{label:'全員ATK+20%'}],
-  },
-  guard: {
-    id:'guard',    name:'鉄壁防衛令', icon:'🛡️', slots:6,
-    flavor:'まず生き残れ。機を見て確実に反撃せよ。',
-    bonus:[{label:'全員HP+20% / 全員PRES+10'}],
-  },
-  swift: {
-    id:'swift',    name:'電撃奇襲令', icon:'⚡', slots:6,
-    flavor:'敵が動く前に終わらせろ。先手必勝が我らの信条だ。',
-    bonus:[{label:'全員SPD+30'}],
-  },
-  balanced: {
-    id:'balanced', name:'万全構え', icon:'⚖️', slots:6,
-    flavor:'攻守を両立せよ。いかなる敵にも隙を見せるな。',
-    bonus:[{label:'全員ATK+10% / 全員HP+10%'}],
-  },
-  support: {
-    id:'support',  name:'後方支援令', icon:'✨', slots:6,
-    flavor:'回復役を守り、長期戦を制せ。焦りは禁物だ。',
-    bonus:[{label:'プリーストATK+30% / 全員MP+20%'}],
-    healerBoost: true,
-    mpBonus: 0.20,
-  },
-};
+// presetsのimagineIdに対応するimagineStateを返す
+function getPresetImagineState(preset) {
+  if (!preset.imagineId) return null;
+  return (gState.imagines||[]).find(s=>s.id===preset.imagineId) || null;
+}
 
-function getActiveFormationType() {
-  const preset = gState.presets[gState.activePreset];
-  return FORMATION_TYPES[preset.formationType || 'standard'] || FORMATION_TYPES['standard'];
+// presetsのimagineバフを計算 (static conditions, no night check)
+function getImagineBuffs(preset, partyUnits) {
+  const res = {atkPct:0, hpPct:0, spd:0, cri:0, dmgReduce:0, skillPw:0, healUp:0,
+               roleAtkPct:{attacker:0,tank:0,support:0,range:0,scout:0,control:0}};
+  const imagineState = getPresetImagineState(preset);
+  if (!imagineState) return res;
+  const imagineDef = getImagineEntry(imagineState.id);
+  if (!imagineDef) return res;
+
+  const lv = imagineState.level||1;
+  const lvScale = (lv - 1) / 99; // 0 at Lv1, 1 at Lv100
+  // 基本HP/ATKはmakeCombatantで直接適用するのでここでは0
+  // (HP/ATK base values are applied per-combatant separately)
+
+  // 共鳴ボーナス
+  const resonance = imagineState.resonance || 0;
+  for (const rs of (imagineDef.resonanceSkills||[])) {
+    if (resonance >= rs.threshold) {
+      const e = rs.effect;
+      if (e.atkPct)    res.atkPct    += e.atkPct;
+      if (e.hpPct)     res.hpPct     += e.hpPct;
+      if (e.spd)       res.spd       += e.spd;
+      if (e.cri)       res.cri       += e.cri;
+      if (e.dmgReduce) res.dmgReduce += e.dmgReduce;
+      if (e.skillPw)   res.skillPw   += e.skillPw;
+      if (e.healUp)    res.healUp    += e.healUp;
+    }
+  }
+
+  // 役割カウント
+  const roleCounts = {};
+  let uniqueRoles = new Set();
+  (partyUnits||[]).forEach(u => {
+    const cls = CLASS_DATA[u.classId];
+    const role = cls?.role || '';
+    roleCounts[role] = (roleCounts[role]||0) + 1;
+    uniqueRoles.add(role);
+  });
+
+  // イマジンスキル
+  for (const sk of (imagineDef.imagineSkills||[])) {
+    let active = false;
+    const c = sk.cond || '';
+    if (c === 'always') {
+      active = true;
+    } else if (c.startsWith('role_gte:')) {
+      const parts = c.split(':');
+      const role = parts[1], needed = parseInt(parts[2]||'1');
+      active = (roleCounts[role]||0) >= needed;
+    } else if (c.startsWith('roles_gte:')) {
+      const needed = parseInt(c.split(':')[1]||'1');
+      active = uniqueRoles.size >= needed;
+    }
+    if (!active) continue;
+    const e = sk.effect;
+    switch (e.type) {
+      case 'all_atk_pct':    res.atkPct    += e.val||0; break;
+      case 'all_hp_pct':     res.hpPct     += e.val||0; break;
+      case 'all_spd':        res.spd       += e.val||0; break;
+      case 'all_cri':        res.cri       += e.val||0; break;
+      case 'all_dmgReduce':  res.dmgReduce += e.val||0; break;
+      case 'all_skillPw':    res.skillPw   += e.val||0; break;
+      case 'all_healUp':     res.healUp    += e.val||0; break;
+      case 'all_atk_hp_pct': res.atkPct += e.atk||0; res.hpPct += e.hp||0; break;
+      case 'role_atk_pct':
+        if (e.role) res.roleAtkPct[e.role] = (res.roleAtkPct[e.role]||0) + (e.val||0);
+        break;
+    }
+  }
+  return res;
 }
 
 function renderFormationTab() {
@@ -8459,52 +8422,10 @@ function renderFormationTab() {
     bar.innerHTML += `<div class="preset-btn ${i===gState.activePreset?'active':''}" onclick="switchPreset(${i})">${i+1}</div>`;
   }
   const preset = gState.presets[gState.activePreset];
-  if (!preset.formationType || !FORMATION_TYPES[preset.formationType]) preset.formationType = 'standard';
-  const ft = FORMATION_TYPES[preset.formationType];
-
-  // 陣形選択バー
-  const typeBar = document.getElementById('formation-type-bar');
-  typeBar.innerHTML = '';
-  Object.values(FORMATION_TYPES).forEach(f => {
-    const btn = document.createElement('div');
-    btn.className = 'formation-type-btn' + (f.id === preset.formationType ? ' active' : '');
-    btn.innerHTML = `
-      <div class="ftb-icon">${f.icon}</div>
-      <div class="ftb-name">${f.name}</div>
-      <div class="ftb-bonus">${f.bonus.map(b=>b.label).join('<br>')}</div>`;
-    btn.addEventListener('click', () => {
-      preset.formationType = f.id;
-      trimFormationToType(preset, f);
-      saveState();
-      renderFormationTab();
-    });
-    typeBar.appendChild(btn);
-  });
-
-  // 作戦指令バー（フレーバー＋ボーナス）
-  const bonusBar = document.getElementById('formation-bonus-bar');
-  const bonusEl  = document.getElementById('fbb-bonuses');
-  if (bonusBar) {
-    bonusBar.style.display = '';
-    bonusEl.innerHTML = `
-      <div style="width:100%;font-size:10px;color:var(--text2);margin-bottom:4px;line-height:1.6">
-        <span style="color:var(--gold);font-weight:700">📢 指令：</span>「${ft.flavor}」
-      </div>
-      ${ft.bonus.map(b=>`<div class="fbb-item">${b.label}</div>`).join('')}`;
-  }
-
-  // スロットラベル
-  const sl = document.getElementById('party-slot-label');
-  if (sl) sl.textContent = `(最大${ft.slots||6}人)`;
-
   if (!Array.isArray(preset.formation.slots)) preset.formation.slots = [];
-  renderFormationSlots('party-slots', preset.formation.slots, 'party', ft.slots || 6);
+  renderImagineSection(preset);
+  renderFormationSlots('party-slots', preset.formation.slots, 'party', 6);
   renderSynergyDisplay(preset);
-}
-
-function trimFormationToType(preset, ft) {
-  const max = ft.slots || 6;
-  for (let i = max; i < 12; i++) { if (preset.formation.slots) preset.formation.slots[i] = undefined; }
 }
 
 function renderFormationSlots(elId, uids, row, maxSlots) {
@@ -8526,11 +8447,6 @@ function renderFormationSlots(elId, uids, row, maxSlots) {
         <div class="slot-icon">${classIconHTML(u.classId,"40px")}</div>
         <div class="slot-name">${u.name}</div>
         <div class="slot-lv">Lv.${prog.level}${isLeader ? ' <span style="color:#f0cc6e;font-size:9px">ATK/HP+15% EXP+50%</span>' : ''}</div>`;
-      const tacBtn = document.createElement('button');
-      tacBtn.className = 'slot-tactics-btn';
-      tacBtn.textContent = '⚙️ 戦術';
-      tacBtn.addEventListener('click', (e) => { e.stopPropagation(); openTactics(u.uid); });
-      div.appendChild(tacBtn);
       const rmBtn = document.createElement('button');
       rmBtn.className = 'slot-remove';
       rmBtn.textContent = '✕';
@@ -8543,6 +8459,195 @@ function renderFormationSlots(elId, uids, row, maxSlots) {
     }
   }
 }
+
+
+// ============================================================
+//  IMAGINE UI & 管理関数
+// ============================================================
+
+function renderImagineSection(preset) {
+  const el = document.getElementById('imagine-section');
+  if (!el) return;
+  const imagineState = getPresetImagineState(preset);
+  const imagineDef   = imagineState ? getImagineEntry(imagineState.id) : null;
+
+  let html = '<div class="imagine-section">';
+  html += '<div class="imagine-section-title">✦ 守護精霊 — イマジン</div>';
+
+  if (!imagineDef || !imagineState) {
+    html += `<div class="imagine-card empty" onclick="openImagineSelect()">
+      <span style="font-size:22px;color:var(--text3)">✦</span>
+      <span style="font-size:12px;color:var(--text3)">守護精霊を設定する（クリック）</span>
+    </div>`;
+  } else {
+    const lv = imagineState.level||1;
+    const res = imagineState.resonance||0;
+    const baseHpNow  = Math.round(imagineDef.baseHp  * (1 + (lv-1)*9/99));
+    const baseAtkNow = Math.round(imagineDef.baseAtk * (1 + (lv-1)*9/99));
+    const resPct = Math.min(100, Math.round(res / 10));
+
+    html += `<div class="imagine-card" onclick="openImagineSelect()">
+      <div class="imagine-icon">${imagineDef.icon}</div>
+      <div class="imagine-info">
+        <div class="imagine-name">${imagineDef.name} <span style="font-size:10px;color:var(--text3)">Lv${lv}</span></div>
+        <div class="imagine-flavor">${imagineDef.flavor}</div>
+        <div class="imagine-stats">HP+${baseHpNow} / ATK+${baseAtkNow} (共鳴: ${res}%)</div>
+        <div class="imagine-resonance-bar">
+          <div class="imagine-resonance-fill" style="width:${resPct}%"></div>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="font-size:10px;" onclick="event.stopPropagation();openImagineManage('${preset.id}')">管理</button>
+    </div>`;
+
+    // アクティブスキル表示
+    html += '<div class="imagine-skills">';
+    const partyUnits = (preset.formation?.slots||[]).filter(Boolean).map(uid=>gState.ownedUnits.find(u=>u.uid===uid)).filter(Boolean);
+    const buffs = getImagineBuffs(preset, partyUnits);
+    const roleCounts = {};
+    let uniqueRoles = new Set();
+    partyUnits.forEach(u=>{ const r=CLASS_DATA[u.classId]?.role||''; roleCounts[r]=(roleCounts[r]||0)+1; uniqueRoles.add(r); });
+    (imagineDef.imagineSkills||[]).forEach(sk => {
+      let active = false;
+      const c = sk.cond||'';
+      if (c==='always') active=true;
+      else if (c.startsWith('role_gte:')) { const p=c.split(':'); active=(roleCounts[p[1]]||0)>=parseInt(p[2]||'1'); }
+      else if (c.startsWith('roles_gte:')) { active=uniqueRoles.size>=parseInt(c.split(':')[1]||'1'); }
+      const color = active ? 'var(--accent2)' : 'var(--text3)';
+      html += `<div class="imagine-skill-row">
+        <span class="imagine-skill-cond" style="color:${color}">${active?'✓':'○'}</span>
+        <span class="imagine-skill-cond">[${sk.condLabel}]</span>
+        <span class="imagine-skill-eff">${sk.effectLabel}</span>
+      </div>`;
+    });
+    html += '</div>';
+
+    // 共鳴マイルストーン
+    html += '<div class="imagine-resonance-milestones">';
+    (imagineDef.resonanceSkills||[]).forEach(rs => {
+      const reached = res >= rs.threshold;
+      html += `<div class="imagine-milestone ${reached?'reached':'locked'}">${rs.threshold}%: ${rs.label}</div>`;
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function openImagineSelect() {
+  const preset = gState.presets[gState.activePreset];
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay open';
+  ov.style.zIndex = '700';
+
+  const cards = IMAGINES.map(im => {
+    const state = (gState.imagines||[]).find(s=>s.id===im.id);
+    const lv  = state?.level||0;
+    const res = state?.resonance||0;
+    const sel = preset.imagineId === im.id;
+    return `<div class="imagine-select-card ${sel?'selected':''}" onclick="equipImagine('${im.id}');this.closest('.modal-overlay').remove();renderFormationTab()">
+      <div class="isc-icon">${im.icon}</div>
+      <div class="isc-name">${im.name}</div>
+      <div class="isc-lv">${lv>0?'Lv'+lv:'未取得'}</div>
+      <div class="isc-res">${res>0?'共鳴'+res+'%':''}</div>
+    </div>`;
+  }).join('');
+
+  ov.innerHTML = `<div class="modal-panel" style="max-width:400px">
+    <div class="modal-header">
+      <h3>✦ 守護精霊を選択</h3>
+      <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">パーティに1体の守護精霊を設定できます。</div>
+      <div class="imagine-select-grid">${cards}</div>
+      ${preset.imagineId?`<button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px" onclick="equipImagine(null);this.closest('.modal-overlay').remove();renderFormationTab()">✕ 設定を解除</button>`:''}
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function equipImagine(imagineId) {
+  const preset = gState.presets[gState.activePreset];
+  preset.imagineId = imagineId || null;
+  // imagineStateが未作成なら作る
+  if (imagineId) {
+    if (!gState.imagines) gState.imagines = [];
+    if (!gState.imagines.find(s=>s.id===imagineId)) {
+      gState.imagines.push({ id:imagineId, level:1, resonance:0 });
+    }
+  }
+  saveState();
+  renderFormationTab();
+}
+
+function openImagineManage(presetId) {
+  const preset = gState.presets[gState.activePreset];
+  const imagineState = getPresetImagineState(preset);
+  const imagineDef   = imagineState ? getImagineEntry(imagineState.id) : null;
+  if (!imagineDef || !imagineState) return;
+
+  const lv = imagineState.level||1;
+  const soul1 = gState.player.cryptoSoulT1||0;
+  const soul2 = gState.player.cryptoSoulT2||0;
+  const soul3 = gState.player.cryptoSoulT3||0;
+  const lvUpCost = lv < 30 ? {t:1,n:3} : lv < 60 ? {t:2,n:3} : lv < 100 ? {t:3,n:3} : null;
+  const canUp = lvUpCost && (lvUpCost.t===1?soul1:lvUpCost.t===2?soul2:soul3) >= lvUpCost.n;
+
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay open';
+  ov.style.zIndex = '700';
+  ov.innerHTML = `<div class="modal-panel" style="max-width:400px">
+    <div class="modal-header">
+      <h3>${imagineDef.icon} ${imagineDef.name}</h3>
+      <button class="close-btn" onclick="this.closest('.modal-overlay').remove();renderFormationTab()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">${imagineDef.flavor}</div>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="flex:1;text-align:center;background:var(--bg3);padding:8px;border:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text3)">レベル</div>
+          <div style="font-size:22px;font-weight:700;color:var(--gold)">${lv}</div>
+        </div>
+        <div style="flex:1;text-align:center;background:var(--bg3);padding:8px;border:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text3)">共鳴度</div>
+          <div style="font-size:22px;font-weight:700;color:var(--purple)">${imagineState.resonance||0}%</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:6px">素材 — クリプトソウル: T1×${soul1} / T2×${soul2} / T3×${soul3}</div>
+      ${lvUpCost && lv < 100 ? `
+      <button class="btn btn-gold" style="width:100%" ${canUp?'':'disabled'} onclick="levelUpImagine('${imagineDef.id}');this.closest('.modal-overlay').remove();openImagineManage(null)">
+        レベルアップ (T${lvUpCost.t}×${lvUpCost.n} 消費)
+      </button>` : lv>=100?'<div style="text-align:center;color:var(--gold);font-size:12px">MAX LEVEL</div>':''}
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function levelUpImagine(imagineId) {
+  const state = (gState.imagines||[]).find(s=>s.id===imagineId);
+  if (!state) return;
+  const lv = state.level||1;
+  if (lv >= 100) return;
+  const cost = lv < 30 ? {t:1,n:3} : lv < 60 ? {t:2,n:3} : {t:3,n:3};
+  const key = `cryptoSoulT${cost.t}`;
+  if ((gState.player[key]||0) < cost.n) { toast('クリプトソウルが不足しています'); return; }
+  gState.player[key] -= cost.n;
+  state.level = lv + 1;
+  saveState();
+  updateTopBar();
+  toast(`${getImagineEntry(imagineId)?.name||'イマジン'} Lv${state.level}にアップ！`);
+}
+
+// バトル後に共鳴度を増加（勝利時+10、撤退時+3）
+function addImagineResonance(amount) {
+  const preset = gState.presets[gState.activePreset];
+  if (!preset.imagineId) return;
+  const state = (gState.imagines||[]).find(s=>s.id===preset.imagineId);
+  if (!state) return;
+  state.resonance = Math.min(1000, (state.resonance||0) + amount);
+  saveState();
+}
+
 
 function addEmptySlot(el, row, i, isLeader) {
   const div = document.createElement('div');
@@ -8618,10 +8723,8 @@ function switchPreset(idx) {
 function openUnitSelect(row, idx) {
   selectingSlot = {row, idx};
   const preset = gState.presets[gState.activePreset];
-  const ft = getActiveFormationType() || FORMATION_TYPES['balance'];
-  const maxForRow = row === 'front' ? ft.front : ft.back;
-  // このスロットが陣形の範囲外なら無視
-  if (idx >= maxForRow) return;
+  // imagine system: 6スロット固定
+  const maxForRow = 6;
   const usedUids = (preset.formation.slots||[]).filter(Boolean);
   const list = document.getElementById('unit-select-list');
   list.innerHTML = '';
@@ -9187,30 +9290,32 @@ function getFormationUnits() {
   return uids.map(uid => gState.ownedUnits.find(u=>u.uid===uid)).filter(Boolean);
 }
 
-function makeCombatant(unit, isEnemy, enemyData, ft, pos) {
+function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
   if (!isEnemy) {
     const cls = CLASS_DATA[unit.classId];
     const stats = calcStats(unit);
     const ult = cls.ultimates.find(x=>x.id===unit.ultimateId) || cls.ultimates[0];
     const activeSkillDefs = cls.activeSkills || (unit.selectedSkills||[]).map(sid=>(cls.skillPool||[]).find(s=>s.id===sid)).filter(Boolean);
 
-    // 陣形ボーナス適用
+    // イマジンバフ適用
     let atk = stats.atk, hp = stats.hp, spd = stats.spd, pres = stats.pres;
-    if (ft) {
-      (ft.bonus||[]).forEach(b => {
-        // 全員ボーナス
-        {
-          const label = b.label;
-          if (label.includes('ATK+'))  { const m = label.match(/ATK\+(\d+)%/); if(m) atk = Math.floor(atk*(1+parseInt(m[1])/100)); }
-          if (label.includes('HP+'))   { const m = label.match(/HP\+(\d+)%/);  if(m) hp  = Math.floor(hp *(1+parseInt(m[1])/100)); }
-          if (label.includes('SPD+'))  { const m = label.match(/SPD\+(\d+)/);  if(m) spd += parseInt(m[1]); }
-          if (label.includes('PRES+')) { const m = label.match(/PRES\+(\d+)/); if(m) pres = Math.min(99, pres+parseInt(m[1])); }
-        }
-      });
-      // 後方支援令: プリーストATK+30%
-      if (ft.healerBoost && unit.classId === 'priest') {
-        atk = Math.floor(atk * 1.30);
+    if (imagineBuffs) {
+      const role = CLASS_DATA[unit.classId]?.role || '';
+      const ib = imagineBuffs;
+      // イマジン基本値
+      const preset = gState.presets[gState.activePreset];
+      const imagineState = getPresetImagineState(preset);
+      const imagineDef   = imagineState ? getImagineEntry(imagineState.id) : null;
+      if (imagineDef && imagineState) {
+        const lv = imagineState.level||1;
+        hp  += Math.round(imagineDef.baseHp  * (1 + (lv-1)*9/99));
+        atk += Math.round(imagineDef.baseAtk * (1 + (lv-1)*9/99));
       }
+      // 条件・共鳴バフ
+      if (ib.atkPct)    atk = Math.floor(atk * (1 + ib.atkPct/100));
+      if (ib.hpPct)     hp  = Math.floor(hp  * (1 + ib.hpPct/100));
+      if (ib.spd)       spd += ib.spd;
+      if (ib.roleAtkPct && ib.roleAtkPct[role]) atk = Math.floor(atk * (1 + ib.roleAtkPct[role]/100));
     }
 
     // ===== リーダーボーナス: スロット0のユニットがリーダー =====
@@ -9236,8 +9341,7 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos) {
     const cls2 = CLASS_DATA[unit.classId];
     const prog  = gState.unitProgress[unit.uid] || { level:1 };
     let baseMp = Math.floor((cls2?.baseStats?.mp || 1600) * (1 + (prog.level-1)*9/99));
-    // 後方支援令: 全員MP+20%
-    if (ft?.mpBonus) baseMp = Math.floor(baseMp * (1 + ft.mpBonus));
+    // イマジン共鳴スキルによるbaseMp補正はなし（シンプルに）
     const combatant = {
       uid: unit.uid, name: unit.name, icon: cls.icon,
       classId: unit.classId,
@@ -9319,13 +9423,13 @@ function initBattle(waveEnemies, stageName) {
   battleStats = { totalDmg:0, crits:0, unitDmg:{}, unitHeal:{}, unitTaken:{} };
   units.forEach(u => { battleStats.unitDmg[u.uid]=0; battleStats.unitTaken[u.uid]=0; battleStats.unitHeal[u.uid]=0; });
 
-  // 陣形ボーナスを計算してcombatantに渡す
+  // イマジンバフを計算してcombatantに渡す
   const preset = gState.presets[gState.activePreset];
-  const ft = FORMATION_TYPES[preset.formationType || 'standard'] || FORMATION_TYPES['standard'];
+  const imagineBuffs = getImagineBuffs(preset, units);
 
   battleState = {
     allies: units.map(u => {
-      return makeCombatant(u, false, null, ft, 'member');
+      return makeCombatant(u, false, null, null, 'member', imagineBuffs);
     }),
     waveIdx: 0,
     waveEnemies,
@@ -9335,7 +9439,7 @@ function initBattle(waveEnemies, stageName) {
     startTime: Date.now(),
     elapsed: 0,
     running: false,
-    formationType: ft.id,
+    formationType: 'imagine',
     hadWipe: false,
     // フェーズ5: 夜戦関連
     isNight: false,
@@ -9356,7 +9460,7 @@ function initBattle(waveEnemies, stageName) {
 
   document.getElementById('battle-stage-title').textContent = stageName;
   const ftBadge = document.getElementById('battle-formation-badge');
-  if (ftBadge) ftBadge.textContent = ft.icon + ' ' + ft.name;
+  if (ftBadge) { const im = getImagineEntry(gState.presets[gState.activePreset]?.imagineId); ftBadge.textContent = im ? im.icon+' '+im.name : ''; }
   // フェーズ4: スカウトバッジをリセット
   const scoutBadge = document.getElementById('battle-scout-badge');
   if (scoutBadge) { scoutBadge.style.display = 'none'; scoutBadge.className = 'normal'; }
@@ -12101,6 +12205,9 @@ function endBattle(victory) {
     else if (deadCount <= 1) rank = 'A';
   }
 
+  // イマジン共鳴度アップ
+  if (victory) addImagineResonance(10);
+
   // Drops
   const drops = [];
   if (victory) {
@@ -12157,7 +12264,7 @@ function endBattle(victory) {
     const leaderUidForExp = (gState.presets[gState.activePreset]?.formation?.slots||[])[0];
     // 作戦EXPボーナス（定石作戦 +10%）
     const activePresetData = gState.presets[gState.activePreset];
-    const activeFt = FORMATION_TYPES[activePresetData?.formationType || 'standard'];
+    const activeFt = null; // imagine system
     const tacticExpMult = activeFt?.expBonus ? (1 + activeFt.expBonus) : 1.0;
     if (expPerUnit > 0) {
       aliveUids.forEach(uid => {
@@ -14213,22 +14320,27 @@ function renderTacticsStats() {
   const stats  = calcStats(u);
   const prog   = gState.unitProgress[uid] || {level:1};
   const preset = gState.presets[gState.activePreset];
-  const ft     = FORMATION_TYPES[preset?.formationType||'standard'] || FORMATION_TYPES['standard'];
+  const ft     = null; // imagine system
   const isLeader = (preset?.formation?.slots||[])[0] === uid;
 
-  // 陣形ボーナス・リーダーボーナス込みの実戦値を計算
+  // イマジンバフ・リーダーボーナス込みの実戦値を計算
   let { atk, hp, spd, pres, mres, cri, cridam } = stats;
   const baseMp = Math.floor((cls.baseStats?.mp||1600) * (1 + (prog.level-1)*9/99));
   let mp = baseMp;
-  (ft.bonus||[]).forEach(b => {
-    const lbl = b.label;
-    if (lbl.includes('ATK+'))  { const m=lbl.match(/ATK\+(\d+)%/);  if(m) atk =Math.floor(atk*(1+parseInt(m[1])/100)); }
-    if (lbl.includes('HP+'))   { const m=lbl.match(/HP\+(\d+)%/);   if(m) hp  =Math.floor(hp *(1+parseInt(m[1])/100)); }
-    if (lbl.includes('SPD+'))  { const m=lbl.match(/SPD\+(\d+)/);   if(m) spd +=parseInt(m[1]); }
-    if (lbl.includes('PRES+')) { const m=lbl.match(/PRES\+(\d+)/);  if(m) pres=Math.min(99,pres+parseInt(m[1])); }
-  });
-  if (ft.healerBoost && u.classId === 'priest') atk = Math.floor(atk*1.30);
-  if (ft.mpBonus) mp = Math.floor(mp*(1+ft.mpBonus));
+  const partyUnits = (preset.formation?.slots||[]).filter(Boolean).map(id=>gState.ownedUnits.find(x=>x.uid===id)).filter(Boolean);
+  const ib = getImagineBuffs(preset, partyUnits);
+  const imagineState = getPresetImagineState(preset);
+  const imagineDef = imagineState ? getImagineEntry(imagineState.id) : null;
+  if (imagineDef && imagineState) {
+    const lv = imagineState.level||1;
+    hp  += Math.round(imagineDef.baseHp  * (1 + (lv-1)*9/99));
+    atk += Math.round(imagineDef.baseAtk * (1 + (lv-1)*9/99));
+  }
+  const role = cls.role||'';
+  if (ib.atkPct) atk = Math.floor(atk*(1+ib.atkPct/100));
+  if (ib.hpPct)  hp  = Math.floor(hp *(1+ib.hpPct/100));
+  if (ib.spd)    spd += ib.spd;
+  if (ib.roleAtkPct?.[role]) atk = Math.floor(atk*(1+ib.roleAtkPct[role]/100));
   if (isLeader) { atk=Math.floor(atk*1.15); hp=Math.floor(hp*1.15); spd+=10; }
 
   const ult = cls.ultimates?.find(x=>x.id===u.ultimateId) || cls.ultimates?.[0];
@@ -15659,8 +15771,11 @@ const SHOP_ITEMS = [
   { id:'atom_core_t1',  icon:'💎', name:'アトミックコアT1', desc:'AFランクアップ素材（Rank0→1）', price:800,  currency:'coin', gives:'atomCore_t1', amount:1 },
   { id:'atom_core_t2',  icon:'💎', name:'アトミックコアT2', desc:'AFランクアップ素材（Rank1→2）', price:1500, currency:'coin', gives:'atomCore_t2', amount:1 },
   { id:'atom_core_t3',  icon:'💎', name:'アトミックコアT3', desc:'AFランクアップ素材（Rank2→3）', price:3000, currency:'coin', gives:'atomCore_t3', amount:1 },
-  { id:'stardust_s',    icon:'✨', name:'星屑の砂×10',      desc:'アクセサリー強化素材',          price:200,  currency:'coin', gives:'stardust',     amount:10 },
-  { id:'stardust_l',    icon:'✨', name:'星屑の砂×30',      desc:'アクセサリー強化素材（まとめ買い）', price:500, currency:'coin', gives:'stardust', amount:30 },
+  { id:'stardust_s',     icon:'✨', name:'星屑の砂×10',          desc:'アクセサリー強化素材',              price:200,  currency:'coin', gives:'stardust',      amount:10 },
+  { id:'stardust_l',     icon:'✨', name:'星屑の砂×30',          desc:'アクセサリー強化素材（まとめ買い）',   price:500,  currency:'coin', gives:'stardust',      amount:30 },
+  { id:'crypto_t1',      icon:'💠', name:'クリプトソウルT1×3',    desc:'イマジン強化素材（低Lv）',           price:100,  currency:'coin', gives:'cryptoSoulT1',  amount:3 },
+  { id:'crypto_t2',      icon:'💜', name:'クリプトソウルT2×3',    desc:'イマジン強化素材（中Lv）',           price:300,  currency:'coin', gives:'cryptoSoulT2',  amount:3 },
+  { id:'crypto_t3',      icon:'🔮', name:'クリプトソウルT3×3',    desc:'イマジン強化素材（高Lv）',           price:800,  currency:'coin', gives:'cryptoSoulT3',  amount:3 },
 ];
 
 function openShop() {
