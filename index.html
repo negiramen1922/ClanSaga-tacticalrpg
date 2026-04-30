@@ -1093,6 +1093,24 @@ img.item-icon {
 
 .hm-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
+/* 持ち物メニュー */
+.items-section { margin-bottom: 16px; }
+.items-section-title { font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; padding: 4px 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.items-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.items-grid.wide { grid-template-columns: 1fr 1fr 1fr; }
+.item-row { display: flex; align-items: center; gap: 8px; background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; }
+.item-row-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.item-row-info { flex: 1; min-width: 0; }
+.item-row-name { font-size: 10px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-row-val { font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); line-height: 1; }
+.item-row-val.gold { color: var(--gold); }
+.item-row-val.crystal { color: #7dd4fc; }
+.item-row-val.green { color: #4ade80; }
+.item-row-val.blue { color: #60a5fa; }
+.item-row-val.purple { color: #c084fc; }
+.item-row-val.amber { color: #fbbf24; }
+
+
 #hm-footer {
   padding: 12px 20px; font-size: 10px; color: var(--text3);
   border-top: 1px solid var(--border); text-align: center;
@@ -2090,6 +2108,7 @@ img.item-icon {
         <div class="hm-item" onclick="closeHamburger();openAchievementModal()"><img src="assets/images/nav-achievement.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>実績<span id="hm-ach-badge" style="display:none;background:var(--red);color:white;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px;">!</span></span></div>
         <div class="hm-item" onclick="closeHamburger();openMissionModal()"><img src="assets/images/nav-mission.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>ミッション</span></div>
         <div class="hm-item" onclick="closeHamburger();openMine()"><img src="assets/images/nav-mine.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>鉱山</span></div>
+        <div class="hm-item" onclick="closeHamburger();openItemsMenu()">🎒<span>持ち物</span></div>
         <div class="hm-item" onclick="closeHamburger();openSmithyPanel()">🔨<span>鍛冶屋</span></div>
         <div class="hm-item" onclick="closeHamburger();openGacha()">✨<span>召喚</span></div>
         <div class="hm-item" onclick="closeHamburger();openHelpModal()"><img src="assets/images/nav-help.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>チュートリアル・ヘルプ</span></div>
@@ -3247,8 +3266,19 @@ const ITEM_ICON_GOLD     = 'assets/images/item-gold.png';
 const ITEM_ICON_INK      = 'assets/images/item-ink.png';
 const ITEM_ICON_EXPPOT   = 'assets/images/item-exppot.png';
 const ITEM_ICON_AWAKEPOT = 'assets/images/item-awakepot.png';
+
+// SVG data-URI icons (transparent background, inline)
+const SVG_ICONS = {
+  crystal: `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="cg" cx="50%" cy="35%" r="70%"><stop offset="0%" stop-color="#ffffff"/><stop offset="35%" stop-color="#bae6fd"/><stop offset="75%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#1e3a8a"/></radialGradient></defs><polygon points="50,3 58,32 83,17 68,42 97,50 68,58 83,83 58,68 50,97 42,68 17,83 32,58 3,50 32,42 17,17 42,32" fill="url(#cg)" stroke="#1e3a8a" stroke-width="2.5"/><ellipse cx="50" cy="50" rx="11" ry="11" fill="white" opacity="0.85"/></svg>')}`,
+  atomT1:  `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="t1g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4ade80"/><stop offset="50%" stop-color="#16a34a"/><stop offset="100%" stop-color="#052e16"/></linearGradient></defs><polygon points="50,5 95,50 50,95 5,50" fill="url(#t1g)" stroke="#166534" stroke-width="2.5"/><polygon points="50,5 95,50 50,50" fill="#22c55e" opacity="0.25"/><polygon points="5,50 50,95 50,50" fill="#052e16" opacity="0.4"/><line x1="50" y1="5" x2="50" y2="95" stroke="#4ade80" stroke-width="1.5" opacity="0.6"/><line x1="5" y1="50" x2="95" y2="50" stroke="#4ade80" stroke-width="1.5" opacity="0.6"/><polygon points="50,22 78,50 50,78 22,50" fill="none" stroke="#86efac" stroke-width="2" opacity="0.7"/></svg>')}`,
+  atomT2:  `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="t2g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#60a5fa"/><stop offset="50%" stop-color="#1d4ed8"/><stop offset="100%" stop-color="#1e1b4b"/></linearGradient></defs><ellipse cx="50" cy="50" rx="47" ry="13" fill="none" stroke="#3b82f6" stroke-width="4.5" opacity="0.9"/><polygon points="50,8 90,50 50,92 10,50" fill="url(#t2g)" stroke="#1e3a8a" stroke-width="2.5"/><polygon points="50,8 90,50 50,50" fill="#60a5fa" opacity="0.2"/><line x1="50" y1="8" x2="50" y2="92" stroke="#93c5fd" stroke-width="1.5" opacity="0.5"/><line x1="10" y1="50" x2="90" y2="50" stroke="#93c5fd" stroke-width="1.5" opacity="0.5"/></svg>')}`,
+  atomT3:  `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="t3g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#c084fc"/><stop offset="50%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#2e1065"/></linearGradient></defs><ellipse cx="50" cy="50" rx="47" ry="13" fill="none" stroke="#a855f7" stroke-width="4" opacity="0.85"/><ellipse cx="50" cy="50" rx="13" ry="47" fill="none" stroke="#a855f7" stroke-width="4" opacity="0.7"/><polygon points="50,8 90,50 50,92 10,50" fill="url(#t3g)" stroke="#4c1d95" stroke-width="2.5"/><polygon points="50,8 90,50 50,50" fill="#c084fc" opacity="0.18"/><line x1="50" y1="8" x2="50" y2="92" stroke="#d8b4fe" stroke-width="1.5" opacity="0.5"/><line x1="10" y1="50" x2="90" y2="50" stroke="#d8b4fe" stroke-width="1.5" opacity="0.5"/></svg>')}`,
+  atomT4:  `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="t4g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde68a"/><stop offset="50%" stop-color="#d97706"/><stop offset="100%" stop-color="#78350f"/></linearGradient></defs><ellipse cx="50" cy="50" rx="47" ry="11" fill="none" stroke="#f59e0b" stroke-width="4.5" opacity="0.9"/><ellipse cx="50" cy="50" rx="30" ry="47" fill="none" stroke="#fbbf24" stroke-width="3.5" opacity="0.8"/><ellipse cx="50" cy="50" rx="47" ry="27" transform="rotate(50 50 50)" fill="none" stroke="#f59e0b" stroke-width="3" opacity="0.65"/><polygon points="50,8 90,50 50,92 10,50" fill="url(#t4g)" stroke="#92400e" stroke-width="2.5"/><polygon points="50,8 90,50 50,50" fill="#fde68a" opacity="0.25"/><line x1="50" y1="8" x2="50" y2="92" stroke="#fde68a" stroke-width="1.5" opacity="0.6"/><line x1="10" y1="50" x2="90" y2="50" stroke="#fde68a" stroke-width="1.5" opacity="0.6"/></svg>')}`,
+};
+
 function itemIconHTML(key, size='18px') {
-  if (key === 'crystal')    return `<span style="font-size:${size};vertical-align:middle;line-height:1;display:inline-block;">💠</span>`;
+  const svgSrc = SVG_ICONS[key];
+  if (svgSrc) return `<img src="${svgSrc}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;display:inline-block;image-rendering:auto;">`;
   if (key === 'passiveKey') return `<span style="font-size:${size};vertical-align:middle;line-height:1;display:inline-block;">🔑</span>`;
   const src = {gold:ITEM_ICON_GOLD,ink:ITEM_ICON_INK,expPot:ITEM_ICON_EXPPOT,awakePot:ITEM_ICON_AWAKEPOT}[key];
   if (!src) return '';
@@ -6471,6 +6501,75 @@ function toggleHamburger() {
 
 function closeHamburger() {
   document.getElementById('hamburger-menu').classList.remove('open');
+}
+
+function openItemsMenu() {
+  const p = gState.player;
+  const fmt = n => (n||0).toLocaleString();
+  const iH = (key, sz='26px') => itemIconHTML(key, sz);
+  const stone = p.atomStone || {};
+  const core  = p.atomCore  || {};
+
+  function section(title, rows, wide=false) {
+    const cells = rows.map(([icon, name, val, cls]) => `
+      <div class="item-row">
+        <div class="item-row-icon">${icon}</div>
+        <div class="item-row-info">
+          <div class="item-row-name">${name}</div>
+          <div class="item-row-val ${cls||''}">${fmt(val)}</div>
+        </div>
+      </div>`).join('');
+    return `<div class="items-section">
+      <div class="items-section-title">${title}</div>
+      <div class="items-grid${wide?' wide':''}">${cells}</div>
+    </div>`;
+  }
+
+  const html = `
+    ${section('通貨', [
+      [iH('gold'), 'ゴールド', p.gold, 'gold'],
+      [iH('crystal'), '星晶石', p.starCrystal, 'crystal'],
+    ])}
+    ${section('育成素材', [
+      [iH('expPot'), 'EXPポット', p.ether, ''],
+      [iH('awakePot'), '覚醒ポット', p.awakePot||0, ''],
+      [`<span style="font-size:22px">⛏️</span>`, 'ミスリル', p.mithril||0, ''],
+      [`<span style="font-size:22px">🔑</span>`, 'パッシブキー', p.passiveKey||0, ''],
+    ])}
+    ${section('アクセサリー素材', [
+      [`<span style="font-size:22px">✨</span>`, '星屑の砂', p.stardust||0, 'amber'],
+    ])}
+    ${section('イマジン素材', [
+      [`<span style="font-size:22px">💠</span>`, 'クリプトソウルT1', p.cryptoSoulT1||0, 'blue'],
+      [`<span style="font-size:22px">💜</span>`, 'クリプトソウルT2', p.cryptoSoulT2||0, 'purple'],
+      [`<span style="font-size:22px">🔮</span>`, 'クリプトソウルT3', p.cryptoSoulT3||0, ''],
+    ])}
+    ${section('アトム秘石', [
+      [iH('atomT1'), '秘石T1', stone.t1||0, 'green'],
+      [iH('atomT2'), '秘石T2', stone.t2||0, 'blue'],
+      [iH('atomT3'), '秘石T3', stone.t3||0, 'purple'],
+    ])}
+    ${section('アトミックコア', [
+      [iH('atomT1'), 'コアT1', core.t1||0, 'green'],
+      [iH('atomT2'), 'コアT2', core.t2||0, 'blue'],
+      [iH('atomT3'), 'コアT3', core.t3||0, 'purple'],
+    ])}
+    ${section('その他', [
+      [`<span style="font-size:22px">⭐</span>`, 'スターPt', p.starMapPoints||0, 'amber'],
+      [`<span style="font-size:22px">🎫</span>`, '周回チケット', p.sweepTicket||0, ''],
+    ])}`;
+
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay open';
+  ov.style.zIndex = '700';
+  ov.innerHTML = `<div class="modal-panel" style="max-width:420px">
+    <div class="modal-header">
+      <h3>🎒 持ち物</h3>
+      <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto">${html}</div>
+  </div>`;
+  document.body.appendChild(ov);
 }
 
 function updateHamburgerInfo() {
@@ -12349,32 +12448,32 @@ function endBattle(victory) {
         if (Math.random() < 0.25) {
           const n = Math.floor(Math.random()*2)+1;
           _stone.t1 += n;
-          drops.push({ name:`🔩 アトム秘石T1 ×${n}` });
+          drops.push({ name:`${itemIconHTML('atomT1','14px')} アトム秘石T1 ×${n}` });
         }
         // T2石: 8%（エリア2以降）
         if (_area >= 2 && Math.random() < 0.08) {
           _stone.t2 += 1;
-          drops.push({ name:`🔩 アトム秘石T2 ×1` });
+          drops.push({ name:`${itemIconHTML('atomT2','14px')} アトム秘石T2 ×1` });
         }
         // T3石: 2%（エリア3以降）
         if (_area >= 3 && Math.random() < 0.02) {
           _stone.t3 += 1;
-          drops.push({ name:`🔩 アトム秘石T3 ×1` });
+          drops.push({ name:`${itemIconHTML('atomT3','14px')} アトム秘石T3 ×1` });
         }
         // T1核: 4%（エリア2以降）
         if (_area >= 2 && Math.random() < 0.04) {
           _core.t1 += 1;
-          drops.push({ name:`💎 アトミックコアT1 ×1` });
+          drops.push({ name:`${itemIconHTML('atomT1','14px')} アトミックコアT1 ×1` });
         }
         // T2核: 1.5%（エリア3以降）
         if (_area >= 3 && Math.random() < 0.015) {
           _core.t2 += 1;
-          drops.push({ name:`💎 アトミックコアT2 ×1` });
+          drops.push({ name:`${itemIconHTML('atomT2','14px')} アトミックコアT2 ×1` });
         }
         // T3核: 0.5%（エリア4以降）
         if (_area >= 4 && Math.random() < 0.005) {
           _core.t3 += 1;
-          drops.push({ name:`💎 アトミックコアT3 ×1` });
+          drops.push({ name:`${itemIconHTML('atomT3','14px')} アトミックコアT3 ×1` });
         }
         gState.player.atomStone = _stone;
         gState.player.atomCore  = _core;
@@ -15377,8 +15476,7 @@ function renderArtifactEnhance(el) {
   // 素材所持数表示
   const matDiv = document.createElement('div');
   matDiv.style.cssText = 'padding:10px 12px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);';
-  matDiv.innerHTML = `<b>🔩 アトム秘石</b> T1:${atomStone.t1} / T2:${atomStone.t2} / T3:${atomStone.t3}
-    &nbsp;&nbsp;<b>💎 アトミックコア</b> T1:${atomCore.t1} / T2:${atomCore.t2} / T3:${atomCore.t3}`;
+  matDiv.innerHTML = `<b>${itemIconHTML('atomT1','13px')} アトム秘石</b> T1:${atomStone.t1} / ${itemIconHTML('atomT2','13px')}T2:${atomStone.t2} / ${itemIconHTML('atomT3','13px')}T3:${atomStone.t3}&nbsp;&nbsp;<b>コア</b> T1:${atomCore.t1} / T2:${atomCore.t2} / T3:${atomCore.t3}`;
   el.appendChild(matDiv);
 
   if (!owned.length) {
@@ -15769,8 +15867,8 @@ const SHOP_ITEMS = [
   { id:'mithril_s',    icon:'⛏️', name:'ミスリル×5',        desc:'鍛冶屋で使用',         price:800, currency:'crystal', gives:'mithril', amount:5 },
   { id:'starpoint_s',  icon:'⭐', name:'スターポイント×10', desc:'星図盤でノード解放',   price:600, currency:'crystal', gives:'starMapPoints', amount:10 },
   { id:'sweep_x5',     icon:'🎫', name:'周回チケット×5',    desc:'バベルステージを即時周回',price:200,currency:'crystal',gives:'sweepTicket',amount:5 },
-  { id:'atom_stone_t1', icon:'🔩', name:'アトム秘石T1×5',   desc:'AF Lv1〜29強化素材',    price:300, currency:'crystal', gives:'atomStone_t1', amount:5 },
-  { id:'atom_stone_t2', icon:'🔩', name:'アトム秘石T2×3',   desc:'AF Lv30〜59強化素材',   price:600, currency:'crystal', gives:'atomStone_t2', amount:3 },
+  { id:'atom_stone_t1', icon:'atomT1', name:'アトム秘石T1×5',   desc:'AF Lv1〜29強化素材',    price:300, currency:'crystal', gives:'atomStone_t1', amount:5 },
+  { id:'atom_stone_t2', icon:'atomT2', name:'アトム秘石T2×3',   desc:'AF Lv30〜59強化素材',   price:600, currency:'crystal', gives:'atomStone_t2', amount:3 },
   { id:'atom_stone_t3', icon:'🔩', name:'アトム秘石T3×1',   desc:'AF Lv60〜強化素材',     price:500, currency:'crystal', gives:'atomStone_t3', amount:1 },
   { id:'atom_core_t1',  icon:'💎', name:'アトミックコアT1', desc:'AFランクアップ素材（Rank0→1）', price:800,  currency:'crystal', gives:'atomCore_t1', amount:1 },
   { id:'atom_core_t2',  icon:'💎', name:'アトミックコアT2', desc:'AFランクアップ素材（Rank1→2）', price:1500, currency:'crystal', gives:'atomCore_t2', amount:1 },
@@ -15795,7 +15893,7 @@ function renderShopContent() {
     const row = document.createElement('div');
     row.className = 'shop-item';
     row.innerHTML = `
-      <div class="shop-item-icon">${(['gold','expPot','ink','awakePot','passiveKey','crystal'].includes(item.icon)) ? itemIconHTML(item.icon,'28px') : item.icon}</div>
+      <div class="shop-item-icon">${(['gold','expPot','ink','awakePot','passiveKey','crystal','atomT1','atomT2','atomT3','atomT4'].includes(item.icon)) ? itemIconHTML(item.icon,'28px') : item.icon}</div>
       <div class="shop-item-info">
         <div class="shop-item-name">${item.name}</div>
         <div class="shop-item-desc">${item.desc}</div>
