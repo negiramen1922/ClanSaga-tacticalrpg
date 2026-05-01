@@ -1982,13 +1982,51 @@ img.item-icon {
   .nav-btn span:last-child { display: none; }
   .nav-btn { font-size: 18px !important; }
 }
+/* ===== DEBUG ADMIN PANEL ===== */
+#debug-overlay {
+  position: fixed; inset: 0; z-index: 99999;
+  background: rgba(0,0,0,0.88); display: none;
+  align-items: center; justify-content: center;
+}
+#debug-overlay.active { display: flex; }
+#debug-panel {
+  background: #1a0f0f; border: 2px solid #c0392b;
+  border-radius: 10px; padding: 20px; width: 320px;
+  max-height: 85vh; overflow-y: auto;
+  box-shadow: 0 0 40px rgba(192,57,43,0.4);
+}
+#debug-panel h3 {
+  font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  color: #e74c3c; letter-spacing: 3px; font-size: 15px;
+  margin-bottom: 16px; text-align: center;
+}
+.debug-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.debug-row label {
+  flex: 1; font-size: 12px; color: var(--text2);
+}
+.debug-row input {
+  width: 110px; background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); padding: 5px 8px; border-radius: 4px;
+  font-size: 13px; text-align: right;
+}
+.debug-apply-btn {
+  width: 100%; padding: 10px; margin-top: 14px;
+  background: #c0392b; color: #fff; border: none;
+  border-radius: 6px; font-size: 14px; font-weight: 700;
+  cursor: pointer; letter-spacing: 1px;
+}
+.debug-apply-btn:hover { background: #e74c3c; }
+.debug-sep { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 </style>
 </head>
 <body>
 
 <!-- ===== AUTH OVERLAY ===== -->
 <div id="overlay" class="visible">
-  <img id="game-logo" src="assets/images/game-logo.png" alt="Clan Saga ロゴ">
+  <img id="game-logo" src="assets/images/game-logo.png" alt="Clan Saga ロゴ" onclick="_debugTap()">
   <div style="text-align:center;margin-top:-8px;">
     <div style="font-family:'Cinzel',serif;font-size:28px;font-weight:900;color:var(--gold);letter-spacing:6px;text-shadow:0 0 30px rgba(201,168,76,0.5);">Clan Saga</div>
     <div class="subtitle" style="margin-top:4px;">カード戦略RPG</div>
@@ -18716,6 +18754,98 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 600);
   }
 });
+// ============================================================
+//  ADMIN DEBUG PANEL
+// ============================================================
+(function() {
+  const _ADMIN_PW = 'admin9999';
+  let _tapCount = 0, _tapTimer = null;
+
+  window._debugTap = function() {
+    _tapCount++;
+    clearTimeout(_tapTimer);
+    if (_tapCount >= 7) {
+      _tapCount = 0;
+      const pw = prompt('管理者パスワードを入力してください');
+      if (pw === _ADMIN_PW) {
+        openDebugPanel();
+      } else if (pw !== null) {
+        alert('パスワードが違います');
+      }
+      return;
+    }
+    _tapTimer = setTimeout(() => { _tapCount = 0; }, 1500);
+  };
+
+  window.openDebugPanel = function() {
+    if (!window.gState?.player) { alert('ゲームを起動してログインしてください'); return; }
+    const p = gState.player;
+    const fields = [
+      { id:'dbg_starCrystal', label:'星晶石',       key:'starCrystal' },
+      { id:'dbg_gold',        label:'ゴールド',       key:'gold' },
+      { id:'dbg_ether',       label:'EXPポット',      key:'ether' },
+      { id:'dbg_awakePot',    label:'覚醒ポット',      key:'awakePot' },
+      { id:'dbg_genericFrag', label:'汎用凸素材',      key:'genericFragments' },
+      { id:'dbg_stardust',    label:'星屑の砂',        key:'stardust' },
+      { id:'dbg_afMileage',   label:'AFマイレージ',    key:'afMileage' },
+      { id:'dbg_charMileage', label:'キャラマイレージ', key:'charMileage' },
+    ];
+    let rows = fields.map(f =>
+      `<div class="debug-row"><label>${f.label}</label><input id="${f.id}" type="number" value="${p[f.key]||0}"></div>`
+    ).join('');
+
+    // eiyuutan rows
+    const roles = ['warrior','vanguard','ranger','support','trickster','scout'];
+    const roleLabels = { warrior:'英雄譚（戦士）', vanguard:'英雄譚（前衛）', ranger:'英雄譚（遠距離）', support:'英雄譚（支援）', trickster:'英雄譚（トリ）', scout:'英雄譚（偵察）' };
+    const eit = p.eiyuutan || {};
+    let eitRows = roles.map(r =>
+      `<div class="debug-row"><label>${roleLabels[r]}</label><input id="dbg_eit_${r}" type="number" value="${eit[r]||0}"></div>`
+    ).join('');
+
+    const el = document.getElementById('debug-panel');
+    el.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;">⚙ ADMIN PANEL</h3>
+        <button onclick="closeDebugPanel()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;line-height:1;">✕</button>
+      </div>
+      ${rows}
+      <hr class="debug-sep">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">英雄譚素材</div>
+      ${eitRows}
+      <button class="debug-apply-btn" onclick="applyDebugValues()">✓ 適用してセーブ</button>
+    `;
+    document.getElementById('debug-overlay').classList.add('active');
+  };
+
+  window.closeDebugPanel = function() {
+    document.getElementById('debug-overlay').classList.remove('active');
+  };
+
+  window.applyDebugValues = function() {
+    const p = gState.player;
+    const numKeys = ['starCrystal','gold','ether','awakePot','genericFragments','stardust','afMileage','charMileage'];
+    const ids     = ['dbg_starCrystal','dbg_gold','dbg_ether','dbg_awakePot','dbg_genericFrag','dbg_stardust','dbg_afMileage','dbg_charMileage'];
+    ids.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el) p[numKeys[i]] = Math.max(0, parseInt(el.value)||0);
+    });
+    if (!p.eiyuutan) p.eiyuutan = {};
+    ['warrior','vanguard','ranger','support','trickster','scout'].forEach(r => {
+      const el = document.getElementById('dbg_eit_' + r);
+      if (el) p.eiyuutan[r] = Math.max(0, parseInt(el.value)||0);
+    });
+    saveState();
+    closeDebugPanel();
+    if (typeof renderHUD === 'function') renderHUD();
+    if (typeof toast === 'function') toast('✓ 管理者パネル：データを保存しました');
+  };
+})();
 </script>
+
+<!-- Admin Debug Panel -->
+<div id="debug-overlay" onclick="if(event.target===this)closeDebugPanel()">
+  <div id="debug-panel"></div>
+</div>
+
 </body>
 </html>
