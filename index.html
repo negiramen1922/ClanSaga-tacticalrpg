@@ -19205,7 +19205,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.openDebugPanel = function() {
-    if (!window.gState?.player) { alert('ゲームを起動してログインしてください'); return; }
+    if (!gState?.player) { alert('ゲームを起動してログインしてください'); return; }
     const p = gState.player;
     const fields = [
       { id:'dbg_starCrystal', label:'星晶石',       key:'starCrystal' },
