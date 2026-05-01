@@ -1166,6 +1166,37 @@ img.item-icon {
   padding: 8px 12px; font-size: 12px; margin-bottom: 12px;
 }
 
+/* PWA ADD TO HOME SCREEN BANNER */
+#pwa-install-banner {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+  background: linear-gradient(135deg, #1a1b2e, #141520);
+  border-top: 1px solid var(--accent);
+  padding: 12px 16px;
+  box-shadow: 0 -4px 20px rgba(74,127,255,0.2);
+  animation: slideUpBanner 0.3s ease-out;
+}
+#pwa-install-banner.visible { display: flex; align-items: center; gap: 12px; }
+@keyframes slideUpBanner { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
+.pwa-banner-icon { font-size: 28px; flex-shrink: 0; }
+.pwa-banner-text { flex: 1; min-width: 0; }
+.pwa-banner-title { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 2px; }
+.pwa-banner-desc  { font-size: 11px; color: var(--text2); line-height: 1.4; }
+.pwa-banner-desc b { color: var(--accent2); }
+.pwa-banner-btn {
+  background: linear-gradient(135deg,var(--accent),#3060cc);
+  color: #fff; border: none; border-radius: 20px;
+  padding: 8px 14px; font-size: 12px; font-weight: 700;
+  cursor: pointer; flex-shrink: 0; white-space: nowrap;
+}
+.pwa-banner-btn:active { opacity: 0.8; }
+.pwa-banner-close {
+  background: none; border: none; color: var(--text3);
+  font-size: 18px; cursor: pointer; padding: 4px; flex-shrink: 0;
+  line-height: 1;
+}
+.pwa-banner-close:active { color: var(--text); }
+
 /* DAMAGE FLOAT */
 .dmg-float {
   position: absolute; pointer-events: none; z-index: 100;
@@ -2035,6 +2066,17 @@ img.item-icon {
 </style>
 </head>
 <body>
+
+<!-- ===== PWA INSTALL BANNER ===== -->
+<div id="pwa-install-banner">
+  <div class="pwa-banner-icon">📱</div>
+  <div class="pwa-banner-text">
+    <div class="pwa-banner-title">ホーム画面に追加しよう！</div>
+    <div class="pwa-banner-desc" id="pwa-banner-desc">アプリとして追加すると、いつでも快適にプレイできます</div>
+  </div>
+  <button class="pwa-banner-btn" id="pwa-install-btn" onclick="_pwaInstall()">追加する</button>
+  <button class="pwa-banner-close" onclick="_pwaDismiss()">×</button>
+</div>
 
 <!-- ===== AUTH OVERLAY ===== -->
 <div id="overlay" class="visible">
@@ -7577,6 +7619,46 @@ function claimAchievement(id) {
 // お知らせデータ
 const NEWS_DATA = [
   {
+    id: 'news_010',
+    type: 'update',
+    title: '🎉 バージョン1.00 正式リリース',
+    date: '2026-05-01',
+    summary: 'ダメージシステム刷新・MPシステム廃止・種族ボーナス・アビスダイブ強化など、大型アップデートを実施しました。',
+    body: `<h4>⚔️ ダメージシステムを2種類に統合</h4>
+<p>これまでの4種ダメージ（RED・WHITE・BLACK・BLUE）を「<b>物理ダメージ</b>」と「<b>特殊ダメージ</b>」の2種に整理しました。</p>
+<ul>
+  <li>物理ダメージ：対象の<b>物理耐性（pdef）</b>で軽減</li>
+  <li>特殊ダメージ：対象の<b>特殊耐性（mdef）</b>で軽減</li>
+  <li>スキルのダメージ表示色も刷新（物理：オレンジ / 特殊：ブルー）</li>
+</ul>
+
+<h4>✨ MPシステムを廃止</h4>
+<p>MPを廃止し、スキルは<b>クールダウン（CD）</b>のみで管理するシステムに変更しました。</p>
+<ul>
+  <li>MPバーをHPバーに一本化してUIをすっきり整理</li>
+  <li>MP消費がなくなり、CD管理のみでスキルを発動可能</li>
+</ul>
+
+<h4>🐉 種族ボーナスシステム追加</h4>
+<p>ユニットの<b>種族</b>によって、特定の敵に対してダメージボーナスが発生するようになりました。パーティ編成の幅が広がります。</p>
+
+<h4>🏔️ アビスダイブ強化</h4>
+<ul>
+  <li>15層まで対応（各層クリアでランダムバフ選択）</li>
+  <li>3層以降でアクセサリーがドロップ、深層ほど高レアも出現</li>
+  <li>出撃メニューから直接アビスへアクセス可能</li>
+  <li>アビス専用VIPデイリー走行回数システムを追加</li>
+</ul>
+
+<h4>✦ その他の改善</h4>
+<ul>
+  <li>ガチャで入手したキャラを「編成に追加」ボタンでそのまま編成へ追加可能</li>
+  <li>星晶石アイコンを新デザインに刷新</li>
+  <li>鋳造のミスリル材料をゴールドに変更</li>
+  <li>イマジンシステム：戦闘開始前に編成バフを選択可能</li>
+</ul>`,
+  },
+  {
     id: 'news_009',
     type: 'update',
     title: '⚙️ バージョン0.52アップデート内容',
@@ -8255,6 +8337,9 @@ function renderHomeTab() {
 
   // 起動時ポップアップ（少し遅延して表示）
   setTimeout(showNewsPopupIfNeeded, 1200);
+
+  // PWA install banner（少し遅延して表示）
+  setTimeout(_pwaShowBannerIfNeeded, 3000);
 
   // 通知
   renderHomeNotices();
@@ -18722,6 +18807,66 @@ function startAsGuest() {
 }
 
 // ── 起動シーケンス ──
+// ============================================================
+//  PWA ADD TO HOME SCREEN
+// ============================================================
+(function() {
+  let _deferredPrompt = null;
+  const DISMISS_KEY = 'cs_pwa_dismissed';
+
+  // Android/Chrome: capture the install prompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    _deferredPrompt = e;
+  });
+
+  // Show the banner after the game has fully launched
+  window._pwaShowBannerIfNeeded = function() {
+    if (localStorage.getItem(DISMISS_KEY)) return;
+    // Already installed as standalone?
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    if (window.navigator.standalone === true) return; // iOS standalone
+
+    const banner = document.getElementById('pwa-install-banner');
+    if (!banner) return;
+
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+    if (isIOS && isSafari) {
+      // iOS Safari: show manual instructions
+      const desc = document.getElementById('pwa-banner-desc');
+      if (desc) desc.innerHTML = 'Safariの<b>共有ボタン</b>から「ホーム画面に追加」を選択してください';
+      const btn = document.getElementById('pwa-install-btn');
+      if (btn) btn.style.display = 'none';
+      banner.classList.add('visible');
+    } else if (_deferredPrompt) {
+      // Android/Chrome: native install prompt available
+      banner.classList.add('visible');
+    }
+    // Other browsers: don't show (no install support)
+  };
+
+  window._pwaInstall = function() {
+    if (!_deferredPrompt) return;
+    _deferredPrompt.prompt();
+    _deferredPrompt.userChoice.then((result) => {
+      if (result.outcome === 'accepted') {
+        localStorage.setItem(DISMISS_KEY, '1');
+      }
+      _deferredPrompt = null;
+    });
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner) banner.classList.remove('visible');
+  };
+
+  window._pwaDismiss = function() {
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner) banner.classList.remove('visible');
+    localStorage.setItem(DISMISS_KEY, '1');
+  };
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
   _resetLoadingUI();
   document.getElementById('overlay').classList.add('visible');
