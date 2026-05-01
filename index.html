@@ -2161,7 +2161,7 @@ img.item-icon {
         <div class="hm-item" onclick="closeHamburger();openNewsModal()">📢<span id="hm-news-label">お知らせ</span></div>
         <div class="hm-item" onclick="closeHamburger();openAchievementModal()"><img src="assets/images/nav-achievement.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>実績<span id="hm-ach-badge" style="display:none;background:var(--red);color:white;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px;">!</span></span></div>
         <div class="hm-item" onclick="closeHamburger();openMissionModal()"><img src="assets/images/nav-mission.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>ミッション</span></div>
-        <div class="hm-item" onclick="closeHamburger();openGacha()">✨<span>召喚</span></div>
+        <div class="hm-item" onclick="closeHamburger();openGacha()">✨<span>ガチャ</span></div>
         <div class="hm-item" onclick="closeHamburger();openSmithyPanel()">🔨<span>鍛冶屋</span></div>
         <div class="hm-item" onclick="closeHamburger();openLibraryMonsterBook()">📚<span>大図書館（図鑑）</span></div>
         <div class="hm-item" onclick="closeHamburger();openMine()"><img src="assets/images/nav-mine.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>鉱山</span></div>
@@ -2239,7 +2239,7 @@ img.item-icon {
       <div class="quick-btns">
         <div class="quick-btn" onclick="switchTab('chara')"><img src="assets/images/nav-chara.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> キャラ</div>
         <div class="quick-btn" onclick="openMissionModal()"><img src="assets/images/nav-mission.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> <span id="mission-badge-text">ミッション</span></div>
-        <div class="quick-btn" onclick="openGacha()">✨ 召喚</div>
+        <div class="quick-btn" onclick="openGacha()">✨ ガチャ</div>
         <div class="quick-btn" onclick="openMine()"><img src="assets/images/nav-mine.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> <span id="mine-quick-text">鉱山</span></div>
         <div class="quick-btn" onclick="openSmithyPanel('forge')">🔩 AF一覧</div>
         <div class="quick-btn" onclick="openSmithyPanel('acc')">💍 アクセサリー</div>
@@ -2393,8 +2393,8 @@ img.item-icon {
       <div class="base-grid">
         <div class="base-card" onclick="openGacha()">
           <div class="bc-icon">✨</div>
-          <div class="bc-name">召喚</div>
-          <div class="bc-desc">星晶石でユニットを召喚</div>
+          <div class="bc-name">ガチャ</div>
+          <div class="bc-desc">キャラ・アーティファクト召喚</div>
         </div>
         <div class="base-card" onclick="openMine()">
           <div class="bc-icon">⛏️</div>
@@ -2615,7 +2615,7 @@ img.item-icon {
 <div class="modal-overlay" id="gacha-modal">
   <div class="modal-panel" style="max-width:500px">
     <div class="modal-header">
-      <h3>✨ 召喚</h3>
+      <h3>✨ ガチャ</h3>
       <button class="close-btn" onclick="closeGacha()">✕</button>
     </div>
     <div id="gacha-card-panel" class="modal-body">
@@ -13165,9 +13165,8 @@ function openGacha() {
 function renderGachaPanel() {
   const panel = document.getElementById('gacha-card-panel');
   if (!panel) return;
-  const crystal = gState.player.starCrystal || 0;
-  const tabs = ['char','card'];
-  const tabLabel = { char:'✨ キャラ召喚', card:'🃏 カード召喚' };
+  const tabs = ['char','artifact'];
+  const tabLabel = { char:'✨ キャラ', artifact:'🔩 アーティファクト' };
   panel.innerHTML = `
     <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:12px">
       ${tabs.map(t=>`<button onclick="switchGachaTab('${t}')"
@@ -13186,7 +13185,7 @@ function renderGachaTabContent() {
   const el = document.getElementById('gacha-tab-content');
   if (!el) return;
   if (gachaActiveTab === 'char') renderCharGachaTab(el);
-  else renderCardGachaTab(el);
+  else renderArtifactGachaTab(el);
 }
 function renderCharGachaTab(el) {
   const crystal  = gState.player.starCrystal || 0;
@@ -13223,36 +13222,74 @@ function renderCharGachaTab(el) {
     </div>
     <div class="gacha-btns" style="margin-bottom:10px">
       <button class="gacha-btn gacha-btn-1" onclick="drawCharGacha(1)" ${crystal<300?'disabled':''} style="flex:1;padding:10px;cursor:${crystal>=300?'pointer':'default'};opacity:${crystal>=300?1:0.4}">
-        1回召喚<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 300</span>
+        1回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 300</span>
       </button>
       <button class="gacha-btn gacha-btn-10" onclick="drawCharGacha(10)" ${crystal<3000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=3000?'pointer':'default'};opacity:${crystal>=3000?1:0.4}">
-        10回召喚<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 3,000</span>
+        10回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 3,000</span>
       </button>
     </div>
     ${canMile?`<button onclick="openMileageExchange()" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(201,168,76,0.3),rgba(201,168,76,0.15));border:1px solid var(--gold);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;border-radius:4px;letter-spacing:1px">
       🎖️ マイレージ交換（${mileage}Pt）</button>`
     :`<div style="text-align:center;font-size:10px;color:var(--text3);padding:6px">マイレージ ${CHAR_MILEAGE_CAP-mileage} Pt 貯まるとピックアップキャラと交換できます</div>`}`;
 }
-function renderCardGachaTab(el) {
-  const crystal = gState.player.starCrystal || 0;
-  const pity    = gState.gacha.cardPityCount || 0;
+function renderArtifactGachaTab(el) {
+  const mithril = gState.player.mithril || 0;
+  const afMileage = gState.player.afMileage || 0;
+  const ssrPool = ARTIFACT_POOL.filter(d => d.rarity === 'SSR');
+
+  // ピックアップ選択
+  let pickupHtml = `<div style="font-size:11px;color:var(--text3);margin-bottom:6px">ピックアップ選択</div>
+    <div class="af2-pickup-row" style="flex-wrap:wrap;gap:4px;display:flex;margin-bottom:10px">
+      <button class="af2-pickup-btn ${af2Pickup===null?'active':''}" onclick="af2Pickup=null;renderArtifactGachaTab(document.getElementById('gacha-tab-content'))">なし</button>`;
+  ssrPool.forEach(d => {
+    pickupHtml += `<button class="af2-pickup-btn ${af2Pickup===d.id?'active':''}" onclick="af2Pickup='${d.id}';renderArtifactGachaTab(document.getElementById('gacha-tab-content'))">${d.icon}${d.name}</button>`;
+  });
+  pickupHtml += `</div>`;
+
+  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
+  const owned = gState.artifacts || [];
+
   el.innerHTML = `
-    <div style="background:rgba(180,125,255,0.08);border:1px solid rgba(180,125,255,0.3);padding:12px;margin-bottom:12px;border-radius:6px">
-      <div style="font-size:12px;color:var(--purple);font-weight:700;margin-bottom:4px">🃏 スキルカード召喚</div>
-      <div style="font-size:10px;color:var(--text3)">★3：5% / ★2：25% / ★1：70%</div>
+    <div style="background:linear-gradient(135deg,rgba(138,154,181,0.12),rgba(74,127,255,0.06));border:1px solid rgba(138,154,181,0.3);padding:12px;margin-bottom:12px;border-radius:6px">
+      <div style="font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:4px">ARTIFACT GACHA</div>
+      <div style="font-size:10px;color:var(--text3)">SSR：5% ／ SR：25% ／ N：70%</div>
     </div>
-    <div style="font-size:10px;color:var(--text3);margin-bottom:10px">
-      ${itemIconHTML('crystal','12px')} 星晶石: <b style="color:#89e3ff">${crystal.toLocaleString()}</b>
-      　天井まで: ${Math.max(0,90-pity)} 回
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px">
+        <span>🎫 マイレージ ${afMileage} / ${AF_MILEAGE_CAP}</span>
+        <span>⛏️ ミスリル: <b style="color:var(--silver)">${mithril}</b></span>
+      </div>
+      <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${Math.min(100,(afMileage/AF_MILEAGE_CAP*100)).toFixed(1)}%;background:linear-gradient(90deg,var(--silver),#c8d8f0);border-radius:3px;transition:width 0.3s"></div>
+      </div>
     </div>
-    <div class="gacha-btns">
-      <button class="gacha-btn gacha-btn-1" onclick="drawCardGacha(1)" ${crystal<200?'disabled':''} style="flex:1;padding:10px;cursor:${crystal>=200?'pointer':'default'};opacity:${crystal>=200?1:0.4}">
-        1回召喚<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 200</span>
+    ${pickupHtml}
+    <div class="gacha-btns" style="margin-bottom:10px">
+      <button class="gacha-btn gacha-btn-1" onclick="doArtifactGachaFromPanel(1)" ${mithril<200?'disabled':''} style="flex:1;padding:10px;cursor:${mithril>=200?'pointer':'default'};opacity:${mithril>=200?1:0.4}">
+        1回ガチャ<br><span style="font-size:10px">⛏️ ミスリル×200</span>
       </button>
-      <button class="gacha-btn gacha-btn-10" onclick="drawCardGacha(10)" ${crystal<2000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=2000?'pointer':'default'};opacity:${crystal>=2000?1:0.4}">
-        10回召喚<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 2,000</span>
+      <button class="gacha-btn gacha-btn-10" onclick="doArtifactGachaFromPanel(10)" ${mithril<2000?'disabled':''} style="flex:2;padding:10px;cursor:${mithril>=2000?'pointer':'default'};opacity:${mithril>=2000?1:0.4}">
+        10回ガチャ<br><span style="font-size:10px">⛏️ ミスリル×2,000</span>
       </button>
-    </div>`;
+    </div>
+    ${afMileage >= AF_MILEAGE_CAP
+      ? `<button onclick="openAfMileageExchange()" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(138,154,181,0.3),rgba(138,154,181,0.15));border:1px solid var(--silver);color:var(--silver);font-size:12px;font-weight:700;cursor:pointer;border-radius:4px;letter-spacing:1px;margin-bottom:10px">
+          🎖️ マイレージ交換（${afMileage}Pt）</button>`
+      : `<div style="text-align:center;font-size:10px;color:var(--text3);padding:4px 0 10px">マイレージ ${AF_MILEAGE_CAP - afMileage} Pt 貯まるとSSRアーティファクトと交換できます</div>`}
+    <div style="font-size:11px;color:var(--text3);margin-bottom:6px">所持アーティファクト（${owned.length}個）</div>
+    ${!owned.length
+      ? `<div style="color:var(--text3);font-size:11px;padding:12px;text-align:center">まだ所持していません</div>`
+      : `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">${owned.map((inst,idx)=>{
+          const def = ARTIFACT_POOL.find(d=>d.id===inst.id); if(!def) return '';
+          const equippedBy = gState.ownedUnits.find(u=>u.equippedArtifact===inst.uid);
+          return `<div style="background:var(--bg3);border:1px solid ${rarColor[def.rarity]};padding:8px;font-size:11px;border-radius:4px">
+            <span style="color:${rarColor[def.rarity]};font-weight:700">${def.rarity}</span>
+            <span style="font-size:16px;margin:0 4px">${def.icon}</span>
+            <span style="font-weight:700">${def.name}</span>
+            ${equippedBy?`<span style="font-size:9px;color:var(--accent2);margin-left:4px">[${equippedBy.name}]</span>`:''}
+            <div style="color:var(--text3);margin-top:2px">Lv.${inst.level||0} / Rank${inst.rank||0}</div>
+          </div>`;
+        }).join('')}</div>`}`;
 }
 
 // ============================================================
@@ -13349,7 +13386,7 @@ function showCharGachaResult(results) {
   }).join('');
   ov.innerHTML = `<div class="modal-panel" style="max-width:420px">
     <div class="modal-header">
-      <h3>✨ 召喚結果</h3>
+      <h3>✨ キャラガチャ結果</h3>
       <button class="close-btn" onclick="this.closest('.modal-overlay').remove();openGacha()">✕</button>
     </div>
     <div class="modal-body">
@@ -13403,6 +13440,118 @@ function execMileageExchange() {
   saveState(); updateTopBar();
   document.querySelectorAll('.modal-overlay').forEach(o=>o.remove());
   renderCharaTab();
+}
+
+// ============================================================
+//  アーティファクト GACHA（ガチャパネル用）
+// ============================================================
+const AF_MILEAGE_CAP = 100;
+
+function doArtifactGachaFromPanel(count) {
+  const cost = count * 200;
+  if ((gState.player.mithril||0) < cost) { toast('ミスリルが不足しています'); return; }
+  gState.player.mithril -= cost;
+
+  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
+  const results = [];
+  for (let i = 0; i < count; i++) {
+    const roll = Math.random() * 100;
+    let rarity;
+    if (roll < 5) rarity = 'SSR';
+    else if (roll < 30) rarity = 'SR';
+    else rarity = 'N';
+
+    let pool;
+    if (rarity === 'SSR' && af2Pickup) {
+      pool = [ARTIFACT_POOL.find(d => d.id === af2Pickup)].filter(Boolean);
+    } else {
+      pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
+    }
+    if (!pool.length) pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
+    const def = pool[Math.floor(Math.random() * pool.length)];
+    if (!def) continue;
+
+    if (!gState.artifacts) gState.artifacts = [];
+    const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000) + '_' + i;
+    gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0 });
+    results.push({ def, rarity });
+  }
+
+  // マイレージ加算
+  gState.player.afMileage = (gState.player.afMileage||0) + count;
+  saveState(); updateTopBar();
+
+  // 結果モーダル表示
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay open';
+  ov.style.zIndex = '9998';
+  const rowsHTML = results.map(({def, rarity}) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:24px">${def.icon}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:${rarColor[rarity]}">${def.name}</div>
+        <div style="font-size:10px;color:var(--text3)">${rarity}</div>
+      </div>
+      <span style="font-size:11px;color:${rarColor[rarity]};font-weight:700">${rarity}</span>
+    </div>`).join('');
+  const ssrCount = results.filter(r=>r.rarity==='SSR').length;
+  const srCount  = results.filter(r=>r.rarity==='SR').length;
+  ov.innerHTML = `<div class="modal-panel" style="max-width:380px">
+    <div class="modal-header">
+      <h3>🔩 アーティファクトガチャ結果</h3>
+      <button class="close-btn" onclick="this.closest('.modal-overlay').remove();renderArtifactGachaTab(document.getElementById('gacha-tab-content'))">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:10px;justify-content:center;padding:6px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px">
+        ${ssrCount?`<span style="color:var(--gold);font-family:Rajdhani;font-size:14px;font-weight:700">SSR ×${ssrCount}</span>`:''}
+        ${srCount?`<span style="color:var(--purple);font-family:Rajdhani;font-size:14px;font-weight:700">SR ×${srCount}</span>`:''}
+        <span style="color:var(--text3);font-size:11px;margin-left:auto">マイレージ: ${gState.player.afMileage||0}/${AF_MILEAGE_CAP}</span>
+      </div>
+      <div style="max-height:55vh;overflow-y:auto">${rowsHTML}</div>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function openAfMileageExchange() {
+  const afMileage = gState.player.afMileage || 0;
+  if (afMileage < AF_MILEAGE_CAP) { toast(`マイレージが不足しています（${afMileage}/${AF_MILEAGE_CAP}）`); return; }
+  const ssrPool = ARTIFACT_POOL.filter(d => d.rarity === 'SSR');
+  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay open';
+  ov.style.zIndex = '9999';
+  ov.innerHTML = `<div class="modal-panel" style="max-width:360px">
+    <div class="modal-header"><h3>🎖️ AFマイレージ交換</h3>
+      <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button></div>
+    <div class="modal-body">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">SSRアーティファクトを1つ選んで交換（マイレージ ${AF_MILEAGE_CAP}Pt 消費）</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+        ${ssrPool.map(d=>`
+          <button onclick="execAfMileageExchange('${d.id}',this.closest('.modal-overlay'))"
+            style="padding:10px;background:var(--bg3);border:1px solid var(--gold);border-radius:6px;cursor:pointer;text-align:center">
+            <div style="font-size:24px">${d.icon}</div>
+            <div style="font-size:11px;color:var(--gold);font-weight:700;margin-top:4px">${d.name}</div>
+            <div style="font-size:10px;color:var(--text3)">SSR</div>
+          </button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function execAfMileageExchange(artifactId, overlayEl) {
+  if ((gState.player.afMileage||0) < AF_MILEAGE_CAP) return;
+  const def = ARTIFACT_POOL.find(d => d.id === artifactId);
+  if (!def) return;
+  gState.player.afMileage -= AF_MILEAGE_CAP;
+  if (!gState.artifacts) gState.artifacts = [];
+  const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+  gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0 });
+  saveState(); updateTopBar();
+  if (overlayEl) overlayEl.remove();
+  toast(`${def.icon}【${def.name}】(SSR) を交換で入手しました！`);
+  renderArtifactGachaTab(document.getElementById('gacha-tab-content'));
 }
 
 // ============================================================
