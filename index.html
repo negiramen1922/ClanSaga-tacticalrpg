@@ -2169,6 +2169,7 @@ img.item-icon {
         <div class="hm-divider"></div>
         <div class="hm-item" onclick="closeHamburger();signOutUser()" style="color:var(--text3);">🚪<span>ログアウト</span></div>
         <div class="hm-item hm-danger" onclick="confirmReset()">🔄<span>データリセット</span></div>
+        <div class="hm-item" onclick="closeHamburger();openDebugPanel()" style="color:var(--text3);font-size:11px">⚙<span>管理者パネル</span></div>
       </nav>
       <div id="hm-footer">
         <div id="hm-account-info" style="margin-bottom:6px;font-size:10px;color:var(--text3);line-height:1.5;"></div>
@@ -2199,13 +2200,9 @@ img.item-icon {
         <div class="hnb-latest" id="hnb-latest-text">最新情報をチェック</div>
       </div>
 
-      <div class="home-header">
-        <h2 id="home-clan-title">— クラン</h2>
-        <div class="clan-lv-bar-wrap">
-          <div class="clan-lv-bar-bg"><div class="clan-lv-bar-fill" id="home-lv-fill" style="width:0%"></div></div>
-          <div class="lv-text" id="home-lv-text">Clan Lv.1 — 0 / 100 EXP</div>
-        </div>
-      </div>
+      <div id="home-clan-title" style="display:none"></div>
+      <div id="home-lv-fill" style="display:none"></div>
+      <div id="home-lv-text" style="display:none"></div>
 
       <!-- 通知バナー（鉱山満杯など） -->
       <div id="home-notices"></div>
@@ -19177,7 +19174,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return;
     }
-    _tapTimer = setTimeout(() => { _tapCount = 0; }, 1500);
+    _tapTimer = setTimeout(() => { _tapCount = 0; }, 5000);
   };
 
   window.openDebugPanel = function() {
