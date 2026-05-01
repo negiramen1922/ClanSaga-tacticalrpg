@@ -2131,6 +2131,10 @@ img.item-icon {
       <div class="cur-item cur-gold"><span class="ico"><img src="assets/images/item-gold.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-gold">0</span></div>
       <div class="cur-item cur-crystal"><span class="ico" style="font-size:14px;vertical-align:middle;">💠</span><span id="disp-crystal">0</span></div>
       <div class="cur-item cur-mithril"><span class="ico" style="font-size:14px;vertical-align:middle;">⛏️</span><span id="disp-mithril">0</span></div>
+      <div class="cur-item cur-stamina" onclick="openStaminaTooltip()" title="スタミナ" style="cursor:pointer">
+        <span style="font-size:13px;vertical-align:middle;color:#7be8b0">⚡</span>
+        <span id="disp-stamina" style="color:#7be8b0">100/100</span>
+      </div>
     </div>
     <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="メニュー">
       <span></span><span></span><span></span>
@@ -2166,6 +2170,7 @@ img.item-icon {
         <div class="hm-item" onclick="closeHamburger();openLibraryMonsterBook()">📚<span>大図書館（図鑑）</span></div>
         <div class="hm-item" onclick="closeHamburger();openMine()"><img src="assets/images/nav-mine.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>鉱山</span></div>
         <div class="hm-item" onclick="closeHamburger();openHelpModal()"><img src="assets/images/nav-help.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>チュートリアル・ヘルプ</span></div>
+        <div class="hm-item" onclick="closeHamburger();openVipPanel()">👑<span id="hm-vip-label">VIP特典</span></div>
         <div class="hm-divider"></div>
         <div class="hm-item" onclick="closeHamburger();signOutUser()" style="color:var(--text3);">🚪<span>ログアウト</span></div>
         <div class="hm-item hm-danger" onclick="confirmReset()">🔄<span>データリセット</span></div>
@@ -2472,6 +2477,7 @@ img.item-icon {
     <div class="wave-info" id="battle-wave-info">WAVE 1/1</div>
     <div id="battle-formation-badge" style="font-family:'Rajdhani';font-size:11px;font-weight:700;color:var(--gold);padding:2px 6px;border:1px solid rgba(201,168,76,0.3);background:rgba(201,168,76,0.08);"></div>
     <div id="battle-scout-badge" class="normal" style="display:none"></div>
+    <button id="battle-skip-btn" onclick="skipBattle()" style="display:none;font-size:10px;padding:3px 8px;background:rgba(232,200,74,0.15);border:1px solid var(--gold);color:var(--gold);cursor:pointer">⏩ スキップ</button>
     <div class="timer" id="battle-timer">0:00</div>
   </div>
   <!-- フェーズタイマー（昼戦・夜戦共通） -->
@@ -6765,12 +6771,18 @@ function defaultState(clanName) {
       atomStone: { t1:5, t2:0, t3:0 },   // アトム秘石T1-T3
       atomCore:  { t1:0, t2:0, t3:0 },   // アトミックコアT1-T3
       stardust:  5,                        // 星屑の砂（アクセサリー強化）
+      // スタミナ
+      stamina:          100,
+      staminaLastRegen: 0,
+      // VIPレベル (0=なし, 1=ブロンズ, 2=ゴールド)
+      vipLevel:           0,
+      vipDailyLastDate:  '',
     },
     ownedUnits: [warrior0],
     unitProgress: {
       [uid0]:{level:1,exp:0},
     },
-    presets: Array.from({length:10},(_,i)=>({
+    presets: Array.from({length:15},(_,i)=>({
       id:i,
       imagineId: null,
       formation:{
@@ -6969,8 +6981,18 @@ function normalizeState() {
   if (!gState.progress.nightBattles) gState.progress.nightBattles = 0;
   if (!gState.progress.surpriseCount) gState.progress.surpriseCount = 0;
 
-  // presets正規化
-  while (gState.presets.length < 10) {
+  // スタミナ・VIP正規化
+  if (p.stamina          === undefined) p.stamina          = 100;
+  if (!p.staminaLastRegen)              p.staminaLastRegen = Date.now();
+  if (p.vipLevel         === undefined) p.vipLevel         = 0;
+  if (!p.vipDailyLastDate)              p.vipDailyLastDate = '';
+
+  // アビス日次挑戦数
+  if (!gState.progress.abyss.dailyRuns)     gState.progress.abyss.dailyRuns = 0;
+  if (!gState.progress.abyss.lastRunDate)   gState.progress.abyss.lastRunDate = '';
+
+  // presets正規化（最大15スロット）
+  while (gState.presets.length < 15) {
     gState.presets.push({ id: gState.presets.length, imagineId:null, formation:{slots:[]}, tactics:{} });
   }
   gState.presets.forEach(pr => { if (!('imagineId' in pr)) pr.imagineId = null; });
@@ -7193,6 +7215,12 @@ function updateHamburgerInfo() {
   if (!gState) return;
   document.getElementById('hm-clan-name').textContent = gState.player.clanName + ' クラン';
   document.getElementById('hm-clan-lv').textContent = 'Clan Lv.' + gState.player.level;
+  const vip = getVip();
+  const vipLbl = document.getElementById('hm-vip-label');
+  if (vipLbl) {
+    vipLbl.textContent = vip.label ? `VIP特典（${vip.label}）` : 'VIP特典';
+    vipLbl.style.color = vip.color || '';
+  }
   updateHmAccountInfo();
 }
 
@@ -8056,7 +8084,99 @@ function updateTopBar() {
   const expNeed = clanExpNeed(p.level);
   const pct = Math.min(100, (p.clanExp / expNeed)*100);
   document.getElementById('clan-exp-fill').style.width = pct + '%';
+  // スタミナ表示
+  const si = staminaRegenInfo();
+  const stEl = document.getElementById('disp-stamina');
+  if (stEl) stEl.textContent = si.cur + '/' + si.max;
+  // VIPデイリーボーナス配布
+  grantVipDailyBonus();
   updateHamburgerInfo();
+}
+
+function grantVipDailyBonus() {
+  const p = gState.player;
+  const vip = getVip();
+  if (!vip.dailyCrystal) return;
+  const today = new Date().toDateString();
+  if (p.vipDailyLastDate === today) return;
+  p.vipDailyLastDate = today;
+  p.starCrystal = (p.starCrystal || 0) + vip.dailyCrystal;
+  saveState();
+  toast(`${vip.label} デイリーボーナス：💠 星晶石 ×${vip.dailyCrystal}`);
+}
+
+function openStaminaTooltip() {
+  const si = staminaRegenInfo();
+  const vip = getVip();
+  const timeStr = si.cur >= si.max ? '満タン' :
+    si.minToFull >= 60 ? `${Math.floor(si.minToFull/60)}時間${si.minToFull%60}分で満タン` :
+    `${si.minToFull}分で満タン`;
+  const vipLabel = vip.label ? `<span style="color:${vip.color};font-size:10px;margin-left:4px">[${vip.label}]</span>` : '';
+  const nextStr = si.cur < si.max ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">次の+1まで ${si.minToNext}分</div>` : '';
+
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-start;justify-content:flex-end;padding:50px 12px 0';
+  ov.onclick = () => ov.remove();
+  ov.innerHTML = `<div style="background:var(--bg2);border:1px solid #7be8b0;border-radius:8px;padding:12px 16px;min-width:180px;box-shadow:0 4px 20px rgba(0,0,0,0.5)" onclick="event.stopPropagation()">
+    <div style="font-size:14px;font-weight:700;color:#7be8b0;margin-bottom:6px">⚡ スタミナ ${vipLabel}</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+      <div style="flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${(si.cur/si.max*100).toFixed(1)}%;background:linear-gradient(90deg,#4ed894,#7be8b0);transition:width 0.3s"></div>
+      </div>
+      <span style="font-size:13px;font-weight:700;color:#7be8b0">${si.cur}/${si.max}</span>
+    </div>
+    <div style="font-size:11px;color:var(--text2)">${timeStr}</div>
+    ${nextStr}
+    <div style="font-size:10px;color:var(--text3);margin-top:6px">${STAMINA_REGEN_MIN}分で+1回復</div>
+    <button onclick="switchTab('shop');this.closest('[style*=fixed]').remove()" style="margin-top:8px;width:100%;background:rgba(123,232,176,0.1);border:1px solid #7be8b0;color:#7be8b0;padding:5px;font-size:11px;cursor:pointer;border-radius:4px">VIP特典を見る</button>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function openVipPanel() {
+  const vip = getVip();
+  const cur = gState.player.vipLevel || 0;
+
+  const tierHTML = (tier) => {
+    const b = VIP_BENEFITS[tier];
+    const active = cur === tier;
+    const label = tier === 0 ? '無料' : b.label;
+    const color = tier === 0 ? 'var(--text3)' : b.color;
+    return `<div style="border:1px solid ${active?color:'var(--border)'};border-radius:8px;padding:10px 12px;margin-bottom:8px;background:${active?`rgba(232,200,74,0.07)`:'transparent'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:14px;font-weight:700;color:${color}">${tier===0?'🆓':'👑'} ${label}</span>
+        ${active?`<span style="font-size:10px;background:${color};color:#0a0b0f;padding:1px 7px;border-radius:8px;font-weight:700">現在</span>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.8">
+        ${tier>0?`💠 デイリー星晶石 +${b.dailyCrystal}個<br>`:''}
+        ⚡ スタミナ上限 ${b.staminaMax}<br>
+        ⛏️ 鉱山貯蓄上限 ${b.mineCapHours}時間<br>
+        📋 フォーメーション保存数 ${b.presetSlots}枠<br>
+        ⚔️ アビス挑戦回数 ${3 + b.abyssExtraRuns}回/日<br>
+        ${b.shopRefresh?`🛒 ショップ無料リフレッシュ ×${b.shopRefresh}/日<br>`:''}
+        ${b.battleSkip?`⏩ バトル演出スキップ（クリア済みステージ）<br>`:''}
+      </div>
+    </div>`;
+  };
+
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay open';
+  ov.style.zIndex = '9990';
+  ov.innerHTML = `<div class="modal-panel" style="max-width:360px">
+    <div class="modal-header">
+      <h3 style="color:var(--gold)">👑 VIP特典</h3>
+      <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
+    </div>
+    <div class="modal-body">
+      ${tierHTML(0)}
+      ${tierHTML(1)}
+      ${tierHTML(2)}
+      <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:8px">
+        VIPランクは管理者パネルから変更できます（テスト中）
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
 }
 
 function clanExpNeed(lv) { return lv * 100; }
@@ -9223,8 +9343,12 @@ function getImagineBuffs(preset, partyUnits) {
 function renderFormationTab() {
   const bar = document.getElementById('preset-bar');
   bar.innerHTML = '';
-  for (let i=0;i<10;i++) {
+  const maxSlots = getVip().presetSlots;
+  for (let i=0;i<maxSlots;i++) {
     bar.innerHTML += `<div class="preset-btn ${i===gState.activePreset?'active':''}" onclick="switchPreset(${i})">${i+1}</div>`;
+  }
+  if (maxSlots < 12) {
+    bar.innerHTML += `<div class="preset-btn" style="opacity:0.4;cursor:default;font-size:9px" title="VIPで追加">+${12-maxSlots}🔒</div>`;
   }
   const preset = gState.presets[gState.activePreset];
   if (!Array.isArray(preset.formation.slots)) preset.formation.slots = [];
@@ -10230,6 +10354,13 @@ function initBattle(waveEnemies, stageName) {
   const scoutBadge = document.getElementById('battle-scout-badge');
   if (scoutBadge) { scoutBadge.style.display = 'none'; scoutBadge.className = 'normal'; }
   document.getElementById('battle-screen').classList.add('active');
+  // VIP2: バトルスキップボタン（クリア済みステージのみ有効）
+  const skipBtn = document.getElementById('battle-skip-btn');
+  if (skipBtn) {
+    const canSkip = getVip().battleSkip && battleContext?.stageId &&
+      (gState.progress.babel?.clearedStages?.[battleContext.stageId] > 0);
+    skipBtn.style.display = canSkip ? '' : 'none';
+  }
   // BGM: バトル開始（ボスはisBossStage判定で後でplayBossに切り替え）
   Audio.playBattle();
   document.getElementById('battle-start-btn').textContent = 'BATTLE START';
@@ -13352,6 +13483,17 @@ function hasNextStage() {
   return idx >= 0 && idx < area.stages.length - 1;
 }
 
+function skipBattle() {
+  if (!getVip().battleSkip) return;
+  if (!battleContext?.stageId) return;
+  const cleared = gState.progress.babel?.clearedStages?.[battleContext.stageId] || 0;
+  if (!cleared) { toast('クリア済みのステージのみスキップできます'); return; }
+  if (battleInterval) clearInterval(battleInterval);
+  battleRunning = false;
+  // クリア済みと同じ報酬を付与して勝利扱い
+  onBattleVictory && onBattleVictory(true);
+}
+
 function exitBattle() {
   if (battleInterval) clearInterval(battleInterval);
   battleRunning = false;
@@ -16151,6 +16293,48 @@ function renderMineExpiry() {
   }
 }
 
+// ============================================================
+//  VIPシステム
+// ============================================================
+
+const VIP_BENEFITS = {
+  0: {
+    staminaMax:       100,
+    mineCapHours:      50,
+    presetSlots:        5,
+    dailyCrystal:       0,
+    shopRefresh:        0,
+    abyssExtraRuns:     0,
+    battleSkip:     false,
+  },
+  1: {
+    staminaMax:       150,
+    mineCapHours:      62,
+    presetSlots:        8,
+    dailyCrystal:      50,
+    shopRefresh:        0,
+    abyssExtraRuns:     1,
+    battleSkip:     false,
+    label: 'VIP ブロンズ',
+    color: '#c87941',
+  },
+  2: {
+    staminaMax:       200,
+    mineCapHours:      75,
+    presetSlots:       12,
+    dailyCrystal:     100,
+    shopRefresh:        1,
+    abyssExtraRuns:     2,
+    battleSkip:      true,
+    label: 'VIP ゴールド',
+    color: '#e8c84a',
+  },
+};
+
+function getVip() {
+  return VIP_BENEFITS[Math.min(2, Math.max(0, gState.player.vipLevel || 0))];
+}
+
 // ===== 鉱山拡充 =====
 
 const MINE_UPGRADE = {
@@ -16171,11 +16355,53 @@ const MINE_UPGRADE = {
 };
 
 const MINE_MAX_HOURS = 50;
+const STAMINA_REGEN_MIN = 6; // 1スタミナ回復に何分かかるか
+
+function staminaMax() {
+  return getVip().staminaMax;
+}
+
+function calcStamina() {
+  const p = gState.player;
+  const max = staminaMax();
+  const now = Date.now();
+  const last = p.staminaLastRegen || now;
+  const elapsed = Math.floor((now - last) / 1000 / 60); // 経過分
+  const regen = Math.floor(elapsed / STAMINA_REGEN_MIN);
+  const cur = Math.min(max, (p.stamina || 0) + regen);
+  if (regen > 0) {
+    p.stamina = cur;
+    p.staminaLastRegen = last + regen * STAMINA_REGEN_MIN * 60 * 1000;
+  }
+  return cur;
+}
+
+function consumeStamina(amount) {
+  const cur = calcStamina();
+  if (cur < amount) return false;
+  gState.player.stamina = cur - amount;
+  gState.player.staminaLastRegen = gState.player.staminaLastRegen || Date.now();
+  saveState();
+  return true;
+}
+
+function staminaRegenInfo() {
+  const cur = calcStamina();
+  const max = staminaMax();
+  if (cur >= max) return { cur, max, minToNext: 0, minToFull: 0 };
+  const p = gState.player;
+  const elapsedSinceLast = Math.floor((Date.now() - (p.staminaLastRegen || Date.now())) / 1000 / 60);
+  const minToNext = STAMINA_REGEN_MIN - (elapsedSinceLast % STAMINA_REGEN_MIN);
+  const remaining = max - cur;
+  const minToFull = (remaining - 1) * STAMINA_REGEN_MIN + minToNext;
+  return { cur, max, minToNext, minToFull };
+}
 
 function calcMineYield() {
   const mine = gState.mine;
   const now = Date.now();
-  const elapsed = Math.min(MINE_MAX_HOURS, (now - mine.lastCollected) / 1000 / 3600);
+  const mineMaxHours = getVip().mineCapHours;
+  const elapsed = Math.min(mineMaxHours, (now - mine.lastCollected) / 1000 / 3600);
   const spLv = mine.level.speed - 1;
   const cpLv = mine.level.cap - 1;
   const rates = MINE_UPGRADE.speed[spLv].rates;
@@ -18342,7 +18568,17 @@ function renderAbyssContent() {
 function startAbyssRun() {
   const units = getFormationUnits();
   if (!units.length) { alert('編成にユニットを設定してください'); return; }
-  gState.progress.abyss.currentRun = { floor:1, buffs:[], cleared:false, hp:{} };
+  // 日次挑戦回数チェック
+  const abyss = gState.progress.abyss;
+  const today = new Date().toDateString();
+  if (abyss.lastRunDate !== today) { abyss.dailyRuns = 0; abyss.lastRunDate = today; }
+  const maxRuns = 3 + getVip().abyssExtraRuns;
+  if ((abyss.dailyRuns || 0) >= maxRuns) {
+    alert(`アビスの本日の挑戦回数（${maxRuns}回）に達しました。\nVIPランクアップで上限が増えます。`);
+    return;
+  }
+  abyss.dailyRuns = (abyss.dailyRuns || 0) + 1;
+  abyss.currentRun = { floor:1, buffs:[], cleared:false, hp:{} };
   // 現在HPを記録
   units.forEach(u => {
     gState.progress.abyss.currentRun.hp[u.uid] = calcStats(u).hp;
@@ -19565,6 +19801,8 @@ document.addEventListener('DOMContentLoaded', () => {
       { id:'dbg_stardust',    label:'星屑の砂',        key:'stardust' },
       { id:'dbg_afMileage',   label:'AFマイレージ',    key:'afMileage' },
       { id:'dbg_charMileage', label:'キャラマイレージ', key:'charMileage' },
+      { id:'dbg_stamina',     label:'スタミナ',        key:'stamina' },
+      { id:'dbg_vipLevel',    label:'VIPレベル(0-2)',  key:'vipLevel' },
     ];
     let rows = fields.map(f =>
       `<div class="debug-row"><label>${f.label}</label><input id="${f.id}" type="number" value="${p[f.key]||0}"></div>`
@@ -19599,8 +19837,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.applyDebugValues = function() {
     const p = gState.player;
-    const numKeys = ['starCrystal','gold','ether','awakePot','genericFragments','stardust','afMileage','charMileage'];
-    const ids     = ['dbg_starCrystal','dbg_gold','dbg_ether','dbg_awakePot','dbg_genericFrag','dbg_stardust','dbg_afMileage','dbg_charMileage'];
+    const numKeys = ['starCrystal','gold','ether','awakePot','genericFragments','stardust','afMileage','charMileage','stamina','vipLevel'];
+    const ids     = ['dbg_starCrystal','dbg_gold','dbg_ether','dbg_awakePot','dbg_genericFrag','dbg_stardust','dbg_afMileage','dbg_charMileage','dbg_stamina','dbg_vipLevel'];
     ids.forEach((id, i) => {
       const el = document.getElementById(id);
       if (el) p[numKeys[i]] = Math.max(0, parseInt(el.value)||0);
