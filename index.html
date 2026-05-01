@@ -1976,23 +1976,30 @@ img.item-icon {
     overflow-y: auto !important;
   }
 
-  /* アリーナ: 縦方向（ALLY上、VS中、ENEMY下） */
+  /* 内部ラッパー: overflow:hidden と height:100% を解除してスクロール可能に */
+  #battle-body > div:first-child {
+    overflow: visible !important;
+    height: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+  /* アリーナ: コンテンツベースの高さ（1frではなくauto行でクリッピング防止） */
   .battle-arena {
     grid-template-columns: 1fr !important;
-    grid-template-rows: 1fr auto 1fr !important;
-    flex: 1 !important;
+    grid-template-rows: auto auto auto !important;
+    flex: none !important;
     min-height: 0 !important;
     padding: 6px !important;
     gap: 4px !important;
+    overflow: visible !important;
   }
 
-  /* 味方・敵ゾーン: 横並びカードに */
+  /* 味方・敵ゾーン: 横並びカードに、クリッピングなし */
   .combatant-zone {
     flex-direction: row !important;
     flex-wrap: wrap !important;
     gap: 4px !important;
-    overflow-y: visible !important;
-    overflow-x: auto !important;
+    overflow: visible !important;
     justify-content: center;
   }
 
