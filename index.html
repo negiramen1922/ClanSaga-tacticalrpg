@@ -8088,21 +8088,21 @@ function updateTopBar() {
   const si = staminaRegenInfo();
   const stEl = document.getElementById('disp-stamina');
   if (stEl) stEl.textContent = si.cur + '/' + si.max;
-  // VIPデイリーボーナス配布
-  grantVipDailyBonus();
   updateHamburgerInfo();
 }
 
 function grantVipDailyBonus() {
   const p = gState.player;
   const vip = getVip();
-  if (!vip.dailyCrystal) return;
   const today = new Date().toDateString();
-  if (p.vipDailyLastDate === today) return;
+  if (p.vipDailyLastDate === today) return false;
   p.vipDailyLastDate = today;
   p.starCrystal = (p.starCrystal || 0) + vip.dailyCrystal;
   saveState();
-  toast(`${vip.label} デイリーボーナス：💠 星晶石 ×${vip.dailyCrystal}`);
+  updateTopBar();
+  const label = vip.label ? `[${vip.label}] ` : '';
+  toast(`${label}デイリーボーナス：💠 星晶石 ×${vip.dailyCrystal}`);
+  return true;
 }
 
 function openStaminaTooltip() {
@@ -8136,6 +8136,10 @@ function openStaminaTooltip() {
 function openVipPanel() {
   const vip = getVip();
   const cur = gState.player.vipLevel || 0;
+
+  const today = new Date().toDateString();
+  const claimed = gState.player.vipDailyLastDate === today;
+  const curBonus = VIP_BENEFITS[cur].dailyCrystal;
 
   const tierHTML = (tier) => {
     const b = VIP_BENEFITS[tier];
@@ -8171,7 +8175,14 @@ function openVipPanel() {
       ${tierHTML(0)}
       ${tierHTML(1)}
       ${tierHTML(2)}
-      <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:8px">
+      <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;text-align:center">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px">💠 本日のデイリーボーナス：<b style="color:var(--gold)">星晶石 ×${curBonus}</b></div>
+        ${claimed
+          ? `<div style="font-size:12px;color:var(--text3);padding:6px 0">✓ 受取済み（明日リセット）</div>`
+          : `<button onclick="if(grantVipDailyBonus()){this.closest('.modal-overlay').remove();openVipPanel();}" style="width:100%;padding:8px;background:rgba(201,168,76,0.15);border:1px solid var(--gold);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;border-radius:4px">受け取る</button>`
+        }
+      </div>
+      <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px">
         VIPランクは管理者パネルから変更できます（テスト中）
       </div>
     </div>
@@ -16302,7 +16313,7 @@ const VIP_BENEFITS = {
     staminaMax:       100,
     mineCapHours:      50,
     presetSlots:        5,
-    dailyCrystal:       0,
+    dailyCrystal:      20,
     shopRefresh:        0,
     abyssExtraRuns:     0,
     battleSkip:     false,
