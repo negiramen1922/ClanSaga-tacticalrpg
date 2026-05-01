@@ -6803,7 +6803,7 @@ function defaultState(clanName) {
     achievements: { unlocked:{}, claimed:{} },
     progress:{
       babel:{ clearedStages:{} },
-      abyss:{ currentRun:null, bestDepth:0 },
+      abyss:{ currentRun:null, bestLayer:0, clearedLayers:[], dailyRuns:0, lastRunDate:'' },
       colosseum:{ rank:1, dailyChallenges:0, lastChallengeDate:'' },
       shrine:{ clearedToday:{} },
     },
@@ -6955,7 +6955,7 @@ function normalizeState() {
   // progress
   if (!gState.progress || typeof gState.progress !== 'object') gState.progress = {};
   if (!gState.progress.babel)      gState.progress.babel      = { clearedStages:{} };
-  if (!gState.progress.abyss)      gState.progress.abyss      = { currentRun:null, bestDepth:0 };
+  if (!gState.progress.abyss)      gState.progress.abyss      = { currentRun:null, bestLayer:0, clearedLayers:[], dailyRuns:0, lastRunDate:'' };
   if (!gState.progress.colosseum)  gState.progress.colosseum  = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
   if (!gState.progress.shrine)     gState.progress.shrine     = { clearedToday:{} };
   if (!gState.progress.babel.clearedStages) gState.progress.babel.clearedStages = {};
@@ -6987,9 +6987,15 @@ function normalizeState() {
   if (p.vipLevel         === undefined) p.vipLevel         = 0;
   if (!p.vipDailyLastDate)              p.vipDailyLastDate = '';
 
-  // アビス日次挑戦数
+  // アビス日次挑戦数・層クリア記録
   if (!gState.progress.abyss.dailyRuns)     gState.progress.abyss.dailyRuns = 0;
   if (!gState.progress.abyss.lastRunDate)   gState.progress.abyss.lastRunDate = '';
+  if (!gState.progress.abyss.clearedLayers) gState.progress.abyss.clearedLayers = [];
+  if (gState.progress.abyss.bestLayer === undefined) gState.progress.abyss.bestLayer = 0;
+  // 旧フォーマット (floor プロパティ) のcurrentRunをリセット
+  if (gState.progress.abyss.currentRun && gState.progress.abyss.currentRun.layerId === undefined) {
+    gState.progress.abyss.currentRun = null;
+  }
 
   // presets正規化（最大15スロット）
   while (gState.presets.length < 15) {
@@ -8010,7 +8016,7 @@ function launchApp() {
   if (!gState.gacha.cardPityCount)  gState.gacha.cardPityCount  = 0;
 
   // ダメージ種別システム互換補正
-  if (!gState.progress.abyss)      gState.progress.abyss      = { currentRun:null, bestDepth:0 };
+  if (!gState.progress.abyss)      gState.progress.abyss      = { currentRun:null, bestLayer:0, clearedLayers:[], dailyRuns:0, lastRunDate:'' };
   if (!gState.progress.colosseum)  gState.progress.colosseum  = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
   if (!gState.progress.shrine)     gState.progress.shrine     = { clearedToday:{} };
 
@@ -10355,6 +10361,39 @@ function initBattle(waveEnemies, stageName) {
   hideNightPhaseChoice();
   // フェーズ2: ヘイト初期化
   initHate(battleState.allies);
+
+  // アビスバフ適用（探索中の選択バフを戦闘ユニットに反映）
+  if (battleContext?.type === 'abyss') {
+    const abyssRun = gState.progress?.abyss?.currentRun;
+    if (abyssRun?.buffs?.length) {
+      abyssRun.buffs.forEach(buffId => {
+        const buffDef = ABYSS_FLOOR_BUFFS.find(b => b.id === buffId);
+        if (!buffDef) return;
+        const eff = buffDef.effect;
+        battleState.allies.forEach(ally => {
+          if (eff.type === 'atk') {
+            ally.atk = Math.floor(ally.atk * (1 + eff.val / 100));
+          } else if (eff.type === 'hp') {
+            const bonus = Math.floor(ally.maxHp * eff.val / 100);
+            ally.maxHp += bonus; ally.hp += bonus;
+          } else if (eff.type === 'cri') {
+            ally.cri += eff.val;
+          } else if (eff.type === 'spd') {
+            ally.spd += eff.val;
+          } else if (eff.type === 'reduce') {
+            ally.buffs.push({ type:'damage_reduce', val:eff.val, turns:999999, icon:'🛡被ダメ↓', cssClass:'hp-up', isPassive:true });
+          } else if (eff.type === 'regen') {
+            ally.buffs.push({ type:'regen', val:eff.val, turns:999999, icon:'💚再生', cssClass:'hp-up', isPassive:true });
+          } else if (eff.type === 'drain') {
+            ally._drainBonus = (ally._drainBonus || 0) + eff.val;
+          } else if (eff.type === 'ult_boost') {
+            ally._ultBoostPct = (ally._ultBoostPct || 0) + eff.val;
+          }
+        });
+      });
+    }
+  }
+
   battleRunning = false;
   battleSpeed = 1;
 
@@ -12123,9 +12162,10 @@ function doAttack(attacker, targets, skill) {
       setTimeout(() => spawnFloatNum(target.uid, `🎯マーク+${skill.effect.val}%`, 'float-buff'), hitDelay + 100);
     }
 
-    // 吸血（totalDmgベース）
-    if (skill.drain) {
-      const healed = Math.floor(totalDmg * skill.drain / 100);
+    // 吸血（totalDmgベース + アビスバフ吸血加算）
+    const totalDrain = (skill.drain||0) + (attacker._drainBonus||0);
+    if (totalDrain > 0) {
+      const healed = Math.floor(totalDmg * totalDrain / 100);
       if (healed > 0) {
         attacker.hp = Math.min(attacker.maxHp, attacker.hp + healed);
         battleStats.unitHeal[attacker.uid] = (battleStats.unitHeal[attacker.uid]||0) + healed;
@@ -12144,8 +12184,9 @@ function doAttack(attacker, targets, skill) {
 
 function performUlt(c, enemies, allies) {
   const _ultLvMult = [1.0, 1.10, 1.25, 1.50][(c.ultLv||1)-1] || 1.0;
-  const ult = _ultLvMult > 1.0
-    ? { ...c.ultimate, power: (c.ultimate.power||1)*_ultLvMult, shieldRatio: (c.ultimate.shieldRatio||0.5)*_ultLvMult }
+  const _ultBoost  = 1 + ((c._ultBoostPct||0) / 100);
+  const ult = (_ultLvMult > 1.0 || _ultBoost > 1.0)
+    ? { ...c.ultimate, power: (c.ultimate.power||1)*_ultLvMult*_ultBoost, shieldRatio: (c.ultimate.shieldRatio||0.5)*_ultLvMult }
     : c.ultimate;
   addLog(`${c.name} 【${ult.name}】発動！ <span class="tag tag-ult">ULTIMATE</span>`, 'all');
   flashCard(c.uid, 'ult');
@@ -13405,7 +13446,7 @@ function endBattle(victory) {
       gState.player.starMapPoints = (gState.player.starMapPoints||0) + starPt;
     }
     if (battleContext.type==='abyss') {
-      onAbyssVictory(battleContext.floor);
+      onAbyssVictory(battleContext.layerId, battleContext.stage);
     }
     if (battleContext.type==='colosseum') {
       const reward = battleContext.reward || 5;
@@ -13429,6 +13470,11 @@ function endBattle(victory) {
     if (battleContext.type==='colosseum') {
       gState.player.starCrystal += 1;
       drops.push({ name:`${itemIconHTML('crystal','14px')} 星晶石 ×1（敗北報酬）` });
+      saveState();
+    }
+    if (battleContext.type==='abyss') {
+      drops.push({ name:'💀 アビス敗北 — 最初からやり直し' });
+      gState.progress.abyss.currentRun = null;
       saveState();
     }
   }
@@ -13526,6 +13572,8 @@ function retryBattle() {
   document.getElementById('battle-result').classList.remove('active');
   if (battleContext.type==='babel') {
     startBabelBattle(battleContext.areaId, battleContext.stageId);
+  } else if (battleContext.type==='abyss') {
+    startAbyssLayer(battleContext.layerId);
   } else {
     startShrineBattle(battleContext.shrineId);
   }
@@ -17491,9 +17539,7 @@ function renderLibraryMonsters(el) {
       if (!seen.has(e.name)) { seen.add(e.name); _monsterBookList.push(e); }
     }));
   }));
-  ABYSS_ENEMIES.forEach(wave => wave.forEach(e => {
-    if (!seen.has(e.name)) { seen.add(e.name); _monsterBookList.push(e); }
-  }));
+  // アビス敵はBABEL_AREASからスケールして生成されるため図鑑には含めない
 
   const discovered = new Set(gState.library?.discovered || []);
   const total = _monsterBookList.length;
@@ -18257,7 +18303,8 @@ function renderAccessoryShop(el) {
 }
 
 function _renderAccBuy(el) {
-  const bestDepth = gState.progress?.abyss?.bestDepth||0;
+  const _abyssCl  = gState.progress?.abyss?.clearedLayers||[];
+  const bestLayer = _abyssCl.length > 0 ? Math.max(..._abyssCl) : 0;
   const crystals  = gState.player.starCrystal||0;
   const coin      = gState.player.starCrystal||0;
   const stardust  = gState.player.stardust||0;
@@ -18267,7 +18314,7 @@ function _renderAccBuy(el) {
     innerHTML: `${itemIconHTML('crystal','13px')} 星晶石: <b style="color:var(--gold)">${fmt(coin)}</b>
       &nbsp;&nbsp;💠 星晶石: <b style="color:#89e3ff">${fmt(crystals)}</b>
       &nbsp;&nbsp;${itemIconHTML('stardust','13px')} 星屑の砂: <b style="color:var(--accent2)">${fmt(stardust)}</b>
-      &nbsp;&nbsp;🌑 アビス最深部: ${bestDepth}F`
+      &nbsp;&nbsp;🌑 アビス最深層: ${bestLayer > 0 ? bestLayer+'層' : '—'}`
   }));
 
   // ★1・★2 → 星晶石で即購入
@@ -18296,7 +18343,7 @@ function _renderAccBuy(el) {
   secTitle2.textContent = '★3-★4 (星晶石で購入・アビス解放)';
   el.appendChild(secTitle2);
   [{rarity:3,cost:100,unlock:5},{rarity:4,cost:300,unlock:15}].forEach(item=>{
-    const unlocked = bestDepth >= item.unlock;
+    const unlocked = bestLayer >= item.unlock;
     const canBuy   = unlocked && crystals >= item.cost;
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:4px;';
@@ -18476,42 +18523,69 @@ function discardAccessory(idx, e) {
 // ============================================================
 
 // ============================================================
-//  PHASE 4: ABYSS DIVE
+//  PHASE 4: ABYSS — 15-LAYER SYSTEM
 // ============================================================
 
 const ABYSS_FLOOR_BUFFS = [
-  { id:'atk5',    label:'ATK+5%',        icon:'⚔️', effect:{type:'atk', val:5} },
-  { id:'atk10',   label:'ATK+10%',       icon:'⚔️', effect:{type:'atk', val:10} },
-  { id:'hp10',    label:'HP+10%',        icon:'❤️', effect:{type:'hp', val:10} },
-  { id:'hp20',    label:'HP+20%',        icon:'❤️', effect:{type:'hp', val:20} },
-  { id:'cri8',    label:'会心率+8%',     icon:'💥', effect:{type:'cri', val:8} },
-  { id:'spd15',   label:'SPD+15',        icon:'💨', effect:{type:'spd', val:15} },
-  { id:'drain10', label:'吸血10%',       icon:'🩸', effect:{type:'drain', val:10} },
-  { id:'reduce8', label:'被ダメ-8%',     icon:'🛡️', effect:{type:'reduce', val:8} },
-  { id:'regen5',  label:'毎T回復5%',     icon:'💚', effect:{type:'regen', val:5} },
-  { id:'ult_boost',label:'ULT威力+20%',  icon:'⚡', effect:{type:'ult_boost', val:20} },
+  { id:'atk5',     label:'ATK+5%',       icon:'⚔️', effect:{type:'atk', val:5} },
+  { id:'atk10',    label:'ATK+10%',      icon:'⚔️', effect:{type:'atk', val:10} },
+  { id:'hp10',     label:'HP+10%',       icon:'❤️', effect:{type:'hp', val:10} },
+  { id:'hp20',     label:'HP+20%',       icon:'❤️', effect:{type:'hp', val:20} },
+  { id:'cri8',     label:'会心率+8%',    icon:'💥', effect:{type:'cri', val:8} },
+  { id:'spd15',    label:'SPD+15',       icon:'💨', effect:{type:'spd', val:15} },
+  { id:'drain10',  label:'吸血10%',      icon:'🩸', effect:{type:'drain', val:10} },
+  { id:'reduce8',  label:'被ダメ-8%',    icon:'🛡️', effect:{type:'reduce', val:8} },
+  { id:'regen5',   label:'毎T回復5%',    icon:'💚', effect:{type:'regen', val:5} },
+  { id:'ult_boost',label:'ULT威力+20%', icon:'⚡', effect:{type:'ult_boost', val:20} },
 ];
 
-const ABYSS_ENEMIES = [
-  // F1-4
-  [{name:'深淵スライム',   icon:'🟣', atk:300,  hp:8000,  pres:0,  mres:0,  spd:45, cri:3}],
-  [{name:'奈落コボルト',   icon:'🐾', atk:400,  hp:10000, pres:8,  mres:5,  spd:60, cri:5},
-   {name:'奈落コボルト',   icon:'🐾', atk:400,  hp:10000, pres:8,  mres:5,  spd:60, cri:5}],
-  [{name:'深淵狼',         icon:'🐺', atk:500,  hp:9000,  pres:5,  mres:5,  spd:90, cri:10},
-   {name:'深淵狼',         icon:'🐺', atk:500,  hp:9000,  pres:5,  mres:5,  spd:90, cri:10},
-   {name:'深淵狼',         icon:'🐺', atk:500,  hp:9000,  pres:5,  mres:5,  spd:90, cri:10}],
-  [{name:'奈落番人',       icon:'👁️', atk:650,  hp:18000, pres:15, mres:15, spd:55, cri:8}],
-  // F5-9
-  [{name:'星辰の亡霊',     icon:'👻', atk:800,  hp:15000, pres:10, mres:10, spd:70, cri:12}],
-  [{name:'深淵騎士',       icon:'⚫', atk:900,  hp:22000, pres:20, mres:10, spd:65, cri:8},
-   {name:'深淵騎士',       icon:'⚫', atk:900,  hp:22000, pres:20, mres:10, spd:65, cri:8}],
-  [{name:'奈落魔導師',     icon:'💧', atk:1100, hp:18000, pres:5,  mres:25, spd:72, cri:15}],
-  [{name:'深淵ドラゴン',   icon:'🐉', atk:1200, hp:30000, pres:18, mres:18, spd:68, cri:12}],
-  [{name:'深淵の支配者',   icon:'💀', atk:1400, hp:25000, pres:15, mres:20, spd:75, cri:15},
-   {name:'奈落番人',       icon:'👁️', atk:800,  hp:18000, pres:12, mres:12, spd:55, cri:8}],
-  // F10+
-  [{name:'虚無の君主',     icon:'🌑', atk:1800, hp:50000, pres:22, mres:22, spd:70, cri:18}],
+// 15層定義 (areaId → BABEL_AREAS.id, statMult = 通常敵スケール, bossMult = ボス敵スケール)
+const ABYSS_LAYERS = [
+  {id:1,  name:'第一層',   icon:'🌱', areaId:'area1',  statMult:1.5, bossMult:0.5, accRarity:1, rec:'推奨 Lv10〜'},
+  {id:2,  name:'第二層',   icon:'🌿', areaId:'area1',  statMult:2.2, bossMult:0.8, accRarity:1, rec:'推奨 Lv13〜'},
+  {id:3,  name:'第三層',   icon:'🍃', areaId:'area1',  statMult:3.0, bossMult:1.2, accRarity:1, rec:'推奨 Lv16〜'},
+  {id:4,  name:'第四層',   icon:'🌿', areaId:'area1',  statMult:4.0, bossMult:1.5, accRarity:2, rec:'推奨 Lv18〜'},
+  {id:5,  name:'第五層',   icon:'🌿', areaId:'area1',  statMult:5.0, bossMult:2.0, accRarity:2, rec:'推奨 Lv20〜'},
+  {id:6,  name:'第六層',   icon:'👺', areaId:'area2',  statMult:1.0, bossMult:1.0, accRarity:2, rec:'推奨 Lv25〜'},
+  {id:7,  name:'第七層',   icon:'👺', areaId:'area2',  statMult:1.3, bossMult:1.3, accRarity:2, rec:'推奨 Lv30〜'},
+  {id:8,  name:'第八層',   icon:'🌲', areaId:'area2b', statMult:0.8, bossMult:0.7, accRarity:3, rec:'推奨 Lv33〜'},
+  {id:9,  name:'第九層',   icon:'🌲', areaId:'area2b', statMult:1.1, bossMult:1.0, accRarity:3, rec:'推奨 Lv37〜'},
+  {id:10, name:'第十層',   icon:'🍄', areaId:'area2c', statMult:1.0, bossMult:1.0, accRarity:3, rec:'推奨 Lv40〜'},
+  {id:11, name:'第十一層', icon:'🏔️', areaId:'area3',  statMult:0.8, bossMult:0.4, accRarity:3, rec:'推奨 Lv42〜'},
+  {id:12, name:'第十二層', icon:'🏔️', areaId:'area3',  statMult:1.0, bossMult:0.6, accRarity:4, rec:'推奨 Lv44〜'},
+  {id:13, name:'第十三層', icon:'🏔️', areaId:'area3',  statMult:1.2, bossMult:0.8, accRarity:4, rec:'推奨 Lv46〜'},
+  {id:14, name:'第十四層', icon:'🏔️', areaId:'area3',  statMult:1.5, bossMult:1.0, accRarity:4, rec:'推奨 Lv48〜'},
+  {id:15, name:'第十五層', icon:'🏔️', areaId:'area3',  statMult:1.8, bossMult:1.3, accRarity:4, rec:'推奨 Lv50〜'},
 ];
+
+const ABYSS_RARITY_LABEL  = ['','N','R','SR','SSR'];
+const ABYSS_RARITY_COLOR  = ['','#aaaaaa','#6ce8ff','#c480ff','#f9d342'];
+
+function scaleAbyssEnemy(e, mult) {
+  const c = Object.assign({}, e);
+  c.hp  = Math.round((e.hp  || 0) * mult);
+  c.atk = Math.round((e.atk || 0) * mult);
+  c.mp  = Math.round((e.mp  || 0) * mult);
+  return c;
+}
+
+function getAbyssStageEnemies(layerId, stage) {
+  const layer   = ABYSS_LAYERS.find(l => l.id === layerId);
+  const area    = BABEL_AREAS.find(a => a.id === layer.areaId);
+  const nonBoss = area.stages.slice(0, area.stages.length - 1);
+  if (stage === 6) {
+    const last     = area.stages[area.stages.length - 1];
+    const bossWave = last.enemies[last.enemies.length - 1];
+    return [bossWave.map(e => scaleAbyssEnemy(e, layer.bossMult))];
+  }
+  const idx    = (stage - 1) % nonBoss.length;
+  const picked = nonBoss[idx];
+  return picked.enemies.map(wave => wave.map(e => scaleAbyssEnemy(e, layer.statMult)));
+}
+
+function abyssSweepCost(layerId) {
+  return layerId <= 5 ? 10 : layerId <= 10 ? 20 : 30;
+}
 
 function renderAbyssContent() {
   const lv = gState.player.level;
@@ -18523,63 +18597,83 @@ function renderAbyssContent() {
     return;
   }
 
-  const abyss = gState.progress.abyss;
-  const inRun = abyss.currentRun && !abyss.currentRun.cleared;
-  const bestDepth = abyss.bestDepth || 0;
+  const abyss   = gState.progress.abyss;
+  const cleared = abyss.clearedLayers || [];
+  const run     = abyss.currentRun;
+  const today   = new Date().toDateString();
+  if (abyss.lastRunDate !== today) { abyss.dailyRuns = 0; abyss.lastRunDate = today; }
+  const maxRuns  = 3 + getVip().abyssExtraRuns;
+  const runsLeft = maxRuns - (abyss.dailyRuns || 0);
+  const bestLayer = cleared.length > 0 ? Math.max(...cleared) : 0;
 
   el.innerHTML = '';
 
-  // ステータスカード
+  // ステータス行
   const stat = document.createElement('div');
-  stat.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;';
+  stat.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px 12px;';
   stat.innerHTML = `
-    <div class="base-res-item"><div class="base-res-val">${bestDepth}F</div><div class="base-res-label">📊 最高到達</div></div>
-    <div class="base-res-item"><div class="base-res-val">${inRun ? (abyss.currentRun.floor+'F') : '—'}</div><div class="base-res-label">🔄 現在の探索</div></div>`;
+    <div class="base-res-item"><div class="base-res-val">${bestLayer > 0 ? bestLayer+'層' : '—'}</div><div class="base-res-label">📊 最深到達</div></div>
+    <div class="base-res-item"><div class="base-res-val">${cleared.length}/15</div><div class="base-res-label">✅ クリア層</div></div>
+    <div class="base-res-item"><div class="base-res-val" style="color:${runsLeft>0?'var(--text)':'var(--red)'}">${runsLeft}</div><div class="base-res-label">⚡ 挑戦回数</div></div>`;
   el.appendChild(stat);
 
-  if (inRun) {
-    // 探索中UI
-    const run = abyss.currentRun;
-    const runEl = document.createElement('div');
-    runEl.style.cssText = 'padding:10px 12px;';
-    runEl.innerHTML = `<div style="font-size:11px;color:var(--text3);letter-spacing:2px;margin-bottom:8px">現在の探索バフ</div>`;
-    const buffsEl = document.createElement('div');
-    buffsEl.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;';
-    (run.buffs||[]).forEach(b => {
-      const buff = ABYSS_FLOOR_BUFFS.find(x=>x.id===b);
-      if (buff) buffsEl.innerHTML += `<span style="background:rgba(155,107,222,0.15);border:1px solid var(--purple);color:var(--purple);font-size:11px;padding:2px 8px;">${buff.icon} ${buff.label}</span>`;
-    });
-    runEl.appendChild(buffsEl);
-
-    const btns = document.createElement('div');
-    btns.style.cssText = 'display:flex;gap:8px;';
-    const continueBtn = document.createElement('button');
-    continueBtn.className = 'btn btn-gold';
-    continueBtn.style.flex = '1';
-    continueBtn.textContent = `▶ ${run.floor}F に挑む`;
-    continueBtn.addEventListener('click', () => startAbyssFloor(run.floor));
-    const retreatBtn = document.createElement('button');
-    retreatBtn.className = 'btn btn-outline';
-    retreatBtn.textContent = '撤退して報酬受取';
-    retreatBtn.addEventListener('click', () => retreatAbyss());
-    btns.appendChild(continueBtn);
-    btns.appendChild(retreatBtn);
-    runEl.appendChild(btns);
-    el.appendChild(runEl);
-  } else {
-    const startBtn = document.createElement('button');
-    startBtn.className = 'btn btn-gold';
-    startBtn.style.cssText = 'width:calc(100%-24px);margin:10px 12px;display:block;';
-    startBtn.textContent = '🌀 アビスダイブ 開始';
-    startBtn.addEventListener('click', () => startAbyssRun());
-    el.appendChild(startBtn);
+  // 進行中の探索バナー
+  if (run && run.layerId) {
+    const layer    = ABYSS_LAYERS.find(l => l.id === run.layerId);
+    const isBoss   = run.stage === 6;
+    const stageLabel = isBoss ? 'BOSS' : `${run.stage}/5`;
+    const buffHtml = (run.buffs || []).map(b => {
+      const bf = ABYSS_FLOOR_BUFFS.find(x => x.id === b);
+      return bf ? `<span style="background:rgba(155,107,222,0.15);border:1px solid var(--purple);color:var(--purple);font-size:10px;padding:2px 6px;">${bf.icon}${bf.label}</span>` : '';
+    }).join('');
+    const cont = document.createElement('div');
+    cont.style.cssText = 'margin:0 12px 10px;border:1px solid var(--purple);padding:12px;';
+    cont.innerHTML = `
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">
+        ${layer.icon} <b>${layer.name}</b> — ステージ <b style="color:${isBoss?'var(--gold)':'var(--text)'}">${stageLabel}</b>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;">${buffHtml || '<span style="font-size:11px;color:var(--text3)">バフなし</span>'}</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-gold" style="flex:1" onclick="continueAbyssRun()">▶ ステージ${stageLabel}へ</button>
+        <button class="btn btn-outline" onclick="retreatAbyss()">撤退</button>
+      </div>`;
+    el.appendChild(cont);
   }
+
+  // 層一覧
+  const grid = document.createElement('div');
+  grid.style.cssText = 'padding:0 12px 12px;display:flex;flex-direction:column;gap:6px;';
+
+  ABYSS_LAYERS.forEach(layer => {
+    const isCleared   = cleared.includes(layer.id);
+    const isUnlocked  = layer.id === 1 || cleared.includes(layer.id - 1);
+    const isActiveRun = run && run.layerId === layer.id;
+    const sweepCost   = abyssSweepCost(layer.id);
+    const rarColor    = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
+    const rarLabel    = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
+
+    const row = document.createElement('div');
+    row.style.cssText = `background:var(--panel);border:1px solid ${isCleared ? 'var(--gold)' : isUnlocked ? 'var(--border)' : 'rgba(80,80,80,0.3)'};
+      padding:10px 12px;display:flex;align-items:center;gap:10px;opacity:${isUnlocked ? 1 : 0.35};`;
+    row.innerHTML = `
+      <div style="font-size:20px;min-width:28px;text-align:center;">${layer.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:700;color:${isCleared ? 'var(--gold)' : 'var(--text)'}">${layer.name}${isCleared ? ' ✅' : ''}</div>
+        <div style="font-size:10px;color:var(--text3)">${layer.rec} &nbsp;|&nbsp; 報酬: <span style="color:${rarColor}">${rarLabel}</span></div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        ${isCleared ? `<button class="btn btn-outline" style="font-size:11px;padding:4px 8px;" onclick="abyssSweep(${layer.id})">⚡${sweepCost} 周回</button>` : ''}
+        ${isUnlocked && !isActiveRun ? `<button class="btn btn-gold" style="font-size:11px;padding:4px 10px;" onclick="startAbyssLayer(${layer.id})" ${runsLeft <= 0 ? 'disabled' : ''}>挑戦</button>` : ''}
+        ${!isUnlocked ? `<span style="font-size:11px;color:var(--text3)">🔒</span>` : ''}
+      </div>`;
+    grid.appendChild(row);
+  });
+  el.appendChild(grid);
 }
 
-function startAbyssRun() {
+function startAbyssLayer(layerId) {
   const units = getFormationUnits();
   if (!units.length) { alert('編成にユニットを設定してください'); return; }
-  // 日次挑戦回数チェック
   const abyss = gState.progress.abyss;
   const today = new Date().toDateString();
   if (abyss.lastRunDate !== today) { abyss.dailyRuns = 0; abyss.lastRunDate = today; }
@@ -18589,60 +18683,76 @@ function startAbyssRun() {
     return;
   }
   abyss.dailyRuns = (abyss.dailyRuns || 0) + 1;
-  abyss.currentRun = { floor:1, buffs:[], cleared:false, hp:{} };
-  // 現在HPを記録
-  units.forEach(u => {
-    gState.progress.abyss.currentRun.hp[u.uid] = calcStats(u).hp;
-  });
+  abyss.currentRun = { layerId, stage: 1, buffs: [] };
   saveState();
   renderAbyssContent();
-  startAbyssFloor(1);
+  startAbyssStage(layerId, 1);
 }
 
-function startAbyssFloor(floor) {
-  const idx = Math.min(floor-1, ABYSS_ENEMIES.length-1);
-  const enemies = ABYSS_ENEMIES[idx];
-  const stageName = `アビスダイブ ${floor}F`;
-  battleContext = { type:'abyss', floor };
-  initBattle([enemies], stageName);
+function continueAbyssRun() {
+  const run = gState.progress.abyss.currentRun;
+  if (!run) return;
+  startAbyssStage(run.layerId, run.stage);
 }
 
-function onAbyssVictory(floor) {
+function startAbyssStage(layerId, stage) {
+  const layer    = ABYSS_LAYERS.find(l => l.id === layerId);
+  const isBoss   = stage === 6;
+  const stageName = isBoss
+    ? `アビス ${layer.name} ボス`
+    : `アビス ${layer.name} ステージ${stage}`;
+  const enemies  = getAbyssStageEnemies(layerId, stage);
+  battleContext  = { type: 'abyss', layerId, stage };
+  initBattle(enemies, stageName);
+}
+
+function onAbyssVictory(layerId, stage) {
   const abyss = gState.progress.abyss;
-  const run = abyss.currentRun;
+  const run   = abyss.currentRun;
   if (!run) return;
 
-  // バフ選択（3択）
-  const pool = [...ABYSS_FLOOR_BUFFS];
-  shuffle(pool);
-  const choices = pool.slice(0,3);
-  showAbyssBuffChoice(choices, floor);
+  if (stage === 6) {
+    // ボス撃破 → 層クリア
+    if (!abyss.clearedLayers) abyss.clearedLayers = [];
+    if (!abyss.clearedLayers.includes(layerId)) {
+      abyss.clearedLayers.push(layerId);
+    }
+    abyss.bestLayer = Math.max(abyss.bestLayer || 0, layerId);
+    abyss.currentRun = null;
+    saveState();
+    giveAbyssLayerReward(layerId);
+    renderAbyssContent();
+  } else {
+    // 通常ステージクリア → バフ選択
+    const pool = [...ABYSS_FLOOR_BUFFS];
+    shuffle(pool);
+    showAbyssBuffChoice(pool.slice(0, 3), layerId, stage);
+  }
 }
 
-function showAbyssBuffChoice(choices, floor) {
-  const el = document.getElementById('abyss-content');
-  const overlay = document.createElement('div');
+function showAbyssBuffChoice(choices, layerId, stage) {
+  const layer    = ABYSS_LAYERS.find(l => l.id === layerId);
+  const isBossNext = stage === 5;
+  const overlay  = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(5,6,8,0.95);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px;';
   overlay.innerHTML = `
-    <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;letter-spacing:3px">${floor}F クリア!</div>
-    <div style="font-size:13px;color:var(--text2)">バフを1つ選択してください</div>`;
+    <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;letter-spacing:3px">${layer.name} ステージ${stage} クリア！</div>
+    <div style="font-size:13px;color:var(--text2)">バフを1つ選択してください${isBossNext ? ' — 次はボス！' : ''}</div>`;
   const grid = document.createElement('div');
   grid.style.cssText = 'display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px;';
   choices.forEach(buff => {
     const btn = document.createElement('div');
     btn.style.cssText = 'background:var(--panel);border:1px solid var(--purple);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.15s;';
     btn.innerHTML = `<span style="font-size:24px">${buff.icon}</span><div><div style="font-size:14px;font-weight:700;color:var(--text)">${buff.label}</div></div>`;
-    btn.addEventListener('mouseover', ()=>btn.style.background='rgba(155,107,222,0.1)');
-    btn.addEventListener('mouseout',  ()=>btn.style.background='var(--panel)');
+    btn.addEventListener('mouseover', () => btn.style.background = 'rgba(155,107,222,0.1)');
+    btn.addEventListener('mouseout',  () => btn.style.background = 'var(--panel)');
     btn.addEventListener('click', () => {
-      gState.progress.abyss.currentRun.buffs.push(buff.id);
-      gState.progress.abyss.currentRun.floor = floor+1;
-      if ((floor+1) > (gState.progress.abyss.bestDepth||0)) {
-        gState.progress.abyss.bestDepth = floor+1;
+      const run = gState.progress.abyss.currentRun;
+      if (run) {
+        run.buffs.push(buff.id);
+        run.stage = stage + 1;
+        saveState();
       }
-      // 5F以降は星辰ドロップ
-      if (floor >= 5) giveAbyssCelestialDrop(floor);
-      saveState();
       document.body.removeChild(overlay);
       renderAbyssContent();
     });
@@ -18652,33 +18762,62 @@ function showAbyssBuffChoice(choices, floor) {
   document.body.appendChild(overlay);
 }
 
-function giveAbyssCelestialDrop(floor) {
-  const rarity = floor >= 9 ? 4 : floor >= 6 ? 3 : floor >= 3 ? 2 : 1;
+function giveAbyssLayerReward(layerId) {
+  const layer = ABYSS_LAYERS.find(l => l.id === layerId);
+  if (!layer) return;
   if (!gState.accessories) gState.accessories = [];
-  const acc = generateAccessory(rarity);
+  const acc      = generateAccessory(layer.accRarity);
   gState.accessories.push(acc);
-  const set = ACCESSORY_SETS.find(s=>s.id===acc.setId);
-  const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--purple);color:var(--text);padding:10px 16px;border-radius:6px;z-index:9999;font-size:12px;text-align:center;';
-  toast.innerHTML = `✦ アクセサリードロップ！<br><span style="color:${ACC_RARITY_COLOR[rarity]};font-weight:700">${accStars(rarity)} ${set?.name||'?'}</span> ${acc.mainStat.label}+${acc.mainStat.val}`;
-  document.body.appendChild(toast);
-  setTimeout(()=>toast.remove(), 3500);
+  saveState();
+  const set      = ACCESSORY_SETS.find(s => s.id === acc.setId);
+  const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
+  const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
+  const popup    = document.createElement('div');
+  popup.style.cssText = 'position:fixed;inset:0;z-index:6000;background:rgba(5,6,8,0.97);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px;';
+  popup.innerHTML = `
+    <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:22px;letter-spacing:3px">LAYER CLEAR!</div>
+    <div style="font-size:14px;color:var(--text2)">${layer.icon} ${layer.name} 制覇！</div>
+    <div style="text-align:center;border:1px solid ${rarColor};padding:16px 24px;background:rgba(0,0,0,0.4);">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">アクセサリー獲得</div>
+      <div style="font-size:18px;font-weight:700;color:${rarColor}">${rarLabel} ${set?.name || 'アクセサリー'}</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:4px">${acc.mainStat.label}+${acc.mainStat.val}</div>
+    </div>
+    <button class="btn btn-gold" onclick="this.closest('div[style*=fixed]').remove()" style="min-width:120px">続ける</button>`;
+  document.body.appendChild(popup);
+}
+
+function abyssSweep(layerId) {
+  if (!(gState.progress.abyss.clearedLayers || []).includes(layerId)) {
+    alert('この層はまだクリアしていません。'); return;
+  }
+  const cost = abyssSweepCost(layerId);
+  const info = staminaRegenInfo();
+  if (info.cur < cost) {
+    alert(`スタミナが不足しています。\n必要: ⚡${cost} / 現在: ⚡${info.cur}`);
+    return;
+  }
+  consumeStamina(cost);
+  const layer = ABYSS_LAYERS.find(l => l.id === layerId);
+  if (!gState.accessories) gState.accessories = [];
+  const acc      = generateAccessory(layer.accRarity);
+  gState.accessories.push(acc);
+  saveState();
+  updateTopBar();
+  const set      = ACCESSORY_SETS.find(s => s.id === acc.setId);
+  const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
+  const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--purple);color:var(--text);padding:10px 16px;border-radius:4px;z-index:9999;font-size:12px;text-align:center;pointer-events:none;';
+  t.innerHTML = `⚡-${cost} 周回完了！<br><span style="color:${rarColor};font-weight:700">${rarLabel} ${set?.name || 'アクセサリー'}</span> ${acc.mainStat.label}+${acc.mainStat.val}`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+  renderAbyssContent();
 }
 
 function retreatAbyss() {
-  const run = gState.progress.abyss.currentRun;
-  if (!run) return;
-  // 撤退報酬
-  const floor = run.floor;
-  const starPt = Math.floor(floor * 3);
-  const mithril = Math.floor(floor * 0.5);
-  gState.player.starMapPoints = (gState.player.starMapPoints||0) + starPt;
-  gState.player.mithril = (gState.player.mithril||0) + mithril;
   gState.progress.abyss.currentRun = null;
   saveState();
-  updateTopBar();
   renderAbyssContent();
-  alert(`撤退完了！\n⭐スターPt +${starPt}\n⛏️ミスリル +${mithril}`);
 }
 
 // ============================================================
@@ -19149,7 +19288,11 @@ function renderSortieTab() {
   // 解放状況テキスト更新
   const lv = gState.player.level;
   const abyssSub = document.getElementById('abyss-sub');
-  if (abyssSub) abyssSub.textContent = lv>=31 ? `最高到達: ${gState.progress.abyss.bestDepth||0}F` : 'Clan Lv.31で解放';
+  if (abyssSub) {
+    const cl = (gState.progress.abyss.clearedLayers||[]);
+    const best = cl.length > 0 ? Math.max(...cl) : 0;
+    abyssSub.textContent = lv>=31 ? `クリア: ${cl.length}/15層 (最深 ${best||0}層)` : 'Clan Lv.31で解放';
+  }
   const colSub = document.getElementById('colosseum-sub');
   if (colSub) colSub.textContent = lv>=31 ? `ランク: ${gState.progress.colosseum.rank||1}` : 'Clan Lv.31で解放';
 }
