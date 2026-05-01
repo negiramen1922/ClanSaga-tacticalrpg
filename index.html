@@ -2240,7 +2240,7 @@ img.item-icon {
     <div id="clan-exp-bar"><div id="clan-exp-fill" style="width:0%"></div></div>
     <div class="currency-row">
       <div class="cur-item cur-gold"><span class="ico"><img src="assets/images/item-gold.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-gold">0</span></div>
-      <div class="cur-item cur-crystal"><span class="ico" style="font-size:14px;vertical-align:middle;">✨</span><span id="disp-crystal">0</span></div>
+      <div class="cur-item cur-crystal"><span class="ico"><img src="assets/images/starstone.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-crystal">0</span></div>
       <div class="cur-item cur-coin"><span class="ico"><img src="assets/images/item-ink.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-coin">0</span></div>
       <!-- ミスリル表示は鋳造から削除のため非表示 -->
     </div>
@@ -3438,7 +3438,7 @@ const ITEM_ICON_INK      = 'assets/images/item-ink.png';
 const ITEM_ICON_EXPPOT   = 'assets/images/item-exppot.png';
 const ITEM_ICON_AWAKEPOT = 'assets/images/item-awakepot.png';
 function itemIconHTML(key, size='18px') {
-  if (key === 'crystal')    return `<span style="font-size:${size};vertical-align:middle;line-height:1;display:inline-block;">✨</span>`;
+  if (key === 'crystal')    return `<img src="assets/images/starstone.png" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;display:inline-block;">`;
   if (key === 'passiveKey') return `<span style="font-size:${size};vertical-align:middle;line-height:1;display:inline-block;">🔑</span>`;
   const src = {gold:ITEM_ICON_GOLD,ink:ITEM_ICON_INK,expPot:ITEM_ICON_EXPPOT,awakePot:ITEM_ICON_AWAKEPOT}[key];
   if (!src) return '';
@@ -16196,7 +16196,7 @@ function renderAccessoryShop(el) {
   const crystals=gState.player.starCrystal||0;
   el.innerHTML='';
   const header=document.createElement('div');
-  header.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:12px">✨ 星晶石: <span style="color:#89e3ff;font-weight:700;font-size:16px">${fmt(crystals)}</span>　アビスクリア: 第${bestLayer}層まで</div>`;
+  header.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:12px">${itemIconHTML('crystal','14px')} 星晶石: <span style="color:#89e3ff;font-weight:700;font-size:16px">${fmt(crystals)}</span>　アビスクリア: 第${bestLayer}層まで</div>`;
   el.appendChild(header);
   [{rarity:1,cost:20,unlock:0},{rarity:2,cost:50,unlock:1},{rarity:3,cost:100,unlock:5},{rarity:4,cost:200,unlock:9}].forEach(item=>{
     const unlocked=bestLayer>=item.unlock;
