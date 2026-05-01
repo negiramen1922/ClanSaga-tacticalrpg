@@ -2131,6 +2131,10 @@ img.item-icon {
       <div class="cur-item cur-gold"><span class="ico"><img src="assets/images/item-gold.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-gold">0</span></div>
       <div class="cur-item cur-crystal"><span class="ico" style="font-size:14px;vertical-align:middle;">💠</span><span id="disp-crystal">0</span></div>
       <div class="cur-item cur-mithril"><span class="ico" style="font-size:14px;vertical-align:middle;">⛏️</span><span id="disp-mithril">0</span></div>
+      <div class="cur-item cur-stamina" onclick="openStaminaTooltip()" title="スタミナ" style="cursor:pointer">
+        <span style="font-size:13px;vertical-align:middle;color:#7be8b0">⚡</span>
+        <span id="disp-stamina" style="color:#7be8b0">100/100</span>
+      </div>
     </div>
     <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="メニュー">
       <span></span><span></span><span></span>
@@ -2166,6 +2170,7 @@ img.item-icon {
         <div class="hm-item" onclick="closeHamburger();openLibraryMonsterBook()">📚<span>大図書館（図鑑）</span></div>
         <div class="hm-item" onclick="closeHamburger();openMine()"><img src="assets/images/nav-mine.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>鉱山</span></div>
         <div class="hm-item" onclick="closeHamburger();openHelpModal()"><img src="assets/images/nav-help.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>チュートリアル・ヘルプ</span></div>
+        <div class="hm-item" onclick="closeHamburger();openVipPanel()">👑<span id="hm-vip-label">VIP特典</span></div>
         <div class="hm-divider"></div>
         <div class="hm-item" onclick="closeHamburger();signOutUser()" style="color:var(--text3);">🚪<span>ログアウト</span></div>
         <div class="hm-item hm-danger" onclick="confirmReset()">🔄<span>データリセット</span></div>
@@ -2472,6 +2477,7 @@ img.item-icon {
     <div class="wave-info" id="battle-wave-info">WAVE 1/1</div>
     <div id="battle-formation-badge" style="font-family:'Rajdhani';font-size:11px;font-weight:700;color:var(--gold);padding:2px 6px;border:1px solid rgba(201,168,76,0.3);background:rgba(201,168,76,0.08);"></div>
     <div id="battle-scout-badge" class="normal" style="display:none"></div>
+    <button id="battle-skip-btn" onclick="skipBattle()" style="display:none;font-size:10px;padding:3px 8px;background:rgba(232,200,74,0.15);border:1px solid var(--gold);color:var(--gold);cursor:pointer">⏩ スキップ</button>
     <div class="timer" id="battle-timer">0:00</div>
   </div>
   <!-- フェーズタイマー（昼戦・夜戦共通） -->
@@ -3716,6 +3722,346 @@ const CLASS_DATA = {
         target:'all', power:1.5, type:'black',
         debuff:{ type:'lethal_poison', val:15, turns:5 },
         extraDebuff:{ type:'grand_debuff', val:-20, turns:3 } },
+    ],
+  },
+
+  // ── バーサーカー（ビースト・アタッカー）★3 ──
+  berserker: {
+    name: 'バーサーカー', icon: '🪓',
+    role: 'アタッカー', species: 'beast', attackTypes: ['斬','打'],
+    baseStats: { atk:920, hp:2500, mp:1600, pres:12, mres:8, bres:5, lres:0, spd:98, cri:16, cridam:175 },
+    baseSearch: 12, baseStealth: 4, baseHate: 380,
+    openingSkill: {
+      id:'bk_open_blood', name:'血の覚醒', type:'buff', target:'self',
+      desc:'ATK+30%（3T）。自身HP-10%。奇襲時ATK+50%',
+      effect:{ type:'atk_up_self_dmg', atkVal:30, selfHpCost:10, turns:3, surpriseAtk:50 }
+    },
+    activeSkills: [
+      { id:'bk_frenzy', name:'狂乱の一撃', type:'red', target:'single',
+        power:2.5, cd:5, desc:'単体 🔴 Pw:2.5（残HP%が低いほどPw+最大+1.5）',
+        scaledByMissingHp:{ maxBonus:1.5 } },
+      { id:'bk_rampage', name:'乱舞斬り', type:'red', target:'random_multi',
+        power:0.9, hits:4, cd:6, desc:'ランダム敵×4 🔴 Pw:0.9（低HP時CRI率+20%）',
+        lowHpCriBonus:20 },
+    ],
+    passiveSkills: [
+      { id:'bk_pas_killing', name:'殺戮本能', type:'passive',
+        desc:'HP50%以下でATK+30%・SPD+20',
+        effect:{ type:'low_hp_boost', hpThreshold:50, atk:30, spd:20 } },
+      { id:'bk_pas_undying', name:'不屈の闘気', type:'passive',
+        desc:'致死ダメージを1度だけHP1で耐える（1戦1回）',
+        effect:{ type:'death_resist', uses:1 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'bku_bloodstorm', name:'血嵐乱舞',
+        effect:'自身HP30%消費→ランダム敵×10 🔴 Pw:1.2 強制会心。撃破ごとにATK+8%スタック',
+        power:1.2, type:'red', target:'random_multi', hits:10, forceCrit:true,
+        selfHpCost:30, killAtkStack:8 },
+    ],
+  },
+
+  // ── センチネル（ヒューム・タンク）★2 ──
+  sentinel: {
+    name: 'センチネル', icon: '🗡️',
+    role: 'タンク', species: 'hume', attackTypes: ['打','貫'],
+    baseStats: { atk:650, hp:4800, mp:2200, pres:30, mres:16, bres:14, lres:5, spd:55, cri:4, cridam:130 },
+    baseSearch: 6, baseStealth: 3, baseHate: 620,
+    openingSkill: {
+      id:'sn_open_ironwall', name:'鉄壁展開', type:'buff', target:'all_ally',
+      desc:'味方全体シールド（最大HP15%）＋自身に挑発 2T',
+      effect:{ type:'shield_and_self_taunt', shieldRatio:0.15, tauntTurns:2 }
+    },
+    activeSkills: [
+      { id:'sn_counter_guard', name:'カウンターガード', type:'buff', target:'self',
+        power:0, cd:7, desc:'防御姿勢3T（被ダメ-30%・被攻撃時反撃 Pw:0.8）',
+        effect:{ type:'counter_stance', dmgReduction:30, counterPower:0.8, turns:3 } },
+      { id:'sn_shield_bash2', name:'大盾突き', type:'red', target:'single',
+        power:1.5, cd:5, desc:'単体 🔴 Pw:1.5 ＋ スタン1T',
+        debuff:{ type:'stun', val:1, turns:1 } },
+    ],
+    passiveSkills: [
+      { id:'sn_pas_fort', name:'不動の砦', type:'passive',
+        desc:'HP70%以上のとき受けるダメージ-20%',
+        effect:{ type:'high_hp_reduction', hpThreshold:70, val:20 } },
+      { id:'sn_pas_guard', name:'守護の誓い', type:'passive',
+        desc:'味方が致死ダメージを受けた時、代わりに受ける（CD10）',
+        effect:{ type:'intercept_fatal', cd:10 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'snu_fortress', name:'不壊の要塞',
+        effect:'自身に完全無敵2T＋味方全体シールド（最大HP40%）＋全耐性+30% 3T',
+        power:0, type:'buff', target:'all_ally',
+        selfInvincible:2, shieldRatio:0.40, allResUp:30, resTurns:3 },
+    ],
+  },
+
+  // ── シューター（ヒューム・レンジ）★2 ──
+  shooter: {
+    name: 'シューター', icon: '🔫',
+    role: 'レンジ', species: 'hume', attackTypes: ['貫'],
+    baseStats: { atk:800, hp:2400, mp:1400, pres:6, mres:8, bres:3, lres:0, spd:92, cri:20, cridam:185 },
+    baseSearch: 32, baseStealth: 12, baseHate: 280,
+    openingSkill: {
+      id:'sr_open_aim', name:'精密照準', type:'buff', target:'self',
+      desc:'CRI+20%・CRI倍率+30% 3T',
+      effect:{ type:'multi_buff', buffs:[
+        { type:'cri_up',    val:20, turns:3 },
+        { type:'cridam_up', val:30, turns:3 },
+      ]}
+    },
+    activeSkills: [
+      { id:'sr_snipe', name:'スナイプ', type:'red', target:'single',
+        power:3.5, cd:7, desc:'単体 🔴 Pw:3.5（強制会心）',
+        forceCrit:true },
+      { id:'sr_burst', name:'バースト射撃', type:'red', target:'random_multi',
+        power:0.8, hits:5, cd:5, desc:'ランダム敵×5 🔴 Pw:0.8' },
+    ],
+    passiveSkills: [
+      { id:'sr_pas_crieye', name:'狙撃手の眼', type:'passive',
+        desc:'CRI時ダメージ+20%（常時）',
+        effect:{ type:'crit_dmg_bonus', val:20 } },
+      { id:'sr_pas_weakspot', name:'急所狙い', type:'passive',
+        desc:'攻撃した敵のCRI耐性-5%スタック（最大3）',
+        effect:{ type:'cri_res_down_stack', val:5, maxStacks:3 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'sru_deadshot', name:'デッドショット',
+        effect:'単体 🔴 Pw:8.0 強制会心（CC中+Pw:4.0追加）',
+        power:8.0, type:'red', target:'single', forceCrit:true,
+        ccBonus:4.0 },
+    ],
+  },
+
+  // ── キャスター（デーモン・レンジ）★3 ──
+  caster: {
+    name: 'キャスター', icon: '🌀',
+    role: 'レンジ', species: 'daemon', attackTypes: ['魔'],
+    baseStats: { atk:880, hp:2200, mp:2600, pres:5, mres:16, bres:3, lres:0, spd:72, cri:10, cridam:155 },
+    baseSearch: 18, baseStealth: 6, baseHate: 220,
+    openingSkill: {
+      id:'cs_open_charge', name:'魔力充填', type:'buff', target:'self',
+      desc:'MP+30%回復 ＋ 次のスキルPw+50%（1T）',
+      effect:{ type:'mp_regen_and_pw_boost', mpRatio:30, pwBoost:50, turns:1 }
+    },
+    activeSkills: [
+      { id:'cs_chain', name:'チェインマジック', type:'red', target:'all',
+        power:1.5, cd:8, desc:'全体 🔴（魔法）Pw:1.5 ＋ チェイン追撃Pw:0.8',
+        chainHit:{ power:0.8 } },
+      { id:'cs_burst', name:'エレメントバースト', type:'black', target:'single',
+        power:3.0, cd:6, desc:'単体 ⬛ Pw:3.0 ＋ 属性耐性-25% 3T',
+        debuff:{ type:'all_res_down', val:-25, turns:3 } },
+    ],
+    passiveSkills: [
+      { id:'cs_pas_amp', name:'魔力増幅', type:'passive',
+        desc:'スキル使用のたびATK+12%スタック（最大4、WAVE後リセット）',
+        effect:{ type:'atk_stack_on_skill', val:12, maxStacks:4 } },
+      { id:'cs_pas_accel', name:'呪文加速', type:'passive',
+        desc:'CDが奇数のスキルの再使用ターン-1',
+        effect:{ type:'odd_cd_reduction', val:1 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'csu_catastrophe', name:'カタストロフィ',
+        effect:'全体 🔴（魔法）Pw:4.0 ＋ 全耐性-30% 3T。奇襲時強制会心',
+        power:4.0, type:'red', target:'all',
+        debuff:{ type:'all_res_down', val:-30, turns:3 },
+        surpriseForceCrit:true },
+    ],
+  },
+
+  // ── ランサー（ビースト・アタッカー）★2 ──
+  lancer: {
+    name: 'ランサー', icon: '🔱',
+    role: 'アタッカー', species: 'beast', attackTypes: ['貫','斬'],
+    baseStats: { atk:860, hp:2800, mp:1600, pres:14, mres:10, bres:6, lres:0, spd:84, cri:12, cridam:160 },
+    baseSearch: 14, baseStealth: 5, baseHate: 350,
+    openingSkill: {
+      id:'lc_open_charge', name:'突撃準備', type:'buff', target:'self',
+      desc:'ATK+25% ＋ 次の攻撃Pw+1.0（2T）',
+      effect:{ type:'atk_and_next_pw', atkVal:25, nextPwBonus:1.0, turns:2 }
+    },
+    activeSkills: [
+      { id:'lc_dragon_pierce', name:'竜貫き', type:'red', target:'single',
+        power:3.0, cd:5, desc:'単体 🔴 Pw:3.0（後列にも50%貫通ダメージ）',
+        pierceHit:{ ratio:0.5 } },
+      { id:'lc_moon_slash', name:'円月槍', type:'red', target:'all',
+        power:1.2, cd:7, desc:'全体 🔴 Pw:1.2 ＋ ATK-15% 2T',
+        debuff:{ type:'atk_down', val:-15, turns:2 } },
+    ],
+    passiveSkills: [
+      { id:'lc_pas_momentum', name:'突貫の勢い', type:'passive',
+        desc:'行動後SPD+10スタック（最大5、WAVE後リセット）',
+        effect:{ type:'spd_stack_on_action', val:10, maxStacks:5 } },
+      { id:'lc_pas_pierce', name:'槍の達人', type:'passive',
+        desc:'貫攻撃のダメージ+15%（常時）',
+        effect:{ type:'pierce_dmg_bonus', val:15 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'lcu_heaven_thrust', name:'皇槍天衝',
+        effect:'前衛全体 🔴 Pw:4.5（後列に50%貫通）＋ 自身ATK+40%・SPD+20 3T',
+        power:4.5, type:'red', target:'front_row',
+        pierceHit:{ ratio:0.5 },
+        selfBuff:{ atk_up:40, spd_up:20, turns:3 } },
+    ],
+  },
+
+  // ── ミンストレル（セレスティア・サポート）★3 ──
+  minstrel: {
+    name: 'ミンストレル', icon: '🎵',
+    role: 'サポート', species: 'celestia', attackTypes: ['魔'],
+    baseStats: { atk:680, hp:2900, mp:2400, pres:6, mres:16, bres:8, lres:0, spd:76, cri:6, cridam:140 },
+    baseSearch: 12, baseStealth: 6, baseHate: 180,
+    openingSkill: {
+      id:'mn_open_inspire', name:'鼓舞の歌', type:'buff', target:'all_ally',
+      desc:'味方全体ATK+15%・SPD+10 3T',
+      effect:{ type:'multi_buff_all', buffs:[
+        { type:'atk_up', val:15, turns:3 },
+        { type:'spd_up', val:10, turns:3 },
+      ]}
+    },
+    activeSkills: [
+      { id:'mn_hero_song', name:'英雄の調べ', type:'buff', target:'all_ally',
+        power:0, cd:6, desc:'味方全体ATK+20%・CRI+10% ＋ HP回復×0.8',
+        effect:{ type:'buff_and_heal_all', atkVal:20, atkTurns:3, criVal:10, criTurns:3, healRatio:0.8 } },
+      { id:'mn_rest_melody', name:'安息の旋律', type:'buff', target:'all_ally',
+        power:0, cd:8, desc:'味方全体デバフ解除 ＋ HP再生×0.15/T 3T',
+        effect:{ type:'cleanse_and_regen', regenRatio:0.15, turns:3 } },
+    ],
+    passiveSkills: [
+      { id:'mn_pas_resonance', name:'戦歌の共鳴', type:'passive',
+        desc:'味方がスキルを使うたびMP+5%回復（全員）',
+        effect:{ type:'team_mp_on_skill', val:5 } },
+      { id:'mn_pas_ballad', name:'バラードの加護', type:'passive',
+        desc:'味方全体SPD+8（常時）',
+        effect:{ type:'team_spd_bonus', val:8 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'mnu_symphony', name:'凱旋の交響曲',
+        effect:'味方全体ATK+40%・全耐性+20%・CRI+20% 3T ＋ 全デバフ解除',
+        power:0, type:'buff', target:'all_ally',
+        buffs:[ { type:'atk_up', val:40, turns:3 }, { type:'all_res_up', val:20, turns:3 }, { type:'cri_up', val:20, turns:3 } ],
+        dispelAll:true },
+    ],
+  },
+
+  // ── プロフェッサー（ヒューム・レンジ）★3 ──
+  professor: {
+    name: 'プロフェッサー', icon: '📚',
+    role: 'レンジ', species: 'hume', attackTypes: ['魔'],
+    baseStats: { atk:820, hp:2300, mp:2800, pres:5, mres:14, bres:3, lres:0, spd:70, cri:9, cridam:150 },
+    baseSearch: 22, baseStealth: 5, baseHate: 200,
+    openingSkill: {
+      id:'pf_open_analyze', name:'解析眼', type:'buff', target:'all_enemy',
+      desc:'敵全体の全耐性-15% 3T（奇襲時-25%）',
+      effect:{ type:'all_res_down_all', val:-15, turns:3, surpriseVal:-25 }
+    },
+    activeSkills: [
+      { id:'pf_gravity', name:'重力魔法', type:'black', target:'all',
+        power:1.0, cd:7, desc:'全体 ⬛ Pw:1.0 ＋ SPD-20・ATK-20% 3T',
+        effect:{ type:'multi_debuff', debuffs:[
+          { type:'spd_down', val:-20, turns:3 },
+          { type:'atk_down', val:-20, turns:3 },
+        ]}},
+      { id:'pf_amplify', name:'弱体強化', type:'black', target:'single',
+        power:0, cd:6, desc:'単体のデバフを強化（効果2倍・期間+2T）',
+        effect:{ type:'debuff_amplify', multiplier:2, extraTurns:2 } },
+    ],
+    passiveSkills: [
+      { id:'pf_pas_research', name:'研究の成果', type:'passive',
+        desc:'デバフ中の敵への与ダメ+18%（常時）',
+        effect:{ type:'dmg_vs_debuffed', val:18 } },
+      { id:'pf_pas_theory', name:'魔法理論', type:'passive',
+        desc:'全体攻撃時、対象の最も低い耐性に追加ダメージ+20%',
+        effect:{ type:'lowest_res_bonus', val:20 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'pfu_forbidden', name:'禁断の理論',
+        effect:'単体 ⬛ Pw:2.0 ＋ 全ステータス-25%・全耐性-25%（永続）→ 全体 🔴 Pw:1.5',
+        power:2.0, type:'black', target:'single',
+        debuff:{ type:'grand_debuff_permanent', statVal:-25, resVal:-25, turns:999 },
+        followUp:{ type:'red', target:'all', power:1.5 } },
+    ],
+  },
+
+  // ── アルケミスト（ヒューム・サポート）★3 ──
+  alchemist: {
+    name: 'アルケミスト', icon: '⚗️',
+    role: 'サポート', species: 'hume', attackTypes: ['魔'],
+    baseStats: { atk:700, hp:3100, mp:2600, pres:6, mres:14, bres:6, lres:0, spd:74, cri:5, cridam:140 },
+    baseSearch: 14, baseStealth: 6, baseHate: 190,
+    openingSkill: {
+      id:'ac_open_brew', name:'賢者の調合', type:'buff', target:'all_ally',
+      desc:'味方全体HP+15%回復 ＋ ATK+10% 3T',
+      effect:{ type:'heal_and_atk_all', healRatio:0.15, atkVal:10, atkTurns:3 }
+    },
+    activeSkills: [
+      { id:'ac_transmute', name:'変成術', type:'buff', target:'single_enemy',
+        power:0, cd:6, desc:'敵のバフを全解除し、解除数×ATK×0.5を味方単体HP回復',
+        effect:{ type:'dispel_and_convert_heal', healPerBuff:0.5 } },
+      { id:'ac_elixir', name:'エリクサー散布', type:'buff', target:'all_ally',
+        power:0, cd:8, desc:'味方全体HP回復×1.2 ＋ 全耐性+15% 2T',
+        effect:{ type:'heal_and_res_all', healRatio:1.2, resVal:15, resTurns:2 } },
+    ],
+    passiveSkills: [
+      { id:'ac_pas_stone', name:'賢者の石', type:'passive',
+        desc:'毎ターン味方全体HP回復（ATK×5%）',
+        effect:{ type:'team_regen_per_turn', ratio:5 } },
+      { id:'ac_pas_refine', name:'精製術', type:'passive',
+        desc:'回復量+15% ＋ 味方全体状態異常耐性+20%（常時）',
+        effect:{ type:'heal_and_status_res', healBonus:15, statusRes:20 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'acu_transmutation', name:'完全変成',
+        effect:'敵全体のバフを全解除しバフ数×Pw:0.5ダメージ ＋ 味方全体HP完全回復',
+        power:0.5, type:'black', target:'all',
+        dispelAndDamage:true, allyFullHeal:true },
+    ],
+  },
+
+  // ── シーフ（スペクター・スカウト）★3 ──
+  thief: {
+    name: 'シーフ', icon: '🃏',
+    role: 'スカウト', species: 'specter', attackTypes: ['斬','裂'],
+    baseStats: { atk:870, hp:2100, mp:1800, pres:5, mres:6, bres:8, lres:0, spd:112, cri:18, cridam:178 },
+    baseSearch: 44, baseStealth: 40, baseHate: 160,
+    openingSkill: {
+      id:'th_open_shadow_run', name:'影走り', type:'opening', target:'self',
+      desc:'奇襲判定 ＋ SPD+30・回避+20% 2T',
+      effect:{ type:'shadow_dash', spdVal:30, evasion:20, turns:2 },
+      guaranteeSurprise:true
+    },
+    activeSkills: [
+      { id:'th_steal', name:'盗む', type:'black', target:'single',
+        power:0.8, cd:5, desc:'単体 ⬛ Pw:0.8 ＋ 対象バフを1つ奪取（自身に付与）',
+        effect:{ type:'steal_buff', count:1 } },
+      { id:'th_decoy', name:'陽動作戦', type:'buff', target:'all_enemy',
+        power:0, cd:7, desc:'敵全体のターゲットをランダム変更 ＋ ATK-10% 3T',
+        effect:{ type:'multi_debuff_all', debuffs:[
+          { type:'hate_shuffle', val:1, turns:1 },
+          { type:'atk_down', val:-10, turns:3 },
+        ]}},
+    ],
+    passiveSkills: [
+      { id:'th_pas_evade', name:'盗賊の身のこなし', type:'passive',
+        desc:'回避率+15%（常時）',
+        effect:{ type:'evasion_bonus', val:15 } },
+      { id:'th_pas_trophy', name:'財宝荒らし', type:'passive',
+        desc:'CRI+10%（常時）＋ 敵撃破時ゴールド獲得+50%',
+        effect:{ type:'cri_and_gold_bonus', cri:10, goldBonus:50 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'thu_grand_thief', name:'大盗賊の舞い',
+        effect:'ランダム敵×8 ⬛ Pw:1.0（各攻撃時バフ奪取）＋ 奪ったバフを全て自身に付与',
+        power:1.0, type:'black', target:'random_multi', hits:8,
+        stealBuff:true, applyStolen:true },
     ],
   },
 };
@@ -6153,12 +6499,12 @@ function classIconHTML(classId, size='48px', style='') {
   return `<span style="font-size:${size};line-height:1;${style}">${cls?.icon||'⚔️'}</span>`;
 }
 
-const GACHA_POOL = ['warrior','vanguard','archer','priest','assassin'];
+const GACHA_POOL = ['warrior','vanguard','archer','priest','assassin','sentinel','shooter','lancer'];
 
 // ── キャラガチャプール ──
 const CHAR_POOL = {
-  3: ['priest','assassin','wizard','paladin','shaman'],
-  2: ['warrior','vanguard','archer'],
+  3: ['priest','assassin','wizard','paladin','shaman','berserker','caster','minstrel','professor','alchemist','thief'],
+  2: ['warrior','vanguard','archer','sentinel','shooter','lancer'],
 };
 const CHAR_GACHA_PICKUP   = 'wizard'; // 現在のピックアップ対象
 const CHAR_MILEAGE_CAP    = 200;      // 交換必要マイレージ
@@ -6425,12 +6771,18 @@ function defaultState(clanName) {
       atomStone: { t1:5, t2:0, t3:0 },   // アトム秘石T1-T3
       atomCore:  { t1:0, t2:0, t3:0 },   // アトミックコアT1-T3
       stardust:  5,                        // 星屑の砂（アクセサリー強化）
+      // スタミナ
+      stamina:          100,
+      staminaLastRegen: 0,
+      // VIPレベル (0=なし, 1=ブロンズ, 2=ゴールド)
+      vipLevel:           0,
+      vipDailyLastDate:  '',
     },
     ownedUnits: [warrior0],
     unitProgress: {
       [uid0]:{level:1,exp:0},
     },
-    presets: Array.from({length:10},(_,i)=>({
+    presets: Array.from({length:15},(_,i)=>({
       id:i,
       imagineId: null,
       formation:{
@@ -6451,7 +6803,7 @@ function defaultState(clanName) {
     achievements: { unlocked:{}, claimed:{} },
     progress:{
       babel:{ clearedStages:{} },
-      abyss:{ currentRun:null, bestDepth:0 },
+      abyss:{ currentRun:null, bestLayer:0, clearedLayers:[], dailyRuns:0, lastRunDate:'' },
       colosseum:{ rank:1, dailyChallenges:0, lastChallengeDate:'' },
       shrine:{ clearedToday:{} },
     },
@@ -6603,7 +6955,7 @@ function normalizeState() {
   // progress
   if (!gState.progress || typeof gState.progress !== 'object') gState.progress = {};
   if (!gState.progress.babel)      gState.progress.babel      = { clearedStages:{} };
-  if (!gState.progress.abyss)      gState.progress.abyss      = { currentRun:null, bestDepth:0 };
+  if (!gState.progress.abyss)      gState.progress.abyss      = { currentRun:null, bestLayer:0, clearedLayers:[], dailyRuns:0, lastRunDate:'' };
   if (!gState.progress.colosseum)  gState.progress.colosseum  = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
   if (!gState.progress.shrine)     gState.progress.shrine     = { clearedToday:{} };
   if (!gState.progress.babel.clearedStages) gState.progress.babel.clearedStages = {};
@@ -6629,8 +6981,24 @@ function normalizeState() {
   if (!gState.progress.nightBattles) gState.progress.nightBattles = 0;
   if (!gState.progress.surpriseCount) gState.progress.surpriseCount = 0;
 
-  // presets正規化
-  while (gState.presets.length < 10) {
+  // スタミナ・VIP正規化
+  if (p.stamina          === undefined) p.stamina          = 100;
+  if (!p.staminaLastRegen)              p.staminaLastRegen = Date.now();
+  if (p.vipLevel         === undefined) p.vipLevel         = 0;
+  if (!p.vipDailyLastDate)              p.vipDailyLastDate = '';
+
+  // アビス日次挑戦数・層クリア記録
+  if (!gState.progress.abyss.dailyRuns)     gState.progress.abyss.dailyRuns = 0;
+  if (!gState.progress.abyss.lastRunDate)   gState.progress.abyss.lastRunDate = '';
+  if (!gState.progress.abyss.clearedLayers) gState.progress.abyss.clearedLayers = [];
+  if (gState.progress.abyss.bestLayer === undefined) gState.progress.abyss.bestLayer = 0;
+  // 旧フォーマット (floor プロパティ) のcurrentRunをリセット
+  if (gState.progress.abyss.currentRun && gState.progress.abyss.currentRun.layerId === undefined) {
+    gState.progress.abyss.currentRun = null;
+  }
+
+  // presets正規化（最大15スロット）
+  while (gState.presets.length < 15) {
     gState.presets.push({ id: gState.presets.length, imagineId:null, formation:{slots:[]}, tactics:{} });
   }
   gState.presets.forEach(pr => { if (!('imagineId' in pr)) pr.imagineId = null; });
@@ -6853,6 +7221,12 @@ function updateHamburgerInfo() {
   if (!gState) return;
   document.getElementById('hm-clan-name').textContent = gState.player.clanName + ' クラン';
   document.getElementById('hm-clan-lv').textContent = 'Clan Lv.' + gState.player.level;
+  const vip = getVip();
+  const vipLbl = document.getElementById('hm-vip-label');
+  if (vipLbl) {
+    vipLbl.textContent = vip.label ? `VIP特典（${vip.label}）` : 'VIP特典';
+    vipLbl.style.color = vip.color || '';
+  }
   updateHmAccountInfo();
 }
 
@@ -7642,7 +8016,7 @@ function launchApp() {
   if (!gState.gacha.cardPityCount)  gState.gacha.cardPityCount  = 0;
 
   // ダメージ種別システム互換補正
-  if (!gState.progress.abyss)      gState.progress.abyss      = { currentRun:null, bestDepth:0 };
+  if (!gState.progress.abyss)      gState.progress.abyss      = { currentRun:null, bestLayer:0, clearedLayers:[], dailyRuns:0, lastRunDate:'' };
   if (!gState.progress.colosseum)  gState.progress.colosseum  = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
   if (!gState.progress.shrine)     gState.progress.shrine     = { clearedToday:{} };
 
@@ -7716,7 +8090,110 @@ function updateTopBar() {
   const expNeed = clanExpNeed(p.level);
   const pct = Math.min(100, (p.clanExp / expNeed)*100);
   document.getElementById('clan-exp-fill').style.width = pct + '%';
+  // スタミナ表示
+  const si = staminaRegenInfo();
+  const stEl = document.getElementById('disp-stamina');
+  if (stEl) stEl.textContent = si.cur + '/' + si.max;
   updateHamburgerInfo();
+}
+
+function grantVipDailyBonus() {
+  const p = gState.player;
+  const vip = getVip();
+  const today = new Date().toDateString();
+  if (p.vipDailyLastDate === today) return false;
+  p.vipDailyLastDate = today;
+  p.starCrystal = (p.starCrystal || 0) + vip.dailyCrystal;
+  saveState();
+  updateTopBar();
+  const label = vip.label ? `[${vip.label}] ` : '';
+  toast(`${label}デイリーボーナス：💠 星晶石 ×${vip.dailyCrystal}`);
+  return true;
+}
+
+function openStaminaTooltip() {
+  const si = staminaRegenInfo();
+  const vip = getVip();
+  const timeStr = si.cur >= si.max ? '満タン' :
+    si.minToFull >= 60 ? `${Math.floor(si.minToFull/60)}時間${si.minToFull%60}分で満タン` :
+    `${si.minToFull}分で満タン`;
+  const vipLabel = vip.label ? `<span style="color:${vip.color};font-size:10px;margin-left:4px">[${vip.label}]</span>` : '';
+  const nextStr = si.cur < si.max ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">次の+1まで ${si.minToNext}分</div>` : '';
+
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-start;justify-content:flex-end;padding:50px 12px 0';
+  ov.onclick = () => ov.remove();
+  ov.innerHTML = `<div style="background:var(--bg2);border:1px solid #7be8b0;border-radius:8px;padding:12px 16px;min-width:180px;box-shadow:0 4px 20px rgba(0,0,0,0.5)" onclick="event.stopPropagation()">
+    <div style="font-size:14px;font-weight:700;color:#7be8b0;margin-bottom:6px">⚡ スタミナ ${vipLabel}</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+      <div style="flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${(si.cur/si.max*100).toFixed(1)}%;background:linear-gradient(90deg,#4ed894,#7be8b0);transition:width 0.3s"></div>
+      </div>
+      <span style="font-size:13px;font-weight:700;color:#7be8b0">${si.cur}/${si.max}</span>
+    </div>
+    <div style="font-size:11px;color:var(--text2)">${timeStr}</div>
+    ${nextStr}
+    <div style="font-size:10px;color:var(--text3);margin-top:6px">${STAMINA_REGEN_MIN}分で+1回復</div>
+    <button onclick="switchTab('shop');this.closest('[style*=fixed]').remove()" style="margin-top:8px;width:100%;background:rgba(123,232,176,0.1);border:1px solid #7be8b0;color:#7be8b0;padding:5px;font-size:11px;cursor:pointer;border-radius:4px">VIP特典を見る</button>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function openVipPanel() {
+  const vip = getVip();
+  const cur = gState.player.vipLevel || 0;
+
+  const today = new Date().toDateString();
+  const claimed = gState.player.vipDailyLastDate === today;
+  const curBonus = VIP_BENEFITS[cur].dailyCrystal;
+
+  const tierHTML = (tier) => {
+    const b = VIP_BENEFITS[tier];
+    const active = cur === tier;
+    const label = tier === 0 ? '無料' : b.label;
+    const color = tier === 0 ? 'var(--text3)' : b.color;
+    return `<div style="border:1px solid ${active?color:'var(--border)'};border-radius:8px;padding:10px 12px;margin-bottom:8px;background:${active?`rgba(232,200,74,0.07)`:'transparent'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:14px;font-weight:700;color:${color}">${tier===0?'🆓':'👑'} ${label}</span>
+        ${active?`<span style="font-size:10px;background:${color};color:#0a0b0f;padding:1px 7px;border-radius:8px;font-weight:700">現在</span>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.8">
+        ${tier>0?`💠 デイリー星晶石 +${b.dailyCrystal}個<br>`:''}
+        ⚡ スタミナ上限 ${b.staminaMax}<br>
+        ⛏️ 鉱山貯蓄上限 ${b.mineCapHours}時間<br>
+        📋 フォーメーション保存数 ${b.presetSlots}枠<br>
+        ⚔️ アビス挑戦回数 ${3 + b.abyssExtraRuns}回/日<br>
+        ${b.shopRefresh?`🛒 ショップ無料リフレッシュ ×${b.shopRefresh}/日<br>`:''}
+        ${b.battleSkip?`⏩ バトル演出スキップ（クリア済みステージ）<br>`:''}
+      </div>
+    </div>`;
+  };
+
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay open';
+  ov.style.zIndex = '9990';
+  ov.innerHTML = `<div class="modal-panel" style="max-width:360px">
+    <div class="modal-header">
+      <h3 style="color:var(--gold)">👑 VIP特典</h3>
+      <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
+    </div>
+    <div class="modal-body">
+      ${tierHTML(0)}
+      ${tierHTML(1)}
+      ${tierHTML(2)}
+      <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;text-align:center">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px">💠 本日のデイリーボーナス：<b style="color:var(--gold)">星晶石 ×${curBonus}</b></div>
+        ${claimed
+          ? `<div style="font-size:12px;color:var(--text3);padding:6px 0">✓ 受取済み（明日リセット）</div>`
+          : `<button onclick="if(grantVipDailyBonus()){this.closest('.modal-overlay').remove();openVipPanel();}" style="width:100%;padding:8px;background:rgba(201,168,76,0.15);border:1px solid var(--gold);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;border-radius:4px">受け取る</button>`
+        }
+      </div>
+      <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px">
+        VIPランクは管理者パネルから変更できます（テスト中）
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
 }
 
 function clanExpNeed(lv) { return lv * 100; }
@@ -8883,8 +9360,12 @@ function getImagineBuffs(preset, partyUnits) {
 function renderFormationTab() {
   const bar = document.getElementById('preset-bar');
   bar.innerHTML = '';
-  for (let i=0;i<10;i++) {
+  const maxSlots = getVip().presetSlots;
+  for (let i=0;i<maxSlots;i++) {
     bar.innerHTML += `<div class="preset-btn ${i===gState.activePreset?'active':''}" onclick="switchPreset(${i})">${i+1}</div>`;
+  }
+  if (maxSlots < 12) {
+    bar.innerHTML += `<div class="preset-btn" style="opacity:0.4;cursor:default;font-size:9px" title="VIPで追加">+${12-maxSlots}🔒</div>`;
   }
   const preset = gState.presets[gState.activePreset];
   if (!Array.isArray(preset.formation.slots)) preset.formation.slots = [];
@@ -9880,6 +10361,39 @@ function initBattle(waveEnemies, stageName) {
   hideNightPhaseChoice();
   // フェーズ2: ヘイト初期化
   initHate(battleState.allies);
+
+  // アビスバフ適用（探索中の選択バフを戦闘ユニットに反映）
+  if (battleContext?.type === 'abyss') {
+    const abyssRun = gState.progress?.abyss?.currentRun;
+    if (abyssRun?.buffs?.length) {
+      abyssRun.buffs.forEach(buffId => {
+        const buffDef = ABYSS_FLOOR_BUFFS.find(b => b.id === buffId);
+        if (!buffDef) return;
+        const eff = buffDef.effect;
+        battleState.allies.forEach(ally => {
+          if (eff.type === 'atk') {
+            ally.atk = Math.floor(ally.atk * (1 + eff.val / 100));
+          } else if (eff.type === 'hp') {
+            const bonus = Math.floor(ally.maxHp * eff.val / 100);
+            ally.maxHp += bonus; ally.hp += bonus;
+          } else if (eff.type === 'cri') {
+            ally.cri += eff.val;
+          } else if (eff.type === 'spd') {
+            ally.spd += eff.val;
+          } else if (eff.type === 'reduce') {
+            ally.buffs.push({ type:'damage_reduce', val:eff.val, turns:999999, icon:'🛡被ダメ↓', cssClass:'hp-up', isPassive:true });
+          } else if (eff.type === 'regen') {
+            ally.buffs.push({ type:'regen', val:eff.val, turns:999999, icon:'💚再生', cssClass:'hp-up', isPassive:true });
+          } else if (eff.type === 'drain') {
+            ally._drainBonus = (ally._drainBonus || 0) + eff.val;
+          } else if (eff.type === 'ult_boost') {
+            ally._ultBoostPct = (ally._ultBoostPct || 0) + eff.val;
+          }
+        });
+      });
+    }
+  }
+
   battleRunning = false;
   battleSpeed = 1;
 
@@ -9890,6 +10404,13 @@ function initBattle(waveEnemies, stageName) {
   const scoutBadge = document.getElementById('battle-scout-badge');
   if (scoutBadge) { scoutBadge.style.display = 'none'; scoutBadge.className = 'normal'; }
   document.getElementById('battle-screen').classList.add('active');
+  // VIP2: バトルスキップボタン（クリア済みステージのみ有効）
+  const skipBtn = document.getElementById('battle-skip-btn');
+  if (skipBtn) {
+    const canSkip = getVip().battleSkip && battleContext?.stageId &&
+      (gState.progress.babel?.clearedStages?.[battleContext.stageId] > 0);
+    skipBtn.style.display = canSkip ? '' : 'none';
+  }
   // BGM: バトル開始（ボスはisBossStage判定で後でplayBossに切り替え）
   Audio.playBattle();
   document.getElementById('battle-start-btn').textContent = 'BATTLE START';
@@ -11641,9 +12162,10 @@ function doAttack(attacker, targets, skill) {
       setTimeout(() => spawnFloatNum(target.uid, `🎯マーク+${skill.effect.val}%`, 'float-buff'), hitDelay + 100);
     }
 
-    // 吸血（totalDmgベース）
-    if (skill.drain) {
-      const healed = Math.floor(totalDmg * skill.drain / 100);
+    // 吸血（totalDmgベース + アビスバフ吸血加算）
+    const totalDrain = (skill.drain||0) + (attacker._drainBonus||0);
+    if (totalDrain > 0) {
+      const healed = Math.floor(totalDmg * totalDrain / 100);
       if (healed > 0) {
         attacker.hp = Math.min(attacker.maxHp, attacker.hp + healed);
         battleStats.unitHeal[attacker.uid] = (battleStats.unitHeal[attacker.uid]||0) + healed;
@@ -11662,8 +12184,9 @@ function doAttack(attacker, targets, skill) {
 
 function performUlt(c, enemies, allies) {
   const _ultLvMult = [1.0, 1.10, 1.25, 1.50][(c.ultLv||1)-1] || 1.0;
-  const ult = _ultLvMult > 1.0
-    ? { ...c.ultimate, power: (c.ultimate.power||1)*_ultLvMult, shieldRatio: (c.ultimate.shieldRatio||0.5)*_ultLvMult }
+  const _ultBoost  = 1 + ((c._ultBoostPct||0) / 100);
+  const ult = (_ultLvMult > 1.0 || _ultBoost > 1.0)
+    ? { ...c.ultimate, power: (c.ultimate.power||1)*_ultLvMult*_ultBoost, shieldRatio: (c.ultimate.shieldRatio||0.5)*_ultLvMult }
     : c.ultimate;
   addLog(`${c.name} 【${ult.name}】発動！ <span class="tag tag-ult">ULTIMATE</span>`, 'all');
   flashCard(c.uid, 'ult');
@@ -12923,7 +13446,7 @@ function endBattle(victory) {
       gState.player.starMapPoints = (gState.player.starMapPoints||0) + starPt;
     }
     if (battleContext.type==='abyss') {
-      onAbyssVictory(battleContext.floor);
+      onAbyssVictory(battleContext.layerId, battleContext.stage);
     }
     if (battleContext.type==='colosseum') {
       const reward = battleContext.reward || 5;
@@ -12947,6 +13470,11 @@ function endBattle(victory) {
     if (battleContext.type==='colosseum') {
       gState.player.starCrystal += 1;
       drops.push({ name:`${itemIconHTML('crystal','14px')} 星晶石 ×1（敗北報酬）` });
+      saveState();
+    }
+    if (battleContext.type==='abyss') {
+      drops.push({ name:'💀 アビス敗北 — 最初からやり直し' });
+      gState.progress.abyss.currentRun = null;
       saveState();
     }
   }
@@ -13012,6 +13540,17 @@ function hasNextStage() {
   return idx >= 0 && idx < area.stages.length - 1;
 }
 
+function skipBattle() {
+  if (!getVip().battleSkip) return;
+  if (!battleContext?.stageId) return;
+  const cleared = gState.progress.babel?.clearedStages?.[battleContext.stageId] || 0;
+  if (!cleared) { toast('クリア済みのステージのみスキップできます'); return; }
+  if (battleInterval) clearInterval(battleInterval);
+  battleRunning = false;
+  // クリア済みと同じ報酬を付与して勝利扱い
+  onBattleVictory && onBattleVictory(true);
+}
+
 function exitBattle() {
   if (battleInterval) clearInterval(battleInterval);
   battleRunning = false;
@@ -13033,6 +13572,8 @@ function retryBattle() {
   document.getElementById('battle-result').classList.remove('active');
   if (battleContext.type==='babel') {
     startBabelBattle(battleContext.areaId, battleContext.stageId);
+  } else if (battleContext.type==='abyss') {
+    startAbyssLayer(battleContext.layerId);
   } else {
     startShrineBattle(battleContext.shrineId);
   }
@@ -13053,11 +13594,20 @@ function nextStage() {
 
 // 各クラスの雇用コスト定義
 const RECRUIT_CONFIG = {
-  warrior:  { name:'ウォリアー',  costType:'gold',    cost:500,  desc:'ATK特化の近接アタッカー' },
-  vanguard: { name:'ヴァンガード',costType:'gold',    cost:800,  desc:'高HP・高防御のタンク' },
-  archer:   { name:'アーチャー',  costType:'gold',    cost:600,  desc:'高SPD・会心の遠距離アタッカー' },
-  priest:   { name:'プリースト',  costType:'crystal', cost:500,  desc:'HP/MP回復・デバフ解除のヒーラー' },
-  assassin: { name:'アサシン',    costType:'crystal', cost:800,  desc:'最速・最高会心。昼は潜伏、夜は無双の近接アタッカー' },
+  warrior:    { name:'ウォリアー',    costType:'gold',    cost:500,  desc:'ATK特化の近接アタッカー' },
+  vanguard:   { name:'ヴァンガード',  costType:'gold',    cost:800,  desc:'高HP・高防御のタンク' },
+  archer:     { name:'アーチャー',    costType:'gold',    cost:600,  desc:'高SPD・会心の遠距離アタッカー' },
+  sentinel:   { name:'センチネル',    costType:'gold',    cost:700,  desc:'カウンター特化の鉄壁タンク' },
+  shooter:    { name:'シューター',    costType:'gold',    cost:650,  desc:'精密射撃と高CRIの遠距離アタッカー' },
+  lancer:     { name:'ランサー',      costType:'gold',    cost:600,  desc:'突貫と貫通ダメージが得意な近接アタッカー' },
+  priest:     { name:'プリースト',    costType:'crystal', cost:500,  desc:'HP/MP回復・デバフ解除のヒーラー' },
+  assassin:   { name:'アサシン',      costType:'crystal', cost:800,  desc:'最速・最高会心。昼は潜伏、夜は無双の近接アタッカー' },
+  berserker:  { name:'バーサーカー',  costType:'crystal', cost:800,  desc:'HP消費で爆発的な火力を発揮するアタッカー' },
+  caster:     { name:'キャスター',    costType:'crystal', cost:800,  desc:'魔法連鎖と属性耐性ダウンで全体を制圧するレンジ' },
+  minstrel:   { name:'ミンストレル',  costType:'crystal', cost:700,  desc:'歌の力で仲間を強化する万能サポート' },
+  professor:  { name:'プロフェッサー',costType:'crystal', cost:800,  desc:'デバフ強化と解析で敵を弱体化するレンジ' },
+  alchemist:  { name:'アルケミスト',  costType:'crystal', cost:700,  desc:'変成術と賢者の石で仲間を回復するサポート' },
+  thief:      { name:'シーフ',        costType:'crystal', cost:800,  desc:'バフ奪取と陽動で戦況を操る高機動スカウト' },
 };
 
 function openRecruitPanel() {
@@ -15802,6 +16352,48 @@ function renderMineExpiry() {
   }
 }
 
+// ============================================================
+//  VIPシステム
+// ============================================================
+
+const VIP_BENEFITS = {
+  0: {
+    staminaMax:       100,
+    mineCapHours:      50,
+    presetSlots:        5,
+    dailyCrystal:      20,
+    shopRefresh:        0,
+    abyssExtraRuns:     0,
+    battleSkip:     false,
+  },
+  1: {
+    staminaMax:       150,
+    mineCapHours:      62,
+    presetSlots:        8,
+    dailyCrystal:      50,
+    shopRefresh:        0,
+    abyssExtraRuns:     1,
+    battleSkip:     false,
+    label: 'VIP ブロンズ',
+    color: '#c87941',
+  },
+  2: {
+    staminaMax:       200,
+    mineCapHours:      75,
+    presetSlots:       12,
+    dailyCrystal:     100,
+    shopRefresh:        1,
+    abyssExtraRuns:     2,
+    battleSkip:      true,
+    label: 'VIP ゴールド',
+    color: '#e8c84a',
+  },
+};
+
+function getVip() {
+  return VIP_BENEFITS[Math.min(2, Math.max(0, gState.player.vipLevel || 0))];
+}
+
 // ===== 鉱山拡充 =====
 
 const MINE_UPGRADE = {
@@ -15822,11 +16414,53 @@ const MINE_UPGRADE = {
 };
 
 const MINE_MAX_HOURS = 50;
+const STAMINA_REGEN_MIN = 6; // 1スタミナ回復に何分かかるか
+
+function staminaMax() {
+  return getVip().staminaMax;
+}
+
+function calcStamina() {
+  const p = gState.player;
+  const max = staminaMax();
+  const now = Date.now();
+  const last = p.staminaLastRegen || now;
+  const elapsed = Math.floor((now - last) / 1000 / 60); // 経過分
+  const regen = Math.floor(elapsed / STAMINA_REGEN_MIN);
+  const cur = Math.min(max, (p.stamina || 0) + regen);
+  if (regen > 0) {
+    p.stamina = cur;
+    p.staminaLastRegen = last + regen * STAMINA_REGEN_MIN * 60 * 1000;
+  }
+  return cur;
+}
+
+function consumeStamina(amount) {
+  const cur = calcStamina();
+  if (cur < amount) return false;
+  gState.player.stamina = cur - amount;
+  gState.player.staminaLastRegen = gState.player.staminaLastRegen || Date.now();
+  saveState();
+  return true;
+}
+
+function staminaRegenInfo() {
+  const cur = calcStamina();
+  const max = staminaMax();
+  if (cur >= max) return { cur, max, minToNext: 0, minToFull: 0 };
+  const p = gState.player;
+  const elapsedSinceLast = Math.floor((Date.now() - (p.staminaLastRegen || Date.now())) / 1000 / 60);
+  const minToNext = STAMINA_REGEN_MIN - (elapsedSinceLast % STAMINA_REGEN_MIN);
+  const remaining = max - cur;
+  const minToFull = (remaining - 1) * STAMINA_REGEN_MIN + minToNext;
+  return { cur, max, minToNext, minToFull };
+}
 
 function calcMineYield() {
   const mine = gState.mine;
   const now = Date.now();
-  const elapsed = Math.min(MINE_MAX_HOURS, (now - mine.lastCollected) / 1000 / 3600);
+  const mineMaxHours = getVip().mineCapHours;
+  const elapsed = Math.min(mineMaxHours, (now - mine.lastCollected) / 1000 / 3600);
   const spLv = mine.level.speed - 1;
   const cpLv = mine.level.cap - 1;
   const rates = MINE_UPGRADE.speed[spLv].rates;
@@ -16905,9 +17539,7 @@ function renderLibraryMonsters(el) {
       if (!seen.has(e.name)) { seen.add(e.name); _monsterBookList.push(e); }
     }));
   }));
-  ABYSS_ENEMIES.forEach(wave => wave.forEach(e => {
-    if (!seen.has(e.name)) { seen.add(e.name); _monsterBookList.push(e); }
-  }));
+  // アビス敵はBABEL_AREASからスケールして生成されるため図鑑には含めない
 
   const discovered = new Set(gState.library?.discovered || []);
   const total = _monsterBookList.length;
@@ -17671,7 +18303,8 @@ function renderAccessoryShop(el) {
 }
 
 function _renderAccBuy(el) {
-  const bestDepth = gState.progress?.abyss?.bestDepth||0;
+  const _abyssCl  = gState.progress?.abyss?.clearedLayers||[];
+  const bestLayer = _abyssCl.length > 0 ? Math.max(..._abyssCl) : 0;
   const crystals  = gState.player.starCrystal||0;
   const coin      = gState.player.starCrystal||0;
   const stardust  = gState.player.stardust||0;
@@ -17681,7 +18314,7 @@ function _renderAccBuy(el) {
     innerHTML: `${itemIconHTML('crystal','13px')} 星晶石: <b style="color:var(--gold)">${fmt(coin)}</b>
       &nbsp;&nbsp;💠 星晶石: <b style="color:#89e3ff">${fmt(crystals)}</b>
       &nbsp;&nbsp;${itemIconHTML('stardust','13px')} 星屑の砂: <b style="color:var(--accent2)">${fmt(stardust)}</b>
-      &nbsp;&nbsp;🌑 アビス最深部: ${bestDepth}F`
+      &nbsp;&nbsp;🌑 アビス最深層: ${bestLayer > 0 ? bestLayer+'層' : '—'}`
   }));
 
   // ★1・★2 → 星晶石で即購入
@@ -17710,7 +18343,7 @@ function _renderAccBuy(el) {
   secTitle2.textContent = '★3-★4 (星晶石で購入・アビス解放)';
   el.appendChild(secTitle2);
   [{rarity:3,cost:100,unlock:5},{rarity:4,cost:300,unlock:15}].forEach(item=>{
-    const unlocked = bestDepth >= item.unlock;
+    const unlocked = bestLayer >= item.unlock;
     const canBuy   = unlocked && crystals >= item.cost;
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:4px;';
@@ -17890,42 +18523,69 @@ function discardAccessory(idx, e) {
 // ============================================================
 
 // ============================================================
-//  PHASE 4: ABYSS DIVE
+//  PHASE 4: ABYSS — 15-LAYER SYSTEM
 // ============================================================
 
 const ABYSS_FLOOR_BUFFS = [
-  { id:'atk5',    label:'ATK+5%',        icon:'⚔️', effect:{type:'atk', val:5} },
-  { id:'atk10',   label:'ATK+10%',       icon:'⚔️', effect:{type:'atk', val:10} },
-  { id:'hp10',    label:'HP+10%',        icon:'❤️', effect:{type:'hp', val:10} },
-  { id:'hp20',    label:'HP+20%',        icon:'❤️', effect:{type:'hp', val:20} },
-  { id:'cri8',    label:'会心率+8%',     icon:'💥', effect:{type:'cri', val:8} },
-  { id:'spd15',   label:'SPD+15',        icon:'💨', effect:{type:'spd', val:15} },
-  { id:'drain10', label:'吸血10%',       icon:'🩸', effect:{type:'drain', val:10} },
-  { id:'reduce8', label:'被ダメ-8%',     icon:'🛡️', effect:{type:'reduce', val:8} },
-  { id:'regen5',  label:'毎T回復5%',     icon:'💚', effect:{type:'regen', val:5} },
-  { id:'ult_boost',label:'ULT威力+20%',  icon:'⚡', effect:{type:'ult_boost', val:20} },
+  { id:'atk5',     label:'ATK+5%',       icon:'⚔️', effect:{type:'atk', val:5} },
+  { id:'atk10',    label:'ATK+10%',      icon:'⚔️', effect:{type:'atk', val:10} },
+  { id:'hp10',     label:'HP+10%',       icon:'❤️', effect:{type:'hp', val:10} },
+  { id:'hp20',     label:'HP+20%',       icon:'❤️', effect:{type:'hp', val:20} },
+  { id:'cri8',     label:'会心率+8%',    icon:'💥', effect:{type:'cri', val:8} },
+  { id:'spd15',    label:'SPD+15',       icon:'💨', effect:{type:'spd', val:15} },
+  { id:'drain10',  label:'吸血10%',      icon:'🩸', effect:{type:'drain', val:10} },
+  { id:'reduce8',  label:'被ダメ-8%',    icon:'🛡️', effect:{type:'reduce', val:8} },
+  { id:'regen5',   label:'毎T回復5%',    icon:'💚', effect:{type:'regen', val:5} },
+  { id:'ult_boost',label:'ULT威力+20%', icon:'⚡', effect:{type:'ult_boost', val:20} },
 ];
 
-const ABYSS_ENEMIES = [
-  // F1-4
-  [{name:'深淵スライム',   icon:'🟣', atk:300,  hp:8000,  pres:0,  mres:0,  spd:45, cri:3}],
-  [{name:'奈落コボルト',   icon:'🐾', atk:400,  hp:10000, pres:8,  mres:5,  spd:60, cri:5},
-   {name:'奈落コボルト',   icon:'🐾', atk:400,  hp:10000, pres:8,  mres:5,  spd:60, cri:5}],
-  [{name:'深淵狼',         icon:'🐺', atk:500,  hp:9000,  pres:5,  mres:5,  spd:90, cri:10},
-   {name:'深淵狼',         icon:'🐺', atk:500,  hp:9000,  pres:5,  mres:5,  spd:90, cri:10},
-   {name:'深淵狼',         icon:'🐺', atk:500,  hp:9000,  pres:5,  mres:5,  spd:90, cri:10}],
-  [{name:'奈落番人',       icon:'👁️', atk:650,  hp:18000, pres:15, mres:15, spd:55, cri:8}],
-  // F5-9
-  [{name:'星辰の亡霊',     icon:'👻', atk:800,  hp:15000, pres:10, mres:10, spd:70, cri:12}],
-  [{name:'深淵騎士',       icon:'⚫', atk:900,  hp:22000, pres:20, mres:10, spd:65, cri:8},
-   {name:'深淵騎士',       icon:'⚫', atk:900,  hp:22000, pres:20, mres:10, spd:65, cri:8}],
-  [{name:'奈落魔導師',     icon:'💧', atk:1100, hp:18000, pres:5,  mres:25, spd:72, cri:15}],
-  [{name:'深淵ドラゴン',   icon:'🐉', atk:1200, hp:30000, pres:18, mres:18, spd:68, cri:12}],
-  [{name:'深淵の支配者',   icon:'💀', atk:1400, hp:25000, pres:15, mres:20, spd:75, cri:15},
-   {name:'奈落番人',       icon:'👁️', atk:800,  hp:18000, pres:12, mres:12, spd:55, cri:8}],
-  // F10+
-  [{name:'虚無の君主',     icon:'🌑', atk:1800, hp:50000, pres:22, mres:22, spd:70, cri:18}],
+// 15層定義 (areaId → BABEL_AREAS.id, statMult = 通常敵スケール, bossMult = ボス敵スケール)
+const ABYSS_LAYERS = [
+  {id:1,  name:'第一層',   icon:'🌱', areaId:'area1',  statMult:1.5, bossMult:0.5, accRarity:1, rec:'推奨 Lv10〜'},
+  {id:2,  name:'第二層',   icon:'🌿', areaId:'area1',  statMult:2.2, bossMult:0.8, accRarity:1, rec:'推奨 Lv13〜'},
+  {id:3,  name:'第三層',   icon:'🍃', areaId:'area1',  statMult:3.0, bossMult:1.2, accRarity:1, rec:'推奨 Lv16〜'},
+  {id:4,  name:'第四層',   icon:'🌿', areaId:'area1',  statMult:4.0, bossMult:1.5, accRarity:2, rec:'推奨 Lv18〜'},
+  {id:5,  name:'第五層',   icon:'🌿', areaId:'area1',  statMult:5.0, bossMult:2.0, accRarity:2, rec:'推奨 Lv20〜'},
+  {id:6,  name:'第六層',   icon:'👺', areaId:'area2',  statMult:1.0, bossMult:1.0, accRarity:2, rec:'推奨 Lv25〜'},
+  {id:7,  name:'第七層',   icon:'👺', areaId:'area2',  statMult:1.3, bossMult:1.3, accRarity:2, rec:'推奨 Lv30〜'},
+  {id:8,  name:'第八層',   icon:'🌲', areaId:'area2b', statMult:0.8, bossMult:0.7, accRarity:3, rec:'推奨 Lv33〜'},
+  {id:9,  name:'第九層',   icon:'🌲', areaId:'area2b', statMult:1.1, bossMult:1.0, accRarity:3, rec:'推奨 Lv37〜'},
+  {id:10, name:'第十層',   icon:'🍄', areaId:'area2c', statMult:1.0, bossMult:1.0, accRarity:3, rec:'推奨 Lv40〜'},
+  {id:11, name:'第十一層', icon:'🏔️', areaId:'area3',  statMult:0.8, bossMult:0.4, accRarity:3, rec:'推奨 Lv42〜'},
+  {id:12, name:'第十二層', icon:'🏔️', areaId:'area3',  statMult:1.0, bossMult:0.6, accRarity:4, rec:'推奨 Lv44〜'},
+  {id:13, name:'第十三層', icon:'🏔️', areaId:'area3',  statMult:1.2, bossMult:0.8, accRarity:4, rec:'推奨 Lv46〜'},
+  {id:14, name:'第十四層', icon:'🏔️', areaId:'area3',  statMult:1.5, bossMult:1.0, accRarity:4, rec:'推奨 Lv48〜'},
+  {id:15, name:'第十五層', icon:'🏔️', areaId:'area3',  statMult:1.8, bossMult:1.3, accRarity:4, rec:'推奨 Lv50〜'},
 ];
+
+const ABYSS_RARITY_LABEL  = ['','N','R','SR','SSR'];
+const ABYSS_RARITY_COLOR  = ['','#aaaaaa','#6ce8ff','#c480ff','#f9d342'];
+
+function scaleAbyssEnemy(e, mult) {
+  const c = Object.assign({}, e);
+  c.hp  = Math.round((e.hp  || 0) * mult);
+  c.atk = Math.round((e.atk || 0) * mult);
+  c.mp  = Math.round((e.mp  || 0) * mult);
+  return c;
+}
+
+function getAbyssStageEnemies(layerId, stage) {
+  const layer   = ABYSS_LAYERS.find(l => l.id === layerId);
+  const area    = BABEL_AREAS.find(a => a.id === layer.areaId);
+  const nonBoss = area.stages.slice(0, area.stages.length - 1);
+  if (stage === 6) {
+    const last     = area.stages[area.stages.length - 1];
+    const bossWave = last.enemies[last.enemies.length - 1];
+    return [bossWave.map(e => scaleAbyssEnemy(e, layer.bossMult))];
+  }
+  const idx    = (stage - 1) % nonBoss.length;
+  const picked = nonBoss[idx];
+  return picked.enemies.map(wave => wave.map(e => scaleAbyssEnemy(e, layer.statMult)));
+}
+
+function abyssSweepCost(layerId) {
+  return layerId <= 5 ? 10 : layerId <= 10 ? 20 : 30;
+}
 
 function renderAbyssContent() {
   const lv = gState.player.level;
@@ -17937,116 +18597,162 @@ function renderAbyssContent() {
     return;
   }
 
-  const abyss = gState.progress.abyss;
-  const inRun = abyss.currentRun && !abyss.currentRun.cleared;
-  const bestDepth = abyss.bestDepth || 0;
+  const abyss   = gState.progress.abyss;
+  const cleared = abyss.clearedLayers || [];
+  const run     = abyss.currentRun;
+  const today   = new Date().toDateString();
+  if (abyss.lastRunDate !== today) { abyss.dailyRuns = 0; abyss.lastRunDate = today; }
+  const maxRuns  = 3 + getVip().abyssExtraRuns;
+  const runsLeft = maxRuns - (abyss.dailyRuns || 0);
+  const bestLayer = cleared.length > 0 ? Math.max(...cleared) : 0;
 
   el.innerHTML = '';
 
-  // ステータスカード
+  // ステータス行
   const stat = document.createElement('div');
-  stat.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;';
+  stat.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px 12px;';
   stat.innerHTML = `
-    <div class="base-res-item"><div class="base-res-val">${bestDepth}F</div><div class="base-res-label">📊 最高到達</div></div>
-    <div class="base-res-item"><div class="base-res-val">${inRun ? (abyss.currentRun.floor+'F') : '—'}</div><div class="base-res-label">🔄 現在の探索</div></div>`;
+    <div class="base-res-item"><div class="base-res-val">${bestLayer > 0 ? bestLayer+'層' : '—'}</div><div class="base-res-label">📊 最深到達</div></div>
+    <div class="base-res-item"><div class="base-res-val">${cleared.length}/15</div><div class="base-res-label">✅ クリア層</div></div>
+    <div class="base-res-item"><div class="base-res-val" style="color:${runsLeft>0?'var(--text)':'var(--red)'}">${runsLeft}</div><div class="base-res-label">⚡ 挑戦回数</div></div>`;
   el.appendChild(stat);
 
-  if (inRun) {
-    // 探索中UI
-    const run = abyss.currentRun;
-    const runEl = document.createElement('div');
-    runEl.style.cssText = 'padding:10px 12px;';
-    runEl.innerHTML = `<div style="font-size:11px;color:var(--text3);letter-spacing:2px;margin-bottom:8px">現在の探索バフ</div>`;
-    const buffsEl = document.createElement('div');
-    buffsEl.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;';
-    (run.buffs||[]).forEach(b => {
-      const buff = ABYSS_FLOOR_BUFFS.find(x=>x.id===b);
-      if (buff) buffsEl.innerHTML += `<span style="background:rgba(155,107,222,0.15);border:1px solid var(--purple);color:var(--purple);font-size:11px;padding:2px 8px;">${buff.icon} ${buff.label}</span>`;
-    });
-    runEl.appendChild(buffsEl);
+  // 進行中の探索バナー
+  if (run && run.layerId) {
+    const layer    = ABYSS_LAYERS.find(l => l.id === run.layerId);
+    const isBoss   = run.stage === 6;
+    const stageLabel = isBoss ? 'BOSS' : `${run.stage}/5`;
+    const buffHtml = (run.buffs || []).map(b => {
+      const bf = ABYSS_FLOOR_BUFFS.find(x => x.id === b);
+      return bf ? `<span style="background:rgba(155,107,222,0.15);border:1px solid var(--purple);color:var(--purple);font-size:10px;padding:2px 6px;">${bf.icon}${bf.label}</span>` : '';
+    }).join('');
+    const cont = document.createElement('div');
+    cont.style.cssText = 'margin:0 12px 10px;border:1px solid var(--purple);padding:12px;';
+    cont.innerHTML = `
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">
+        ${layer.icon} <b>${layer.name}</b> — ステージ <b style="color:${isBoss?'var(--gold)':'var(--text)'}">${stageLabel}</b>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;">${buffHtml || '<span style="font-size:11px;color:var(--text3)">バフなし</span>'}</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-gold" style="flex:1" onclick="continueAbyssRun()">▶ ステージ${stageLabel}へ</button>
+        <button class="btn btn-outline" onclick="retreatAbyss()">撤退</button>
+      </div>`;
+    el.appendChild(cont);
+  }
 
-    const btns = document.createElement('div');
-    btns.style.cssText = 'display:flex;gap:8px;';
-    const continueBtn = document.createElement('button');
-    continueBtn.className = 'btn btn-gold';
-    continueBtn.style.flex = '1';
-    continueBtn.textContent = `▶ ${run.floor}F に挑む`;
-    continueBtn.addEventListener('click', () => startAbyssFloor(run.floor));
-    const retreatBtn = document.createElement('button');
-    retreatBtn.className = 'btn btn-outline';
-    retreatBtn.textContent = '撤退して報酬受取';
-    retreatBtn.addEventListener('click', () => retreatAbyss());
-    btns.appendChild(continueBtn);
-    btns.appendChild(retreatBtn);
-    runEl.appendChild(btns);
-    el.appendChild(runEl);
+  // 層一覧
+  const grid = document.createElement('div');
+  grid.style.cssText = 'padding:0 12px 12px;display:flex;flex-direction:column;gap:6px;';
+
+  ABYSS_LAYERS.forEach(layer => {
+    const isCleared   = cleared.includes(layer.id);
+    const isUnlocked  = layer.id === 1 || cleared.includes(layer.id - 1);
+    const isActiveRun = run && run.layerId === layer.id;
+    const sweepCost   = abyssSweepCost(layer.id);
+    const rarColor    = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
+    const rarLabel    = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
+
+    const row = document.createElement('div');
+    row.style.cssText = `background:var(--panel);border:1px solid ${isCleared ? 'var(--gold)' : isUnlocked ? 'var(--border)' : 'rgba(80,80,80,0.3)'};
+      padding:10px 12px;display:flex;align-items:center;gap:10px;opacity:${isUnlocked ? 1 : 0.35};`;
+    row.innerHTML = `
+      <div style="font-size:20px;min-width:28px;text-align:center;">${layer.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:700;color:${isCleared ? 'var(--gold)' : 'var(--text)'}">${layer.name}${isCleared ? ' ✅' : ''}</div>
+        <div style="font-size:10px;color:var(--text3)">${layer.rec} &nbsp;|&nbsp; 報酬: <span style="color:${rarColor}">${rarLabel}</span></div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        ${isCleared ? `<button class="btn btn-outline" style="font-size:11px;padding:4px 8px;" onclick="abyssSweep(${layer.id})">⚡${sweepCost} 周回</button>` : ''}
+        ${isUnlocked && !isActiveRun ? `<button class="btn btn-gold" style="font-size:11px;padding:4px 10px;" onclick="startAbyssLayer(${layer.id})" ${runsLeft <= 0 ? 'disabled' : ''}>挑戦</button>` : ''}
+        ${!isUnlocked ? `<span style="font-size:11px;color:var(--text3)">🔒</span>` : ''}
+      </div>`;
+    grid.appendChild(row);
+  });
+  el.appendChild(grid);
+}
+
+function startAbyssLayer(layerId) {
+  const units = getFormationUnits();
+  if (!units.length) { alert('編成にユニットを設定してください'); return; }
+  const abyss = gState.progress.abyss;
+  const today = new Date().toDateString();
+  if (abyss.lastRunDate !== today) { abyss.dailyRuns = 0; abyss.lastRunDate = today; }
+  const maxRuns = 3 + getVip().abyssExtraRuns;
+  if ((abyss.dailyRuns || 0) >= maxRuns) {
+    alert(`アビスの本日の挑戦回数（${maxRuns}回）に達しました。\nVIPランクアップで上限が増えます。`);
+    return;
+  }
+  abyss.dailyRuns = (abyss.dailyRuns || 0) + 1;
+  abyss.currentRun = { layerId, stage: 1, buffs: [] };
+  saveState();
+  renderAbyssContent();
+  startAbyssStage(layerId, 1);
+}
+
+function continueAbyssRun() {
+  const run = gState.progress.abyss.currentRun;
+  if (!run) return;
+  startAbyssStage(run.layerId, run.stage);
+}
+
+function startAbyssStage(layerId, stage) {
+  const layer    = ABYSS_LAYERS.find(l => l.id === layerId);
+  const isBoss   = stage === 6;
+  const stageName = isBoss
+    ? `アビス ${layer.name} ボス`
+    : `アビス ${layer.name} ステージ${stage}`;
+  const enemies  = getAbyssStageEnemies(layerId, stage);
+  battleContext  = { type: 'abyss', layerId, stage };
+  initBattle(enemies, stageName);
+}
+
+function onAbyssVictory(layerId, stage) {
+  const abyss = gState.progress.abyss;
+  const run   = abyss.currentRun;
+  if (!run) return;
+
+  if (stage === 6) {
+    // ボス撃破 → 層クリア
+    if (!abyss.clearedLayers) abyss.clearedLayers = [];
+    if (!abyss.clearedLayers.includes(layerId)) {
+      abyss.clearedLayers.push(layerId);
+    }
+    abyss.bestLayer = Math.max(abyss.bestLayer || 0, layerId);
+    abyss.currentRun = null;
+    saveState();
+    giveAbyssLayerReward(layerId);
+    renderAbyssContent();
   } else {
-    const startBtn = document.createElement('button');
-    startBtn.className = 'btn btn-gold';
-    startBtn.style.cssText = 'width:calc(100%-24px);margin:10px 12px;display:block;';
-    startBtn.textContent = '🌀 アビスダイブ 開始';
-    startBtn.addEventListener('click', () => startAbyssRun());
-    el.appendChild(startBtn);
+    // 通常ステージクリア → バフ選択
+    const pool = [...ABYSS_FLOOR_BUFFS];
+    shuffle(pool);
+    showAbyssBuffChoice(pool.slice(0, 3), layerId, stage);
   }
 }
 
-function startAbyssRun() {
-  const units = getFormationUnits();
-  if (!units.length) { alert('編成にユニットを設定してください'); return; }
-  gState.progress.abyss.currentRun = { floor:1, buffs:[], cleared:false, hp:{} };
-  // 現在HPを記録
-  units.forEach(u => {
-    gState.progress.abyss.currentRun.hp[u.uid] = calcStats(u).hp;
-  });
-  saveState();
-  renderAbyssContent();
-  startAbyssFloor(1);
-}
-
-function startAbyssFloor(floor) {
-  const idx = Math.min(floor-1, ABYSS_ENEMIES.length-1);
-  const enemies = ABYSS_ENEMIES[idx];
-  const stageName = `アビスダイブ ${floor}F`;
-  battleContext = { type:'abyss', floor };
-  initBattle([enemies], stageName);
-}
-
-function onAbyssVictory(floor) {
-  const abyss = gState.progress.abyss;
-  const run = abyss.currentRun;
-  if (!run) return;
-
-  // バフ選択（3択）
-  const pool = [...ABYSS_FLOOR_BUFFS];
-  shuffle(pool);
-  const choices = pool.slice(0,3);
-  showAbyssBuffChoice(choices, floor);
-}
-
-function showAbyssBuffChoice(choices, floor) {
-  const el = document.getElementById('abyss-content');
-  const overlay = document.createElement('div');
+function showAbyssBuffChoice(choices, layerId, stage) {
+  const layer    = ABYSS_LAYERS.find(l => l.id === layerId);
+  const isBossNext = stage === 5;
+  const overlay  = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(5,6,8,0.95);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px;';
   overlay.innerHTML = `
-    <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;letter-spacing:3px">${floor}F クリア!</div>
-    <div style="font-size:13px;color:var(--text2)">バフを1つ選択してください</div>`;
+    <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;letter-spacing:3px">${layer.name} ステージ${stage} クリア！</div>
+    <div style="font-size:13px;color:var(--text2)">バフを1つ選択してください${isBossNext ? ' — 次はボス！' : ''}</div>`;
   const grid = document.createElement('div');
   grid.style.cssText = 'display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px;';
   choices.forEach(buff => {
     const btn = document.createElement('div');
     btn.style.cssText = 'background:var(--panel);border:1px solid var(--purple);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.15s;';
     btn.innerHTML = `<span style="font-size:24px">${buff.icon}</span><div><div style="font-size:14px;font-weight:700;color:var(--text)">${buff.label}</div></div>`;
-    btn.addEventListener('mouseover', ()=>btn.style.background='rgba(155,107,222,0.1)');
-    btn.addEventListener('mouseout',  ()=>btn.style.background='var(--panel)');
+    btn.addEventListener('mouseover', () => btn.style.background = 'rgba(155,107,222,0.1)');
+    btn.addEventListener('mouseout',  () => btn.style.background = 'var(--panel)');
     btn.addEventListener('click', () => {
-      gState.progress.abyss.currentRun.buffs.push(buff.id);
-      gState.progress.abyss.currentRun.floor = floor+1;
-      if ((floor+1) > (gState.progress.abyss.bestDepth||0)) {
-        gState.progress.abyss.bestDepth = floor+1;
+      const run = gState.progress.abyss.currentRun;
+      if (run) {
+        run.buffs.push(buff.id);
+        run.stage = stage + 1;
+        saveState();
       }
-      // 5F以降は星辰ドロップ
-      if (floor >= 5) giveAbyssCelestialDrop(floor);
-      saveState();
       document.body.removeChild(overlay);
       renderAbyssContent();
     });
@@ -18056,33 +18762,62 @@ function showAbyssBuffChoice(choices, floor) {
   document.body.appendChild(overlay);
 }
 
-function giveAbyssCelestialDrop(floor) {
-  const rarity = floor >= 9 ? 4 : floor >= 6 ? 3 : floor >= 3 ? 2 : 1;
+function giveAbyssLayerReward(layerId) {
+  const layer = ABYSS_LAYERS.find(l => l.id === layerId);
+  if (!layer) return;
   if (!gState.accessories) gState.accessories = [];
-  const acc = generateAccessory(rarity);
+  const acc      = generateAccessory(layer.accRarity);
   gState.accessories.push(acc);
-  const set = ACCESSORY_SETS.find(s=>s.id===acc.setId);
-  const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--purple);color:var(--text);padding:10px 16px;border-radius:6px;z-index:9999;font-size:12px;text-align:center;';
-  toast.innerHTML = `✦ アクセサリードロップ！<br><span style="color:${ACC_RARITY_COLOR[rarity]};font-weight:700">${accStars(rarity)} ${set?.name||'?'}</span> ${acc.mainStat.label}+${acc.mainStat.val}`;
-  document.body.appendChild(toast);
-  setTimeout(()=>toast.remove(), 3500);
+  saveState();
+  const set      = ACCESSORY_SETS.find(s => s.id === acc.setId);
+  const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
+  const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
+  const popup    = document.createElement('div');
+  popup.style.cssText = 'position:fixed;inset:0;z-index:6000;background:rgba(5,6,8,0.97);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px;';
+  popup.innerHTML = `
+    <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:22px;letter-spacing:3px">LAYER CLEAR!</div>
+    <div style="font-size:14px;color:var(--text2)">${layer.icon} ${layer.name} 制覇！</div>
+    <div style="text-align:center;border:1px solid ${rarColor};padding:16px 24px;background:rgba(0,0,0,0.4);">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">アクセサリー獲得</div>
+      <div style="font-size:18px;font-weight:700;color:${rarColor}">${rarLabel} ${set?.name || 'アクセサリー'}</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:4px">${acc.mainStat.label}+${acc.mainStat.val}</div>
+    </div>
+    <button class="btn btn-gold" onclick="this.closest('div[style*=fixed]').remove()" style="min-width:120px">続ける</button>`;
+  document.body.appendChild(popup);
+}
+
+function abyssSweep(layerId) {
+  if (!(gState.progress.abyss.clearedLayers || []).includes(layerId)) {
+    alert('この層はまだクリアしていません。'); return;
+  }
+  const cost = abyssSweepCost(layerId);
+  const info = staminaRegenInfo();
+  if (info.cur < cost) {
+    alert(`スタミナが不足しています。\n必要: ⚡${cost} / 現在: ⚡${info.cur}`);
+    return;
+  }
+  consumeStamina(cost);
+  const layer = ABYSS_LAYERS.find(l => l.id === layerId);
+  if (!gState.accessories) gState.accessories = [];
+  const acc      = generateAccessory(layer.accRarity);
+  gState.accessories.push(acc);
+  saveState();
+  updateTopBar();
+  const set      = ACCESSORY_SETS.find(s => s.id === acc.setId);
+  const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
+  const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--purple);color:var(--text);padding:10px 16px;border-radius:4px;z-index:9999;font-size:12px;text-align:center;pointer-events:none;';
+  t.innerHTML = `⚡-${cost} 周回完了！<br><span style="color:${rarColor};font-weight:700">${rarLabel} ${set?.name || 'アクセサリー'}</span> ${acc.mainStat.label}+${acc.mainStat.val}`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+  renderAbyssContent();
 }
 
 function retreatAbyss() {
-  const run = gState.progress.abyss.currentRun;
-  if (!run) return;
-  // 撤退報酬
-  const floor = run.floor;
-  const starPt = Math.floor(floor * 3);
-  const mithril = Math.floor(floor * 0.5);
-  gState.player.starMapPoints = (gState.player.starMapPoints||0) + starPt;
-  gState.player.mithril = (gState.player.mithril||0) + mithril;
   gState.progress.abyss.currentRun = null;
   saveState();
-  updateTopBar();
   renderAbyssContent();
-  alert(`撤退完了！\n⭐スターPt +${starPt}\n⛏️ミスリル +${mithril}`);
 }
 
 // ============================================================
@@ -18553,7 +19288,11 @@ function renderSortieTab() {
   // 解放状況テキスト更新
   const lv = gState.player.level;
   const abyssSub = document.getElementById('abyss-sub');
-  if (abyssSub) abyssSub.textContent = lv>=31 ? `最高到達: ${gState.progress.abyss.bestDepth||0}F` : 'Clan Lv.31で解放';
+  if (abyssSub) {
+    const cl = (gState.progress.abyss.clearedLayers||[]);
+    const best = cl.length > 0 ? Math.max(...cl) : 0;
+    abyssSub.textContent = lv>=31 ? `クリア: ${cl.length}/15層 (最深 ${best||0}層)` : 'Clan Lv.31で解放';
+  }
   const colSub = document.getElementById('colosseum-sub');
   if (colSub) colSub.textContent = lv>=31 ? `ランク: ${gState.progress.colosseum.rank||1}` : 'Clan Lv.31で解放';
 }
@@ -19205,7 +19944,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.openDebugPanel = function() {
-    if (!window.gState?.player) { alert('ゲームを起動してログインしてください'); return; }
+    if (!gState?.player) { alert('ゲームを起動してログインしてください'); return; }
     const p = gState.player;
     const fields = [
       { id:'dbg_starCrystal', label:'星晶石',       key:'starCrystal' },
@@ -19216,6 +19955,8 @@ document.addEventListener('DOMContentLoaded', () => {
       { id:'dbg_stardust',    label:'星屑の砂',        key:'stardust' },
       { id:'dbg_afMileage',   label:'AFマイレージ',    key:'afMileage' },
       { id:'dbg_charMileage', label:'キャラマイレージ', key:'charMileage' },
+      { id:'dbg_stamina',     label:'スタミナ',        key:'stamina' },
+      { id:'dbg_vipLevel',    label:'VIPレベル(0-2)',  key:'vipLevel' },
     ];
     let rows = fields.map(f =>
       `<div class="debug-row"><label>${f.label}</label><input id="${f.id}" type="number" value="${p[f.key]||0}"></div>`
@@ -19250,8 +19991,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.applyDebugValues = function() {
     const p = gState.player;
-    const numKeys = ['starCrystal','gold','ether','awakePot','genericFragments','stardust','afMileage','charMileage'];
-    const ids     = ['dbg_starCrystal','dbg_gold','dbg_ether','dbg_awakePot','dbg_genericFrag','dbg_stardust','dbg_afMileage','dbg_charMileage'];
+    const numKeys = ['starCrystal','gold','ether','awakePot','genericFragments','stardust','afMileage','charMileage','stamina','vipLevel'];
+    const ids     = ['dbg_starCrystal','dbg_gold','dbg_ether','dbg_awakePot','dbg_genericFrag','dbg_stardust','dbg_afMileage','dbg_charMileage','dbg_stamina','dbg_vipLevel'];
     ids.forEach((id, i) => {
       const el = document.getElementById(id);
       if (el) p[numKeys[i]] = Math.max(0, parseInt(el.value)||0);
