@@ -6722,6 +6722,10 @@ function normalizeState() {
     gState._cardRefundDone = true;
   }
 
+  // AFの凸素材・conste初期化
+  if (!gState.player.afDuplicates) gState.player.afDuplicates = {};
+  (gState.artifacts || []).forEach(af => { if (af.conste === undefined) af.conste = 0; });
+
   console.log('[normalizeState] done');
 }
 
@@ -13477,9 +13481,16 @@ function doArtifactGachaFromPanel(count) {
     if (!def) continue;
 
     if (!gState.artifacts) gState.artifacts = [];
-    const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000) + '_' + i;
-    gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0 });
-    results.push({ def, rarity });
+    const already = gState.artifacts.find(a => a.id === def.id);
+    if (already) {
+      if (!gState.player.afDuplicates) gState.player.afDuplicates = {};
+      gState.player.afDuplicates[def.id] = (gState.player.afDuplicates[def.id] || 0) + 1;
+      results.push({ def, rarity, isDupe: true });
+    } else {
+      const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000) + '_' + i;
+      gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0, conste: 0 });
+      results.push({ def, rarity, isDupe: false });
+    }
   }
 
   // マイレージ加算
@@ -13495,7 +13506,7 @@ function doArtifactGachaFromPanel(count) {
       <span style="font-size:24px">${def.icon}</span>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:700;color:${rarColor[rarity]}">${def.name}</div>
-        <div style="font-size:10px;color:var(--text3)">${rarity}</div>
+        <div style="font-size:10px;color:${isDupe?'var(--gold)':'var(--text3)'}">${rarity}${isDupe?' ✦ 凸素材+1':''}</div>
       </div>
       <span style="font-size:11px;color:${rarColor[rarity]};font-weight:700">${rarity}</span>
     </div>`).join('');
@@ -13551,11 +13562,18 @@ function execAfMileageExchange(artifactId, overlayEl) {
   if (!def) return;
   gState.player.afMileage -= AF_MILEAGE_CAP;
   if (!gState.artifacts) gState.artifacts = [];
-  const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
-  gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0 });
+  const already = gState.artifacts.find(a => a.id === artifactId);
+  if (already) {
+    if (!gState.player.afDuplicates) gState.player.afDuplicates = {};
+    gState.player.afDuplicates[artifactId] = (gState.player.afDuplicates[artifactId] || 0) + 1;
+    toast(`${def.icon}【${def.name}】重複 → 凸素材+1`);
+  } else {
+    const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+    gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0, conste: 0 });
+    toast(`${def.icon}【${def.name}】(SSR) を交換で入手しました！`);
+  }
   saveState(); updateTopBar();
   if (overlayEl) overlayEl.remove();
-  toast(`${def.icon}【${def.name}】(SSR) を交換で入手しました！`);
   renderArtifactGachaTab(document.getElementById('gacha-tab-content'));
 }
 
@@ -16313,6 +16331,7 @@ function renderArtifactListTab() {
         <div style="font-size:12px;font-weight:700;color:${rc};text-align:center;margin-bottom:2px">${def.rarity}</div>
         <div style="font-size:12px;font-weight:700;text-align:center;margin-bottom:4px">${def.name}</div>
         <div style="font-size:10px;color:var(--text3);text-align:center">Lv.${lv}</div>
+        ${(inst.conste||0) > 0 ? `<div style="font-size:10px;color:var(--gold);text-align:center;font-weight:700;margin-top:2px">+${inst.conste}凸</div>` : ''}
         ${equippedBy ? `<div style="font-size:10px;color:var(--accent2);text-align:center;margin-top:4px">⚔️ ${equippedBy.name}</div>` : ''}
       </div>`;
     }).join('')}
@@ -16324,10 +16343,13 @@ function openArtifactDetail(uid) {
   if (!inst) return;
   const def = ARTIFACT_POOL.find(d => d.id === inst.id);
   if (!def) return;
-  const lv = inst.level || 0;
+  const lv      = inst.level  || 0;
+  const conste  = inst.conste || 0;
   const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
   const rc = rarColor[def.rarity] || 'var(--text3)';
   const equippedBy = gState.ownedUnits.find(u => u.equippedArtifact === uid);
+  const dupCount = (gState.player.afDuplicates || {})[def.id] || 0;
+  const canConste = conste < 9 && dupCount >= 1;
 
   const ov = document.createElement('div');
   ov.className = 'modal-overlay open';
@@ -16340,23 +16362,29 @@ function openArtifactDetail(uid) {
     </div>`
   ).join('');
 
+  // 凸ドット表示
+  const consteDots = Array.from({length:9}, (_,i) =>
+    `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 1px;background:${i<conste?'var(--gold)':'var(--border)'}"></span>`
+  ).join('');
+
   ov.innerHTML = `<div class="modal-panel" style="max-width:360px">
     <div class="modal-header">
-      <h3 style="color:${rc}">${def.icon} ${def.name}</h3>
+      <h3 style="color:${rc}">${def.icon} ${def.name}${conste>0?` <span style="font-size:12px;color:var(--gold)">+${conste}</span>`:''}</h3>
       <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
     </div>
     <div class="modal-body">
-      <div style="text-align:center;margin-bottom:12px">
+      <div style="text-align:center;margin-bottom:8px">
         <span style="font-size:11px;background:${rc};color:#0a0b0f;padding:2px 10px;border-radius:10px;font-weight:700">${def.rarity}</span>
       </div>
+      <div style="text-align:center;margin-bottom:12px">${consteDots}</div>
       <div style="display:flex;gap:16px;justify-content:center;margin-bottom:12px">
         <div style="text-align:center">
           <div style="font-size:10px;color:var(--text3)">ATK</div>
-          <div style="font-size:16px;font-weight:700;color:var(--orange)">+${afMainScale(def.mainStat?.atk||0, lv)}</div>
+          <div style="font-size:16px;font-weight:700;color:var(--orange)">+${afMainScale(def.mainStat?.atk||0, lv, conste)}</div>
         </div>
         <div style="text-align:center">
           <div style="font-size:10px;color:var(--text3)">HP</div>
-          <div style="font-size:16px;font-weight:700;color:var(--green)">+${afMainScale(def.mainStat?.hp||0, lv)}</div>
+          <div style="font-size:16px;font-weight:700;color:var(--green)">+${afMainScale(def.mainStat?.hp||0, lv, conste)}</div>
         </div>
         <div style="text-align:center">
           <div style="font-size:10px;color:var(--text3)">Lv</div>
@@ -16364,6 +16392,17 @@ function openArtifactDetail(uid) {
         </div>
       </div>
       ${effHTML ? `<div style="margin-bottom:12px">${effHTML}</div>` : ''}
+      <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);padding:10px;border-radius:6px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:11px;color:var(--text3)">凸 ${conste} / 9　凸素材: ${dupCount}個</span>
+          <span style="font-size:10px;color:var(--text3)">凸ごとにATK・HP +10%</span>
+        </div>
+        <button class="btn btn-sm" onclick="constellateArtifact('${uid}',this.closest('.modal-overlay'))"
+          style="width:100%;background:${canConste?'rgba(201,168,76,0.2)':'rgba(80,80,80,0.15)'};color:${canConste?'var(--gold)':'var(--text3)'};border:1px solid ${canConste?'rgba(201,168,76,0.5)':'var(--border)'};"
+          ${canConste?'':'disabled'}>
+          ✦ 凸する（素材×1 → +${conste+1}凸）${conste>=9?' ※MAX':''}
+        </button>
+      </div>
       ${equippedBy
         ? `<div style="background:rgba(74,127,255,0.1);border:1px solid var(--accent);padding:10px;border-radius:6px;margin-bottom:12px">
             <div style="font-size:11px;color:var(--text3);margin-bottom:4px">装備中のキャラ</div>
@@ -16385,6 +16424,22 @@ function openArtifactDetail(uid) {
   </div>`;
   document.body.appendChild(ov);
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+}
+
+function constellateArtifact(uid, overlayEl) {
+  const inst = (gState.artifacts || []).find(a => a.uid === uid);
+  if (!inst) return;
+  const conste = inst.conste || 0;
+  if (conste >= 9) return;
+  const dupCount = (gState.player.afDuplicates || {})[inst.id] || 0;
+  if (dupCount < 1) return;
+  inst.conste = conste + 1;
+  gState.player.afDuplicates[inst.id]--;
+  saveState();
+  const def = ARTIFACT_POOL.find(d => d.id === inst.id);
+  toast(`${def?.icon||''} 【${def?.name||'AF'}】 +${inst.conste}凸！ATK・HP +${inst.conste*10}%`);
+  if (overlayEl) overlayEl.remove();
+  openArtifactDetail(uid);
 }
 
 // ===== アクセサリー一覧ページ =====
@@ -17171,8 +17226,10 @@ function afCondValue(stat, level) {
 }
 
 // アーティファクトのメイン平坦値（Lv1基礎 × スケール倍率）
-function afMainScale(baseVal, level) {
-  return Math.floor(baseVal * (1 + level * 9 / 100));
+function afMainScale(baseVal, level, conste) {
+  const lvMult     = 1 + level * 9 / 100;
+  const consteMult = 1 + (conste || 0) * 0.10;
+  return Math.floor(baseVal * lvMult * consteMult);
 }
 
 function getArtifactStats(unit) {
@@ -17184,11 +17241,12 @@ function getArtifactStats(unit) {
   if (!inst) return r;
   const def = ARTIFACT_POOL.find(d => d.id === inst.id);
   if (!def) return r;
-  const lv = inst.level || 0;
+  const lv      = inst.level  || 0;
+  const conste  = inst.conste || 0;
 
   // メインステータス（平坦値）
-  r.atkFlat += afMainScale(def.mainStat.atk || 0, lv);
-  r.hpFlat  += afMainScale(def.mainStat.hp  || 0, lv);
+  r.atkFlat += afMainScale(def.mainStat.atk || 0, lv, conste);
+  r.hpFlat  += afMainScale(def.mainStat.hp  || 0, lv, conste);
 
   // 条件付与効果
   (def.conditions||[]).forEach(cond => {
