@@ -3718,6 +3718,346 @@ const CLASS_DATA = {
         extraDebuff:{ type:'grand_debuff', val:-20, turns:3 } },
     ],
   },
+
+  // ── バーサーカー（ビースト・アタッカー）★3 ──
+  berserker: {
+    name: 'バーサーカー', icon: '🪓',
+    role: 'アタッカー', species: 'beast', attackTypes: ['斬','打'],
+    baseStats: { atk:920, hp:2500, mp:1600, pres:12, mres:8, bres:5, lres:0, spd:98, cri:16, cridam:175 },
+    baseSearch: 12, baseStealth: 4, baseHate: 380,
+    openingSkill: {
+      id:'bk_open_blood', name:'血の覚醒', type:'buff', target:'self',
+      desc:'ATK+30%（3T）。自身HP-10%。奇襲時ATK+50%',
+      effect:{ type:'atk_up_self_dmg', atkVal:30, selfHpCost:10, turns:3, surpriseAtk:50 }
+    },
+    activeSkills: [
+      { id:'bk_frenzy', name:'狂乱の一撃', type:'red', target:'single',
+        power:2.5, cd:5, desc:'単体 🔴 Pw:2.5（残HP%が低いほどPw+最大+1.5）',
+        scaledByMissingHp:{ maxBonus:1.5 } },
+      { id:'bk_rampage', name:'乱舞斬り', type:'red', target:'random_multi',
+        power:0.9, hits:4, cd:6, desc:'ランダム敵×4 🔴 Pw:0.9（低HP時CRI率+20%）',
+        lowHpCriBonus:20 },
+    ],
+    passiveSkills: [
+      { id:'bk_pas_killing', name:'殺戮本能', type:'passive',
+        desc:'HP50%以下でATK+30%・SPD+20',
+        effect:{ type:'low_hp_boost', hpThreshold:50, atk:30, spd:20 } },
+      { id:'bk_pas_undying', name:'不屈の闘気', type:'passive',
+        desc:'致死ダメージを1度だけHP1で耐える（1戦1回）',
+        effect:{ type:'death_resist', uses:1 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'bku_bloodstorm', name:'血嵐乱舞',
+        effect:'自身HP30%消費→ランダム敵×10 🔴 Pw:1.2 強制会心。撃破ごとにATK+8%スタック',
+        power:1.2, type:'red', target:'random_multi', hits:10, forceCrit:true,
+        selfHpCost:30, killAtkStack:8 },
+    ],
+  },
+
+  // ── センチネル（ヒューム・タンク）★2 ──
+  sentinel: {
+    name: 'センチネル', icon: '🗡️',
+    role: 'タンク', species: 'hume', attackTypes: ['打','貫'],
+    baseStats: { atk:650, hp:4800, mp:2200, pres:30, mres:16, bres:14, lres:5, spd:55, cri:4, cridam:130 },
+    baseSearch: 6, baseStealth: 3, baseHate: 620,
+    openingSkill: {
+      id:'sn_open_ironwall', name:'鉄壁展開', type:'buff', target:'all_ally',
+      desc:'味方全体シールド（最大HP15%）＋自身に挑発 2T',
+      effect:{ type:'shield_and_self_taunt', shieldRatio:0.15, tauntTurns:2 }
+    },
+    activeSkills: [
+      { id:'sn_counter_guard', name:'カウンターガード', type:'buff', target:'self',
+        power:0, cd:7, desc:'防御姿勢3T（被ダメ-30%・被攻撃時反撃 Pw:0.8）',
+        effect:{ type:'counter_stance', dmgReduction:30, counterPower:0.8, turns:3 } },
+      { id:'sn_shield_bash2', name:'大盾突き', type:'red', target:'single',
+        power:1.5, cd:5, desc:'単体 🔴 Pw:1.5 ＋ スタン1T',
+        debuff:{ type:'stun', val:1, turns:1 } },
+    ],
+    passiveSkills: [
+      { id:'sn_pas_fort', name:'不動の砦', type:'passive',
+        desc:'HP70%以上のとき受けるダメージ-20%',
+        effect:{ type:'high_hp_reduction', hpThreshold:70, val:20 } },
+      { id:'sn_pas_guard', name:'守護の誓い', type:'passive',
+        desc:'味方が致死ダメージを受けた時、代わりに受ける（CD10）',
+        effect:{ type:'intercept_fatal', cd:10 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'snu_fortress', name:'不壊の要塞',
+        effect:'自身に完全無敵2T＋味方全体シールド（最大HP40%）＋全耐性+30% 3T',
+        power:0, type:'buff', target:'all_ally',
+        selfInvincible:2, shieldRatio:0.40, allResUp:30, resTurns:3 },
+    ],
+  },
+
+  // ── シューター（ヒューム・レンジ）★2 ──
+  shooter: {
+    name: 'シューター', icon: '🔫',
+    role: 'レンジ', species: 'hume', attackTypes: ['貫'],
+    baseStats: { atk:800, hp:2400, mp:1400, pres:6, mres:8, bres:3, lres:0, spd:92, cri:20, cridam:185 },
+    baseSearch: 32, baseStealth: 12, baseHate: 280,
+    openingSkill: {
+      id:'sr_open_aim', name:'精密照準', type:'buff', target:'self',
+      desc:'CRI+20%・CRI倍率+30% 3T',
+      effect:{ type:'multi_buff', buffs:[
+        { type:'cri_up',    val:20, turns:3 },
+        { type:'cridam_up', val:30, turns:3 },
+      ]}
+    },
+    activeSkills: [
+      { id:'sr_snipe', name:'スナイプ', type:'red', target:'single',
+        power:3.5, cd:7, desc:'単体 🔴 Pw:3.5（強制会心）',
+        forceCrit:true },
+      { id:'sr_burst', name:'バースト射撃', type:'red', target:'random_multi',
+        power:0.8, hits:5, cd:5, desc:'ランダム敵×5 🔴 Pw:0.8' },
+    ],
+    passiveSkills: [
+      { id:'sr_pas_crieye', name:'狙撃手の眼', type:'passive',
+        desc:'CRI時ダメージ+20%（常時）',
+        effect:{ type:'crit_dmg_bonus', val:20 } },
+      { id:'sr_pas_weakspot', name:'急所狙い', type:'passive',
+        desc:'攻撃した敵のCRI耐性-5%スタック（最大3）',
+        effect:{ type:'cri_res_down_stack', val:5, maxStacks:3 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'sru_deadshot', name:'デッドショット',
+        effect:'単体 🔴 Pw:8.0 強制会心（CC中+Pw:4.0追加）',
+        power:8.0, type:'red', target:'single', forceCrit:true,
+        ccBonus:4.0 },
+    ],
+  },
+
+  // ── キャスター（デーモン・レンジ）★3 ──
+  caster: {
+    name: 'キャスター', icon: '🌀',
+    role: 'レンジ', species: 'daemon', attackTypes: ['魔'],
+    baseStats: { atk:880, hp:2200, mp:2600, pres:5, mres:16, bres:3, lres:0, spd:72, cri:10, cridam:155 },
+    baseSearch: 18, baseStealth: 6, baseHate: 220,
+    openingSkill: {
+      id:'cs_open_charge', name:'魔力充填', type:'buff', target:'self',
+      desc:'MP+30%回復 ＋ 次のスキルPw+50%（1T）',
+      effect:{ type:'mp_regen_and_pw_boost', mpRatio:30, pwBoost:50, turns:1 }
+    },
+    activeSkills: [
+      { id:'cs_chain', name:'チェインマジック', type:'red', target:'all',
+        power:1.5, cd:8, desc:'全体 🔴（魔法）Pw:1.5 ＋ チェイン追撃Pw:0.8',
+        chainHit:{ power:0.8 } },
+      { id:'cs_burst', name:'エレメントバースト', type:'black', target:'single',
+        power:3.0, cd:6, desc:'単体 ⬛ Pw:3.0 ＋ 属性耐性-25% 3T',
+        debuff:{ type:'all_res_down', val:-25, turns:3 } },
+    ],
+    passiveSkills: [
+      { id:'cs_pas_amp', name:'魔力増幅', type:'passive',
+        desc:'スキル使用のたびATK+12%スタック（最大4、WAVE後リセット）',
+        effect:{ type:'atk_stack_on_skill', val:12, maxStacks:4 } },
+      { id:'cs_pas_accel', name:'呪文加速', type:'passive',
+        desc:'CDが奇数のスキルの再使用ターン-1',
+        effect:{ type:'odd_cd_reduction', val:1 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'csu_catastrophe', name:'カタストロフィ',
+        effect:'全体 🔴（魔法）Pw:4.0 ＋ 全耐性-30% 3T。奇襲時強制会心',
+        power:4.0, type:'red', target:'all',
+        debuff:{ type:'all_res_down', val:-30, turns:3 },
+        surpriseForceCrit:true },
+    ],
+  },
+
+  // ── ランサー（ビースト・アタッカー）★2 ──
+  lancer: {
+    name: 'ランサー', icon: '🔱',
+    role: 'アタッカー', species: 'beast', attackTypes: ['貫','斬'],
+    baseStats: { atk:860, hp:2800, mp:1600, pres:14, mres:10, bres:6, lres:0, spd:84, cri:12, cridam:160 },
+    baseSearch: 14, baseStealth: 5, baseHate: 350,
+    openingSkill: {
+      id:'lc_open_charge', name:'突撃準備', type:'buff', target:'self',
+      desc:'ATK+25% ＋ 次の攻撃Pw+1.0（2T）',
+      effect:{ type:'atk_and_next_pw', atkVal:25, nextPwBonus:1.0, turns:2 }
+    },
+    activeSkills: [
+      { id:'lc_dragon_pierce', name:'竜貫き', type:'red', target:'single',
+        power:3.0, cd:5, desc:'単体 🔴 Pw:3.0（後列にも50%貫通ダメージ）',
+        pierceHit:{ ratio:0.5 } },
+      { id:'lc_moon_slash', name:'円月槍', type:'red', target:'all',
+        power:1.2, cd:7, desc:'全体 🔴 Pw:1.2 ＋ ATK-15% 2T',
+        debuff:{ type:'atk_down', val:-15, turns:2 } },
+    ],
+    passiveSkills: [
+      { id:'lc_pas_momentum', name:'突貫の勢い', type:'passive',
+        desc:'行動後SPD+10スタック（最大5、WAVE後リセット）',
+        effect:{ type:'spd_stack_on_action', val:10, maxStacks:5 } },
+      { id:'lc_pas_pierce', name:'槍の達人', type:'passive',
+        desc:'貫攻撃のダメージ+15%（常時）',
+        effect:{ type:'pierce_dmg_bonus', val:15 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'lcu_heaven_thrust', name:'皇槍天衝',
+        effect:'前衛全体 🔴 Pw:4.5（後列に50%貫通）＋ 自身ATK+40%・SPD+20 3T',
+        power:4.5, type:'red', target:'front_row',
+        pierceHit:{ ratio:0.5 },
+        selfBuff:{ atk_up:40, spd_up:20, turns:3 } },
+    ],
+  },
+
+  // ── ミンストレル（セレスティア・サポート）★3 ──
+  minstrel: {
+    name: 'ミンストレル', icon: '🎵',
+    role: 'サポート', species: 'celestia', attackTypes: ['魔'],
+    baseStats: { atk:680, hp:2900, mp:2400, pres:6, mres:16, bres:8, lres:0, spd:76, cri:6, cridam:140 },
+    baseSearch: 12, baseStealth: 6, baseHate: 180,
+    openingSkill: {
+      id:'mn_open_inspire', name:'鼓舞の歌', type:'buff', target:'all_ally',
+      desc:'味方全体ATK+15%・SPD+10 3T',
+      effect:{ type:'multi_buff_all', buffs:[
+        { type:'atk_up', val:15, turns:3 },
+        { type:'spd_up', val:10, turns:3 },
+      ]}
+    },
+    activeSkills: [
+      { id:'mn_hero_song', name:'英雄の調べ', type:'buff', target:'all_ally',
+        power:0, cd:6, desc:'味方全体ATK+20%・CRI+10% ＋ HP回復×0.8',
+        effect:{ type:'buff_and_heal_all', atkVal:20, atkTurns:3, criVal:10, criTurns:3, healRatio:0.8 } },
+      { id:'mn_rest_melody', name:'安息の旋律', type:'buff', target:'all_ally',
+        power:0, cd:8, desc:'味方全体デバフ解除 ＋ HP再生×0.15/T 3T',
+        effect:{ type:'cleanse_and_regen', regenRatio:0.15, turns:3 } },
+    ],
+    passiveSkills: [
+      { id:'mn_pas_resonance', name:'戦歌の共鳴', type:'passive',
+        desc:'味方がスキルを使うたびMP+5%回復（全員）',
+        effect:{ type:'team_mp_on_skill', val:5 } },
+      { id:'mn_pas_ballad', name:'バラードの加護', type:'passive',
+        desc:'味方全体SPD+8（常時）',
+        effect:{ type:'team_spd_bonus', val:8 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'mnu_symphony', name:'凱旋の交響曲',
+        effect:'味方全体ATK+40%・全耐性+20%・CRI+20% 3T ＋ 全デバフ解除',
+        power:0, type:'buff', target:'all_ally',
+        buffs:[ { type:'atk_up', val:40, turns:3 }, { type:'all_res_up', val:20, turns:3 }, { type:'cri_up', val:20, turns:3 } ],
+        dispelAll:true },
+    ],
+  },
+
+  // ── プロフェッサー（ヒューム・レンジ）★3 ──
+  professor: {
+    name: 'プロフェッサー', icon: '📚',
+    role: 'レンジ', species: 'hume', attackTypes: ['魔'],
+    baseStats: { atk:820, hp:2300, mp:2800, pres:5, mres:14, bres:3, lres:0, spd:70, cri:9, cridam:150 },
+    baseSearch: 22, baseStealth: 5, baseHate: 200,
+    openingSkill: {
+      id:'pf_open_analyze', name:'解析眼', type:'buff', target:'all_enemy',
+      desc:'敵全体の全耐性-15% 3T（奇襲時-25%）',
+      effect:{ type:'all_res_down_all', val:-15, turns:3, surpriseVal:-25 }
+    },
+    activeSkills: [
+      { id:'pf_gravity', name:'重力魔法', type:'black', target:'all',
+        power:1.0, cd:7, desc:'全体 ⬛ Pw:1.0 ＋ SPD-20・ATK-20% 3T',
+        effect:{ type:'multi_debuff', debuffs:[
+          { type:'spd_down', val:-20, turns:3 },
+          { type:'atk_down', val:-20, turns:3 },
+        ]}},
+      { id:'pf_amplify', name:'弱体強化', type:'black', target:'single',
+        power:0, cd:6, desc:'単体のデバフを強化（効果2倍・期間+2T）',
+        effect:{ type:'debuff_amplify', multiplier:2, extraTurns:2 } },
+    ],
+    passiveSkills: [
+      { id:'pf_pas_research', name:'研究の成果', type:'passive',
+        desc:'デバフ中の敵への与ダメ+18%（常時）',
+        effect:{ type:'dmg_vs_debuffed', val:18 } },
+      { id:'pf_pas_theory', name:'魔法理論', type:'passive',
+        desc:'全体攻撃時、対象の最も低い耐性に追加ダメージ+20%',
+        effect:{ type:'lowest_res_bonus', val:20 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'pfu_forbidden', name:'禁断の理論',
+        effect:'単体 ⬛ Pw:2.0 ＋ 全ステータス-25%・全耐性-25%（永続）→ 全体 🔴 Pw:1.5',
+        power:2.0, type:'black', target:'single',
+        debuff:{ type:'grand_debuff_permanent', statVal:-25, resVal:-25, turns:999 },
+        followUp:{ type:'red', target:'all', power:1.5 } },
+    ],
+  },
+
+  // ── アルケミスト（ヒューム・サポート）★3 ──
+  alchemist: {
+    name: 'アルケミスト', icon: '⚗️',
+    role: 'サポート', species: 'hume', attackTypes: ['魔'],
+    baseStats: { atk:700, hp:3100, mp:2600, pres:6, mres:14, bres:6, lres:0, spd:74, cri:5, cridam:140 },
+    baseSearch: 14, baseStealth: 6, baseHate: 190,
+    openingSkill: {
+      id:'ac_open_brew', name:'賢者の調合', type:'buff', target:'all_ally',
+      desc:'味方全体HP+15%回復 ＋ ATK+10% 3T',
+      effect:{ type:'heal_and_atk_all', healRatio:0.15, atkVal:10, atkTurns:3 }
+    },
+    activeSkills: [
+      { id:'ac_transmute', name:'変成術', type:'buff', target:'single_enemy',
+        power:0, cd:6, desc:'敵のバフを全解除し、解除数×ATK×0.5を味方単体HP回復',
+        effect:{ type:'dispel_and_convert_heal', healPerBuff:0.5 } },
+      { id:'ac_elixir', name:'エリクサー散布', type:'buff', target:'all_ally',
+        power:0, cd:8, desc:'味方全体HP回復×1.2 ＋ 全耐性+15% 2T',
+        effect:{ type:'heal_and_res_all', healRatio:1.2, resVal:15, resTurns:2 } },
+    ],
+    passiveSkills: [
+      { id:'ac_pas_stone', name:'賢者の石', type:'passive',
+        desc:'毎ターン味方全体HP回復（ATK×5%）',
+        effect:{ type:'team_regen_per_turn', ratio:5 } },
+      { id:'ac_pas_refine', name:'精製術', type:'passive',
+        desc:'回復量+15% ＋ 味方全体状態異常耐性+20%（常時）',
+        effect:{ type:'heal_and_status_res', healBonus:15, statusRes:20 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'acu_transmutation', name:'完全変成',
+        effect:'敵全体のバフを全解除しバフ数×Pw:0.5ダメージ ＋ 味方全体HP完全回復',
+        power:0.5, type:'black', target:'all',
+        dispelAndDamage:true, allyFullHeal:true },
+    ],
+  },
+
+  // ── シーフ（スペクター・スカウト）★3 ──
+  thief: {
+    name: 'シーフ', icon: '🃏',
+    role: 'スカウト', species: 'specter', attackTypes: ['斬','裂'],
+    baseStats: { atk:870, hp:2100, mp:1800, pres:5, mres:6, bres:8, lres:0, spd:112, cri:18, cridam:178 },
+    baseSearch: 44, baseStealth: 40, baseHate: 160,
+    openingSkill: {
+      id:'th_open_shadow_run', name:'影走り', type:'opening', target:'self',
+      desc:'奇襲判定 ＋ SPD+30・回避+20% 2T',
+      effect:{ type:'shadow_dash', spdVal:30, evasion:20, turns:2 },
+      guaranteeSurprise:true
+    },
+    activeSkills: [
+      { id:'th_steal', name:'盗む', type:'black', target:'single',
+        power:0.8, cd:5, desc:'単体 ⬛ Pw:0.8 ＋ 対象バフを1つ奪取（自身に付与）',
+        effect:{ type:'steal_buff', count:1 } },
+      { id:'th_decoy', name:'陽動作戦', type:'buff', target:'all_enemy',
+        power:0, cd:7, desc:'敵全体のターゲットをランダム変更 ＋ ATK-10% 3T',
+        effect:{ type:'multi_debuff_all', debuffs:[
+          { type:'hate_shuffle', val:1, turns:1 },
+          { type:'atk_down', val:-10, turns:3 },
+        ]}},
+    ],
+    passiveSkills: [
+      { id:'th_pas_evade', name:'盗賊の身のこなし', type:'passive',
+        desc:'回避率+15%（常時）',
+        effect:{ type:'evasion_bonus', val:15 } },
+      { id:'th_pas_trophy', name:'財宝荒らし', type:'passive',
+        desc:'CRI+10%（常時）＋ 敵撃破時ゴールド獲得+50%',
+        effect:{ type:'cri_and_gold_bonus', cri:10, goldBonus:50 } },
+    ],
+    skillPool: [],
+    ultimates: [
+      { id:'thu_grand_thief', name:'大盗賊の舞い',
+        effect:'ランダム敵×8 ⬛ Pw:1.0（各攻撃時バフ奪取）＋ 奪ったバフを全て自身に付与',
+        power:1.0, type:'black', target:'random_multi', hits:8,
+        stealBuff:true, applyStolen:true },
+    ],
+  },
 };
 
 // ============================================================
@@ -6153,12 +6493,12 @@ function classIconHTML(classId, size='48px', style='') {
   return `<span style="font-size:${size};line-height:1;${style}">${cls?.icon||'⚔️'}</span>`;
 }
 
-const GACHA_POOL = ['warrior','vanguard','archer','priest','assassin'];
+const GACHA_POOL = ['warrior','vanguard','archer','priest','assassin','sentinel','shooter','lancer'];
 
 // ── キャラガチャプール ──
 const CHAR_POOL = {
-  3: ['priest','assassin','wizard','paladin','shaman'],
-  2: ['warrior','vanguard','archer'],
+  3: ['priest','assassin','wizard','paladin','shaman','berserker','caster','minstrel','professor','alchemist','thief'],
+  2: ['warrior','vanguard','archer','sentinel','shooter','lancer'],
 };
 const CHAR_GACHA_PICKUP   = 'wizard'; // 現在のピックアップ対象
 const CHAR_MILEAGE_CAP    = 200;      // 交換必要マイレージ
@@ -13053,11 +13393,20 @@ function nextStage() {
 
 // 各クラスの雇用コスト定義
 const RECRUIT_CONFIG = {
-  warrior:  { name:'ウォリアー',  costType:'gold',    cost:500,  desc:'ATK特化の近接アタッカー' },
-  vanguard: { name:'ヴァンガード',costType:'gold',    cost:800,  desc:'高HP・高防御のタンク' },
-  archer:   { name:'アーチャー',  costType:'gold',    cost:600,  desc:'高SPD・会心の遠距離アタッカー' },
-  priest:   { name:'プリースト',  costType:'crystal', cost:500,  desc:'HP/MP回復・デバフ解除のヒーラー' },
-  assassin: { name:'アサシン',    costType:'crystal', cost:800,  desc:'最速・最高会心。昼は潜伏、夜は無双の近接アタッカー' },
+  warrior:    { name:'ウォリアー',    costType:'gold',    cost:500,  desc:'ATK特化の近接アタッカー' },
+  vanguard:   { name:'ヴァンガード',  costType:'gold',    cost:800,  desc:'高HP・高防御のタンク' },
+  archer:     { name:'アーチャー',    costType:'gold',    cost:600,  desc:'高SPD・会心の遠距離アタッカー' },
+  sentinel:   { name:'センチネル',    costType:'gold',    cost:700,  desc:'カウンター特化の鉄壁タンク' },
+  shooter:    { name:'シューター',    costType:'gold',    cost:650,  desc:'精密射撃と高CRIの遠距離アタッカー' },
+  lancer:     { name:'ランサー',      costType:'gold',    cost:600,  desc:'突貫と貫通ダメージが得意な近接アタッカー' },
+  priest:     { name:'プリースト',    costType:'crystal', cost:500,  desc:'HP/MP回復・デバフ解除のヒーラー' },
+  assassin:   { name:'アサシン',      costType:'crystal', cost:800,  desc:'最速・最高会心。昼は潜伏、夜は無双の近接アタッカー' },
+  berserker:  { name:'バーサーカー',  costType:'crystal', cost:800,  desc:'HP消費で爆発的な火力を発揮するアタッカー' },
+  caster:     { name:'キャスター',    costType:'crystal', cost:800,  desc:'魔法連鎖と属性耐性ダウンで全体を制圧するレンジ' },
+  minstrel:   { name:'ミンストレル',  costType:'crystal', cost:700,  desc:'歌の力で仲間を強化する万能サポート' },
+  professor:  { name:'プロフェッサー',costType:'crystal', cost:800,  desc:'デバフ強化と解析で敵を弱体化するレンジ' },
+  alchemist:  { name:'アルケミスト',  costType:'crystal', cost:700,  desc:'変成術と賢者の石で仲間を回復するサポート' },
+  thief:      { name:'シーフ',        costType:'crystal', cost:800,  desc:'バフ奪取と陽動で戦況を操る高機動スカウト' },
 };
 
 function openRecruitPanel() {
