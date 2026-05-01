@@ -3515,7 +3515,7 @@ const CLASS_DATA = {
     icon: '🏹',
     iconImg: 'assets/images/role-ranger.png',
     role: 'レンジ',
-    species: 'hume',
+    species: 'beast',
     attackTypes: ['貫'],
     baseStats: { atk:780, hp:2600, mp:1400, pres:5, mres:8, bres:3, lres:0, spd:85, cri:14, cridam:170 },
     baseSearch:  30,
@@ -3545,6 +3545,113 @@ const CLASS_DATA = {
       { id:'au_stormcross', name:'ストームクロス',
         effect:'ランダムな敵に🔵BLUE×10連射（1発：現在HPの4%）',
         power:0.04, type:'blue', target:'random_multi', hits:10 },
+    ],
+  },
+
+  // ── ウィザード（ヒューム・レンジ）★3 ──
+  wizard: {
+    name: 'ウィザード', icon: '🧙', iconImg: 'assets/images/role-ranger.png',
+    role: 'レンジ', species: 'hume', attackTypes: ['魔'],
+    baseStats: { atk:850, hp:2400, mp:2200, pres:5, mres:15, bres:3, lres:0, spd:78, cri:10, cridam:155 },
+    baseSearch: 20, baseStealth: 5, baseHate: 250,
+    openingSkill: {
+      id:'wz_open_arcane', name:'古代魔法陣', type:'red', target:'all',
+      desc:'全体 🔴（魔法）Pw:2.5＋MRES-20%（3T）。奇襲時Pw×1.3',
+      power:2.5, powerOnSurprise:3.25,
+      debuff:{ type:'mres_down', val:-20, turns:3 }
+    },
+    activeSkills: [
+      { id:'wz_silence', name:'サイレンス', type:'white', target:'single',
+        power:2.5, cd:7, desc:'単体 🔵 Pw:2.5＋沈黙（次スキル封印）',
+        debuff:{ type:'silence', val:1, turns:1 } },
+      { id:'wz_meteor', name:'メテオストライク', type:'red', target:'all',
+        power:2.0, cd:12, desc:'全体 🔴（魔法）Pw:2.0' },
+    ],
+    passiveSkills: [
+      { id:'wz_pas_stack', name:'魔力集中', effect:'行動するたびに次スキルPw+15%スタック（最大3）',
+        effect:{ type:'power_stack', val:15, max:3 } },
+      { id:'wz_pas_bigcd', name:'蓄積魔力', effect:'CD10以上のスキル使用時ATK+10%（3T）自動付与',
+        effect:{ type:'high_cd_atk', threshold:10, val:10, turns:3 } },
+    ],
+    ultimates: [
+      { id:'wu_starcurse', name:'星天の呪詛',
+        effect:'単体⬛Pw:3.0＋WHITE耐性-25%・BLACK耐性-20%（永続）→全体🔴Pw:2.0＋MRES-20%（3T）。奇襲強制会心',
+        target:'single', power:3.0, type:'black',
+        debuff:{ type:'multi_res_down', wres:-25, bres:-20, turns:999 } },
+    ],
+  },
+
+  // ── パラディン（セレスティア・タンク）★3 ──
+  paladin: {
+    name: 'パラディン', icon: '🛡️', iconImg: 'assets/images/role-vanguard.png',
+    role: 'タンク', species: 'celestia', attackTypes: ['聖','打'],
+    baseStats: { atk:700, hp:4200, mp:1800, pres:25, mres:20, bres:10, lres:5, spd:68, cri:6, cridam:145 },
+    baseSearch: 10, baseStealth: 3, baseHate: 500,
+    openingSkill: {
+      id:'pd_open_holy', name:'聖なる加護', type:'buff', target:'all_ally',
+      desc:'全体シールド（最大HP20%）＋全体WHITE耐性+15%（3T）',
+      effect:{ type:'shield_and_res', shieldRatio:0.20, resType:'wres', resVal:15, turns:3 }
+    },
+    activeSkills: [
+      { id:'pd_holy_strike', name:'聖光撃', type:'red', target:'single',
+        power:2.0, cd:5, desc:'単体 🔴（聖）Pw:2.0＋対象WHITE耐性-15%（2T）',
+        debuff:{ type:'wres_down', val:-15, turns:2 } },
+      { id:'pd_miracle', name:'奇跡の光', type:'buff', target:'all_ally',
+        power:0, cd:8, desc:'全体HP回復×1.2＋全デバフ解除',
+        effect:{ type:'heal_and_cleanse', healRatio:1.2 } },
+    ],
+    passiveSkills: [
+      { id:'pd_pas_heal', name:'奇跡の器', effect:'回復スキル使用時、対象にATKの30%の追加HP回復',
+        effect:{ type:'heal_bonus', val:30 } },
+      { id:'pd_pas_bres', name:'聖域の守護', effect:'味方全体BLACK耐性+8%（常時）',
+        effect:{ type:'team_bres', val:8 } },
+    ],
+    ultimates: [
+      { id:'pu_divine', name:'天罰の審判',
+        effect:'単体🔴（聖）Pw:6.0強制会心＋全体HP回復×1.5＋全体全耐性+20%（3T）',
+        target:'single', power:6.0, type:'red', forceCrit:true,
+        allyHeal:{ healRatio:1.5 },
+        allyBuff:{ type:'all_res_up', val:20, turns:3 } },
+    ],
+  },
+
+  // ── シャーマン（デーモン・サポート）★3 ──
+  shaman: {
+    name: 'シャーマン', icon: '🔮', iconImg: 'assets/images/role-support.png',
+    role: 'サポート', species: 'daemon', attackTypes: ['魔','裂'],
+    baseStats: { atk:720, hp:2800, mp:2000, pres:8, mres:18, bres:5, lres:0, spd:75, cri:8, cridam:150 },
+    baseSearch: 15, baseStealth: 8, baseHate: 200,
+    openingSkill: {
+      id:'sh_open_fog', name:'呪いの霧', type:'buff', target:'all_enemy',
+      desc:'全体ATK-20%・SPD-10（3T）。奇襲時効果×1.3',
+      effect:{ type:'multi_debuff_all', debuffs:[
+        { type:'atk_down', val:-20, turns:3 },
+        { type:'spd_down', val:-10, turns:3 },
+      ]}
+    },
+    activeSkills: [
+      { id:'sh_poison_mist', name:'毒霧散布', type:'black', target:'all',
+        power:0.8, cd:7, desc:'全体 ⬛ Pw:0.8＋猛毒（3T・ATK×0.15/行動）',
+        debuff:{ type:'lethal_poison', val:15, turns:3 } },
+      { id:'sh_curse', name:'弱体の呪い', type:'black', target:'single',
+        power:0.4, cd:5, desc:'単体 ⬛ Pw:0.4＋全耐性-20%・ATK-15%（3T）',
+        effect:{ type:'multi_debuff', debuffs:[
+          { type:'all_res_down', val:-20, turns:3 },
+          { type:'atk_down', val:-15, turns:3 },
+        ]}},
+    ],
+    passiveSkills: [
+      { id:'sh_pas_debuff', name:'呪いの連鎖', effect:'デバフ中の敵への与ダメ+15%（常時）',
+        effect:{ type:'dmg_vs_debuffed', val:15 } },
+      { id:'sh_pas_res', name:'精霊の加護', effect:'味方全体BLACK耐性+8%・状態異常耐性+15%（常時）',
+        effect:{ type:'team_res_passive', bres:8, statusRes:15 } },
+    ],
+    ultimates: [
+      { id:'su_grand_curse', name:'大呪詛陣',
+        effect:'全体⬛Pw:1.5＋全ステータス-20%・全耐性-20%（3T）＋猛毒（5T）',
+        target:'all', power:1.5, type:'black',
+        debuff:{ type:'lethal_poison', val:15, turns:5 },
+        extraDebuff:{ type:'grand_debuff', val:-20, turns:3 } },
     ],
   },
 };
@@ -5984,6 +6091,25 @@ function classIconHTML(classId, size='48px', style='') {
 
 const GACHA_POOL = ['warrior','vanguard','archer','priest','assassin'];
 
+// ── キャラガチャプール ──
+const CHAR_POOL = {
+  3: ['priest','assassin','wizard','paladin','shaman'],
+  2: ['warrior','vanguard','archer'],
+};
+const CHAR_GACHA_PICKUP   = 'wizard'; // 現在のピックアップ対象
+const CHAR_MILEAGE_CAP    = 200;      // 交換必要マイレージ
+const CHAR_GACHA_ROLES    = ['warrior','vanguard','ranger','support','trickster','scout'];
+// ★1枠：素材ドロップテーブル（weightで重み付け抽選）
+const CHAR_GACHA_MAT_TABLE = [
+  { w:25, give:(p)=>{ p.ether            = (p.ether||0)+80;  return `EXPポット ×80`; } },
+  { w:15, give:(p)=>{ p.ether            = (p.ether||0)+200; return `EXPポット ×200`; } },
+  { w:15, give:(p)=>{ const r=CHAR_GACHA_ROLES[Math.floor(Math.random()*6)]; p.kyoten=p.kyoten||{}; p.kyoten[r]=p.kyoten[r]||{t1:0,t2:0,t3:0}; p.kyoten[r].t1++; return `響典T1（${r}）`; } },
+  { w:10, give:(p)=>{ const r=CHAR_GACHA_ROLES[Math.floor(Math.random()*6)]; p.eiyuutan=p.eiyuutan||{}; p.eiyuutan[r]=(p.eiyuutan[r]||0)+1; return `英雄譚（${r}）`; } },
+  { w:20, give:(p)=>{ p.genericFragments = (p.genericFragments||0)+1; return `汎用凸素材 ×1`; } },
+  { w:10, give:(p)=>{ p.genericFragments = (p.genericFragments||0)+3; return `汎用凸素材 ×3`; } },
+  { w: 5, give:(p)=>{ p.stardust         = (p.stardust||0)+3;         return `星屑の砂 ×3`; } },
+];
+
 // ============================================================
 //  初心者ミッション（永続・リセットなし・カード収集チュートリアル）
 // ============================================================
@@ -6404,6 +6530,11 @@ function normalizeState() {
   gState.gacha.pityCount       = gState.gacha.pityCount       || 0;
   gState.gacha.cardTotalPulls  = gState.gacha.cardTotalPulls  || 0;
   gState.gacha.cardPityCount   = gState.gacha.cardPityCount   || 0;
+  gState.gacha.charTotalPulls  = gState.gacha.charTotalPulls  || 0;
+  gState.gacha.charPityCount   = gState.gacha.charPityCount   || 0;
+  gState.gacha.charMileage     = gState.gacha.charMileage     || 0;
+  if (!gState.player.unitFragments)                 gState.player.unitFragments  = {};
+  if (gState.player.genericFragments === undefined) gState.player.genericFragments = 0;
 
   // progress
   if (!gState.progress || typeof gState.progress !== 'object') gState.progress = {};
@@ -10595,24 +10726,40 @@ function fireOpeningSkills(allies, enemies) {
         doAttack(ally, aliveEnemies, { ...opening, type:'red', power:pw, target:'single', hits:1 });
       }
     } else if (opening.type === 'buff') {
-      // バフ系開幕（バトルクライ、プロヴォーク、リジェネレーション）
       addLog(`${ally.name} <span class="tag tag-skill">${opening.name}</span> [開幕]`, 'trigger');
-      applyBuff(ally, opening, ally);
-      flashCard(ally.uid, 'buff');
+      if (opening.target === 'all_ally') {
+        // パラディン系：全体にバフ付与
+        aliveAllies.forEach(a => { applyBuff(a, opening, ally); flashCard(a.uid, 'buff'); });
+      } else if (opening.target === 'all_enemy') {
+        // シャーマン系：全体にデバフ付与
+        const eff = opening.effect;
+        aliveEnemies.forEach(e => {
+          if (eff?.type === 'multi_debuff_all') {
+            const mult = (scoutOutcome==='success' && opening.surpriseMult) ? opening.surpriseMult : 1.0;
+            (eff.debuffs||[]).forEach(db => applyDebuffDirect(e, { ...db, val: Math.round((db.val||0)*mult) }));
+          }
+          spawnFloatNum(e.uid, '呪い', 'float-debuff');
+        });
+      } else {
+        applyBuff(ally, opening, ally);
+        flashCard(ally.uid, 'buff');
+      }
     } else if (opening.type === 'red' || opening.type === 'black') {
-      // 攻撃系開幕（先制射撃）
+      // 攻撃系開幕
       addLog(`${ally.name} <span class="tag tag-skill">${opening.name}</span> [開幕]`, 'trigger');
       if (aliveEnemies.length) {
+        const pw = (scoutOutcome==='success' && opening.powerOnSurprise) ? opening.powerOnSurprise : (opening.power||1.0);
+        const opWithPw = { ...opening, power: pw };
         if (opening.target === 'random_multi') {
           const hitCount = opening.hits || 6;
           for (let i = 0; i < hitCount; i++) {
             const alive = aliveEnemies.filter(e => !e.dead);
             if (!alive.length) break;
             const tgt = alive[Math.floor(Math.random() * alive.length)];
-            doAttack(ally, [tgt], { ...opening, target:'single', hits:1 });
+            doAttack(ally, [tgt], { ...opWithPw, target:'single', hits:1 });
           }
         } else {
-          doAttack(ally, aliveEnemies, opening);
+          doAttack(ally, aliveEnemies, opWithPw);
         }
       }
     }
@@ -11645,6 +11792,7 @@ function performUlt(c, enemies, allies) {
       addLog(`${c.name} → ${t.name}: <span class="tag tag-dmg">${dmg}</span>${isCrit?' <span class="tag tag-crit">CRITICAL</span>':''}`, 'damage');
     }
     if (ult.debuff) { applyDebuff(t, ult.debuff, c); setTimeout(()=>spawnFloatNum(t.uid,'弱体','float-debuff'),350); }
+    if (ult.extraDebuff) { applyDebuffDirect(t, ult.extraDebuff); }
     if (ult.drain) {
       const h = Math.floor(dmg * ult.drain / 100);
       c.hp = Math.min(c.maxHp, c.hp + h);
@@ -11652,6 +11800,29 @@ function performUlt(c, enemies, allies) {
       setTimeout(() => spawnFloatNum(c.uid, '+'+h, 'float-heal'), 350);
     }
   });
+  // パラディン系ULT: 全体回復＋全体バフ
+  if (ult.allyHeal || ult.allyBuff) {
+    const liveAllies = [...(battleState?.allies||[])].filter(a=>!a.dead);
+    const healBonus = getBattleHealBonus(c);
+    liveAllies.forEach(a => {
+      if (ult.allyHeal) {
+        const h = Math.floor(a.maxHp * (ult.allyHeal.healRatio||1.0) * healBonus);
+        a.hp = Math.min(a.maxHp, a.hp + h);
+        battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + h;
+        spawnFloatNum(a.uid, `💚+${h}`, 'float-heal');
+      }
+      if (ult.allyBuff) {
+        const b = ult.allyBuff;
+        if (b.type === 'all_res_up') {
+          ['pres_up','mres_up','bres_up'].forEach(rt =>
+            a.buffs.push({ type:rt, val:b.val, turns:b.turns, icon:'🛡耐性↑', cssClass:'hp-up' })
+          );
+          spawnFloatNum(a.uid, '耐性↑', 'float-buff');
+        }
+      }
+    });
+    addLog(`${c.name} 全体回復＋全耐性+${ult.allyBuff?.val||0}%(${ult.allyBuff?.turns||3}T)`, 'trigger');
+  }
 }
 
 // ============================================================
@@ -11821,6 +11992,44 @@ function applyBuff(c, skill, sourceUnit) {
     spawnFloatNum(c.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(finalHeal)} / WHITE耐性+${eff.mresVal||10}%(${eff.mresTurns||3}T)`, 'trigger');
     Audio.buff(); return;
+  }
+
+  // ── パラディン: heal_and_cleanse（全体回復＋デバフ全解除）──
+  if (eff.type === 'heal_and_cleanse') {
+    const atk = sourceUnit?.atk || c.atk;
+    const healAmt = Math.floor(atk * (eff.healRatio||1.2));
+    const healBonus = getBattleHealBonus(sourceUnit);
+    const finalHeal = Math.floor(healAmt * healBonus);
+    c.hp = Math.min(c.maxHp, c.hp + finalHeal);
+    battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
+    const removed = (c.debuffs||[]).length;
+    c.debuffs = [];
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
+    if (removed > 0) spawnFloatNum(c.uid, '✨浄化', 'float-buff', 20);
+    addLog(`${c.name} 💚HP+${fmt(finalHeal)}${removed>0?` / デバフ${removed}個解除`:''}`, 'trigger');
+    Audio.buff(); return;
+  }
+
+  // ── パラディン開幕: shield_and_res（全体シールド＋耐性バフ）──
+  if (eff.type === 'shield_and_res') {
+    const shieldAmt = Math.floor(c.maxHp * (eff.shieldRatio||0.20));
+    applyShield(c, shieldAmt);
+    const resIcon = eff.resType==='wres'?'🤍WHITE耐性↑':'💜BLACK耐性↑';
+    c.buffs.push({ type:`${eff.resType}_up`, val:eff.resVal||15, turns:eff.turns||3, icon:resIcon, cssClass:'mres-up' });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `🛡️+${fmt(shieldAmt)}`, 'float-buff');
+    addLog(`${c.name} 🛡シールド+${fmt(shieldAmt)} / WHITE耐性+${eff.resVal}%(${eff.turns}T)`, 'trigger');
+    Audio.buff(); return;
+  }
+
+  // ── シャーマン: multi_debuff（単体マルチデバフ）──
+  if (eff.type === 'multi_debuff') {
+    (eff.debuffs||[]).forEach(db => applyDebuffDirect(c, db));
+    flashCard(c.uid, 'debuff');
+    spawnFloatNum(c.uid, '呪い', 'float-debuff');
+    addLog(`${c.name} に複合デバフを付与`, 'trigger');
+    return;
   }
 
   // ===== プリースト: サンクチュアリ =====
@@ -12246,6 +12455,15 @@ function tryApplyDebuff(target, debuff, attacker) {
 }
 
 function applyDebuffDirect(target, debuff) {
+  // 複合デバフ型を展開
+  if (debuff.type === 'all_res_down') {
+    ['pres_down','mres_down','bres_down'].forEach(t => applyDebuffDirect(target, { ...debuff, type:t }));
+    return;
+  }
+  if (debuff.type === 'grand_debuff') {
+    ['pres_down','mres_down','bres_down','atk_down','spd_down'].forEach(t => applyDebuffDirect(target, { ...debuff, type:t }));
+    return;
+  }
   // CC免疫チェック（スタン・しびれ・ひるみは無効化）
   const ccTypes = ['stun', 'paralysis', 'flinch'];
   if (ccTypes.includes(debuff.type) && (target.buffs||[]).some(b=>b.type==='cc_immune')) {
@@ -12901,13 +13119,252 @@ function recruitUnit(classId) {
 //  GACHA
 // ============================================================
 
+let gachaActiveTab = 'char';
 function openGacha() {
   document.getElementById('gacha-modal').classList.add('open');
+  renderGachaPanel();
+}
+function renderGachaPanel() {
+  const panel = document.getElementById('gacha-card-panel');
+  if (!panel) return;
+  const crystal = gState.player.starCrystal || 0;
+  const tabs = ['char','card'];
+  const tabLabel = { char:'✨ キャラ召喚', card:'🃏 カード召喚' };
+  panel.innerHTML = `
+    <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:12px">
+      ${tabs.map(t=>`<button onclick="switchGachaTab('${t}')"
+        style="flex:1;padding:8px;background:none;border:none;border-bottom:2px solid ${gachaActiveTab===t?'var(--gold)':'transparent'};
+          color:${gachaActiveTab===t?'var(--gold)':'var(--text3)'};cursor:pointer;font-size:12px;font-family:'Rajdhani',sans-serif;font-weight:700">
+        ${tabLabel[t]}</button>`).join('')}
+    </div>
+    <div id="gacha-tab-content"></div>`;
+  renderGachaTabContent();
+}
+function switchGachaTab(tab) {
+  gachaActiveTab = tab;
+  renderGachaPanel();
+}
+function renderGachaTabContent() {
+  const el = document.getElementById('gacha-tab-content');
+  if (!el) return;
+  if (gachaActiveTab === 'char') renderCharGachaTab(el);
+  else renderCardGachaTab(el);
+}
+function renderCharGachaTab(el) {
+  const crystal  = gState.player.starCrystal || 0;
+  const mileage  = gState.gacha.charMileage  || 0;
+  const pity     = gState.gacha.charPityCount|| 0;
+  const pickupCls= CLASS_DATA[CHAR_GACHA_PICKUP];
+  const pickupName = pickupCls?.name || CHAR_GACHA_PICKUP;
+  const canMile  = mileage >= CHAR_MILEAGE_CAP;
+  el.innerHTML = `
+    <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(74,127,255,0.08));border:1px solid rgba(201,168,76,0.3);padding:12px;margin-bottom:12px;border-radius:6px">
+      <div style="font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:4px">PICKUP</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        ${classIconHTML(CHAR_GACHA_PICKUP,'40px')}
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);font-weight:700">【${pickupName}】</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">★3排出率 5% ／ ピックアップ対象</div>
+        </div>
+        <div style="margin-left:auto;font-size:10px;color:var(--text3);text-align:right">
+          <div>★3：5%</div><div>★2：20%</div><div>★1：75%</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px">
+        <span>🎫 マイレージ ${mileage} / ${CHAR_MILEAGE_CAP}</span>
+        <span>天井まで: ${Math.max(0, 90-pity)} 回</span>
+      </div>
+      <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${Math.min(100,(mileage/CHAR_MILEAGE_CAP*100)).toFixed(1)}%;background:linear-gradient(90deg,var(--gold),#f0cc6e);border-radius:3px;transition:width 0.3s"></div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:10px">
+      ${itemIconHTML('crystal','12px')} 星晶石: <b style="color:#89e3ff">${crystal.toLocaleString()}</b>
+    </div>
+    <div class="gacha-btns" style="margin-bottom:10px">
+      <button class="gacha-btn gacha-btn-1" onclick="drawCharGacha(1)" ${crystal<300?'disabled':''} style="flex:1;padding:10px;cursor:${crystal>=300?'pointer':'default'};opacity:${crystal>=300?1:0.4}">
+        1回召喚<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 300</span>
+      </button>
+      <button class="gacha-btn gacha-btn-10" onclick="drawCharGacha(10)" ${crystal<3000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=3000?'pointer':'default'};opacity:${crystal>=3000?1:0.4}">
+        10回召喚<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 3,000</span>
+      </button>
+    </div>
+    ${canMile?`<button onclick="openMileageExchange()" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(201,168,76,0.3),rgba(201,168,76,0.15));border:1px solid var(--gold);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;border-radius:4px;letter-spacing:1px">
+      🎖️ マイレージ交換（${mileage}Pt）</button>`
+    :`<div style="text-align:center;font-size:10px;color:var(--text3);padding:6px">マイレージ ${CHAR_MILEAGE_CAP-mileage} Pt 貯まるとピックアップキャラと交換できます</div>`}`;
+}
+function renderCardGachaTab(el) {
+  const crystal = gState.player.starCrystal || 0;
+  const pity    = gState.gacha.cardPityCount || 0;
+  el.innerHTML = `
+    <div style="background:rgba(180,125,255,0.08);border:1px solid rgba(180,125,255,0.3);padding:12px;margin-bottom:12px;border-radius:6px">
+      <div style="font-size:12px;color:var(--purple);font-weight:700;margin-bottom:4px">🃏 スキルカード召喚</div>
+      <div style="font-size:10px;color:var(--text3)">★3：5% / ★2：25% / ★1：70%</div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:10px">
+      ${itemIconHTML('crystal','12px')} 星晶石: <b style="color:#89e3ff">${crystal.toLocaleString()}</b>
+      　天井まで: ${Math.max(0,90-pity)} 回
+    </div>
+    <div class="gacha-btns">
+      <button class="gacha-btn gacha-btn-1" onclick="drawCardGacha(1)" ${crystal<200?'disabled':''} style="flex:1;padding:10px;cursor:${crystal>=200?'pointer':'default'};opacity:${crystal>=200?1:0.4}">
+        1回召喚<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 200</span>
+      </button>
+      <button class="gacha-btn gacha-btn-10" onclick="drawCardGacha(10)" ${crystal<2000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=2000?'pointer':'default'};opacity:${crystal>=2000?1:0.4}">
+        10回召喚<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 2,000</span>
+      </button>
+    </div>`;
 }
 
-let gachaActiveTab = 'card';
-function switchGachaTab(tab) {
-  // カードのみなので何もしない
+// ============================================================
+//  キャラ GACHA
+// ============================================================
+function rollCharGachaMaterial() {
+  const total = CHAR_GACHA_MAT_TABLE.reduce((s,e)=>s+e.w, 0);
+  let r = Math.random() * total;
+  for (const entry of CHAR_GACHA_MAT_TABLE) { r -= entry.w; if (r <= 0) return { type:'mat', entry }; }
+  return { type:'mat', entry: CHAR_GACHA_MAT_TABLE[0] };
+}
+function rollCharGacha() {
+  const pity = gState.gacha.charPityCount || 0;
+  if (pity >= 90) {
+    gState.gacha.charPityCount = 0;
+    return { type:'char', rarity:3, classId: CHAR_POOL[3][Math.floor(Math.random()*CHAR_POOL[3].length)] };
+  }
+  const roll = Math.random() * 100;
+  if (roll < 5) {
+    gState.gacha.charPityCount = 0;
+    return { type:'char', rarity:3, classId: CHAR_POOL[3][Math.floor(Math.random()*CHAR_POOL[3].length)] };
+  } else if (roll < 25) {
+    return { type:'char', rarity:2, classId: CHAR_POOL[2][Math.floor(Math.random()*CHAR_POOL[2].length)] };
+  }
+  return rollCharGachaMaterial();
+}
+function drawCharGacha(count) {
+  const cost = count === 1 ? 300 : 3000;
+  if ((gState.player.starCrystal||0) < cost) { toast('星晶石が不足しています'); return; }
+  gState.player.starCrystal -= cost;
+  gState.gacha.charTotalPulls = (gState.gacha.charTotalPulls||0) + count;
+  gState.gacha.charPityCount  = (gState.gacha.charPityCount ||0) + count;
+  gState.gacha.charMileage    = (gState.gacha.charMileage   ||0) + count;
+  gState.missions.daily.gachaPulls  = (gState.missions.daily.gachaPulls||0)  + count;
+  gState.missions.weekly.gachaPulls = (gState.missions.weekly.gachaPulls||0) + count;
+  const results = [];
+  for (let i = 0; i < count; i++) results.push(rollCharGacha());
+  results.forEach(r => {
+    if (r.type === 'char') {
+      const already = gState.ownedUnits.find(u => u.classId === r.classId);
+      if (!already) {
+        const unit = makeUnit(r.classId);
+        gState.ownedUnits.push(unit);
+        gState.unitProgress[unit.uid] = { level:1, exp:0 };
+        giveStarterCardsForClass(r.classId);
+        r.isNew = true;
+      } else {
+        const specFrag = r.rarity===3?60:15;
+        const genFrag  = r.rarity===3?10:3;
+        if (!gState.player.unitFragments) gState.player.unitFragments={};
+        gState.player.unitFragments[r.classId] = (gState.player.unitFragments[r.classId]||0)+specFrag;
+        gState.player.genericFragments = (gState.player.genericFragments||0)+genFrag;
+        r.isNew = false; r.specFrag = specFrag; r.genFrag = genFrag;
+      }
+    } else {
+      r.label = r.entry.give(gState.player);
+    }
+  });
+  saveState(); updateTopBar(); setTimeout(checkAchievements,100);
+  closeGacha(); Audio.gacha();
+  showCharGachaResult(results);
+}
+function showCharGachaResult(results) {
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay open';
+  ov.style.zIndex = '9999';
+  const star3 = results.filter(r=>r.type==='char'&&r.rarity===3);
+  const star2 = results.filter(r=>r.type==='char'&&r.rarity===2);
+  const mats  = results.filter(r=>r.type==='mat');
+  const rowsHTML = [...results].sort((a,b)=>{
+    const rar = r => r.type==='char'?r.rarity:0;
+    return rar(b)-rar(a);
+  }).map(r => {
+    if (r.type==='char') {
+      const cls  = CLASS_DATA[r.classId];
+      const col  = r.rarity===3?'var(--gold)':'var(--purple)';
+      const stars= r.rarity===3?'★★★':'★★☆';
+      const badge= r.isNew
+        ? `<span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:3px;border:1px solid rgba(201,168,76,0.4)">NEW</span>`
+        : `<span style="font-size:9px;color:var(--text3)">→専用+${r.specFrag} 汎用+${r.genFrag}</span>`;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        ${classIconHTML(r.classId,'28px')}
+        <span style="flex:1;font-size:12px;color:var(--text)">${cls?.name||r.classId}</span>
+        <span style="font-size:11px;color:${col};font-family:Rajdhani;font-weight:700">${stars}</span>
+        ${badge}
+      </div>`;
+    } else {
+      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:14px">📦</span>
+        <span style="flex:1;font-size:11px;color:var(--text2)">${r.label}</span>
+        <span style="font-size:10px;color:var(--text3)">★☆☆</span>
+      </div>`;
+    }
+  }).join('');
+  ov.innerHTML = `<div class="modal-panel" style="max-width:420px">
+    <div class="modal-header">
+      <h3>✨ 召喚結果</h3>
+      <button class="close-btn" onclick="this.closest('.modal-overlay').remove();openGacha()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:10px;justify-content:center;padding:6px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px">
+        ${star3.length?`<span style="color:var(--gold);font-family:Rajdhani;font-size:14px;font-weight:700">★★★ ×${star3.length}</span>`:''}
+        ${star2.length?`<span style="color:var(--purple);font-family:Rajdhani;font-size:14px;font-weight:700">★★☆ ×${star2.length}</span>`:''}
+        ${mats.length?`<span style="color:var(--text3);font-family:Rajdhani;font-size:14px;font-weight:700">素材 ×${mats.length}</span>`:''}
+      </div>
+      <div style="max-height:60vh;overflow-y:auto">${rowsHTML}</div>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+function openMileageExchange() {
+  const mileage = gState.gacha.charMileage || 0;
+  if (mileage < CHAR_MILEAGE_CAP) { toast(`マイレージが不足しています（${mileage}/${CHAR_MILEAGE_CAP}）`); return; }
+  const pickupCls = CLASS_DATA[CHAR_GACHA_PICKUP];
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay open';
+  ov.style.zIndex = '9999';
+  ov.innerHTML = `<div class="modal-panel" style="max-width:360px;text-align:center">
+    <div class="modal-header"><h3>🎖️ マイレージ交換</h3>
+      <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button></div>
+    <div class="modal-body">
+      <div style="margin-bottom:16px">${classIconHTML(CHAR_GACHA_PICKUP,'60px')}</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold);margin-bottom:8px">【${pickupCls?.name||CHAR_GACHA_PICKUP}】</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:20px">マイレージ ${CHAR_MILEAGE_CAP}Pt でこのキャラと交換します</div>
+      <button onclick="execMileageExchange()" style="width:100%;padding:12px;background:linear-gradient(135deg,#8b6a1f,#c9a84c);border:none;color:#000;font-family:'Cinzel',serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px">
+        交換する（残り ${mileage}Pt）</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+function execMileageExchange() {
+  if ((gState.gacha.charMileage||0) < CHAR_MILEAGE_CAP) return;
+  gState.gacha.charMileage -= CHAR_MILEAGE_CAP;
+  const already = gState.ownedUnits.find(u=>u.classId===CHAR_GACHA_PICKUP);
+  if (!already) {
+    const unit = makeUnit(CHAR_GACHA_PICKUP);
+    gState.ownedUnits.push(unit);
+    gState.unitProgress[unit.uid] = { level:1, exp:0 };
+    giveStarterCardsForClass(CHAR_GACHA_PICKUP);
+    toast(`【${CLASS_DATA[CHAR_GACHA_PICKUP]?.name}】を入手しました！`);
+  } else {
+    const specFrag=60, genFrag=10;
+    if (!gState.player.unitFragments) gState.player.unitFragments={};
+    gState.player.unitFragments[CHAR_GACHA_PICKUP]=(gState.player.unitFragments[CHAR_GACHA_PICKUP]||0)+specFrag;
+    gState.player.genericFragments=(gState.player.genericFragments||0)+genFrag;
+    toast(`重複：専用凸素材+${specFrag}、汎用凸素材+${genFrag}`);
+  }
+  saveState(); updateTopBar();
+  document.querySelectorAll('.modal-overlay').forEach(o=>o.remove());
+  renderCharaTab();
 }
 
 // ============================================================
