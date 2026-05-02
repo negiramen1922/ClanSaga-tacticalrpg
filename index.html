@@ -6703,11 +6703,11 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_11', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第4章：中ボスに挑む',
-    text:'バベルタワー S8（スカーボア）を撃破',
-    desc:'最初の中ボス。HP30,000の強敵。カードをしっかり装備して挑もう。',
+    text:'バベルタワー S10（スカーボア）を撃破',
+    desc:'最初の中ボス。HP32,000の強敵。カードをしっかり装備して挑もう。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×200 + ${itemIconHTML('expPot','14px')} EXPポット ×100`,
     rewardIcon:'crystal', rewardAmt:200, rewardType:'starCrystal', bonusEther:100,
-    cur:()=> gState.progress?.babel?.clearedStages?.['a1s8'] ? 1 : 0, req:1,
+    cur:()=> gState.progress?.babel?.clearedStages?.['a1s10'] ? 1 : 0, req:1,
   },
   // ─── 第5章: カードを強化する ───
   {
@@ -6728,11 +6728,11 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_14', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第5章：カードを強化する',
-    text:'バベルタワー S12（ゴブリン指揮部隊）をクリア',
+    text:'バベルタワー Area2-S4（ホブゴブリンの砦）をクリア',
     desc:'ホブゴブリン＋アーチャー混成部隊。遠距離と近接に対応した編成が必要。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×200`,
     rewardIcon:'crystal', rewardAmt:200, rewardType:'starCrystal',
-    cur:()=> gState.progress?.babel?.clearedStages?.['a1s12'] ? 1 : 0, req:1,
+    cur:()=> gState.progress?.babel?.clearedStages?.['a2s4'] ? 1 : 0, req:1,
   },
   // ─── 第6章: 夜戦を体験 ───
   {
@@ -6745,11 +6745,11 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_16', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第6章：夜戦を体験する',
-    text:'バベルタワー S13（鉄角の牧場）をクリア',
+    text:'バベルタワー Area2-S5（アイアンホーンの放牧地）をクリア',
     desc:'PRES35%の超硬い敵。BLACKダメージや割合ダメージが有効。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×250`,
     rewardIcon:'crystal', rewardAmt:250, rewardType:'starCrystal',
-    cur:()=> gState.progress?.babel?.clearedStages?.['a1s13'] ? 1 : 0, req:1,
+    cur:()=> gState.progress?.babel?.clearedStages?.['a2s5'] ? 1 : 0, req:1,
   },
   // ─── 第7章: 第一層制覇 ───
   {
@@ -6762,19 +6762,19 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_18', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第7章：第一層を制覇せよ',
-    text:'バベルタワー S14（精鋭ホブゴブリン隊）をクリア',
+    text:'バベルタワー Area2-S7（ホブゴブリンの猛攻）をクリア',
     desc:'3体の強力なホブゴブリン。鼓舞バフが重なると危険。素早く各個撃破しよう。',
     reward:`${itemIconHTML('expPot','14px')} EXPポット ×150`,
     rewardIcon:'expPot', rewardAmt:150, rewardType:'ether',
-    cur:()=> gState.progress?.babel?.clearedStages?.['a1s14'] ? 1 : 0, req:1,
+    cur:()=> gState.progress?.babel?.clearedStages?.['a2s7'] ? 1 : 0, req:1,
   },
   {
     id:'bg_19', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第7章：第一層を制覇せよ',
-    text:'バベルタワー S15（覇者の試練）を撃破',
-    desc:'第一層のボス。HP90,000の強敵。3クラスをフル強化して挑め！',
+    text:'バベルタワー Area2-S10（覇者の試練）を撃破',
+    desc:'第二層のボス。HP95,000の強敵。3クラスをフル強化して挑め！',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×500 + ${itemIconHTML('expPot','14px')} EXPポット ×200`,
     rewardIcon:'crystal', rewardAmt:500, rewardType:'starCrystal', bonusEther:200,
-    cur:()=> gState.progress?.babel?.clearedStages?.['a1s15'] ? 1 : 0, req:1,
+    cur:()=> gState.progress?.babel?.clearedStages?.['a2s10'] ? 1 : 0, req:1,
   },
   {
     id:'bg_20', shortcut:()=>{ closeMissionModal(); switchTab('chara'); }, shortcutLabel:'👤 キャラへ', chapter:'第7章：第一層を制覇せよ',
