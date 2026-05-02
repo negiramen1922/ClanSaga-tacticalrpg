@@ -2687,11 +2687,13 @@ img.item-icon {
       <button class="close-btn" onclick="closeMissionModal()">✕</button>
     </div>
     <div style="display:flex;border-bottom:1px solid var(--border)">
+      <div class="smithy-tab" id="mtab-event" onclick="switchMissionTab('event')" style="color:var(--gold)">🎊 イベント</div>
       <div class="smithy-tab active" id="mtab-beginner" onclick="switchMissionTab('beginner')">🎯 初心者</div>
       <div class="smithy-tab" id="mtab-daily" onclick="switchMissionTab('daily')">デイリー</div>
       <div class="smithy-tab" id="mtab-weekly" onclick="switchMissionTab('weekly')">ウィークリー</div>
     </div>
     <div class="modal-body">
+      <div id="mission-event-panel" style="display:none"></div>
       <div id="mission-beginner-panel"></div>
       <div id="mission-daily-panel" style="display:none"></div>
       <div id="mission-weekly-panel" style="display:none"></div>
@@ -6788,15 +6790,75 @@ const BEGINNER_MISSIONS = [
 ];
 
 
+// ============================================================
+//  スタートダッシュイベント（ver.1.00 リリース記念）
+// ============================================================
+
+const EVENT_END_DATE = '2026-05-14';
+function isEventActive() {
+  return new Date().toISOString().slice(0,10) <= EVENT_END_DATE;
+}
+
+const EVENT_MISSIONS = [
+  {
+    id:'ev_01',
+    text:'ログインボーナスを受け取る',
+    desc:'ホーム画面でログインボーナスを受け取ろう',
+    reward:`${itemIconHTML('crystal','14px')} 星晶石 ×200`,
+    rewardType:'starCrystal', rewardAmt:200,
+    cur:()=>Math.min(gState.missions.event?.loginBonus||0,1), req:1,
+  },
+  {
+    id:'ev_02',
+    text:'バベルタワーを3回クリア',
+    desc:'好きなステージを3回クリアしよう',
+    reward:`${itemIconHTML('crystal','14px')} 星晶石 ×300`,
+    rewardType:'starCrystal', rewardAmt:300,
+    cur:()=>Math.min(gState.missions.event?.babelClears||0,3), req:3,
+    shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ',
+  },
+  {
+    id:'ev_03',
+    text:'ガチャを1回引く',
+    desc:'強化素材や新キャラをゲットしよう',
+    reward:`${itemIconHTML('crystal','14px')} 星晶石 ×200 + ${itemIconHTML('expPot','14px')} EXPポット ×500`,
+    rewardType:'starCrystal', rewardAmt:200, bonusEther:500,
+    cur:()=>Math.min(gState.missions.event?.gachaPulls||0,1), req:1,
+    shortcut:()=>{ closeMissionModal(); openGacha(); }, shortcutLabel:'✨ ガチャへ',
+  },
+  {
+    id:'ev_04',
+    text:'ユニットをLv.5以上に強化する',
+    desc:'キャラ画面でEXPポットを使って強化しよう',
+    reward:`${itemIconHTML('expPot','14px')} EXPポット ×1000`,
+    rewardType:'ether', rewardAmt:1000,
+    cur:()=>gState.ownedUnits?.some(u=>(gState.unitProgress?.[u.uid]?.level||1)>=5)?1:0, req:1,
+    shortcut:()=>{ closeMissionModal(); switchTab('chara'); }, shortcutLabel:'👤 キャラへ',
+  },
+  {
+    id:'ev_05',
+    text:'バベルタワー S10（闘技場の掟）をクリア',
+    desc:'第1層の中盤ステージを突破せよ！',
+    reward:`${itemIconHTML('crystal','14px')} 星晶石 ×500`,
+    rewardType:'starCrystal', rewardAmt:500,
+    cur:()=>gState.progress?.babel?.clearedStages?.['a1s10']?1:0, req:1,
+    shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ',
+  },
+];
+const EVENT_ALL_BONUS = {
+  starCrystal:1000, ether:1000,
+  label:`${itemIconHTML('crystal','14px')} 星晶石 ×1000 + ${itemIconHTML('expPot','14px')} EXPポット ×1000`,
+};
+
 const DAILY_MISSIONS = [
-  { id:'d_login',  text:'ログインボーナスを受け取る',       reward:`${itemIconHTML('crystal','14px')} 星晶石 ×50`,  key:'loginBonus',  req:1, cur:()=>gState.missions.daily.loginBonus||0 },
-  { id:'d_babel1', text:'バベルタワーを1回クリア',           reward:`${itemIconHTML('crystal','14px')} 星晶石 ×80`,  key:'babelClears', req:1, cur:()=>gState.missions.daily.babelClears||0 },
+  { id:'d_login',  text:'ログインボーナスを受け取る',       reward:`${itemIconHTML('crystal','14px')} 星晶石 ×100`,  key:'loginBonus',  req:1, cur:()=>gState.missions.daily.loginBonus||0 },
+  { id:'d_babel1', text:'バベルタワーを1回クリア',           reward:`${itemIconHTML('crystal','14px')} 星晶石 ×100`,  key:'babelClears', req:1, cur:()=>gState.missions.daily.babelClears||0 },
   { id:'d_babel3', text:'バベルタワーを3回クリア',           reward:`${itemIconHTML('crystal','14px')} 星晶石 ×150`, key:'babelClears', req:3, cur:()=>gState.missions.daily.babelClears||0 },
-  { id:'d_class',  text:'クラスをどれかひとつ強化する',     reward:`${itemIconHTML('expPot','14px')} EXPポット ×100`,   key:'classUpgrade', req:1, cur:()=>gState.missions.daily.classUpgrade||0 },
+  { id:'d_class',  text:'クラスをどれかひとつ強化する',     reward:`${itemIconHTML('expPot','14px')} EXPポット ×200`,  key:'classUpgrade', req:1, cur:()=>gState.missions.daily.classUpgrade||0 },
   { id:'d_mine',   text:'鉱山から報酬を回収',               reward:`${itemIconHTML('gold','14px')} ゴールド ×500`,   key:'mineCollect', req:1, cur:()=>gState.missions.daily.mineCollect||0 },
 ];
 // デイリー全達成ボーナス
-const DAILY_ALL_BONUS = { starCrystal:200, label:`${itemIconHTML('crystal','14px')} 星晶石 ×200` };
+const DAILY_ALL_BONUS = { starCrystal:300, label:`${itemIconHTML('crystal','14px')} 星晶石 ×300` };
 
 const WEEKLY_MISSIONS = [
   { id:'w_login5',   text:'5回ログインする',             reward:`${itemIconHTML('crystal','14px')} 星晶石 ×300`,  key:'loginCount',    req:5,  cur:()=>gState.missions.weekly.loginCount||0 },
@@ -6821,9 +6883,9 @@ function defaultState(clanName) {
     player: {
       clanName, level:1, clanExp:0,
       gold:        500,  // 序盤の雰囲気。カード強化1回分
-      ether:       100,  // ユニット強化数回分
+      ether:       500,  // ユニット強化数回分（v1.00: 増量）
       clanCoin:      0,
-      starCrystal:  50,  // 初期星晶石（ガチャ半回分）
+      starCrystal: 300,  // 初期星晶石（v1.00: ガチャ1回分）
       mithril:       0,
       rankStones:  0,
       rerollStones: 1,  // 初回パッシブリロール1回
@@ -6831,9 +6893,9 @@ function defaultState(clanName) {
       lastLoginDate: '',
       loginStreak: 0,
       // アーティファクト強化素材
-      atomStone: { t1:5, t2:0, t3:0 },   // アトム秘石T1-T3
-      atomCore:  { t1:0, t2:0, t3:0 },   // アトミックコアT1-T3
-      stardust:  5,                        // 星屑の砂（アクセサリー強化）
+      atomStone: { t1:20, t2:0, t3:0 },  // アトム秘石T1-T3（v1.00: 増量）
+      atomCore:  { t1:0,  t2:0, t3:0 },  // アトミックコアT1-T3
+      stardust:  20,                       // 星屑の砂（v1.00: 増量）
       // スタミナ
       stamina:          100,
       staminaLastRegen: 0,
@@ -6873,7 +6935,8 @@ function defaultState(clanName) {
     missions:{
       daily:{ loginBonus:0, babelClears:0, mineCollect:0, classUpgrade:0, gachaPulls:0 },
       weekly:{ loginCount:0, babelClears:0, gachaPulls:0, dailyClears:0, cardUpgrade:0 },
-      dailyClaimed:{}, weeklyClaimed:{},
+      event:{ loginBonus:0, babelClears:0, gachaPulls:0 },
+      dailyClaimed:{}, weeklyClaimed:{}, eventClaimed:{},
       lastDaily:'', lastWeekly:'',
     },
   };
@@ -7039,6 +7102,9 @@ function normalizeState() {
   // beginnerMissions
   if (!gState.beginnerMissions) gState.beginnerMissions = { vanguardGiven:false, archerGiven:false };
   if (!gState.beginnerMissions.claimed) gState.beginnerMissions.claimed = {};
+  // イベントミッション
+  if (!gState.missions.event)        gState.missions.event        = { loginBonus:0, babelClears:0, gachaPulls:0 };
+  if (!gState.missions.eventClaimed) gState.missions.eventClaimed = {};
   if (!gState.progress) gState.progress = {};
   if (!gState.progress.nightBattles) gState.progress.nightBattles = 0;
   if (!gState.progress.surpriseCount) gState.progress.surpriseCount = 0;
@@ -7623,6 +7689,31 @@ function claimAchievement(id) {
 
 // お知らせデータ
 const NEWS_DATA = [
+  {
+    id: 'news_011',
+    type: 'campaign',
+    title: '🎊 ver.1.00 スタートダッシュイベント開催！',
+    date: '2026-05-01',
+    summary: '正式リリース記念！ミッション達成で星晶石を大量ゲット。全5ミッション達成で星晶石×1000＋EXPポット×1000！期間：5/1〜5/14',
+    body: `<h4>🎊 スタートダッシュイベント開催中！</h4>
+<p>バージョン1.00の正式リリースを記念して、期間限定のスタートダッシュイベントを開催します！</p>
+<div class="highlight">📅 開催期間：2026年5月1日 〜 2026年5月14日</div>
+
+<h4>🎁 イベントミッション一覧</h4>
+<ul>
+  <li>ログインボーナスを受け取る → <b>${itemIconHTML('crystal','14px')} 星晶石 ×200</b></li>
+  <li>バベルタワーを3回クリア → <b>${itemIconHTML('crystal','14px')} 星晶石 ×300</b></li>
+  <li>ガチャを1回引く → <b>${itemIconHTML('crystal','14px')} ×200 + ${itemIconHTML('expPot','14px')} EXPポット ×500</b></li>
+  <li>ユニットをLv.5以上に強化する → <b>${itemIconHTML('expPot','14px')} EXPポット ×1000</b></li>
+  <li>バベルタワー S10をクリア → <b>${itemIconHTML('crystal','14px')} 星晶石 ×500</b></li>
+</ul>
+
+<h4>🏆 全達成ボーナス</h4>
+<div class="highlight">5つ全て達成すると <b>${itemIconHTML('crystal','14px')} 星晶石 ×1000 + ${itemIconHTML('expPot','14px')} EXPポット ×1000</b> を獲得！</div>
+
+<h4>📋 受け取り方</h4>
+<p>ミッション画面の「🎊 イベント」タブからミッションを達成・受け取りできます。</p>`,
+  },
   {
     id: 'news_010',
     type: 'update',
@@ -8492,13 +8583,13 @@ function renderHomeDailyProgress() {
 
 // ===== ログインボーナス =====
 const LOGIN_BONUS = [
-  { day:1, rewards:[{ type:'starCrystal', amount:100, label:`${itemIconHTML('crystal','13px')}×100` }] },
-  { day:2, rewards:[{ type:'ether', amount:200, label:`${itemIconHTML('expPot','13px')}×200` }] },
-  { day:3, rewards:[{ type:'gold', amount:1000, label:`${itemIconHTML('gold','13px')}×1000` }] },
-  { day:4, rewards:[{ type:'starCrystal', amount:300, label:`${itemIconHTML('crystal','13px')}×300` }] },
-  { day:5, rewards:[{ type:'mithril', amount:3, label:'⛏️×3' }] },
-  { day:6, rewards:[{ type:'ether', amount:500, label:`${itemIconHTML('expPot','13px')}×500` }] },
-  { day:7, rewards:[{ type:'starCrystal', amount:1000, label:`${itemIconHTML('crystal','13px')}×1000`}, { type:'starMapPoints', amount:20, label:'⭐×20' }] },
+  { day:1, rewards:[{ type:'starCrystal', amount:200,  label:`${itemIconHTML('crystal','13px')}×200` }] },
+  { day:2, rewards:[{ type:'ether',       amount:500,  label:`${itemIconHTML('expPot','13px')}×500` }] },
+  { day:3, rewards:[{ type:'gold',        amount:1000, label:`${itemIconHTML('gold','13px')}×1000` }] },
+  { day:4, rewards:[{ type:'starCrystal', amount:500,  label:`${itemIconHTML('crystal','13px')}×500` }] },
+  { day:5, rewards:[{ type:'mithril', amount:3, label:'⛏️×3' }, { type:'ether', amount:500, label:`${itemIconHTML('expPot','13px')}×500` }] },
+  { day:6, rewards:[{ type:'ether',       amount:800,  label:`${itemIconHTML('expPot','13px')}×800` }] },
+  { day:7, rewards:[{ type:'starCrystal', amount:2000, label:`${itemIconHTML('crystal','13px')}×2000`}, { type:'starMapPoints', amount:20, label:'⭐×20' }] },
 ];
 
 function checkLoginBonus() {
@@ -8538,9 +8629,11 @@ function checkLoginBonus() {
     });
     p.lastLoginDate = today;
     // デイリーミッション: ログインボーナス受取カウント
-    gState.missions.daily.loginBonus = (gState.missions.daily.loginBonus||0) + 1;
+    gState.missions.daily.loginBonus  = (gState.missions.daily.loginBonus||0)  + 1;
     // ウィークリーミッション: ログイン回数カウント
     gState.missions.weekly.loginCount = (gState.missions.weekly.loginCount||0) + 1;
+    // イベントミッション: ログインボーナス受取カウント
+    if (gState.missions.event) gState.missions.event.loginBonus = (gState.missions.event.loginBonus||0) + 1;
     saveState();
     updateTopBar();
     banner.style.display = 'none';
@@ -12923,6 +13016,7 @@ function drawCharGacha(count) {
   gState.gacha.charMileage    = (gState.gacha.charMileage   ||0) + count;
   gState.missions.daily.gachaPulls  = (gState.missions.daily.gachaPulls||0)  + count;
   gState.missions.weekly.gachaPulls = (gState.missions.weekly.gachaPulls||0) + count;
+  if (gState.missions.event) gState.missions.event.gachaPulls = (gState.missions.event.gachaPulls||0) + count;
   const results = [];
   for (let i = 0; i < count; i++) results.push(rollCharGacha());
   results.forEach(r => {
@@ -13190,6 +13284,7 @@ function drawCardGacha(count) {
   gState.gacha.cardPityCount  = (gState.gacha.cardPityCount||0)  + count;
   gState.missions.daily.gachaPulls  = (gState.missions.daily.gachaPulls||0)  + count;
   gState.missions.weekly.gachaPulls = (gState.missions.weekly.gachaPulls||0) + count;
+  if (gState.missions.event) gState.missions.event.gachaPulls = (gState.missions.event.gachaPulls||0) + count;
 
   const results = [];
   for (let i = 0; i < count; i++) {
@@ -15002,9 +15097,13 @@ let missionActiveTab = 'beginner';
 
 function switchMissionTab(tab) {
   missionActiveTab = tab;
+  const evTab = document.getElementById('mtab-event');
+  if (evTab) evTab.className = 'smithy-tab' + (tab==='event'?' active':'');
   document.getElementById('mtab-beginner').className = 'smithy-tab' + (tab==='beginner'?' active':'');
   document.getElementById('mtab-daily').className    = 'smithy-tab' + (tab==='daily'?' active':'');
   document.getElementById('mtab-weekly').className   = 'smithy-tab' + (tab==='weekly'?' active':'');
+  const evPanel = document.getElementById('mission-event-panel');
+  if (evPanel) evPanel.style.display = tab==='event'?'':'none';
   document.getElementById('mission-beginner-panel').style.display = tab==='beginner'?'':'none';
   document.getElementById('mission-daily-panel').style.display    = tab==='daily'?'':'none';
   document.getElementById('mission-weekly-panel').style.display   = tab==='weekly'?'':'none';
@@ -15012,9 +15111,10 @@ function switchMissionTab(tab) {
 
 function openMissionModal() {
   renderMissions();
-  // 受取可能な初心者ミッションがあれば初心者タブを優先表示
+  // 受取可能なタブを優先表示: イベント > 初心者 > 現在のタブ
+  const hasEvClaim  = isEventActive() && EVENT_MISSIONS.some(m=>m.cur()>=m.req&&!(gState.missions.eventClaimed?.[m.id]));
   const hasBegClaim = BEGINNER_MISSIONS.some(m=>m.cur()>=m.req&&!(gState.beginnerMissions?.claimed?.[m.id]));
-  switchMissionTab(hasBegClaim ? 'beginner' : missionActiveTab);
+  switchMissionTab(hasEvClaim ? 'event' : hasBegClaim ? 'beginner' : missionActiveTab);
   document.getElementById('mission-modal').classList.add('open');
 }
 
@@ -15023,6 +15123,7 @@ function closeMissionModal() {
 }
 
 function renderMissions() {
+  renderEventMissionPanel();
   renderBeginnerMissionPanel();
   renderMissionPanel('daily',  DAILY_MISSIONS,  'mission-daily-panel',  'dailyClaimed');
   renderMissionPanel('weekly', WEEKLY_MISSIONS, 'mission-weekly-panel', 'weeklyClaimed');
@@ -15033,10 +15134,143 @@ function renderMissions() {
   const missionText = document.getElementById('mission-badge-text');
   if (missionText) {
     const claimableDaily = DAILY_MISSIONS.filter(m=>m.cur()>=m.req&&!gState.missions.dailyClaimed[m.id]).length;
-    const claimableBeg = BEGINNER_MISSIONS.filter(m=>m.cur()>=m.req&&!(gState.beginnerMissions?.claimed?.[m.id])).length;
-    const total = claimableDaily + claimableBeg;
+    const claimableBeg   = BEGINNER_MISSIONS.filter(m=>m.cur()>=m.req&&!(gState.beginnerMissions?.claimed?.[m.id])).length;
+    const claimableEv    = isEventActive() ? EVENT_MISSIONS.filter(m=>m.cur()>=m.req&&!(gState.missions.eventClaimed?.[m.id])).length : 0;
+    const total = claimableDaily + claimableBeg + claimableEv;
     missionText.innerHTML = 'ミッション' + (total>0?` <span class="mine-badge">${total}</span>`:'');
   }
+}
+
+function renderEventMissionPanel() {
+  const el = document.getElementById('mission-event-panel');
+  if (!el) return;
+  el.innerHTML = '';
+
+  if (!isEventActive()) {
+    el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text3)">イベント期間は終了しました</div>';
+    return;
+  }
+
+  if (!gState.missions.eventClaimed) gState.missions.eventClaimed = {};
+  const claimed = gState.missions.eventClaimed;
+
+  // 期間ヘッダー
+  const periodEl = document.createElement('div');
+  periodEl.style.cssText = 'font-size:10px;color:var(--text3);margin-bottom:10px;';
+  periodEl.textContent = '開催期間: 2026年5月1日 〜 2026年5月14日';
+  el.appendChild(periodEl);
+
+  // 全達成ボーナスカード
+  const allBonusId = 'ev_all_bonus';
+  const allClaimed = !!claimed[allBonusId];
+  const allDone    = EVENT_MISSIONS.every(m => claimed[m.id]);
+  const bonusCard  = document.createElement('div');
+  bonusCard.className = 'mission-item-v2' + (allClaimed ? ' claimed' : '');
+  bonusCard.style.cssText = `background:${allClaimed?'var(--bg2)':'rgba(201,168,76,0.06)'};border-color:${allDone&&!allClaimed?'var(--gold)':'var(--border)'};margin-bottom:14px`;
+  const bonusBtnHtml = allDone && !allClaimed
+    ? `<button class="mi2-claim" id="ev-allbonus-btn">受取</button>`
+    : allClaimed ? `<div class="mi2-done">✓ 受取済</div>` : '';
+  bonusCard.innerHTML = `
+    <div class="mi2-top">
+      <div>
+        <div class="mi2-text" style="color:var(--gold)">🏆 全達成ボーナス</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">全5ミッションをクリアすると獲得</div>
+      </div>
+      <div class="mi2-reward">${EVENT_ALL_BONUS.label}</div>
+    </div>
+    <div class="mi2-bottom">
+      <div class="mi2-count">${EVENT_MISSIONS.filter(m=>claimed[m.id]).length} / ${EVENT_MISSIONS.length}</div>
+      ${bonusBtnHtml}
+    </div>`;
+  el.appendChild(bonusCard);
+  if (allDone && !allClaimed) {
+    bonusCard.querySelector('#ev-allbonus-btn')?.addEventListener('click', () => {
+      const p = gState.player;
+      p.starCrystal = (p.starCrystal||0) + EVENT_ALL_BONUS.starCrystal;
+      p.ether       = (p.ether||0)       + EVENT_ALL_BONUS.ether;
+      gState.missions.eventClaimed[allBonusId] = true;
+      saveState(); updateTopBar(); renderMissions();
+      const flash = document.createElement('div');
+      flash.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:99999;animation:flashOut 2s forwards';
+      flash.innerHTML = `✓ ${EVENT_ALL_BONUS.label} 受取完了！`;
+      document.body.appendChild(flash);
+      setTimeout(() => flash.remove(), 2000);
+    });
+  }
+
+  EVENT_MISSIONS.forEach(m => {
+    const cur = Math.min(m.cur(), m.req);
+    const done = cur >= m.req;
+    const isClaimed = !!claimed[m.id];
+    const pct = Math.min(100, (cur / m.req) * 100);
+
+    const card = document.createElement('div');
+    card.className = 'mission-item-v2' + (isClaimed ? ' claimed' : '');
+    card.style.opacity = isClaimed ? '0.5' : '1';
+
+    const top = document.createElement('div');
+    top.className = 'mi2-top';
+    top.innerHTML = `
+      <div>
+        <div class="mi2-text">${m.text}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${m.desc}</div>
+      </div>
+      <div class="mi2-reward" style="min-width:80px;text-align:right">${m.reward}</div>`;
+    card.appendChild(top);
+
+    if (m.req > 1) {
+      const bar = document.createElement('div');
+      bar.className = 'mi2-bar';
+      bar.innerHTML = `<div class="mi2-bar-fill" style="width:${pct}%;background:${done?'var(--gold)':''}"></div>`;
+      card.appendChild(bar);
+    }
+
+    const bottom = document.createElement('div');
+    bottom.className = 'mi2-bottom';
+    const countEl = document.createElement('div');
+    countEl.className = 'mi2-count';
+    countEl.textContent = m.req > 1 ? `${cur} / ${m.req}` : (done ? '達成！' : '未達成');
+    bottom.appendChild(countEl);
+
+    if (done && !isClaimed) {
+      const btn = document.createElement('button');
+      btn.className = 'mi2-claim';
+      btn.textContent = '受取';
+      btn.addEventListener('click', () => claimEventMission(m));
+      bottom.appendChild(btn);
+    } else if (isClaimed) {
+      const doneEl = document.createElement('div');
+      doneEl.className = 'mi2-done';
+      doneEl.textContent = '✓ 受取済';
+      bottom.appendChild(doneEl);
+    } else if (m.shortcut) {
+      const scBtn = document.createElement('button');
+      scBtn.style.cssText = 'padding:4px 10px;background:none;border:1px solid var(--accent2);color:var(--accent2);font-size:10px;border-radius:6px;cursor:pointer';
+      scBtn.textContent = m.shortcutLabel || '→ 開く';
+      scBtn.addEventListener('click', () => m.shortcut());
+      bottom.appendChild(scBtn);
+    }
+    card.appendChild(bottom);
+    el.appendChild(card);
+  });
+}
+
+function claimEventMission(m) {
+  if (!gState.missions.eventClaimed) gState.missions.eventClaimed = {};
+  if (gState.missions.eventClaimed[m.id]) return;
+  const p = gState.player;
+  if (m.rewardType === 'starCrystal') p.starCrystal = (p.starCrystal||0) + m.rewardAmt;
+  else if (m.rewardType === 'ether')  p.ether       = (p.ether||0)       + m.rewardAmt;
+  else if (m.rewardType === 'gold')   p.gold        = (p.gold||0)        + m.rewardAmt;
+  if (m.bonusEther)   p.ether   = (p.ether||0)   + m.bonusEther;
+  if (m.bonusMithril) p.mithril = (p.mithril||0) + m.bonusMithril;
+  gState.missions.eventClaimed[m.id] = true;
+  saveState(); updateTopBar(); renderMissions();
+  const flash = document.createElement('div');
+  flash.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:99999;animation:flashOut 2s forwards';
+  flash.innerHTML = `✓ ${m.reward} 受取完了！`;
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 2000);
 }
 
 function renderBeginnerMissionPanel() {
@@ -16804,8 +17038,9 @@ function executeSweep(areaId, stageId, count) {
   gState.player.starCrystal = (gState.player.starCrystal||0) + coin;
   gState.player.atomStone = stone;
   gState.player.atomCore  = core;
-  gState.missions.daily.babelClears = (gState.missions.daily.babelClears||0)+count;
+  gState.missions.daily.babelClears  = (gState.missions.daily.babelClears||0)+count;
   gState.missions.weekly.babelClears = (gState.missions.weekly.babelClears||0)+count;
+  if (gState.missions.event) gState.missions.event.babelClears = (gState.missions.event.babelClears||0)+count;
   addClanExp(Math.floor(ether*0.4)*count);
   saveState();
   updateTopBar();
