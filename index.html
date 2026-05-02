@@ -18554,24 +18554,26 @@ function renderSortieTab() {
   });
 
   const shrineWrap = document.getElementById('shrine-list-wrap');
-  shrineWrap.innerHTML = '';
-  SHRINE_STAGES.forEach(sh => {
-    const row = document.createElement('div');
-    row.className = 'area-item';
-    row.innerHTML = `
-      <span style="font-size:20px">${sh.icon}</span>
-      <div>
-        <div class="area-name">${sh.name}</div>
-        <div class="area-atk">難易度: ${'★'.repeat(sh.diff||1)}</div>
-      </div>`;
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-blue btn-sm';
-    btn.style.marginLeft = 'auto';
-    btn.textContent = '挑戦';
-    btn.addEventListener('click', () => startShrineBattle(sh.id));
-    row.appendChild(btn);
-    shrineWrap.appendChild(row);
-  });
+  if (shrineWrap) {
+    shrineWrap.innerHTML = '';
+    SHRINE_STAGES.forEach(sh => {
+      const row = document.createElement('div');
+      row.className = 'area-item';
+      row.innerHTML = `
+        <span style="font-size:20px">${sh.icon}</span>
+        <div>
+          <div class="area-name">${sh.name}</div>
+          <div class="area-atk">難易度: ${'★'.repeat(sh.diff||1)}</div>
+        </div>`;
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-blue btn-sm';
+      btn.style.marginLeft = 'auto';
+      btn.textContent = '挑戦';
+      btn.addEventListener('click', () => startShrineBattle(sh.id));
+      row.appendChild(btn);
+      shrineWrap.appendChild(row);
+    });
+  }
 
   // アビス・コロシアム・即時ダンジョン
   renderAbyssContent();
