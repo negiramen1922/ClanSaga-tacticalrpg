@@ -2421,7 +2421,7 @@ img.item-icon {
         <div class="section-header" onclick="toggleSection(this,'babel-area-list')">
           <span class="sec-icon">🗼</span>
           <div>
-            <div class="sec-title">バベルタワー</div>
+            <div class="sec-title">メインステージ</div>
             <div class="sec-sub">メインコンテンツ — 5エリア×10ステージ</div>
           </div>
           <span class="sec-arrow">▶</span>
@@ -6592,7 +6592,7 @@ const BEGINNER_MISSIONS = [
   // ─── 第1章: 戦闘の基本 ───
   {
     id:'bg_01', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第1章：戦闘の基本',
-    text:'バベルタワー S1（はじまりの平原）をクリア',
+    text:'メインステージ S1（はじまりの平原）をクリア',
     desc:'まずは一番最初のステージを攻略しよう。ウォリアーが自動で戦ってくれる。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×50`,
     rewardIcon:'crystal', rewardAmt:50, rewardType:'starCrystal',
@@ -6600,7 +6600,7 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_02', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第1章：戦闘の基本',
-    text:'バベルタワー S2（一角兎の巣）をクリア',
+    text:'メインステージ S2（一角兎の巣）をクリア',
     desc:'高SPDの敵が登場。ATBゲージの動きに注目しよう。',
     reward:`${itemIconHTML('expPot','14px')} EXPポット ×30`,
     rewardIcon:'expPot', rewardAmt:30, rewardType:'ether',
@@ -6608,7 +6608,7 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_03', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第1章：戦闘の基本',
-    text:'バベルタワー S3（灰色の森）をクリア → ヴァンガード獲得',
+    text:'メインステージ S3（灰色の森）をクリア → ヴァンガード獲得',
     desc:'タンク役のヴァンガードが仲間になる！前衛に配置して壁を作ろう。',
     reward:`🃏 カード召喚 ×1回分（${itemIconHTML('ink','14px')} 200）`,
     rewardIcon:'crystal', rewardAmt:200, rewardType:'starCrystal',
@@ -6632,7 +6632,7 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_05', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第2章：編成を学ぶ',
-    text:'バベルタワー S5（ウルフの縄張り）をクリア',
+    text:'メインステージ S5（ウルフの縄張り）をクリア',
     desc:'2体の強敵。前衛のヴァンガードがいると安定する。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×80`,
     rewardIcon:'crystal', rewardAmt:80, rewardType:'starCrystal',
@@ -6673,7 +6673,7 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_08', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第3章：カードを装備する',
-    text:'バベルタワー S7（ゴブリンの見張り）をクリア → アーチャー獲得',
+    text:'メインステージ S7（ゴブリンの見張り）をクリア → アーチャー獲得',
     desc:'遠距離アタッカーのアーチャーが仲間に！後衛から高火力で支援してくれる。',
     reward:`🃏 カード召喚 ×3回分（${itemIconHTML('ink','14px')} 600）`,
     rewardIcon:'crystal', rewardAmt:600, rewardType:'starCrystal',
@@ -6703,11 +6703,11 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_11', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第4章：中ボスに挑む',
-    text:'バベルタワー S8（スカーボア）を撃破',
-    desc:'最初の中ボス。HP30,000の強敵。カードをしっかり装備して挑もう。',
+    text:'メインステージ S10（スカーボア）を撃破',
+    desc:'最初の中ボス。HP32,000の強敵。カードをしっかり装備して挑もう。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×200 + ${itemIconHTML('expPot','14px')} EXPポット ×100`,
     rewardIcon:'crystal', rewardAmt:200, rewardType:'starCrystal', bonusEther:100,
-    cur:()=> gState.progress?.babel?.clearedStages?.['a1s8'] ? 1 : 0, req:1,
+    cur:()=> gState.progress?.babel?.clearedStages?.['a1s10'] ? 1 : 0, req:1,
   },
   // ─── 第5章: カードを強化する ───
   {
@@ -6728,11 +6728,11 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_14', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第5章：カードを強化する',
-    text:'バベルタワー S12（ゴブリン指揮部隊）をクリア',
+    text:'メインステージ Area2-S4（ホブゴブリンの砦）をクリア',
     desc:'ホブゴブリン＋アーチャー混成部隊。遠距離と近接に対応した編成が必要。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×200`,
     rewardIcon:'crystal', rewardAmt:200, rewardType:'starCrystal',
-    cur:()=> gState.progress?.babel?.clearedStages?.['a1s12'] ? 1 : 0, req:1,
+    cur:()=> gState.progress?.babel?.clearedStages?.['a2s4'] ? 1 : 0, req:1,
   },
   // ─── 第6章: 夜戦を体験 ───
   {
@@ -6745,11 +6745,11 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_16', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第6章：夜戦を体験する',
-    text:'バベルタワー S13（鉄角の牧場）をクリア',
+    text:'メインステージ Area2-S5（アイアンホーンの放牧地）をクリア',
     desc:'PRES35%の超硬い敵。BLACKダメージや割合ダメージが有効。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×250`,
     rewardIcon:'crystal', rewardAmt:250, rewardType:'starCrystal',
-    cur:()=> gState.progress?.babel?.clearedStages?.['a1s13'] ? 1 : 0, req:1,
+    cur:()=> gState.progress?.babel?.clearedStages?.['a2s5'] ? 1 : 0, req:1,
   },
   // ─── 第7章: 第一層制覇 ───
   {
@@ -6762,19 +6762,19 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_18', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第7章：第一層を制覇せよ',
-    text:'バベルタワー S14（精鋭ホブゴブリン隊）をクリア',
+    text:'メインステージ Area2-S7（ホブゴブリンの猛攻）をクリア',
     desc:'3体の強力なホブゴブリン。鼓舞バフが重なると危険。素早く各個撃破しよう。',
     reward:`${itemIconHTML('expPot','14px')} EXPポット ×150`,
     rewardIcon:'expPot', rewardAmt:150, rewardType:'ether',
-    cur:()=> gState.progress?.babel?.clearedStages?.['a1s14'] ? 1 : 0, req:1,
+    cur:()=> gState.progress?.babel?.clearedStages?.['a2s7'] ? 1 : 0, req:1,
   },
   {
     id:'bg_19', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第7章：第一層を制覇せよ',
-    text:'バベルタワー S15（覇者の試練）を撃破',
-    desc:'第一層のボス。HP90,000の強敵。3クラスをフル強化して挑め！',
+    text:'メインステージ Area2-S10（覇者の試練）を撃破',
+    desc:'第二層のボス。HP95,000の強敵。3クラスをフル強化して挑め！',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×500 + ${itemIconHTML('expPot','14px')} EXPポット ×200`,
     rewardIcon:'crystal', rewardAmt:500, rewardType:'starCrystal', bonusEther:200,
-    cur:()=> gState.progress?.babel?.clearedStages?.['a1s15'] ? 1 : 0, req:1,
+    cur:()=> gState.progress?.babel?.clearedStages?.['a2s10'] ? 1 : 0, req:1,
   },
   {
     id:'bg_20', shortcut:()=>{ closeMissionModal(); switchTab('chara'); }, shortcutLabel:'👤 キャラへ', chapter:'第7章：第一層を制覇せよ',
@@ -6810,7 +6810,7 @@ const EVENT_MISSIONS = [
   },
   {
     id:'ev_02',
-    text:'バベルタワーを3回クリア',
+    text:'メインステージを3回クリア',
     desc:'好きなステージを3回クリアしよう',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×300`,
     rewardType:'starCrystal', rewardAmt:300,
@@ -6837,7 +6837,7 @@ const EVENT_MISSIONS = [
   },
   {
     id:'ev_05',
-    text:'バベルタワー S10（闘技場の掟）をクリア',
+    text:'メインステージ S10（闘技場の掟）をクリア',
     desc:'第1層の中盤ステージを突破せよ！',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×500`,
     rewardType:'starCrystal', rewardAmt:500,
@@ -6852,8 +6852,8 @@ const EVENT_ALL_BONUS = {
 
 const DAILY_MISSIONS = [
   { id:'d_login',  text:'ログインボーナスを受け取る',       reward:`${itemIconHTML('crystal','14px')} 星晶石 ×100`,  key:'loginBonus',  req:1, cur:()=>gState.missions.daily.loginBonus||0 },
-  { id:'d_babel1', text:'バベルタワーを1回クリア',           reward:`${itemIconHTML('crystal','14px')} 星晶石 ×100`,  key:'babelClears', req:1, cur:()=>gState.missions.daily.babelClears||0 },
-  { id:'d_babel3', text:'バベルタワーを3回クリア',           reward:`${itemIconHTML('crystal','14px')} 星晶石 ×150`, key:'babelClears', req:3, cur:()=>gState.missions.daily.babelClears||0 },
+  { id:'d_babel1', text:'メインステージを1回クリア',           reward:`${itemIconHTML('crystal','14px')} 星晶石 ×100`,  key:'babelClears', req:1, cur:()=>gState.missions.daily.babelClears||0 },
+  { id:'d_babel3', text:'メインステージを3回クリア',           reward:`${itemIconHTML('crystal','14px')} 星晶石 ×150`, key:'babelClears', req:3, cur:()=>gState.missions.daily.babelClears||0 },
   { id:'d_class',  text:'クラスをどれかひとつ強化する',     reward:`${itemIconHTML('expPot','14px')} EXPポット ×200`,  key:'classUpgrade', req:1, cur:()=>gState.missions.daily.classUpgrade||0 },
   { id:'d_mine',   text:'鉱山から報酬を回収',               reward:`${itemIconHTML('gold','14px')} ゴールド ×500`,   key:'mineCollect', req:1, cur:()=>gState.missions.daily.mineCollect||0 },
 ];
@@ -6862,7 +6862,7 @@ const DAILY_ALL_BONUS = { starCrystal:300, label:`${itemIconHTML('crystal','14px
 
 const WEEKLY_MISSIONS = [
   { id:'w_login5',   text:'5回ログインする',             reward:`${itemIconHTML('crystal','14px')} 星晶石 ×300`,  key:'loginCount',    req:5,  cur:()=>gState.missions.weekly.loginCount||0 },
-  { id:'w_babel10',  text:'バベルタワーを10回クリア',    reward:`${itemIconHTML('crystal','14px')} 星晶石 ×500`,  key:'babelClears',   req:10, cur:()=>gState.missions.weekly.babelClears||0 },
+  { id:'w_babel10',  text:'メインステージを10回クリア',    reward:`${itemIconHTML('crystal','14px')} 星晶石 ×500`,  key:'babelClears',   req:10, cur:()=>gState.missions.weekly.babelClears||0 },
   { id:'w_gacha5',   text:'カードガチャを5回引く',       reward:`${itemIconHTML('expPot','14px')} EXPポット ×300`,    key:'gachaPulls',    req:5,  cur:()=>gState.missions.weekly.gachaPulls||0 },
   { id:'w_daily20',  text:'デイリーミッションを20回クリアする', reward:`${itemIconHTML('crystal','14px')} 星晶石 ×400`, key:'dailyClears', req:20, cur:()=>gState.missions.weekly.dailyClears||0 },
   { id:'w_cardUp',   text:'カードを1枚強化する',         reward:`${itemIconHTML('expPot','14px')} EXPポット ×500`,    key:'cardUpgrade',   req:1,  cur:()=>gState.missions.weekly.cardUpgrade||0 },
@@ -7440,10 +7440,10 @@ const ACHIEVEMENTS = [
   { id:'a_gacha300', cat:'gacha', icon:'⭐', name:'召喚の覇者',         desc:'ガチャを合計300回引く',          reward:`${itemIconHTML('crystal','14px')}×1000`, rCoin:1000,rEther:0,  cur:()=> Math.min((gState.gacha?.totalPulls||0)+(gState.gacha?.cardTotalPulls||0),300), req:300 },
 
   // ─── カテゴリ: バトル・討伐 ───
-  { id:'a_bat1',     cat:'battle', icon:'🗡️', name:'はじめての戦闘',   desc:'バベルタワーを1回クリアする',     reward:`${itemIconHTML('crystal','14px')}×50`,            rCoin:50,   rEther:0, rCrystal:0,   cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 1),    req:1    },
-  { id:'a_bat10',    cat:'battle', icon:'⚔️', name:'歴戦の冒険者',     desc:'バベルタワーを10回クリアする',    reward:`${itemIconHTML('crystal','14px')}×200 + 💠×50`,   rCoin:200,  rEther:0, rCrystal:50,  cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 10),   req:10   },
-  { id:'a_bat50',    cat:'battle', icon:'🏆', name:'バベルの覇者',     desc:'バベルタワーを50回クリアする',    reward:`${itemIconHTML('crystal','14px')}×500 + 💠×100`,  rCoin:500,  rEther:0, rCrystal:100, cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 50),   req:50   },
-  { id:'a_bat100',   cat:'battle', icon:'🌋', name:'無双の剣豪',       desc:'バベルタワーを100回クリアする',   reward:`${itemIconHTML('crystal','14px')}×1000 + 💠×200`, rCoin:1000, rEther:0, rCrystal:200, cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 100),  req:100  },
+  { id:'a_bat1',     cat:'battle', icon:'🗡️', name:'はじめての戦闘',   desc:'メインステージを1回クリアする',     reward:`${itemIconHTML('crystal','14px')}×50`,            rCoin:50,   rEther:0, rCrystal:0,   cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 1),    req:1    },
+  { id:'a_bat10',    cat:'battle', icon:'⚔️', name:'歴戦の冒険者',     desc:'メインステージを10回クリアする',    reward:`${itemIconHTML('crystal','14px')}×200 + 💠×50`,   rCoin:200,  rEther:0, rCrystal:50,  cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 10),   req:10   },
+  { id:'a_bat50',    cat:'battle', icon:'🏆', name:'バベルの覇者',     desc:'メインステージを50回クリアする',    reward:`${itemIconHTML('crystal','14px')}×500 + 💠×100`,  rCoin:500,  rEther:0, rCrystal:100, cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 50),   req:50   },
+  { id:'a_bat100',   cat:'battle', icon:'🌋', name:'無双の剣豪',       desc:'メインステージを100回クリアする',   reward:`${itemIconHTML('crystal','14px')}×1000 + 💠×200`, rCoin:1000, rEther:0, rCrystal:200, cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 100),  req:100  },
   { id:'a_slime100', cat:'battle', icon:'🟢', name:'スライム掃討',     desc:'スライム系モンスターを100体討伐する', reward:`${itemIconHTML('crystal','14px')}×200`, rCoin:200, rEther:0, cur:()=> Math.min(gState.progress?.stats?.killsByName?.['スライム']||0, 100), req:100 },
   { id:'a_slime300', cat:'battle', icon:'💚', name:'スライム根絶',     desc:'スライム系モンスターを300体討伐する', reward:`${itemIconHTML('expPot','14px')}×300`, rCoin:0,   rEther:300,cur:()=> Math.min(gState.progress?.stats?.killsByName?.['スライム']||0, 300), req:300 },
   { id:'a_goblin50', cat:'battle', icon:'👺', name:'ゴブリンハンター', desc:'ゴブリン系モンスターを50体討伐する',  reward:`${itemIconHTML('crystal','14px')}×150`, rCoin:150, rEther:0, cur:()=> Math.min(gState.progress?.stats?.killsByName?.['ゴブリン']||0, 50),  req:50  },
@@ -7702,10 +7702,10 @@ const NEWS_DATA = [
 <h4>🎁 イベントミッション一覧</h4>
 <ul>
   <li>ログインボーナスを受け取る → <b>${itemIconHTML('crystal','14px')} 星晶石 ×200</b></li>
-  <li>バベルタワーを3回クリア → <b>${itemIconHTML('crystal','14px')} 星晶石 ×300</b></li>
+  <li>メインステージを3回クリア → <b>${itemIconHTML('crystal','14px')} 星晶石 ×300</b></li>
   <li>ガチャを1回引く → <b>${itemIconHTML('crystal','14px')} ×200 + ${itemIconHTML('expPot','14px')} EXPポット ×500</b></li>
   <li>ユニットをLv.5以上に強化する → <b>${itemIconHTML('expPot','14px')} EXPポット ×1000</b></li>
-  <li>バベルタワー S10をクリア → <b>${itemIconHTML('crystal','14px')} 星晶石 ×500</b></li>
+  <li>メインステージ S10をクリア → <b>${itemIconHTML('crystal','14px')} 星晶石 ×500</b></li>
 </ul>
 
 <h4>🏆 全達成ボーナス</h4>
@@ -8508,13 +8508,13 @@ function renderBeginnerMissions() {
   const missions = [
     {
       label: 'ヴァンガードを獲得', icon: '🛡️',
-      desc: 'バベルタワー S3（灰色の森）をクリア',
+      desc: 'メインステージ S3（灰色の森）をクリア',
       done: !!bm.vanguardGiven,
       progress: !!cleared['a1s3'],
     },
     {
       label: 'アーチャーを獲得', icon: '🏹',
-      desc: 'バベルタワー S7（ゴブリンの見張り）をクリア',
+      desc: 'メインステージ S7（ゴブリンの見張り）をクリア',
       done: !!bm.archerGiven,
       progress: !!cleared['a1s7'],
     },
@@ -9936,13 +9936,6 @@ function openStageList(areaId) {
       btn.addEventListener('click', () => startBabelBattle(areaId, s.id));
       row.appendChild(btn);
 
-      if (cleared && (gState.tickets?.sweep||0) > 0) {
-        const sweepBtn = document.createElement('button');
-        sweepBtn.className = 'sweep-btn';
-        sweepBtn.textContent = '🎫周回';
-        sweepBtn.addEventListener('click', () => { closeStageList(); openSweepUI(areaId, s.id); });
-        row.appendChild(sweepBtn);
-      }
     }
 
     el.appendChild(row);
@@ -14302,7 +14295,7 @@ function renderHomeBeginner() {
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:16px">🎁</span>
             <div style="flex:1">
-              <div style="font-size:12px;font-weight:700;color:var(--gold)">${nextClaimable.text.replace(/バベルタワー /,'')}</div>
+              <div style="font-size:12px;font-weight:700;color:var(--gold)">${nextClaimable.text.replace(/メインステージ /,'')}</div>
               <div style="font-size:10px;color:var(--text3);margin-top:1px">報酬: ${nextClaimable.reward || ''}</div>
             </div>
             <div style="font-size:11px;color:var(--gold);font-weight:700">受取 ▶</div>
@@ -14314,7 +14307,7 @@ function renderHomeBeginner() {
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:16px">📍</span>
             <div style="flex:1">
-              <div style="font-size:12px;color:var(--text)">${nextPending.text.replace(/バベルタワー /,'')}</div>
+              <div style="font-size:12px;color:var(--text)">${nextPending.text.replace(/メインステージ /,'')}</div>
               <div style="font-size:10px;color:var(--text3);margin-top:1px">${nextPending.desc}</div>
             </div>
             <div style="font-size:10px;color:var(--text3)">詳細 ▶</div>
@@ -17860,6 +17853,7 @@ function abyssSweepCost(layerId) {
 function renderAbyssContent() {
   const el = document.getElementById('abyss-content');
   if (!el) return;
+  const lv = gState.player.level;
 
   if (lv < 31) {
     el.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3)">🔒 Clan Lv.31で解放されます（現在: Lv.${lv}）</div>`;
