@@ -2418,7 +2418,7 @@ img.item-icon {
     <!-- SORTIE -->
     <div id="tab-sortie" class="tab-panel">
       <div class="content-section">
-        <div class="section-header" onclick="toggleSection(this,'babel-area-list')">
+        <div id="ft-babel-header" class="section-header" onclick="toggleSection(this,'babel-area-list')">
           <span class="sec-icon">🗼</span>
           <div>
             <div class="sec-title">メインステージ</div>
@@ -2799,6 +2799,22 @@ img.item-icon {
 
   <!-- スポットライト（背景クリック無効化用） -->
   <div id="tut-spotlight" style="display:none;position:fixed;pointer-events:none;border-radius:10px;box-shadow:0 0 0 3px var(--accent2);z-index:8001;transition:all 0.3s"></div>
+
+  <!-- フロー型チュートリアルパネル -->
+  <div id="flow-tut" style="display:none;position:fixed;bottom:68px;left:0;right:0;z-index:9000;padding:0 10px;">
+    <div style="background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:14px 16px;max-width:480px;margin:0 auto;box-shadow:0 4px 24px rgba(0,0,0,0.7);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span id="ft-icon" style="font-size:22px"></span>
+        <div id="ft-title" style="font-weight:700;font-size:14px;color:var(--gold);flex:1"></div>
+        <div id="ft-progress" style="font-size:10px;color:var(--text3)"></div>
+        <button onclick="skipFlowTutorial()" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;padding:2px 6px;margin-left:4px;">スキップ</button>
+      </div>
+      <div id="ft-text" style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:12px;white-space:pre-wrap;"></div>
+      <div style="display:flex;justify-content:flex-end;">
+        <button id="ft-btn" onclick="flowTutNext()" class="btn btn-gold" style="padding:8px 24px;font-size:13px;display:none;">次へ</button>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="modal-overlay" id="mine-modal">
   <div class="modal-panel">
@@ -7098,6 +7114,8 @@ function normalizeState() {
   // tutorial
   if (!gState.tutorial) gState.tutorial = { completed:{atb:false,scout:false,night:false}, skipped:false };
   if (!gState.tutorial.completed) gState.tutorial.completed = {atb:false,scout:false,night:false};
+  if (gState.tutorial.flowDone     === undefined) gState.tutorial.flowDone     = false;
+  if (gState.tutorial.flowRewarded === undefined) gState.tutorial.flowRewarded = false;
 
   // beginnerMissions
   if (!gState.beginnerMissions) gState.beginnerMissions = { vanguardGiven:false, archerGiven:false };
@@ -8263,6 +8281,10 @@ function launchApp() {
 
   // 初回チュートリアル自動起動
   checkAutoTutorial();
+  // フロー型チュートリアル（新規プレイヤーのみ）
+  if (!gState.tutorial?.flowDone) {
+    setTimeout(() => startFlowTutorial(), 1000);
+  }
 }
 
 function renderAll() {
@@ -9896,13 +9918,18 @@ function isAreaUnlocked(areaId) {
 
 function toggleSection(header, listId) {
   header.classList.toggle('open');
-  document.getElementById(listId).classList.toggle('open');
+  const panel = document.getElementById(listId);
+  panel.classList.toggle('open');
+  if (listId === 'babel-area-list' && panel.classList.contains('open')) {
+    flowTutAdvance('babel_open');
+  }
 }
 
 let currentAreaId = null;
 
 function openStageList(areaId) {
   currentAreaId = areaId;
+  if (areaId === 'area1') flowTutAdvance('open_area1');
   const area = BABEL_AREAS.find(a=>a.id===areaId);
   document.getElementById('slm-title').textContent = area.icon + ' ' + area.name + '  ' + area.recAtk;
   const el = document.getElementById('slm-stages');
@@ -9933,9 +9960,9 @@ function openStageList(areaId) {
       const btn = document.createElement('button');
       btn.className = 'start-btn';
       btn.textContent = '出撃';
+      if (areaId === 'area1' && i === 0) btn.id = 'ft-s1-btn';
       btn.addEventListener('click', () => startBabelBattle(areaId, s.id));
       row.appendChild(btn);
-
     }
 
     el.appendChild(row);
@@ -10364,6 +10391,7 @@ function startBabelBattle(areaId, stageId) {
   const area = BABEL_AREAS.find(a=>a.id===areaId);
   const stage = area.stages.find(s=>s.id===stageId);
   battleContext = { type:'babel', areaId, stageId, stageName: area.name + ' - ' + stage.name, waves: stage.enemies };
+  if (stageId === 'a1s1') flowTutAdvance('battle_start');
   closeStageList();
   initBattle(stage.enemies, area.name + ' - ' + stage.name);
 }
@@ -12605,6 +12633,9 @@ function endBattle(victory) {
   }
 
   // Result screen
+  if (victory && battleContext?.type === 'babel' && battleContext?.stageId === 'a1s1') {
+    flowTutAdvance('battle_victory');
+  }
   document.getElementById('result-title').textContent = victory ? 'VICTORY' : 'DEFEAT';
   document.getElementById('result-title').className = 'result-title ' + (victory?'victory':'defeat');
   // BGM・SE
@@ -14211,6 +14242,7 @@ function renderHelpModal() {
 // ホーム表示時にチュートリアル自動起動（初回のみ）
 function checkAutoTutorial() {
   if (!gState.tutorial) return;
+  if (!gState.tutorial.flowDone) return; // フロー型チュートリアルを先に完了させる
   if (gState.tutorial.skipped) return;
   if (!gState.tutorial.completed?.atb) {
     setTimeout(() => startTutorial('atb'), 800);
@@ -18547,6 +18579,7 @@ function renderSortieTab() {
       const btn = document.createElement('button');
       btn.className = 'btn btn-blue btn-sm';
       btn.textContent = '挑戦';
+      if (area.id === 'area1') btn.id = 'ft-area1-btn';
       btn.addEventListener('click', () => openStageList(area.id));
       row.appendChild(btn);
     }
@@ -18720,6 +18753,8 @@ function switchTab(tab) {
   if (tab==='cards')    renderCardListTab();
   if (tab==='artifact') renderArtifactListTab();
   if (tab==='acc')      renderAccListTab();
+  if (tab === 'sortie') flowTutAdvance('tab_sortie');
+  if (tab === 'chara')  flowTutAdvance('tab_chara');
 }
 
 // ============================================================
@@ -19363,6 +19398,179 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof toast === 'function') toast('✓ 管理者パネル：データを保存しました');
   };
 })();
+
+// ============================================================
+//  フロー型チュートリアル
+// ============================================================
+
+const FLOW_STEPS = [
+  {
+    id: 'ft_welcome', type: 'info', icon: '🏰',
+    title: 'ようこそ！',
+    getText: () => `${gState.player.clanName}クランのリーダーよ、\n五大力が渦巻く世界へようこそ！\n\nこれから基本操作を一緒に確認しましょう。`,
+    btnText: 'はじめよう！',
+    spotlight: null,
+  },
+  {
+    id: 'ft_goto_sortie', type: 'action', icon: '⚔️',
+    title: '出撃タブへ移動',
+    getText: () => '画面下の「⚔️ 出撃」タブを\nタップしてください',
+    spotlight: 'nav-sortie',
+    trigger: 'tab_sortie',
+  },
+  {
+    id: 'ft_open_section', type: 'action', icon: '🗺️',
+    title: 'メインステージを開く',
+    getText: () => '「🗼 メインステージ」のタイトル部分を\nタップして展開してください',
+    spotlight: 'ft-babel-header',
+    trigger: 'babel_open',
+  },
+  {
+    id: 'ft_open_area', type: 'action', icon: '🗺️',
+    title: 'エリア1を選択',
+    getText: () => 'エリア1の「挑戦」ボタンを\nタップしてください',
+    spotlight: 'ft-area1-btn',
+    trigger: 'open_area1',
+  },
+  {
+    id: 'ft_start_battle', type: 'action', icon: '⚔️',
+    title: 'バトル開始！',
+    getText: () => 'S1「はじまりの平原」の\n「出撃」ボタンをタップ！',
+    spotlight: 'ft-s1-btn',
+    trigger: 'battle_start',
+  },
+  {
+    id: 'ft_battle_watch', type: 'info', icon: '⚡',
+    title: 'バトルは自動進行！',
+    getText: () => 'ATBゲージが溜まると自動でスキルを発動します。\n\nバトルを見守りましょう！',
+    btnText: 'わかった！',
+    spotlight: null,
+    autoTrigger: 'battle_victory',
+  },
+  {
+    id: 'ft_victory', type: 'info', icon: '🏆',
+    title: '初勝利おめでとう！',
+    getText: () => 'バトルに勝利しました！\n\n次はキャラタブでユニットを強化してみましょう。',
+    btnText: '次へ',
+    spotlight: null,
+  },
+  {
+    id: 'ft_goto_chara', type: 'action', icon: '👤',
+    title: 'キャラタブへ移動',
+    getText: () => '画面下の「👤 キャラ」タブを\nタップしてください',
+    spotlight: 'nav-chara',
+    trigger: 'tab_chara',
+  },
+  {
+    id: 'ft_complete', type: 'info', icon: '🎉',
+    title: 'チュートリアル完了！',
+    getText: () => '基本操作をマスターしました！\n\nあとはミッションに沿ってゲームを進めましょう。\n\n⭐ 星晶石 ×500 獲得！',
+    btnText: 'ミッションを確認',
+    spotlight: null,
+    isLast: true,
+  },
+];
+
+let flowTutState = { active: false, stepIdx: 0 };
+
+function startFlowTutorial() {
+  if (!gState || gState.tutorial?.flowDone) return;
+  flowTutState = { active: true, stepIdx: 0 };
+  renderFlowStep();
+}
+
+function renderFlowStep() {
+  const step = FLOW_STEPS[flowTutState.stepIdx];
+  if (!step) { endFlowTutorial(); return; }
+
+  document.getElementById('ft-icon').textContent     = step.icon;
+  document.getElementById('ft-title').textContent    = step.title;
+  document.getElementById('ft-text').textContent     = step.getText();
+  document.getElementById('ft-progress').textContent = `${flowTutState.stepIdx + 1} / ${FLOW_STEPS.length}`;
+
+  const btn = document.getElementById('ft-btn');
+  if (step.type === 'info') {
+    btn.style.display = 'block';
+    btn.textContent = step.btnText || '次へ';
+  } else {
+    btn.style.display = 'none';
+  }
+
+  document.getElementById('flow-tut').style.display = 'block';
+
+  if (step.spotlight) {
+    setTimeout(() => spotlightFlowEl(step.spotlight), 150);
+  } else {
+    clearFlowSpotlight();
+  }
+}
+
+function spotlightFlowEl(id) {
+  const sp = document.getElementById('tut-spotlight');
+  const el = document.getElementById(id);
+  if (!el) { sp.style.display = 'none'; return; }
+  const r = el.getBoundingClientRect();
+  const pad = 6;
+  sp.style.cssText =
+    `display:block;position:fixed;pointer-events:none;border-radius:10px;` +
+    `box-shadow:0 0 0 4px var(--accent2),0 0 0 9999px rgba(0,0,0,0.55);` +
+    `z-index:8051;transition:all 0.25s;` +
+    `top:${r.top - pad}px;left:${r.left - pad}px;` +
+    `width:${r.width + pad * 2}px;height:${r.height + pad * 2}px;`;
+}
+
+function clearFlowSpotlight() {
+  const sp = document.getElementById('tut-spotlight');
+  if (sp) sp.style.display = 'none';
+}
+
+function flowTutNext() {
+  const step = FLOW_STEPS[flowTutState.stepIdx];
+  if (!step) return;
+  if (step.isLast) {
+    endFlowTutorial();
+    setTimeout(() => openMissionModal(), 300);
+    return;
+  }
+  flowTutState.stepIdx++;
+  renderFlowStep();
+}
+
+function flowTutAdvance(trigger) {
+  if (!flowTutState.active) return;
+  const step = FLOW_STEPS[flowTutState.stepIdx];
+  if (!step) return;
+  if (step.type === 'action' && step.trigger === trigger) {
+    flowTutState.stepIdx++;
+    setTimeout(() => renderFlowStep(), 200);
+    return;
+  }
+  if (step.type === 'info' && step.autoTrigger === trigger) {
+    flowTutState.stepIdx++;
+    setTimeout(() => renderFlowStep(), 400);
+  }
+}
+
+function skipFlowTutorial() {
+  if (!confirm('チュートリアルをスキップしますか？\n（いつでもヘルプから確認できます）')) return;
+  endFlowTutorial();
+}
+
+function endFlowTutorial() {
+  flowTutState.active = false;
+  document.getElementById('flow-tut').style.display = 'none';
+  clearFlowSpotlight();
+  if (!gState) return;
+  if (!gState.tutorial) gState.tutorial = {};
+  gState.tutorial.flowDone = true;
+  if (!gState.tutorial.flowRewarded) {
+    gState.tutorial.flowRewarded = true;
+    gState.player.starCrystal = (gState.player.starCrystal || 0) + 500;
+    updateTopBar();
+    setTimeout(() => showBonusToast('🎉 チュートリアル完了！ 星晶石 ×500 獲得'), 500);
+  }
+  saveState();
+}
 </script>
 
 <!-- Admin Debug Panel -->
