@@ -19475,6 +19475,18 @@ let flowTutState = { active: false, stepIdx: 0 };
 
 function startFlowTutorial() {
   if (!gState || gState.tutorial?.flowDone) return;
+  // 既存プレイヤー（バトルやガチャの実績がある場合）はスキップして完了扱いにする
+  const hasProgress =
+    Object.keys(gState.progress?.babel?.clearedStages || {}).length > 0 ||
+    (gState.gacha?.cardTotalPulls || 0) > 0 ||
+    (gState.gacha?.totalPulls    || 0) > 0 ||
+    (gState.player?.level        || 1) > 1;
+  if (hasProgress) {
+    gState.tutorial.flowDone     = true;
+    gState.tutorial.flowRewarded = true;
+    saveState();
+    return;
+  }
   flowTutState = { active: true, stepIdx: 0 };
   renderFlowStep();
 }
