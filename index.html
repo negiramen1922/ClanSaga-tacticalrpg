@@ -2229,7 +2229,7 @@ img.item-icon {
         <div class="hm-item" onclick="closeHamburger();openGacha()">✨<span>ガチャ</span></div>
         <div class="hm-item" onclick="closeHamburger();openSmithyPanel()">🔨<span>鍛冶屋</span></div>
         <div class="hm-item" onclick="closeHamburger();openLibraryMonsterBook()">📚<span>大図書館（図鑑）</span></div>
-        <div class="hm-item" onclick="closeHamburger();openMine()"><img src="assets/images/nav-mine.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>鉱山</span></div>
+        <div class="hm-item" onclick="closeHamburger();openMineIfUnlocked()"><img src="assets/images/nav-mine.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>鉱山</span></div>
         <div class="hm-item" onclick="closeHamburger();openHelpModal()"><img src="assets/images/nav-help.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>チュートリアル・ヘルプ</span></div>
         <div class="hm-item" onclick="closeHamburger();openVipPanel()">👑<span id="hm-vip-label">VIP特典</span></div>
         <div class="hm-divider"></div>
@@ -2313,7 +2313,7 @@ img.item-icon {
         <div class="quick-btn" onclick="switchTab('chara')"><img src="assets/images/nav-chara.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> キャラ</div>
         <div class="quick-btn" onclick="openMissionModal()"><img src="assets/images/nav-mission.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> <span id="mission-badge-text">ミッション</span></div>
         <div class="quick-btn" onclick="openGacha()">✨ ガチャ</div>
-        <div class="quick-btn" onclick="openMine()"><img src="assets/images/nav-mine.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> <span id="mine-quick-text">鉱山</span></div>
+        <div class="quick-btn" id="mine-quick-btn" onclick="openMineIfUnlocked()"><img src="assets/images/nav-mine.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> <span id="mine-quick-text">鉱山</span></div>
         <div class="quick-btn" onclick="switchTab('artifact')">🔩 AF一覧</div>
         <div class="quick-btn" onclick="switchTab('acc')">💍 アクセサリー</div>
         <div class="quick-btn" onclick="openItemsMenu()">🎒 持ち物</div>
@@ -2497,10 +2497,10 @@ img.item-icon {
           <div class="bc-name">ガチャ</div>
           <div class="bc-desc">キャラ・アーティファクト召喚</div>
         </div>
-        <div class="base-card" onclick="openMine()">
+        <div class="base-card" id="base-mine" onclick="openMineIfUnlocked()">
           <div class="bc-icon">⛏️</div>
           <div class="bc-name">鉱山</div>
-          <div class="bc-desc" id="mine-badge-desc">資源を自動採取</div>
+          <div id="mine-badge-desc" class="bc-desc">資源を自動採取</div>
         </div>
         <div class="base-card" id="base-smithy" onclick="openSmithyPanel()">
           <div class="bc-icon">🔨</div>
@@ -7124,6 +7124,10 @@ function normalizeState() {
     gState.tutorial.flowRewarded = hasExistingProgress;
   }
   if (gState.tutorial.flowRewarded === undefined) gState.tutorial.flowRewarded = false;
+  if (gState.tutorial.mineDone === undefined) {
+    // 既存プレイヤーでS5クリア済みなら鉱山チュートリアルは不要
+    gState.tutorial.mineDone = !!(gState.progress?.babel?.clearedStages?.['a1s5']);
+  }
 
   // beginnerMissions
   if (!gState.beginnerMissions) gState.beginnerMissions = { vanguardGiven:false, archerGiven:false };
@@ -12689,6 +12693,8 @@ function endBattle(victory) {
       gState.progress.babel.clearedStages[battleContext.stageId] = { rank, clearedAt: Date.now() };
       // 初回クリア報酬: 星晶石 + アーティファクト
       if (_isFirstClear) {
+        // 鉱山アンロック (S5初クリア)
+        if (battleContext.stageId === 'a1s5') setTimeout(() => triggerMineUnlock(), 1500);
         const _crystal = getFirstClearCrystal(battleContext.stageId);
         if (_crystal > 0) {
           gState.player.starCrystal = (gState.player.starCrystal||0) + _crystal;
@@ -16490,13 +16496,18 @@ function showBonusToast(msg, isHtml=false) {
 // ============================================================
 
 function renderMineExpiry() {
+  const desc = document.getElementById('mine-badge-desc');
+  const qText = document.getElementById('mine-quick-text');
+  if (!isMineUnlocked()) {
+    if (desc)  { desc.style.color = 'var(--red)'; desc.textContent = 'S5クリアで解放'; }
+    if (qText) qText.textContent = '🔒 鉱山';
+    return;
+  }
   // 鉱山バッジ更新
   const y = calcMineYield();
   const pct = Math.round((y.gold / y.capGold) * 100);
-  const desc = document.getElementById('mine-badge-desc');
-  if (desc) {
-    desc.innerHTML = '資源を自動採取' + (pct >= 80 ? ' <span class="mine-badge">採取可</span>' : '');
-  }
+  if (desc)  { desc.style.color = ''; desc.innerHTML = '資源を自動採取' + (pct >= 80 ? ' <span class="mine-badge">採取可</span>' : ''); }
+  if (qText) qText.textContent = '鉱山';
 }
 
 // ============================================================
@@ -16675,6 +16686,7 @@ function renderMineContent() {
 
   // 採取ボタン
   const collectBtn = document.createElement('button');
+  collectBtn.id = 'mine-collect-btn';
   collectBtn.className = 'btn btn-gold';
   collectBtn.style.cssText = 'width:calc(100% - 32px);margin:0 16px 12px;';
   collectBtn.textContent = '⛏️ 採取する';
@@ -16724,6 +16736,7 @@ function collectMine() {
   updateTopBar();
   renderMineContent();
   renderMineExpiry();
+  mineTutAdvance('mine_collect');
 }
 
 function upgradeMine(type) {
@@ -20332,6 +20345,13 @@ const FLOW_STEPS = [
     trigger: 'level_up_unit',
   },
   {
+    id: 'ft_awaken_info', type: 'info', icon: '🔴',
+    title: 'レベル上限の解放',
+    getText: () => 'ユニットにはレベルの上限（初期はLv.20）があります。\n\n「覚醒ポット」を使うと上限を段階的に引き上げられます！\n\n覚醒ポットは鉱山やバトル報酬で入手できます',
+    btnText: '次へ',
+    spotlight: null,
+  },
+  {
     id: 'ft_complete', type: 'info', icon: '🎉',
     title: 'チュートリアル完了！',
     getText: () => '基本操作をマスターしました！\n\nあとはミッションに沿ってゲームを進めましょう。\n\n⭐ 星晶石 ×500 獲得！',
@@ -20406,6 +20426,7 @@ function clearFlowSpotlight() {
 }
 
 function flowTutNext() {
+  if (mineTutState.active) { mineTutNext(); return; }
   const step = FLOW_STEPS[flowTutState.stepIdx];
   if (!step) return;
   if (step.isLast) {
@@ -20464,6 +20485,113 @@ function endFlowTutorial() {
     updateTopBar();
     setTimeout(() => showBonusToast('🎉 チュートリアル完了！ 星晶石 ×500 獲得'), 500);
   }
+  saveState();
+}
+
+// ============================================================
+//  MINE UNLOCK & MINE TUTORIAL
+// ============================================================
+
+function isMineUnlocked() {
+  return !!(gState?.progress?.babel?.clearedStages?.['a1s5']);
+}
+
+function openMineIfUnlocked() {
+  if (!isMineUnlocked()) {
+    toast('メインステージ S5 をクリアすると解放されます');
+    return;
+  }
+  openMine();
+}
+
+function triggerMineUnlock() {
+  renderMineExpiry();
+  renderBaseTab();
+  if (!gState.tutorial.mineDone) startMineTutorial();
+}
+
+const MINE_TUT_STEPS = [
+  {
+    id: 'mt_unlocked', type: 'info', icon: '⛏️',
+    title: '鉱山が解放されました！',
+    getText: () => 'ステージ5クリアおめでとう！\n\n「鉱山」が解放されました。\n放置するだけで資源が自動で貯まります。\n\nゴールド・EXPポット・覚醒ポットを\n定期的に採取しましょう！',
+    btnText: '採取してみる！',
+    spotlight: null,
+  },
+  {
+    id: 'mt_collect', type: 'action', icon: '🏆',
+    title: '採取しましょう！',
+    getText: () => '「⛏️ 採取する」ボタンをタップして\n放置報酬を獲得しましょう！',
+    spotlight: 'mine-collect-btn',
+    trigger: 'mine_collect',
+  },
+];
+
+let mineTutState = { active: false, stepIdx: 0 };
+
+function startMineTutorial() {
+  if (!gState || gState.tutorial?.mineDone) return;
+  mineTutState = { active: true, stepIdx: 0 };
+  renderMineTutStep();
+}
+
+function renderMineTutStep() {
+  const step = MINE_TUT_STEPS[mineTutState.stepIdx];
+  if (!step) { endMineTutorial(); return; }
+
+  document.getElementById('ft-icon').textContent     = step.icon;
+  document.getElementById('ft-title').textContent    = step.title;
+  document.getElementById('ft-text').textContent     = step.getText();
+  document.getElementById('ft-progress').textContent = `${mineTutState.stepIdx + 1} / ${MINE_TUT_STEPS.length}`;
+
+  const btn = document.getElementById('ft-btn');
+  if (step.type === 'info') {
+    btn.style.display = 'block';
+    btn.textContent = step.btnText || '次へ';
+  } else {
+    btn.style.display = 'none';
+  }
+
+  document.getElementById('flow-tut').style.display = 'block';
+
+  if (step.spotlight) {
+    setTimeout(() => spotlightFlowEl(step.spotlight), 200);
+  } else {
+    clearFlowSpotlight();
+  }
+}
+
+function mineTutNext() {
+  const step = MINE_TUT_STEPS[mineTutState.stepIdx];
+  if (!step) return;
+  if (step.id === 'mt_unlocked') {
+    mineTutState.stepIdx++;
+    openMine();
+    setTimeout(() => renderMineTutStep(), 300);
+    return;
+  }
+  mineTutState.stepIdx++;
+  renderMineTutStep();
+}
+
+function mineTutAdvance(trigger) {
+  if (!mineTutState.active) return;
+  const step = MINE_TUT_STEPS[mineTutState.stepIdx];
+  if (!step) return;
+  if (step.type === 'action' && step.trigger === trigger) {
+    mineTutState.stepIdx++;
+    endMineTutorial();
+    setTimeout(() => showBonusToast('⛏️ 鉱山チュートリアル完了！ 定期的に採取しましょう'), 400);
+  }
+}
+
+function endMineTutorial() {
+  mineTutState.active = false;
+  document.getElementById('flow-tut').style.display = 'none';
+  clearFlowSpotlight();
+  if (!gState) return;
+  if (!gState.tutorial) gState.tutorial = {};
+  gState.tutorial.mineDone = true;
   saveState();
 }
 </script>
