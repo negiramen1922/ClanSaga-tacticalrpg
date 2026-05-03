@@ -1864,28 +1864,34 @@ img.item-icon {
     flex-direction: column !important;
   }
 
-  /* battle-body: 縦方向スタック（アリーナ上・ログ下） */
+  /* battle-body: 縦方向スタック（アリーナ上・ログ下）、画面いっぱいに広げる */
   #battle-body {
+    flex: 1 !important;
     flex-direction: column !important;
-    overflow-y: auto !important;
+    overflow: hidden !important;
+    min-height: 0 !important;
   }
 
-  /* 内部ラッパー: overflow:hidden と height:100% を解除してスクロール可能に */
+  /* 内部ラッパー: flex:1 で余白なく画面を埋める */
   #battle-body > div:first-child {
-    overflow: visible !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
     height: auto !important;
-    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
-  /* アリーナ: コンテンツベースの高さ（1frではなくauto行でクリッピング防止） */
+  /* アリーナ: 残り高さを全部使う */
   .battle-arena {
     grid-template-columns: 1fr !important;
     grid-template-rows: auto auto auto !important;
-    flex: none !important;
+    flex: 1 !important;
     min-height: 0 !important;
     padding: 6px !important;
     gap: 4px !important;
-    overflow: visible !important;
+    overflow-y: auto !important;
+    align-content: center !important;
   }
 
   /* 味方・敵ゾーン: 横並びカードに、クリッピングなし */
@@ -20296,8 +20302,8 @@ const FLOW_STEPS = [
   {
     id: 'ft_battle_watch', type: 'info', icon: '⚡',
     title: 'バトルは自動進行！',
-    getText: () => 'ATBゲージが溜まると自動でスキルを発動します。\n\nバトルを見守りましょう！',
-    btnText: 'わかった！',
+    getText: () => 'ATBゲージが溜まると自動でスキルを発動します。\n\n勝利するまでバトルを見守りましょう！',
+    noBtn: true,
     spotlight: null,
     autoTrigger: 'battle_victory',
   },
@@ -20354,7 +20360,7 @@ function renderFlowStep() {
   document.getElementById('ft-progress').textContent = `${flowTutState.stepIdx + 1} / ${FLOW_STEPS.length}`;
 
   const btn = document.getElementById('ft-btn');
-  if (step.type === 'info') {
+  if (step.type === 'info' && !step.noBtn) {
     btn.style.display = 'block';
     btn.textContent = step.btnText || '次へ';
   } else {
