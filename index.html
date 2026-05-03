@@ -3189,6 +3189,27 @@ const Audio = (() => {
     osc(220, 'sine', 0.5, 0.2, seGain, t);
     osc(165, 'sine', 0.8, 0.15, seGain, t + 0.3);
   }
+  function seItemGet() {
+    const c = getCtx(); const t = c.currentTime;
+    // キラキラ上昇アルペジオ
+    [784, 1047, 1319, 1568, 2093].forEach((f, i) => {
+      osc(f,     'sine',     0.22, 0.30, seGain, t + i * 0.07);
+      osc(f * 2, 'sine',     0.10, 0.08, seGain, t + i * 0.07);
+    });
+    // 仕上げのキラキラ余韻
+    osc(2637, 'sine', 0.35, 0.15, seGain, t + 0.38);
+    osc(2093, 'sine', 0.35, 0.10, seGain, t + 0.42);
+  }
+  function seMineUpgrade() {
+    const c = getCtx(); const t = c.currentTime;
+    // カンカンカン: 金属打撃3回
+    [0, 0.20, 0.40].forEach((dt, i) => {
+      const pitch = 900 - i * 60;
+      osc(pitch,      'sawtooth', 0.12, 0.55, seGain, t + dt);
+      osc(pitch * 1.5,'square',   0.06, 0.25, seGain, t + dt);
+      osc(pitch * 3,  'sine',     0.04, 0.12, seGain, t + dt);
+    });
+  }
 
   // ---- BGM ジェネレーター ----
   // 共通: ループ再生のためstopFnを返す
@@ -3319,7 +3340,9 @@ const Audio = (() => {
     ult:      () => { try { seUlt(); }        catch(e){} },
     victory:  () => { try { seVictory(); }    catch(e){} },
     opening:  () => { try { seOpeningSkill(); } catch(e){} },
-    night:    () => { try { seNight(); }      catch(e){} },
+    night:       () => { try { seNight(); }       catch(e){} },
+    itemGet:     () => { try { seItemGet(); }     catch(e){} },
+    mineUpgrade: () => { try { seMineUpgrade(); } catch(e){} },
     // BGM
     playHome:    () => { try { bgmHome(); }    catch(e){} },
     playBattle:  () => { try { bgmBattle(); }  catch(e){} },
@@ -7709,6 +7732,7 @@ function claimAchievement(id) {
   updateTopBar();
   renderAchievementModal();
   updateAchBadge();
+  Audio.itemGet();
   showBonusToast(`🏆 ${a.name} の報酬を受け取りました！ ${a.reward}`, true);
 }
 
@@ -16143,6 +16167,7 @@ function claimEventMission(m) {
   if (m.bonusEther)   p.ether   = (p.ether||0)   + m.bonusEther;
   if (m.bonusMithril) p.mithril = (p.mithril||0) + m.bonusMithril;
   gState.missions.eventClaimed[m.id] = true;
+  Audio.itemGet();
   saveState(); updateTopBar(); renderMissions();
   const flash = document.createElement('div');
   flash.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:99999;animation:flashOut 2s forwards';
@@ -16242,6 +16267,7 @@ function claimBeginnerMission(m) {
   if (m.bonusMithril) p.mithril = (p.mithril||0) + m.bonusMithril;
 
   gState.beginnerMissions.claimed[m.id] = true;
+  Audio.itemGet();
   saveState();
   updateTopBar();
   renderMissions();
@@ -16437,6 +16463,7 @@ function claimMission(type, id, rewardStr) {
     });
   }
   giveRewardStr(rewardStr);
+  Audio.itemGet();
 
   if (type==='daily') {
     gState.missions.dailyClaimed[id] = true;
@@ -16746,6 +16773,7 @@ function upgradeMine(type) {
   if (gState.player.gold < cost.gold) return;
   gState.player.gold -= cost.gold;
   mine.level[type]++;
+  Audio.mineUpgrade();
   saveState();
   updateTopBar();
   renderMineContent();
@@ -20481,7 +20509,7 @@ function endFlowTutorial() {
     gState.tutorial.flowRewarded = true;
     gState.player.starCrystal = (gState.player.starCrystal || 0) + 500;
     updateTopBar();
-    setTimeout(() => showBonusToast('🎉 チュートリアル完了！ 星晶石 ×500 獲得'), 500);
+    setTimeout(() => { Audio.itemGet(); showBonusToast('🎉 チュートリアル完了！ 星晶石 ×500 獲得'); }, 500);
   }
   saveState();
 }
