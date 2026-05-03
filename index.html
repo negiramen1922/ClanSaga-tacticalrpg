@@ -2578,7 +2578,7 @@ img.item-icon {
           <button class="speed-btn" onclick="setSpeed(3)">×3</button>
           <button class="speed-btn" onclick="setSpeed(5)">×5</button>
         </div>
-        <button id="battle-start-btn" onclick="startScoutPhase((r)=>startBattle(r))">BATTLE START</button>
+        <button id="battle-start-btn" onclick="flowTutAdvance('battle_start_btn');startScoutPhase((r)=>startBattle(r))">BATTLE START</button>
       </div>
     </div>
     <div class="battle-log-wrap">
@@ -20298,6 +20298,13 @@ const FLOW_STEPS = [
     getText: () => 'S1「はじまりの平原」の\n「出撃」ボタンをタップ！',
     spotlight: 'ft-s1-btn',
     trigger: 'battle_start',
+  },
+  {
+    id: 'ft_press_battle_start', type: 'action', icon: '▶',
+    title: 'バトルスタート！',
+    getText: () => '「BATTLE START」ボタンを\nタップしてバトルを始めましょう！',
+    spotlight: 'battle-start-btn',
+    trigger: 'battle_start_btn',
   },
   {
     id: 'ft_battle_watch', type: 'info', icon: '⚡',
