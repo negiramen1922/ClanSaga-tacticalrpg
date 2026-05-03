@@ -8803,6 +8803,7 @@ function executeSellUnits() {
 function openUnitDetail(uid) {
   const u = gState.ownedUnits.find(x=>x.uid===uid);
   if (!u) return;
+  flowTutAdvance('open_unit_detail');
   const cls = CLASS_DATA[u.classId];
   if (!cls) return;
   const prog = gState.unitProgress[u.uid] || {level:1,exp:0};
@@ -9240,6 +9241,7 @@ function levelUpUnit(uid, times) {
   updateTopBar();
   renderCharaTab();
   openUnitDetail(uid);
+  flowTutAdvance('level_up_unit');
 }
 
 function toggleSkill(uid, skillId, rowEl) {
@@ -20316,6 +20318,20 @@ const FLOW_STEPS = [
     trigger: 'tab_chara',
   },
   {
+    id: 'ft_open_unit', type: 'action', icon: '🔍',
+    title: 'ユニットを確認！',
+    getText: () => 'キャラ一覧からユニットをタップして\n詳細を開いてみましょう',
+    spotlight: 'unit-grid-wrap',
+    trigger: 'open_unit_detail',
+  },
+  {
+    id: 'ft_levelup_unit', type: 'action', icon: '⬆️',
+    title: 'レベルアップ！',
+    getText: () => '「+1」ボタンをタップして\nユニットをレベルアップしましょう！\n\nEXPポットを消費してレベルが上がります',
+    spotlight: 'udp-lvup-btn',
+    trigger: 'level_up_unit',
+  },
+  {
     id: 'ft_complete', type: 'info', icon: '🎉',
     title: 'チュートリアル完了！',
     getText: () => '基本操作をマスターしました！\n\nあとはミッションに沿ってゲームを進めましょう。\n\n⭐ 星晶石 ×500 獲得！',
@@ -20405,8 +20421,8 @@ function flowTutNext() {
       if (document.getElementById('stage-list-modal')?.classList.contains('open')) closeStageList();
       // キャラタブへ自動移動
       switchTab('chara');
-      // ft_goto_charaをスキップしてft_completeへ直接進む
-      flowTutState.stepIdx = FLOW_STEPS.findIndex(s => s.id === 'ft_complete');
+      // ft_goto_charaをスキップしてft_open_unitへ直接進む
+      flowTutState.stepIdx = FLOW_STEPS.findIndex(s => s.id === 'ft_open_unit');
       setTimeout(() => renderFlowStep(), 200);
     }, 400);
     return;
