@@ -2752,7 +2752,8 @@ img.item-icon {
     <div class="modal-body" style="padding:0">
       <!-- チュートリアルタブ -->
       <div id="help-tut-panel">
-        <div style="padding:12px 14px;font-size:11px;color:var(--text3)">タップして各チュートリアルを確認できます</div>
+        <div id="help-flow-row"></div>
+        <div style="padding:10px 14px 4px;font-size:11px;color:var(--text3)">システム解説チュートリアル</div>
         <div id="help-tut-list"></div>
       </div>
       <!-- システム解説タブ -->
@@ -7114,7 +7115,16 @@ function normalizeState() {
   // tutorial
   if (!gState.tutorial) gState.tutorial = { completed:{atb:false,scout:false,night:false}, skipped:false };
   if (!gState.tutorial.completed) gState.tutorial.completed = {atb:false,scout:false,night:false};
-  if (gState.tutorial.flowDone     === undefined) gState.tutorial.flowDone     = false;
+  if (gState.tutorial.flowDone === undefined) {
+    // 既存プレイヤー（バトルやガチャ実績あり）は完了扱いにして初回チュートリアルをスキップ
+    const hasExistingProgress =
+      Object.keys(gState.progress?.babel?.clearedStages || {}).length > 0 ||
+      (gState.gacha?.cardTotalPulls || 0) > 0 ||
+      (gState.gacha?.totalPulls    || 0) > 0 ||
+      (gState.player?.level        || 1) > 1;
+    gState.tutorial.flowDone     = hasExistingProgress;
+    gState.tutorial.flowRewarded = hasExistingProgress;
+  }
   if (gState.tutorial.flowRewarded === undefined) gState.tutorial.flowRewarded = false;
 
   // beginnerMissions
@@ -14206,6 +14216,22 @@ function switchHelpTab(tab) {
 function renderHelpModal() {
   const comp = gState.tutorial?.completed || {};
 
+  // フロー型チュートリアルリセットボタン
+  const flowRow = document.getElementById('help-flow-row');
+  if (flowRow) {
+    const flowDone = !!gState.tutorial?.flowDone;
+    flowRow.innerHTML = `
+      <div onclick="replayFlowTutorial()" style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:2px solid var(--accent);cursor:pointer;background:rgba(74,127,255,0.06)" onmouseover="this.style.background='rgba(74,127,255,0.12)'" onmouseout="this.style.background='rgba(74,127,255,0.06)'">
+        <div style="font-size:28px;flex-shrink:0">🎓</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--gold)">はじめての冒険チュートリアル</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">バトル・編成・強化の基本操作を一通り体験できます</div>
+          <div style="font-size:10px;color:${flowDone?'var(--text3)':'var(--purple)'};margin-top:4px">${flowDone?'✓ 完了済（再起動可能）':'⭐ 初回完了で星晶石 ×500'}</div>
+        </div>
+        <div style="font-size:11px;color:var(--accent2);flex-shrink:0">${flowDone?'🔄 再開':'▶ 開始'}</div>
+      </div>`;
+  }
+
   // チュートリアル一覧
   const tutList = document.getElementById('help-tut-list');
   if (tutList) {
@@ -19475,20 +19501,19 @@ let flowTutState = { active: false, stepIdx: 0 };
 
 function startFlowTutorial() {
   if (!gState || gState.tutorial?.flowDone) return;
-  // 既存プレイヤー（バトルやガチャの実績がある場合）はスキップして完了扱いにする
-  const hasProgress =
-    Object.keys(gState.progress?.babel?.clearedStages || {}).length > 0 ||
-    (gState.gacha?.cardTotalPulls || 0) > 0 ||
-    (gState.gacha?.totalPulls    || 0) > 0 ||
-    (gState.player?.level        || 1) > 1;
-  if (hasProgress) {
-    gState.tutorial.flowDone     = true;
-    gState.tutorial.flowRewarded = true;
-    saveState();
-    return;
-  }
   flowTutState = { active: true, stepIdx: 0 };
   renderFlowStep();
+}
+
+function replayFlowTutorial() {
+  if (!gState || !gState.tutorial) return;
+  gState.tutorial.flowDone = false;
+  saveState();
+  closeHelpModal();
+  setTimeout(() => {
+    flowTutState = { active: true, stepIdx: 0 };
+    renderFlowStep();
+  }, 400);
 }
 
 function renderFlowStep() {
