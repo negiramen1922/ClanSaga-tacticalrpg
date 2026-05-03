@@ -2272,7 +2272,7 @@ img.item-icon {
       <div id="home-beginner-panel"></div>
 
       <!-- メイン出撃ボタン -->
-      <button class="btn btn-gold" style="width:100%;padding:16px;font-size:18px;font-weight:700;letter-spacing:2px;border-radius:14px;margin-bottom:12px;box-shadow:0 4px 16px rgba(201,168,76,0.4)" onclick="switchTab('sortie')">
+      <button id="ft-home-sortie-btn" class="btn btn-gold" style="width:100%;padding:16px;font-size:18px;font-weight:700;letter-spacing:2px;border-radius:14px;margin-bottom:12px;box-shadow:0 4px 16px rgba(201,168,76,0.4)" onclick="switchTab('sortie')">
         ⚔️ 出撃
       </button>
 
@@ -10401,6 +10401,201 @@ let battleRunning = false;
 let logFilter = 'all';
 let battleContext = null; // {type:'babel'|'shrine', areaId, stageId}
 let battleStats = { totalDmg:0, crits:0, unitDmg:{}, unitHeal:{}, unitTaken:{} };
+
+function initBattle(waveEnemies, stageName) {
+  const units = getFormationUnits();
+  if (!units.length) { alert('編成にユニットを設定してください'); return; }
+
+  battleStats = { totalDmg:0, crits:0, unitDmg:{}, unitHeal:{}, unitTaken:{} };
+  units.forEach(u => { battleStats.unitDmg[u.uid]=0; battleStats.unitTaken[u.uid]=0; battleStats.unitHeal[u.uid]=0; });
+
+  const preset = gState.presets[gState.activePreset];
+  const imagineBuffs = getImagineBuffs(preset, units);
+
+  battleState = {
+    allies: units.map(u => makeCombatant(u, false, null, null, 'member', imagineBuffs)),
+    waveIdx: 0,
+    waveEnemies,
+    enemies: waveEnemies[0].map((e, i, arr) => {
+      const c = makeCombatant(null, true, e);
+      c.isBackRow = arr.length >= 3 && i >= Math.ceil(arr.length / 2);
+      return c;
+    }),
+    startTime: Date.now(),
+    elapsed: 0,
+    running: false,
+    hadWipe: false,
+    isNight: false,
+    nightElapsed: 0,
+    nightPhaseOffered: false,
+  };
+
+  document.getElementById('battle-screen').classList.remove('is-night');
+  const nightBar = document.getElementById('night-timer-bar');
+  if (nightBar) nightBar.style.display = 'none';
+  const phaseWrap = document.getElementById('phase-timer-wrap');
+  if (phaseWrap) phaseWrap.className = 'day-mode active';
+  hideNightPhaseChoice();
+  initHate(battleState.allies);
+  battleRunning = false;
+  battleSpeed = 1;
+
+  document.getElementById('battle-stage-title').textContent = stageName;
+  const ftBadge = document.getElementById('battle-formation-badge');
+  if (ftBadge) ftBadge.textContent = '';
+  const scoutBadge = document.getElementById('battle-scout-badge');
+  if (scoutBadge) { scoutBadge.style.display = 'none'; scoutBadge.className = 'normal'; }
+
+  document.getElementById('battle-screen').classList.add('active');
+  Audio.playBattle();
+  document.getElementById('battle-start-btn').textContent = 'BATTLE START';
+  document.getElementById('battle-start-btn').disabled = false;
+  document.getElementById('battle-log').innerHTML = '';
+  setSpeedBtn(1);
+  renderBattle();
+}
+
+function renderBattle() {
+  const bs = battleState;
+  if (!bs) return;
+  document.getElementById('battle-wave-info').textContent = `WAVE ${bs.waveIdx+1}/${bs.waveEnemies.length}`;
+
+  function renderZone(zoneId, units) {
+    const zone = document.getElementById(zoneId);
+    if (!zone) return;
+    const currentCards = new Map();
+    zone.querySelectorAll('.combatant-card').forEach(el => currentCards.set(el.id, el));
+    const newIds = new Set(units.map(u => 'cc-' + u.uid));
+    currentCards.forEach((el, id) => { if (!newIds.has(id)) el.remove(); });
+
+    units.forEach(u => {
+      const cardId = 'cc-' + u.uid;
+      const existing = document.getElementById(cardId);
+      if (!existing) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = combatantCardHTML(u);
+        const el = tmp.firstElementChild;
+        if (!el) return;
+        el.querySelectorAll('.hp-fill,.atb-fill,.shield-fill,.ult-card-fill').forEach(f => f.style.transition = 'none');
+        zone.appendChild(el);
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          el.querySelectorAll('.hp-fill,.atb-fill,.shield-fill,.ult-card-fill').forEach(f => f.style.transition = '');
+        }));
+      } else {
+        const hpPct = u.maxHp > 0 ? Math.max(0, u.hp / u.maxHp * 100) : 0;
+        const shPct = (u.shield > 0 && u.maxHp > 0) ? Math.min(100, u.shield / u.maxHp * 100) : 0;
+        const q = sel => existing.querySelector(sel);
+        const hpFill = q('.hp-fill');
+        if (hpFill) { hpFill.style.width = hpPct + '%'; hpFill.className = 'hp-fill' + (hpPct <= 20 ? ' critical' : hpPct <= 50 ? ' low' : ''); }
+        const atbFill = q('.atb-fill'); if (atbFill) atbFill.style.width = u.atb + '%';
+        const ultFill = q('.ult-card-fill'); if (ultFill) ultFill.style.width = Math.min(100, u.ultGauge||0) + '%';
+        let shFill = q('.shield-fill');
+        if (shPct > 0) {
+          if (!shFill) { shFill = document.createElement('div'); shFill.className = 'shield-fill'; const wrap = q('.hp-bar-wrap'); if (wrap) wrap.appendChild(shFill); }
+          if (shFill) shFill.style.width = shPct + '%';
+        } else if (shFill) { shFill.style.width = '0%'; }
+        const hpText = q('.hp-text');
+        if (hpText) hpText.innerHTML = `${fmt(Math.max(0,u.hp))} / ${fmt(u.maxHp)}${u.shield>0?` <span style="color:#88aaff">🛡${fmt(u.shield)}</span>`:''}`;
+        existing.classList.toggle('dead', !!u.dead);
+        existing.classList.toggle('staggered', !!u.staggered);
+        const buffHtml = [...(u.buffs||[]),...(u.debuffs||[])].map(b=>`<div class="status-icon ${b.cssClass||''}">${b.icon||'?'}</div>`).join('');
+        const statusIcons = q('.status-icons');
+        if (statusIcons) statusIcons.innerHTML = buffHtml;
+      }
+    });
+  }
+
+  renderZone('ally-zone', bs.allies);
+  renderZone('enemy-zone', bs.enemies);
+  updateTimer();
+}
+
+function combatantCardHTML(c) {
+  const hpPct = c.maxHp > 0 ? Math.max(0,(c.hp/c.maxHp)*100) : 0;
+  const shieldPct = (c.shield && c.maxHp > 0) ? Math.min(100,(c.shield/c.maxHp)*100) : 0;
+  const atbPct = c.atb;
+  const buffHtml = [...(c.buffs||[]),...(c.debuffs||[])].map(b=>`<div class="status-icon ${b.cssClass||''}">${b.icon||'?'}</div>`).join('');
+  const ultPct = c.ultGauge || 0;
+  const ultReady = ultPct >= 100;
+  const ultSection = !c.isEnemy ? `
+    <div class="ult-card-bar"><div class="ult-card-fill" style="width:${Math.min(100,ultPct)}%"></div></div>
+    <div class="ult-card-text ${ultReady?'ready':''}">
+      <span>${ultReady?'⚡':'◈'}</span><span>${ultReady?'ULT READY':Math.floor(ultPct)+'%'}</span>
+    </div>` : '';
+  const leaderBadge = (!c.isEnemy && c.isLeader) ? `<span class="leader-combatant-badge">👑</span>` : '';
+  const atkInfo = `<span class="cc-atk">⚔${fmt(c.atk)}</span>`;
+  const staggerClass = c.staggered ? ' staggered' : '';
+  const rowClass = (c.isEnemy && c.isBackRow) ? ' card-back-row' : ' card-front-row';
+  return `
+    <div class="combatant-card${staggerClass}${rowClass} ${c.dead?'dead':''}${c.isLeader?' leader-slot':''}" id="cc-${c.uid}">
+      <div class="cc-name">
+        ${leaderBadge}
+        <span class="cc-icon">${c.icon}</span>
+        <span class="cc-name-text">${c.name}</span>
+        ${atkInfo}
+      </div>
+      <div class="hp-bar-wrap">
+        <div class="hp-bar">
+          <div class="hp-fill ${hpPct<=50?'low':''} ${hpPct<=20?'critical':''}" style="width:${hpPct}%"></div>
+        </div>
+        ${shieldPct > 0 ? `<div class="shield-fill" style="width:${Math.min(100,shieldPct)}%"></div>` : ''}
+      </div>
+      <div class="hp-text">${fmt(Math.max(0,c.hp))} / ${fmt(c.maxHp)}${c.shield>0?` <span style="color:#88aaff">🛡${fmt(c.shield)}</span>`:''}</div>
+      <div class="atb-bar"><div class="atb-fill" style="width:${atbPct}%"></div></div>
+      ${ultSection}
+      ${buffHtml ? `<div class="status-icons">${buffHtml}</div>` : ''}
+    </div>`;
+}
+
+function updateTimer() {
+  if (!battleState) return;
+  const bs = battleState;
+  const secs = Math.floor(bs.elapsed/1000);
+  const m = Math.floor(secs/60);
+  const s = secs%60;
+  document.getElementById('battle-timer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+
+  const wrap = document.getElementById('phase-timer-wrap');
+  const fill = document.getElementById('phase-timer-fill');
+  const countdown = document.getElementById('phase-timer-countdown');
+  const label = document.getElementById('phase-timer-label-text');
+  if (!wrap || !fill || !countdown) return;
+
+  if (bs.isNight) {
+    const nightSecs = Math.floor((bs.nightElapsed||0)/1000);
+    const remaining = Math.max(0, 60 - nightSecs);
+    wrap.className = (remaining <= 15 ? 'night-mode urgent' : 'night-mode') + ' active';
+    fill.style.width = (remaining/60*100) + '%';
+    countdown.textContent = remaining + 's';
+    if (label) label.textContent = '夜戦残り';
+  } else if (!bs.nightPhaseOffered) {
+    const daySecs = Math.min(60, Math.floor(bs.elapsed/1000));
+    const remaining = Math.max(0, 60 - daySecs);
+    wrap.className = 'day-mode active';
+    fill.style.width = (remaining/60*100) + '%';
+    countdown.textContent = remaining + 's';
+    if (label) label.textContent = '昼戦残り';
+  } else {
+    wrap.classList.remove('active');
+  }
+}
+
+function isBattleOver() {
+  if (!battleState) return true;
+  return battleState.enemies.filter(c=>!c.dead).length === 0 ||
+         battleState.allies.filter(c=>!c.dead).length === 0;
+}
+
+function pauseBattle() {
+  if (battleInterval) clearInterval(battleInterval);
+  battleRunning = false;
+}
+
+function resumeBattle() {
+  if (battleRunning) return;
+  battleRunning = true;
+  runBattleLoop();
+}
 
 function startBabelBattle(areaId, stageId) {
   const area = BABEL_AREAS.find(a=>a.id===areaId);
@@ -19444,9 +19639,9 @@ const FLOW_STEPS = [
   },
   {
     id: 'ft_goto_sortie', type: 'action', icon: '⚔️',
-    title: '出撃タブへ移動',
-    getText: () => '画面下の「⚔️ 出撃」タブを\nタップしてください',
-    spotlight: 'nav-sortie',
+    title: 'まず出撃！',
+    getText: () => 'ホーム画面の大きな\n「⚔️ 出撃」ボタンをタップしてください',
+    spotlight: 'ft-home-sortie-btn',
     trigger: 'tab_sortie',
   },
   {
