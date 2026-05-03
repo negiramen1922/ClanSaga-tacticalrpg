@@ -20401,9 +20401,14 @@ function flowTutNext() {
   if (step.id === 'ft_victory') {
     exitBattle();
     setTimeout(() => {
-      flowTutState.stepIdx++;
-      renderFlowStep();
-    }, 300);
+      // ステージ一覧が開いていれば閉じる
+      if (document.getElementById('stage-list-modal')?.classList.contains('open')) closeStageList();
+      // キャラタブへ自動移動
+      switchTab('chara');
+      // ft_goto_charaをスキップしてft_completeへ直接進む
+      flowTutState.stepIdx = FLOW_STEPS.findIndex(s => s.id === 'ft_complete');
+      setTimeout(() => renderFlowStep(), 200);
+    }, 400);
     return;
   }
   flowTutState.stepIdx++;
