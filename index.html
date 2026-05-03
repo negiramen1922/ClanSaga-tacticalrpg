@@ -12955,8 +12955,636 @@ function nextStage() {
 }
 
 // ============================================================
-//  雇用システム（タヴァーン）
+//  WAVE / NIGHT / SCOUT PHASE
 // ============================================================
+
+function showWaveTransition(nextWave, totalWaves, callback) {
+  // 既存オーバーレイ除去
+  const old = document.getElementById('wave-transition-overlay');
+  if (old) old.remove();
+
+  const ov = document.createElement('div');
+  ov.id = 'wave-transition-overlay';
+  ov.style.cssText = `
+    position:fixed; inset:0; z-index:3000;
+    background:rgba(5,6,8,0.92);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:16px;
+  `;
+
+  ov.innerHTML = `
+    <div id="wave-tr-sub" style="
+      font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:700;
+      color:var(--text3); letter-spacing:4px; text-transform:uppercase;
+      opacity:0; transition:opacity 0.3s;
+    ">WAVE CLEAR</div>
+    <div id="wave-tr-main" style="
+      font-family:'Cinzel',serif; font-size:38px; font-weight:900;
+      color:var(--gold); letter-spacing:6px;
+      text-shadow:0 0 30px rgba(201,168,76,0.6);
+      opacity:0; transform:scale(0.7);
+      transition:opacity 0.35s, transform 0.35s;
+    ">WAVE ${nextWave} <span style="color:var(--text3);font-size:22px;">/ ${totalWaves}</span></div>
+    <div id="wave-tr-bar-wrap" style="
+      width:240px; height:3px; background:var(--bg3);
+      border-radius:2px; overflow:hidden; margin-top:8px;
+    ">
+      <div id="wave-tr-bar" style="
+        height:100%; width:0%;
+        background:linear-gradient(90deg,var(--gold),var(--gold2));
+        transition:width 1.0s ease-out;
+      "></div>
+    </div>
+    <div id="wave-tr-hint" style="
+      font-family:'Noto Sans JP',sans-serif; font-size:11px;
+      color:var(--text3); margin-top:4px;
+      opacity:0; transition:opacity 0.3s;
+    ">HP・MP・ULTゲージを引き継いで次のWAVEへ</div>
+  `;
+
+  document.body.appendChild(ov);
+
+  // アニメーション順次
+  requestAnimationFrame(() => {
+    const sub  = document.getElementById('wave-tr-sub');
+    const main = document.getElementById('wave-tr-main');
+    const bar  = document.getElementById('wave-tr-bar');
+    const hint = document.getElementById('wave-tr-hint');
+
+    // フェードイン
+    setTimeout(() => { if (sub)  { sub.style.opacity = '1'; } }, 100);
+    setTimeout(() => {
+      if (main) { main.style.opacity = '1'; main.style.transform = 'scale(1)'; }
+    }, 300);
+    setTimeout(() => { if (bar)  { bar.style.width = '100%'; } }, 400);
+    setTimeout(() => { if (hint) { hint.style.opacity = '1'; } }, 600);
+
+    // 1.8秒後にフェードアウトしてコールバック
+    setTimeout(() => {
+      ov.style.transition = 'opacity 0.4s';
+      ov.style.opacity = '0';
+      setTimeout(() => {
+        ov.remove();
+        if (callback) callback();
+      }, 400);
+    }, 1800);
+  });
+}
+
+function showNightPhaseChoice() {
+  const modal = document.getElementById('night-choice-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+/** 夜戦選択UIを閉じる */
+function hideNightPhaseChoice() {
+  const modal = document.getElementById('night-choice-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+/** 夜戦選択で「撤退する」を選んだ場合 */
+function retreatFromNightChoice() {
+  hideNightPhaseChoice();
+  endBattle('retreat');
+}
+
+/** 夜戦開始 */
+function startNightPhase() {
+  try {
+    hideNightPhaseChoice();
+    battleState.isNight    = true;
+    battleState.nightElapsed = 0;
+    applyNightModifiers();
+    Audio.night();
+    Audio.playBoss(); // 夜戦はボスBGMに切り替え
+    // フェーズタイマーはupdateTimer()で自動更新されるため個別制御不要
+    // バトル画面に夜戦クラス付与
+    document.getElementById('battle-screen').classList.add('is-night');
+    addLog('🌙 夜戦突入！ダメージ上昇・遠距離命中低下', 'trigger');
+    // 初心者ミッション: 夜戦体験カウント
+    gState.progress.nightBattles = (gState.progress.nightBattles||0) + 1;
+    saveState();
+    console.log('[Night] night phase started');
+    resumeBattle();
+  } catch(e) {
+    console.error('[Night] startNightPhase error:', e);
+    resumeBattle(); // エラーでも再開
+  }
+}
+
+/**
+ * 夜戦補正を全ユニットに適用
+ * - 全員: damageMult +25%
+ * - 遠距離ロール: hit -20（命中補正）
+ * - 近接ロール: damageMult追加 +10%
+ */
+function applyNightModifiers() {
+  if (!battleState) return;
+  const all = [...battleState.allies, ...battleState.enemies];
+  all.forEach(c => {
+    if (c.nightModApplied) return; // 二重適用防止
+    c.nightModApplied = true;
+    // 全員: ダメージ倍率 +25%
+    c.nightDamageMult = 1.25;
+    // 近接ロール判定
+    const isRange = c.classId === 'archer' || (c.isEnemy && (c.name?.includes('アーチャー') || c.name?.includes('アーチャ')));
+    if (!c.isEnemy) {
+      const cls = CLASS_DATA[c.classId];
+      if (cls?.role === 'レンジ') {
+        c.nightHitPenalty = -20;
+        c.nightDamageMult = 1.25;
+        addLog(`${c.name}: 夜戦 遠距離命中-20`, 'trigger');
+      } else {
+        c.nightDamageMult = 1.35;
+        addLog(`${c.name}: 夜戦 ダメージ+35%`, 'trigger');
+      }
+      // パッシブ: 夜の狩人（アサシン: 夜戦ATK+20%・CRI+15%・SPD+15%）
+      const nightPass = (cls?.passiveSkills||[]).find(p=>p.effect?.type==='night_bonus');
+      if (nightPass) {
+        const np = nightPass.effect;
+        c.atk = Math.floor(c.atk * (1 + (np.atk||0)/100));
+        c.cri += (np.cri||0);
+        c.spd += (np.spd||0);
+        addLog(`${c.name}: <span class="tag tag-buff">${nightPass.name}</span> ATK+${np.atk}%・CRI+${np.cri}・SPD+${np.spd}`, 'trigger');
+      }
+    }
+  });
+  console.log('[Night] modifiers applied');
+}
+
+/**
+ * 夜戦補正を解除（将来: 昼に戻る場合など）
+ */
+function removeNightModifiers() {
+  if (!battleState) return;
+  const all = [...battleState.allies, ...battleState.enemies];
+  all.forEach(c => {
+    delete c.nightDamageMult;
+    delete c.nightHitPenalty;
+    delete c.nightModApplied;
+  });
+  document.getElementById('battle-screen').classList.remove('is-night');
+  const timerBar = document.getElementById('night-timer-bar');
+  if (timerBar) timerBar.style.display = 'none';
+  console.log('[Night] modifiers removed');
+}
+
+/**
+ * 照明スキルの効果（フェーズ5仕様）
+ * 将来: 照明系カード使用時に呼ぶ
+ */
+function applyLightEffect(unit) {
+  if (!unit || !battleState) return;
+  // ヘイト上昇
+  updateHate(unit, 500);
+  // 味方全体の命中補正 +30（10秒 = 200tick相当）
+  battleState.allies.filter(c=>!c.dead).forEach(c => {
+    (c.buffs=c.buffs||[]).push({ type:'hit_up', val:30, turns:10, icon:'🔦', cssClass:'atk-up' });
+  });
+  addLog(`${unit.name}: 照明効果 — 味方命中+30 / ヘイト+500`, 'trigger');
+  console.log(`[Night] light effect applied by ${unit.name}`);
+}
+
+// ============================================================
+//  SCOUT PHASE（フェーズ4）
+// ============================================================
+
+/**
+ * 索敵フェーズのメイン関数
+ * initBattle完了後（画面表示済み）、BATTLE STARTの代わりに呼ばれる
+ */
+function startScoutPhase(onComplete) {
+  try {
+    const result = calcScoutResult();
+    console.log('[Scout] result:', result);
+    showScoutResult(result, () => {
+      if (result.outcome === 'success') {
+        // 奇襲成功: 開幕演出を順番に再生してからバトル開始
+        playOpeningSkillsSequence('player', 1.3, () => {
+          if (onComplete) onComplete(result);
+        });
+      } else if (result.outcome === 'failure') {
+        // 索敵失敗: 敵先制演出してからバトル開始
+        playOpeningSkillsSequence('enemy', 1.0, () => {
+          if (onComplete) onComplete(result);
+        });
+      } else {
+        // 通常遭遇: 即バトル開始
+        if (onComplete) onComplete(result);
+      }
+    });
+  } catch(e) {
+    console.error('[Scout] error:', e);
+    if (onComplete) onComplete(null);
+  }
+}
+
+/**
+ * 索敵判定の計算
+ * 味方の索敵合計 vs 敵の隠密合計
+ */
+function calcScoutResult() {
+  const allies = getFormationUnits();
+
+  // 味方索敵合計
+  const totalSearch = allies.reduce((sum, u) => {
+    const cls = CLASS_DATA[u.classId];
+    return sum + (cls?.baseSearch ?? 10);
+  }, 0);
+
+  // 敵隠密合計（現在はステージデータに隠密値なし → 固定値で仮定）
+  // 将来: ステージデータに enemyStealth を追加
+  const stageStealth = battleContext?.stageStealth ?? 20;
+
+  // 索敵成功率（%）= clamp(50 + (味方索敵 - 敵隠密) * 1.5, 10, 90)
+  const successRate = Math.min(90, Math.max(10,
+    50 + (totalSearch - stageStealth) * 1.5
+  ));
+
+  const roll = Math.random() * 100;
+  let outcome;
+  if (roll < successRate) {
+    outcome = 'success'; // 奇襲成功（先制）
+    // 初心者ミッション: 奇襲成功カウント
+    if (!gState.progress) gState.progress = {};
+    gState.progress.surpriseCount = (gState.progress.surpriseCount||0) + 1;
+  } else if (roll < successRate + (100 - successRate) * 0.4) {
+    outcome = 'normal';  // 通常遭遇
+  } else {
+    outcome = 'failure'; // 索敵失敗（敵先制）
+  }
+
+  return {
+    outcome,
+    totalSearch,
+    stageStealth,
+    successRate: Math.round(successRate),
+    bonusMult: outcome === 'success' ? 1.3 : 1.0,
+  };
+}
+
+/**
+ * 索敵結果の演出表示
+ */
+function showScoutResult(result, callback) {
+  // 既存オーバーレイ削除
+  const old = document.getElementById('scout-overlay');
+  if (old) old.remove();
+
+  const ov = document.createElement('div');
+  ov.id = 'scout-overlay';
+
+  const titleText = {
+    success: '⚡ 奇襲成功！',
+    failure: '👁️ 索敵失敗...',
+    normal:  '🗡️ 通常遭遇',
+  }[result.outcome];
+
+  const subText = {
+    success: `先制攻撃権を獲得！\n開幕スキルの効果が +30% 上昇`,
+    failure: `敵に発見された！\n敵が先制攻撃を行う`,
+    normal:  `互いに気づいた状態で戦闘開始`,
+  }[result.outcome];
+
+  const barColor = {
+    success: 'var(--gold)',
+    failure: 'var(--red)',
+    normal:  'var(--accent)',
+  }[result.outcome];
+
+  ov.innerHTML = `
+    <div class="scout-title ${result.outcome}">${titleText}</div>
+    <div class="scout-stats">
+      <div class="scout-stat">
+        <div class="scout-stat-val" style="color:var(--accent2)">${result.totalSearch}</div>
+        <div class="scout-stat-label">味方索敵</div>
+      </div>
+      <div class="scout-vs">vs</div>
+      <div class="scout-stat">
+        <div class="scout-stat-val" style="color:var(--red)">${result.stageStealth}</div>
+        <div class="scout-stat-label">敵隠密</div>
+      </div>
+    </div>
+    <div class="scout-bar">
+      <div class="scout-bar-fill" id="scout-bar-fill" style="width:0%;background:${barColor}"></div>
+    </div>
+    <div style="font-size:10px;color:var(--text3)">奇襲成功率 ${result.successRate}%</div>
+    <div class="scout-sub">${subText.replace(/\n/g,'<br>')}</div>
+    ${result.outcome === 'success' ? '<div class="scout-bonus">⚡ 開幕スキル効果 × 1.3</div>' : ''}`;
+
+  document.body.appendChild(ov);
+
+  // バーアニメ
+  setTimeout(() => {
+    const fill = document.getElementById('scout-bar-fill');
+    if (fill) fill.style.width = result.successRate + '%';
+  }, 100);
+
+  // 1.5秒後にコールバック
+  setTimeout(() => {
+    ov.remove();
+    if (callback) callback();
+  }, 1800);
+}
+
+/**
+ * 開幕スキルカードの効果を発動
+ */
+/**
+ * 開幕スキル演出を順番に再生する
+ * 各カードの演出が終わってから次へ進む
+ * @param {string} side - 'player' or 'enemy'
+ * @param {number} bonusMult - 効果量倍率
+ * @param {function} onAllDone - 全演出完了後のコールバック
+ */
+function playOpeningSkillsSequence(side, bonusMult, onAllDone) {
+  if (side === 'enemy') {
+    // 敵先制: ATBゲージ+50演出（テキストのみ）
+    battleState.enemies.forEach(e => { e.atb = Math.min(99, (e.atb||0) + 50); });
+    renderBattle();
+    addLog('👁️ 敵が先制！敵全体のATBゲージ +50 <span class="tag tag-trigger">SURPRISE</span>', 'trigger');
+    setTimeout(onAllDone, 800);
+    return;
+  }
+
+  // 味方の開幕カードリストを収集（ユニット順 × スロット順）
+  const openingActions = [];
+  battleState.allies.forEach(c => {
+    const unit = gState.ownedUnits.find(u => u.uid === c.uid);
+    if (!unit || !unit.equippedCards) return;
+    (unit.equippedCards||[]).forEach((slot, slotIdx) => {
+      if (!slot) return;
+      const card = CARDS[slot.cardId];
+      if (!card || card.type !== 'opening') return;
+      openingActions.push({ combatant: c, unit, card, slot, slotIdx, bonusMult });
+    });
+  });
+
+  if (!openingActions.length) {
+    onAllDone();
+    return;
+  }
+
+  // 順番に実行
+  let idx = 0;
+  function playNext() {
+    if (idx >= openingActions.length) {
+      onAllDone();
+      return;
+    }
+    const action = openingActions[idx++];
+    playOneOpeningSkill(action, () => {
+      setTimeout(playNext, 300); // 次のスキルまで少し間を置く
+    });
+  }
+  playNext();
+}
+
+/**
+ * 1つの開幕スキルを演出付きで実行し、完了後にcallbackを呼ぶ
+ */
+function playOneOpeningSkill(action, callback) {
+  const { combatant: c, card, slot, bonusMult } = action;
+  const lv = slot.cardLv || 1;
+  const lvMult = card.lvBonus?.[lv-1] ?? 1.0;
+  const eff = card.effect || {};
+
+  // バフ名の日本語マップ
+  const buffNameMap = {
+    atk_up:'ATK', mdef_up:'特殊耐性', pdef_up:'物理耐性',
+    cri_up:'会心率', spd_up:'SPD',
+    damage_reduce:'被ダメ軽減', hate_up:'ヘイト',
+  };
+
+  // 効果テキスト生成ヘルパー
+  function buffDesc(type, val, turns) {
+    const name = buffNameMap[type] || type;
+    const sign = val >= 0 ? '+' : '';
+    return `${name}${sign}${val}%(${turns}T)`;
+  }
+
+  // ログ見出し（全カード共通）
+  function logHeader(targetDesc) {
+    addLog(`✦【開幕】${c.name}: <b>${card.name}</b>` +
+      (targetDesc ? ` → ${targetDesc}` : '') +
+      ` <span class="tag tag-buff">OPENING</span>`, 'trigger');
+  }
+
+  // ============================
+  // A) 攻撃系（type:'attack' または eff.type:'damage'）
+  // ============================
+  if (card.type === 'attack' || eff.type === 'damage') {
+    const enemies = battleState.enemies.filter(x=>!x.dead);
+    if (!enemies.length) { callback(); return; }
+
+    const isSurprise = (battleState._scoutOutcome === 'success');
+    const power = ((isSurprise && eff.powerOnSurprise) ? eff.powerOnSurprise : (eff.power || 1.0)) * lvMult * bonusMult;
+    const dmgType = eff.damageType || 'red';
+    const isSingle = (card.target !== 'all' && card.target !== 'all_enemy');
+    const targets = isSingle ? [enemies[Math.floor(Math.random()*enemies.length)]] : [...enemies];
+
+    Audio.opening();
+    spawnSkillNamePop(c.uid, card.name, dmgType);
+
+    const tNames = isSingle ? targets[0]?.name : '敵全体';
+    const surpriseNote = (isSurprise && eff.powerOnSurprise) ? ' <span class="tag tag-crit">奇襲BONUS</span>' : '';
+    logHeader(tNames);
+
+    let doneCount = 0;
+    targets.forEach((t, ti) => {
+      setTimeout(() => {
+        if (t.dead) { doneCount++; if (doneCount >= targets.length) setTimeout(callback, 400); return; }
+
+        // ダメージ計算（computeDmgを使って耐性適用）
+        const pseudoSkill = { type: dmgType, power, name: card.name };
+        let { hpDmg } = computeDmg(c, t, pseudoSkill);
+        hpDmg = Math.max(hpDmg > 0 ? 1 : 0, hpDmg);
+
+        // シールド処理
+        const rawDmg = Math.floor(c.atk * power);
+        const shieldResult = processShieldDamage(t, rawDmg, hpDmg);
+        hpDmg = shieldResult.hpDmg;
+        if (shieldResult.shieldBroke) {
+          addLog(`${t.name}: シールドブレイク！ <span class="tag tag-shield-break">BREAK</span>`, 'trigger');
+        }
+
+        if (hpDmg > 0) t.hp = Math.max(0, t.hp - hpDmg);
+        if (t.hp <= 0) { t.hp = 0; t.dead = true; }
+        const totalDmg = hpDmg;
+        battleStats.totalDmg += totalDmg;
+        battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + totalDmg;
+
+        spawnBall(c.uid, t.uid, dmgType);
+        setTimeout(() => {
+          flashCard(t.uid, 'hit');
+          const dmgTag = dmgType === 'spec' ? 'tag-dmg-spec' : 'tag-dmg-phys';
+          if (hpDmg > 0) spawnFloatNum(t.uid, String(hpDmg), dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys');
+
+          // ダメージログ
+          let dmgLine = `${c.name} → ${t.name}: `;
+          if (hpDmg > 0) dmgLine += `<span class="tag ${dmgTag}">${hpDmg}</span>`;
+          if (t.dead) dmgLine += ` <span class="tag tag-defeat">DEFEAT</span>`;
+          else dmgLine += surpriseNote;
+          addLog(dmgLine, 'damage');
+
+          // デバフ付与
+          if (eff.debuff && !t.dead) {
+            applyDebuffDirect(t, eff.debuff);
+            spawnFloatNum(t.uid, '🔻', 'float-debuff', 30);
+            addLog(`${t.name}: ${eff.debuff.type.toUpperCase()} (${eff.debuff.turns}T)`, 'trigger');
+          }
+          if (eff.extraDebuff && !t.dead) {
+            applyDebuffDirect(t, eff.extraDebuff);
+            addLog(`${t.name}: ${eff.extraDebuff.type.toUpperCase()} (${eff.extraDebuff.turns}T)`, 'trigger');
+          }
+          // ヘイトMAX
+          if (eff.hateMax) {
+            c.hate = (c.hate||0) + 9999;
+            spawnFloatNum(c.uid, 'ヘイトMAX', 'float-buff');
+            addLog(`${c.name}: ヘイトMAX`, 'trigger');
+          }
+
+          renderBattle();
+          doneCount++;
+          if (doneCount >= targets.length) setTimeout(callback, 400);
+        }, 250);
+      }, ti * 150);
+    });
+    return;
+  }
+
+  // ============================
+  // B) バフ/シールド系
+  // ============================
+  Audio.buff();
+  spawnSkillNamePop(c.uid, card.name, 'buff');
+  flashCard(c.uid, 'buff');
+
+  // ターゲット解決
+  const allies = battleState.allies.filter(a=>!a.dead);
+  const isAllAlly = (card.target === 'all_ally');
+  const isSelfOnly = (card.target === 'self' || !isAllAlly);
+  const buffTargets = isAllAlly ? allies : [c];
+
+  // ターゲット名
+  const targetLabel = isAllAlly ? '味方全体' : c.name;
+  logHeader(targetLabel);
+
+  const effectLines = []; // ログにまとめて出力するテキスト
+
+  // ── multi_buff ──
+  if (eff.type === 'multi_buff') {
+    (eff.buffs || []).forEach(b => {
+      const val = Math.round(b.val * lvMult * bonusMult);
+      const turns = b.turns || 3;
+      buffTargets.forEach(tgt => {
+        (tgt.buffs = tgt.buffs||[]).push({ type:b.type, val, turns, icon:`⬆${buffNameMap[b.type]||b.type}`, cssClass:b.type });
+        spawnFloatNum(tgt.uid, `+${val}%`, 'float-buff');
+      });
+      effectLines.push(buffDesc(b.type, val, turns));
+    });
+  }
+
+  // ── shield_and_mres ──
+  else if (eff.type === 'shield_and_mres') {
+    const shAmt = Math.floor(c.atk * (eff.shieldVal || 0.3) * lvMult * bonusMult);
+    const mresVal = Math.round((eff.mresVal || 8) * lvMult * bonusMult);
+    const mresTurns = eff.mresTurns || 3;
+    buffTargets.forEach(tgt => {
+      applyShield(tgt, shAmt);
+      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:mresVal, turns:mresTurns, icon:'🤍WHITE耐性↑', cssClass:'mres-up' });
+    });
+    effectLines.push(`シールド+${shAmt}`);
+    effectLines.push(buffDesc('mres_up', mresVal, mresTurns));
+  }
+
+  // ── shield_pres_bres ──
+  else if (eff.type === 'shield_pres_bres') {
+    const shAmt = Math.floor(c.atk * (eff.shieldVal || 0.8) * lvMult * bonusMult);
+    const presVal = Math.round((eff.presVal || 20) * lvMult * bonusMult);
+    const bresVal = Math.round((eff.bresVal || 8) * lvMult * bonusMult);
+    buffTargets.forEach(tgt => {
+      applyShield(tgt, shAmt);
+    });
+    // PRES/BRES は自身のみ
+    (c.buffs=c.buffs||[]).push({ type:'pdef_up', val:presVal, turns:eff.presTurns||3, icon:'⬆RED耐性', cssClass:'pres_up' });
+    buffTargets.forEach(tgt => {
+      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:bresVal, turns:eff.bresTurns||3, icon:'⬆BLACK耐性', cssClass:'bres_up' });
+    });
+    effectLines.push(`シールド+${shAmt}`);
+    effectLines.push(buffDesc('pres_up', presVal, eff.presTurns||3));
+    effectLines.push(buffDesc('bres_up', bresVal, eff.bresTurns||3));
+  }
+
+  // ── 旧 stat:'atk' 形式 ──
+  else if (eff.stat === 'atk') {
+    const buffVal = Math.round((eff.amount||0) * lvMult * bonusMult * 100);
+    const turns = eff.duration || 3;
+    buffTargets.forEach(tgt => {
+      (tgt.buffs=tgt.buffs||[]).push({ type:'atk_up', val:buffVal, turns, icon:'⬆ATK', cssClass:'atk-up' });
+      spawnFloatNum(tgt.uid, `⬆ATK+${buffVal}%`, 'float-buff');
+    });
+    effectLines.push(buffDesc('atk_up', buffVal, turns));
+  }
+
+  // ── プリースト開幕: heal_and_mres（祝福の祈り）──
+  else if (eff.type === 'heal_and_mres') {
+    const healAmt = Math.floor(c.atk * (eff.healRatio||0.8) * lvMult * bonusMult);
+    const hb = getBattleHealBonus(c);
+    const finalHeal = Math.floor(healAmt * hb);
+    const mresVal = Math.round((eff.mresVal||10) * lvMult * bonusMult);
+    const allyTargets = battleState.allies.filter(a=>!a.dead);
+    allyTargets.forEach(tgt => {
+      tgt.hp = Math.min(tgt.maxHp, tgt.hp + finalHeal);
+      battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + finalHeal;
+      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:mresVal, turns:eff.mresTurns||3, icon:'🤍WHITE耐性↑', cssClass:'mres-up' });
+      spawnFloatNum(tgt.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
+    });
+    effectLines.push(`💚HP+${fmt(finalHeal)}`);
+    effectLines.push(buffDesc('mres_up', mresVal, eff.mresTurns||3));
+  }
+
+  // ── プリースト開幕: opening_goddess（女神の加護）──
+  else if (eff.type === 'opening_goddess') {
+    const atkVal = Math.round((eff.atkVal||20) * lvMult * bonusMult);
+    const hpRegen = Math.floor(c.atk * (eff.hpRegenRatio||0.10) * lvMult * bonusMult);
+    const allyTargets2 = battleState.allies.filter(a=>!a.dead);
+    allyTargets2.forEach(tgt => {
+      (tgt.buffs=tgt.buffs||[]).push({ type:'atk_up', val:atkVal, turns:eff.atkTurns||3, icon:'⬆ATK', cssClass:'atk-up' });
+      (tgt.buffs=tgt.buffs||[]).push({ type:'hp_regen_tick', val:hpRegen, turns:eff.regenTurns||3, icon:'💚再生', cssClass:'hp-up' });
+      spawnFloatNum(tgt.uid, `⬆ATK+${atkVal}%`, 'float-buff');
+    });
+    effectLines.push(buffDesc('atk_up', atkVal, eff.atkTurns||3));
+    effectLines.push(`HP再生+${fmt(hpRegen)}/T`);
+  }
+
+  // ── ULTゲージ（どのeffect typeでも共通）──
+  if (eff.ultGaugeBonus) {
+    const gaugeAmt = Math.floor(eff.ultGaugeBonus * lvMult * bonusMult);
+    gainUltGauge(c, gaugeAmt);
+    setTimeout(() => spawnFloatNum(c.uid, `⚡+${gaugeAmt}%`, 'float-buff'), 150);
+    effectLines.push(`ULTゲージ+${gaugeAmt}%`);
+  }
+
+  // ── 索敵ボーナス ──
+  if (eff.scoutBonus) {
+    effectLines.push(`索敵+${Math.round(eff.scoutBonus * lvMult * bonusMult)}%`);
+  }
+
+  // 効果をまとめてログ出力
+  if (effectLines.length > 0) {
+    addLog(`　　　 ${effectLines.join(' / ')}`, 'trigger');
+  }
+
+  renderBattle();
+  setTimeout(callback, 600);
+}
+
+/**
+ * 旧互換: executeOpeningSkills（演出なし即時適用、将来削除予定）
+ */
+
+
 
 // 各クラスの雇用コスト定義
 const RECRUIT_CONFIG = {
