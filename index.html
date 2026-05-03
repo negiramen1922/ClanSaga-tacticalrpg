@@ -2246,6 +2246,7 @@ img.item-icon {
         ver. 1.00 · Clan Saga
         <div style="margin-top:6px;font-size:9px;color:var(--text3);line-height:1.6;text-align:center;">
           BGM: <a href="https://youtu.be/DJPoUKKSDwY?si=1aaLg3tfrO6UzABe" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">古の世界地図</a>
+          ／ <a href="https://youtu.be/EOlXXpqlS5k?si=YKRfyB3hGQsdY9Fj" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">Prairie4</a>
         </div>
       </div>
     </div>
@@ -3215,53 +3216,36 @@ const Audio = (() => {
     }
   }
 
-  // -- バトルBGM: 緊張感あるリズム --
+  // -- バトルBGM: MP3ファイル再生 --
+  let _bgmBattleBuffer = null;
+  let _bgmBattleLoadPromise = null;
+  function _loadBgmBattleBuffer() {
+    if (_bgmBattleLoadPromise) return _bgmBattleLoadPromise;
+    _bgmBattleLoadPromise = fetch('assets/audio/bgm_battle.mp3')
+      .then(r => r.arrayBuffer())
+      .then(ab => getCtx().decodeAudioData(ab))
+      .then(buf => { _bgmBattleBuffer = buf; return buf; })
+      .catch(e => { console.warn('[BGM] battle load failed:', e); return null; });
+    return _bgmBattleLoadPromise;
+  }
+
   function bgmBattle() {
     stopBgm();
     const c = getCtx();
-    const bpm = 140; const step = 60 / bpm;
-    // Aマイナースケール
-    const scale = [220, 246.9, 261.6, 293.7, 329.6, 349.2, 392.0, 440];
-    const melody = [4,4,5,7, 4,4,3,4, 2,2,3,5, 2,2,1,0];
-    const bassLine= [0,0,0,5, 0,0,5,3, 5,5,5,3, 5,5,3,0];
-    const rhythm  = [1,0,1,0, 1,1,0,1, 1,0,1,0, 1,1,1,0]; // パーカッション
-    let running = true;
-    function play() {
-      if (!running) return;
-      const startT = c.currentTime + 0.01;
-      melody.forEach((n, i) => {
-        osc(scale[n] * 2, 'sawtooth', step * 0.6, 0.10, bgmGain, startT + i * step);
-        osc(scale[n] * 2, 'square',   step * 0.6, 0.04, bgmGain, startT + i * step, 5);
-      });
-      bassLine.forEach((n, i) => {
-        osc(scale[n] / 2, 'sawtooth', step * 0.8, 0.12, bgmGain, startT + i * step);
-        osc(scale[n],     'sine',     step * 0.5, 0.05, bgmGain, startT + i * step);
-      });
-      // パーカッション風
-      rhythm.forEach((on, i) => {
-        if (!on) return;
-        const o = c.createOscillator(); const g = c.createGain();
-        o.type = 'square'; o.frequency.value = 60;
-        o.connect(g); g.connect(bgmGain);
-        const t = startT + i * step;
-        g.gain.setValueAtTime(0.08, t);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
-        o.start(t); o.stop(t + 0.06);
-        // ハイハット風
-        const buf = c.createBuffer(1, c.sampleRate * 0.04, c.sampleRate);
-        const d = buf.getChannelData(0);
-        for (let k=0;k<d.length;k++) d[k] = (Math.random()*2-1);
-        const src = c.createBufferSource(); const hg = c.createGain();
-        const flt = c.createBiquadFilter(); flt.type='highpass'; flt.frequency.value=5000;
-        src.buffer = buf; src.connect(flt); flt.connect(hg); hg.connect(bgmGain);
-        hg.gain.setValueAtTime(0.06, t); hg.gain.exponentialRampToValueAtTime(0.0001, t+0.04);
-        src.start(t);
-      });
-      const loopDur = step * melody.length * 1000 - 60;
-      const tid = setTimeout(() => { if (running) play(); }, loopDur);
-      currentBgm = () => { running = false; clearTimeout(tid); };
+    const playBuf = (buf) => {
+      if (!buf) return;
+      const src = c.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      src.connect(bgmGain);
+      src.start();
+      currentBgm = () => { try { src.stop(); src.disconnect(); } catch(e){} };
+    };
+    if (_bgmBattleBuffer) {
+      playBuf(_bgmBattleBuffer);
+    } else {
+      _loadBgmBattleBuffer().then(playBuf);
     }
-    play();
   }
 
   // -- ボスBGM: 重厚 --
