@@ -2271,6 +2271,11 @@ img.item-icon {
       <!-- 初心者ミッション（クラン名と編成の間） -->
       <div id="home-beginner-panel"></div>
 
+      <!-- メイン出撃ボタン -->
+      <button class="btn btn-gold" style="width:100%;padding:16px;font-size:18px;font-weight:700;letter-spacing:2px;border-radius:14px;margin-bottom:12px;box-shadow:0 4px 16px rgba(201,168,76,0.4)" onclick="switchTab('sortie')">
+        ⚔️ 出撃
+      </button>
+
       <!-- 現在の編成 + クイック出撃 -->
       <div class="formation-preview">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -2412,7 +2417,6 @@ img.item-icon {
       </div>
       <div id="party-slots" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px"></div>
 
-      <button class="btn btn-gold" style="width:100%" onclick="switchTab('sortie')">⚔️ この編成で出撃</button>
     </div>
 
     <!-- SORTIE -->
@@ -19434,7 +19438,7 @@ const FLOW_STEPS = [
   {
     id: 'ft_welcome', type: 'info', icon: '🏰',
     title: 'ようこそ！',
-    getText: () => `${gState.player.clanName}クランのリーダーよ、\n五大力が渦巻く世界へようこそ！\n\nこれから基本操作を一緒に確認しましょう。`,
+    getText: () => `${gState.player.clanName}クランのリーダーよ、\n剣と魔法の世界へようこそ！\n\nこれから基本操作を一緒に確認しましょう。`,
     btnText: 'はじめよう！',
     spotlight: null,
   },
