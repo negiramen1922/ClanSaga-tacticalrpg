@@ -6990,7 +6990,6 @@ function defaultState(clanName) {
 function makeUnit(classId, uid) {
   uid = uid || ('u_' + Date.now() + '_' + Math.random().toString(36).slice(2,7));
   const cls = CLASS_DATA[classId];
-  const passives = rollPassives();
   const ult = cls.ultimates[Math.floor(Math.random()*cls.ultimates.length)];
   const defaultSkills = (cls.activeSkills||cls.skillPool||[]).map(s=>s.id);
   // tactics: スキルごとに {priority, trigger, enabled}
@@ -6998,7 +6997,7 @@ function makeUnit(classId, uid) {
     skillId: sid, priority: i, trigger: 'none', enabled: true
   }));
   return {
-    uid, classId, name:cls.name, passives,
+    uid, classId, name:cls.name, passives: [], // passives unlocked at Lv.40
     ultimateId: ult.id,
     selectedSkills: defaultSkills,
     tactics: defaultTactics,
@@ -7161,6 +7160,12 @@ function normalizeState() {
   if (gState.tutorial.abyssDone === undefined) {
     // 既存プレイヤーでa1s10クリア済みならアビスチュートリアルは不要
     gState.tutorial.abyssDone = !!(gState.progress?.babel?.clearedStages?.['a1s10']);
+  }
+  if (gState.tutorial.passiveDone === undefined) {
+    // 既存プレイヤーでLv40以上のキャラがいればパッシブチュートリアルは不要
+    gState.tutorial.passiveDone = (gState.ownedUnits||[]).some(u =>
+      ((gState.unitProgress?.[u.uid]?.level) || 1) >= 40
+    );
   }
 
   // beginnerMissions
@@ -8288,7 +8293,11 @@ function launchApp() {
       const cls = CLASS_DATA[u.classId];
       if (cls) u.selectedSkills = (cls.activeSkills||cls.skillPool||[]).map(s=>s.id);
     }
-    if (!u.passives) u.passives = rollPassives();
+    if (u.passives == null) {
+      // 既存ユニット互換: Lv40以上なら付与済みとして扱い、未満は空で統一
+      const lv = (gState.unitProgress?.[u.uid]?.level) || 1;
+      u.passives = lv >= 40 ? rollPassives() : [];
+    }
     if (u.equippedArtifact === undefined) u.equippedArtifact = null;
     if (!u.equippedAccessories) u.equippedAccessories = {A:null,B:null,C:null,D:null,E:null,F:null};
     else { ['D','E','F'].forEach(s=>{ if(u.equippedAccessories[s]===undefined) u.equippedAccessories[s]=null; }); }
@@ -8965,15 +8974,22 @@ function openUnitDetail(uid) {
 
   // Passive HTML
   const ROMAN = ['I','II','III'];
-  const passiveHTML = (u.passives||[]).map((p, i) => {
-    const lvLabel = ROMAN[p.lv-1] || '';
-    const locked  = p.locked || false;
-    return `<div class="passive-card" style="position:relative">
-      <button class="pkey-lock-btn" data-idx="${i}" title="パッシブキーで固定" style="position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;font-size:15px;padding:2px;line-height:1">${locked?'🔒':'🔓'}</button>
-      <div class="passive-name">${p.name} ${lvLabel}</div>
-      <div class="passive-effect">${p.effect}</div>
-    </div>`;
-  }).join('');
+  const passivesUnlocked = (u.passives||[]).length > 0;
+  const passiveHTML = passivesUnlocked
+    ? (u.passives||[]).map((p, i) => {
+        const lvLabel = ROMAN[p.lv-1] || '';
+        const locked  = p.locked || false;
+        return `<div class="passive-card" style="position:relative">
+          <button class="pkey-lock-btn" data-idx="${i}" title="パッシブキーで固定" style="position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;font-size:15px;padding:2px;line-height:1">${locked?'🔒':'🔓'}</button>
+          <div class="passive-name">${p.name} ${lvLabel}</div>
+          <div class="passive-effect">${p.effect}</div>
+        </div>`;
+      }).join('')
+    : `<div style="background:var(--bg2);border:1px dashed var(--border);border-radius:6px;padding:14px;text-align:center;grid-column:1/-1">
+        <div style="font-size:22px;margin-bottom:5px">🔒</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:3px">パッシブスキル未解放</div>
+        <div style="font-size:11px;color:var(--text3)">Lv.40 に到達すると解放されます</div>
+      </div>`;
 
   const inner = document.getElementById('udp-inner');
   const expNeed = lvUpCost(prog.level);
@@ -9045,7 +9061,7 @@ function openUnitDetail(uid) {
     <div class="udp-section">
       <div class="udp-section-title">PASSIVES</div>
       <div class="passive-list">${passiveHTML}</div>
-      <button id="udp-reroll-btn" class="btn btn-outline btn-sm" style="margin-top:8px">${buildRerollLabel(u)}</button>
+      ${passivesUnlocked ? `<button id="udp-reroll-btn" class="btn btn-outline btn-sm" style="margin-top:8px">${buildRerollLabel(u)}</button>` : ''}
     </div>
     <div class="udp-section">
       <div class="udp-section-title">ULTIMATE</div>
@@ -9083,7 +9099,7 @@ function openUnitDetail(uid) {
       <button id="udp-close-btn" class="btn btn-outline" style="flex:1">閉じる</button>
     </div>`;
 
-  document.getElementById('udp-reroll-btn').addEventListener('click', () => rerollPassives(uid));
+  document.getElementById('udp-reroll-btn')?.addEventListener('click', () => rerollPassives(uid));
   document.getElementById('udp-close-btn').addEventListener('click', closeUnitDetail);
   document.getElementById('udp-add-party-btn')?.addEventListener('click', () => {
     const preset = gState.presets[gState.activePreset];
@@ -9256,6 +9272,7 @@ function levelUpUnit(uid, times) {
   if (!u) return;
   const prog = gState.unitProgress[u.uid] || {level:1,exp:0};
   const limit = getAwakeLimit(u.uid);
+  const prevLevel = prog.level;
   let leveled = 0;
   for (let i=0;i<times;i++) {
     if (prog.level >= 100) break;
@@ -9273,6 +9290,11 @@ function levelUpUnit(uid, times) {
     }
     return;
   }
+  // Lv.40到達でパッシブ解放
+  const crossedLv40 = prevLevel < 40 && prog.level >= 40;
+  if (crossedLv40 && (!u.passives || u.passives.length === 0)) {
+    u.passives = rollPassives();
+  }
   gState.unitProgress[u.uid] = prog;
   Audio.buff();
   // デイリーミッション: クラス強化カウント
@@ -9283,6 +9305,14 @@ function levelUpUnit(uid, times) {
   renderCharaTab();
   openUnitDetail(uid);
   flowTutAdvance('level_up_unit');
+  // パッシブ解放チュートリアル
+  if (crossedLv40) {
+    if (!gState.tutorial.passiveDone) {
+      setTimeout(() => startPassiveTutorial(), 800);
+    } else {
+      setTimeout(() => showBonusToast('✨ パッシブスキルが解放されました！'), 500);
+    }
+  }
 }
 
 function toggleSkill(uid, skillId, rowEl) {
@@ -9334,6 +9364,7 @@ function rerollPassives(uid) {
   const REROLL_COST = 1000;
   const u = gState.ownedUnits.find(x=>x.uid===uid);
   if (!u) return;
+  if (!u.passives || u.passives.length === 0) { showBonusToast('Lv.40 でパッシブスキルが解放されます'); return; }
   const locked = (u.passives||[]).filter(pa=>pa.locked);
   const keysNeeded = locked.length;
   if (p.starCrystal < REROLL_COST) { alert(`星晶石が不足しています（必要: ${REROLL_COST}）`); return; }
@@ -20690,8 +20721,9 @@ function clearFlowSpotlight() {
 }
 
 function flowTutNext() {
-  if (mineTutState.active)  { mineTutNext();  return; }
-  if (abyssTutState.active) { abyssTutNext(); return; }
+  if (mineTutState.active)    { mineTutNext();    return; }
+  if (abyssTutState.active)   { abyssTutNext();   return; }
+  if (passiveTutState.active) { passiveTutNext(); return; }
   const step = FLOW_STEPS[flowTutState.stepIdx];
   if (!step) return;
   if (step.isLast) {
@@ -20931,6 +20963,68 @@ function endAbyssTutorial() {
   if (!gState) return;
   if (!gState.tutorial) gState.tutorial = {};
   gState.tutorial.abyssDone = true;
+  saveState();
+}
+
+// ============================================================
+//  PASSIVE SKILL TUTORIAL (triggered on first Lv.40 unit)
+// ============================================================
+
+const PASSIVE_TUT_STEPS = [
+  {
+    id: 'pt_unlocked', type: 'info', icon: '✨',
+    title: 'パッシブスキル解放！',
+    getText: () => 'Lv.40 に到達しました！\n\n「パッシブスキル」が解放されました。\n\nパッシブスキルは戦闘中つねに効果を発揮する\n永続的な強化効果です。\n3種類がランダムで付与されます。',
+    btnText: '次へ',
+    spotlight: null,
+  },
+  {
+    id: 'pt_reroll', type: 'info', icon: '🔄',
+    title: 'リロールで変更できます',
+    getText: () => 'パッシブが気に入らない場合は\n星晶石×1000で「リロール」できます。\n\n🔒 ボタンでスキルを固定した後にリロールすると\n固定したスキルは変更されません！\n\nキャラ詳細の PASSIVES 欄から操作できます。',
+    btnText: '了解！',
+    spotlight: null,
+    isLast: true,
+  },
+];
+
+let passiveTutState = { active: false, stepIdx: 0 };
+
+function startPassiveTutorial() {
+  if (!gState || gState.tutorial?.passiveDone) return;
+  passiveTutState = { active: true, stepIdx: 0 };
+  renderPassiveTutStep();
+}
+
+function renderPassiveTutStep() {
+  const step = PASSIVE_TUT_STEPS[passiveTutState.stepIdx];
+  if (!step) { endPassiveTutorial(); return; }
+  document.getElementById('ft-icon').textContent     = step.icon;
+  document.getElementById('ft-title').textContent    = step.title;
+  document.getElementById('ft-text').textContent     = step.getText();
+  document.getElementById('ft-progress').textContent = `${passiveTutState.stepIdx + 1} / ${PASSIVE_TUT_STEPS.length}`;
+  const btn = document.getElementById('ft-btn');
+  btn.style.display = 'block';
+  btn.textContent = step.btnText || '次へ';
+  document.getElementById('flow-tut').style.display = 'block';
+  clearFlowSpotlight();
+}
+
+function passiveTutNext() {
+  const step = PASSIVE_TUT_STEPS[passiveTutState.stepIdx];
+  if (!step) return;
+  if (step.isLast) { endPassiveTutorial(); return; }
+  passiveTutState.stepIdx++;
+  renderPassiveTutStep();
+}
+
+function endPassiveTutorial() {
+  passiveTutState.active = false;
+  document.getElementById('flow-tut').style.display = 'none';
+  clearFlowSpotlight();
+  if (!gState) return;
+  if (!gState.tutorial) gState.tutorial = {};
+  gState.tutorial.passiveDone = true;
   saveState();
 }
 </script>
