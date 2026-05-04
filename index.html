@@ -362,7 +362,7 @@ img.item-icon {
 .skill-info .skill-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
 .skill-cd { font-family: 'Rajdhani', sans-serif; font-size: 12px; color: var(--text3); margin-left: auto; white-space: nowrap; }
 
-/* PASSIVES */
+/* TALENTS */
 .passive-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .passive-card {
   background: var(--bg3); border: 1px solid var(--border); padding: 10px;
@@ -5330,16 +5330,14 @@ function calcCardLv(count) { return 1; } // 旧互換スタブ
 
 // ============================================================
 const PASSIVE_POOL = [
-  { id:'hp_inc',   name:'HP増加',     stats:['HP'], levels:[{val:10,desc:'HP+10%'},{val:18,desc:'HP+18%'},{val:28,desc:'HP+28%'}] },
-  { id:'atk_inc',  name:'ATK増加',    stats:['ATK'], levels:[{val:10,desc:'ATK+10%'},{val:18,desc:'ATK+18%'},{val:28,desc:'ATK+28%'}] },
-  { id:'spd_inc',  name:'SPD増加',    stats:['SPD'], levels:[{val:12,desc:'SPD+12'},{val:20,desc:'SPD+20'},{val:30,desc:'SPD+30'}] },
-  { id:'pres_inc', name:'RED耐性',  stats:['PRES'], levels:[{val:6,desc:'RED耐性+6'},{val:12,desc:'RED耐性+12'},{val:18,desc:'RED耐性+18'}] },
-  { id:'mres_inc', name:'WHITE耐性',stats:['MRES'], levels:[{val:6,desc:'WHITE耐性+6'},{val:12,desc:'WHITE耐性+12'},{val:18,desc:'WHITE耐性+18'}] },
-  { id:'cri_inc',  name:'会心率',     stats:['CRI'], levels:[{val:8,desc:'会心率+8%'},{val:13,desc:'会心率+13%'},{val:20,desc:'会心率+20%'}] },
-  { id:'cridam',   name:'会心ダメージ',stats:['CRIDAM'], levels:[{val:20,desc:'会心ダメ+20%'},{val:32,desc:'会心ダメ+32%'},{val:45,desc:'会心ダメ+45%'}] },
-  { id:'reduce',   name:'被ダメ軽減', stats:['RED'], levels:[{val:6,desc:'被ダメ-6%'},{val:10,desc:'被ダメ-10%'},{val:15,desc:'被ダメ-15%'}] },
-  { id:'heal_up',  name:'回復効果',   stats:['HEAL'], levels:[{val:15,desc:'回復+15%'},{val:25,desc:'回復+25%'},{val:40,desc:'回復+40%'}] },
-  { id:'drain',    name:'吸血',       stats:['DRAIN'], levels:[{val:8,desc:'吸血8%'},{val:14,desc:'吸血14%'},{val:20,desc:'吸血20%'}] },
+  { id:'hp_inc',  name:'HP増加',      stats:['HP'],     levels:[{val:10,desc:'HP+10%'},{val:18,desc:'HP+18%'},{val:28,desc:'HP+28%'}] },
+  { id:'atk_inc', name:'ATK増加',     stats:['ATK'],    levels:[{val:10,desc:'ATK+10%'},{val:18,desc:'ATK+18%'},{val:28,desc:'ATK+28%'}] },
+  { id:'spd_inc', name:'SPD増加',     stats:['SPD'],    levels:[{val:12,desc:'SPD+12'},{val:20,desc:'SPD+20'},{val:30,desc:'SPD+30'}] },
+  { id:'cri_inc', name:'会心率',      stats:['CRI'],    levels:[{val:8,desc:'会心率+8%'},{val:13,desc:'会心率+13%'},{val:20,desc:'会心率+20%'}] },
+  { id:'cridam',  name:'会心ダメージ', stats:['CRIDAM'], levels:[{val:20,desc:'会心ダメ+20%'},{val:32,desc:'会心ダメ+32%'},{val:45,desc:'会心ダメ+45%'}] },
+  { id:'reduce',  name:'被ダメ軽減',  stats:['RED'],    levels:[{val:6,desc:'被ダメ-6%'},{val:10,desc:'被ダメ-10%'},{val:15,desc:'被ダメ-15%'}] },
+  { id:'heal_up', name:'回復効果',    stats:['HEAL'],   levels:[{val:15,desc:'回復+15%'},{val:25,desc:'回復+25%'},{val:40,desc:'回復+40%'}] },
+  { id:'drain',   name:'吸血',        stats:['DRAIN'],  levels:[{val:8,desc:'吸血8%'},{val:14,desc:'吸血14%'},{val:20,desc:'吸血20%'}] },
 ];
 
 const BABEL_AREAS = [
@@ -7345,7 +7343,7 @@ function openItemsMenu() {
       [iH('expPot'), 'EXPポット', p.ether, ''],
       [iH('awakePot'), '覚醒ポット', p.awakePot||0, ''],
       [`<span style="font-size:22px">⛏️</span>`, 'ミスリル', p.mithril||0, ''],
-      [`<span style="font-size:22px">🔑</span>`, 'パッシブキー', p.passiveKey||0, ''],
+      [`<span style="font-size:22px">🔑</span>`, 'タレントキー', p.passiveKey||0, ''],
     ])}
     ${section('アクセサリー素材', [
       [iH('stardust'), '星屑の砂', p.stardust||0, 'amber'],
@@ -8897,7 +8895,7 @@ function openUnitDetail(uid) {
       </div>
     </div>
     <div style="font-size:10px;color:var(--text3);margin-top:6px;padding:4px 6px;background:var(--bg2);">
-      ★ 固定値は装備・パッシブ・星図盤で強化できます
+      ★ 固定値は装備・タレント・星図盤で強化できます
     </div>`;
 
   // Fixed Skills HTML — skill-type image icons
@@ -8980,14 +8978,14 @@ function openUnitDetail(uid) {
         const lvLabel = ROMAN[p.lv-1] || '';
         const locked  = p.locked || false;
         return `<div class="passive-card" style="position:relative">
-          <button class="pkey-lock-btn" data-idx="${i}" title="パッシブキーで固定" style="position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;font-size:15px;padding:2px;line-height:1">${locked?'🔒':'🔓'}</button>
+          <button class="pkey-lock-btn" data-idx="${i}" title="タレントキーで固定" style="position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;font-size:15px;padding:2px;line-height:1">${locked?'🔒':'🔓'}</button>
           <div class="passive-name">${p.name} ${lvLabel}</div>
           <div class="passive-effect">${p.effect}</div>
         </div>`;
       }).join('')
     : `<div style="background:var(--bg2);border:1px dashed var(--border);border-radius:6px;padding:14px;text-align:center;grid-column:1/-1">
         <div style="font-size:22px;margin-bottom:5px">🔒</div>
-        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:3px">パッシブスキル未解放</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:3px">タレント未解放</div>
         <div style="font-size:11px;color:var(--text3)">Lv.40 に到達すると解放されます</div>
       </div>`;
 
@@ -9059,7 +9057,7 @@ function openUnitDetail(uid) {
       ${passiveSkillsHTML}
     </div>
     <div class="udp-section">
-      <div class="udp-section-title">PASSIVES</div>
+      <div class="udp-section-title">TALENTS</div>
       <div class="passive-list">${passiveHTML}</div>
       ${passivesUnlocked ? `<button id="udp-reroll-btn" class="btn btn-outline btn-sm" style="margin-top:8px">${buildRerollLabel(u)}</button>` : ''}
     </div>
@@ -9310,7 +9308,7 @@ function levelUpUnit(uid, times) {
     if (!gState.tutorial.passiveDone) {
       setTimeout(() => startPassiveTutorial(), 800);
     } else {
-      setTimeout(() => showBonusToast('✨ パッシブスキルが解放されました！'), 500);
+      setTimeout(() => showBonusToast('✨ タレントが解放されました！'), 500);
     }
   }
 }
@@ -9332,7 +9330,7 @@ function toggleSkill(uid, skillId, rowEl) {
 function buildRerollLabel(unit) {
   const locked = (unit.passives||[]).filter(p=>p.locked).length;
   const keyPart = locked > 0 ? ` + ${itemIconHTML('passiveKey','12px')}×${locked}` : '';
-  return `パッシブリロール（${itemIconHTML('gold','12px')}1,000${keyPart}）`;
+  return `タレントリロール（${itemIconHTML('gold','12px')}1,000${keyPart}）`;
 }
 
 function rollPartialPassives(lockedPassives) {
@@ -9364,11 +9362,11 @@ function rerollPassives(uid) {
   const REROLL_COST = 1000;
   const u = gState.ownedUnits.find(x=>x.uid===uid);
   if (!u) return;
-  if (!u.passives || u.passives.length === 0) { showBonusToast('Lv.40 でパッシブスキルが解放されます'); return; }
+  if (!u.passives || u.passives.length === 0) { showBonusToast('Lv.40 でタレントが解放されます'); return; }
   const locked = (u.passives||[]).filter(pa=>pa.locked);
   const keysNeeded = locked.length;
   if (p.starCrystal < REROLL_COST) { alert(`星晶石が不足しています（必要: ${REROLL_COST}）`); return; }
-  if (keysNeeded > 0 && (p.passiveKey||0) < keysNeeded) { alert(`パッシブキーが不足しています（必要: ${keysNeeded}個）`); return; }
+  if (keysNeeded > 0 && (p.passiveKey||0) < keysNeeded) { alert(`タレントキーが不足しています（必要: ${keysNeeded}個）`); return; }
   p.starCrystal -= REROLL_COST;
   if (keysNeeded > 0) p.passiveKey -= keysNeeded;
   u.passives = rollPartialPassives(locked);
@@ -9400,8 +9398,6 @@ function calcStats(unit) {
     if (p.id==='atk_inc')  atk    = Math.floor(atk*(1+val/100));
     if (p.id==='hp_inc')   hp     = Math.floor(hp *(1+val/100));
     if (p.id==='spd_inc')  spd   += val;
-    if (p.id==='pres_inc' || p.id==='pdef_inc') pdef += val;
-    if (p.id==='mres_inc' || p.id==='mdef_inc') mdef += val;
     if (p.id==='cri_inc')  cri   += val;
     if (p.id==='cridam')   cridam += val;
   });
@@ -18057,8 +18053,8 @@ function openMonsterDetail(idx) {
 
 // ===== ショップ =====
 const SHOP_ITEMS = [
-  { id:'passive_key',  icon:'passiveKey', name:'パッシブキー',     desc:'リロール時にパッシブ1枠を固定',price:800, currency:'crystal', gives:'passiveKey', amount:1 },
-  { id:'passive_key3', icon:'passiveKey', name:'パッシブキー×3',   desc:'リロール時にパッシブ1枠を固定（3個）',price:2000,currency:'crystal',gives:'passiveKey',amount:3 },
+  { id:'passive_key',  icon:'passiveKey', name:'タレントキー',     desc:'リロール時にタレント1枠を固定',price:800, currency:'crystal', gives:'passiveKey', amount:1 },
+  { id:'passive_key3', icon:'passiveKey', name:'タレントキー×3',   desc:'リロール時にタレント1枠を固定（3個）',price:2000,currency:'crystal',gives:'passiveKey',amount:3 },
   { id:'ether_pack_s', icon:'expPot', name:'EXPポットパック(S)',  desc:'EXPポット×500',        price:300, currency:'crystal', gives:'ether', amount:500 },
   { id:'ether_pack_l', icon:'expPot', name:'EXPポットパック(L)',  desc:'EXPポット×2000',       price:1000,currency:'crystal', gives:'ether', amount:2000 },
   { id:'mithril_s',    icon:'⛏️', name:'ミスリル×5',        desc:'鍛冶屋で使用',         price:800, currency:'crystal', gives:'mithril', amount:5 },
@@ -20973,15 +20969,15 @@ function endAbyssTutorial() {
 const PASSIVE_TUT_STEPS = [
   {
     id: 'pt_unlocked', type: 'info', icon: '✨',
-    title: 'パッシブスキル解放！',
-    getText: () => 'Lv.40 に到達しました！\n\n「パッシブスキル」が解放されました。\n\nパッシブスキルは戦闘中つねに効果を発揮する\n永続的な強化効果です。\n3種類がランダムで付与されます。',
+    title: 'タレント解放！',
+    getText: () => 'Lv.40 に到達しました！\n\n「タレント」が解放されました。\n\nタレントは戦闘中つねに効果を発揮する\n永続的な強化スキルです。\n3種類がランダムで付与されます。',
     btnText: '次へ',
     spotlight: null,
   },
   {
     id: 'pt_reroll', type: 'info', icon: '🔄',
     title: 'リロールで変更できます',
-    getText: () => 'パッシブが気に入らない場合は\n星晶石×1000で「リロール」できます。\n\n🔒 ボタンでスキルを固定した後にリロールすると\n固定したスキルは変更されません！\n\nキャラ詳細の PASSIVES 欄から操作できます。',
+    getText: () => 'タレントが気に入らない場合は\n星晶石×1000で「リロール」できます。\n\n🔒 ボタンでタレントを固定した後にリロールすると\n固定したタレントは変更されません！\n\nキャラ詳細の TALENTS 欄から操作できます。',
     btnText: '了解！',
     spotlight: null,
     isLast: true,
