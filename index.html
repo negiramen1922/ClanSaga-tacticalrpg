@@ -2273,7 +2273,7 @@ img.item-icon {
           <button onclick="closeHamburger();openAccountModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;">🔗 アカウント設定</button>
           <a href="https://docs.google.com/forms/d/e/1FAIpQLSdOyYrYSKMvdOJrdJtxhwG80aQ6Pd9z4nzYycyGylSt9IbqBQ/viewform?usp=header" target="_blank" rel="noopener" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;">📩 お問い合わせ</a>
         </div>
-        ver. 1.00 · Clan Saga
+        <span id="hm-version">ver. 1.02 · Clan Saga</span>
         <div style="margin-top:6px;font-size:9px;color:var(--text3);line-height:1.6;text-align:center;">
           BGM: <a href="https://youtu.be/DJPoUKKSDwY?si=1aaLg3tfrO6UzABe" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">古の世界地図</a>
           ／ <a href="https://youtu.be/EOlXXpqlS5k?si=YKRfyB3hGQsdY9Fj" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">Prairie4</a>
@@ -5362,6 +5362,8 @@ const PASSIVE_POOL = [
   { id:'drain',   name:'吸血',        stats:['DRAIN'],  levels:[{val:8,desc:'吸血8%'},{val:14,desc:'吸血14%'},{val:20,desc:'吸血20%'}] },
 ];
 
+const GAME_VERSION = '1.02';
+
 const BABEL_AREAS = [
   {
     id:'area1', name:'翠緑の草原', icon:'🌿', recAtk:'推奨 1人Lv1〜2人Lv5', boss:'スカーボア',
@@ -7479,6 +7481,8 @@ function updateHamburgerInfo() {
     vipLbl.textContent = vip.label ? `VIP特典（${vip.label}）` : 'VIP特典';
     vipLbl.style.color = vip.color || '';
   }
+  const verEl = document.getElementById('hm-version');
+  if (verEl) verEl.textContent = `ver. ${GAME_VERSION} · Clan Saga`;
   updateHmAccountInfo();
 }
 
@@ -8369,6 +8373,10 @@ function closeNewsPopup() {
 function launchApp() {
   document.getElementById('overlay').classList.remove('visible');
   document.getElementById('app').classList.add('active');
+
+  // 旧キャッシュ対策: 即時ダンジョンの残骸要素を非表示化
+  const _ic = document.getElementById('instant-content');
+  if (_ic) { const _ip = _ic.closest('.content-section'); if (_ip) _ip.style.display='none'; else _ic.style.display='none'; }
 
   // セーブデータを確実に正規化（loadState後でも再実行）
   normalizeState();
@@ -19750,68 +19758,6 @@ function rerollCelestialSubs(idx) {
   renderCelestialContent();
 }
 
-// ============================================================
-//  PHASE 4: INSTANT DUNGEONS
-// ============================================================
-
-const INSTANT_DUNGEONS = [
-  { id:'memory1', name:'記憶の回廊 Lv.1', icon:'📜', type:'ether',
-    cost:{ gold:200 }, reward:{ ether:500 }, time:60 },
-  { id:'memory2', name:'記憶の回廊 Lv.2', icon:'📜', type:'ether',
-    cost:{ gold:500 }, reward:{ ether:1500 }, time:60 },
-  { id:'memory3', name:'記憶の回廊 Lv.3', icon:'📜', type:'ether',
-    cost:{ gold:1200 }, reward:{ ether:4000 }, time:60 },
-  { id:'gold1',   name:'黄金の地下室 Lv.1', icon:'gold', type:'gold',
-    cost:{ ether:100 }, reward:{ gold:1000 }, time:60 },
-  { id:'gold2',   name:'黄金の地下室 Lv.2', icon:'gold', type:'gold',
-    cost:{ ether:300 }, reward:{ gold:3500 }, time:60 },
-  { id:'gold3',   name:'黄金の地下室 Lv.3', icon:'gold', type:'gold',
-    cost:{ ether:800 }, reward:{ gold:10000 }, time:60 },
-];
-
-function renderInstantContent() {
-  const el = document.getElementById('instant-content');
-  if (!el) return;
-  el.innerHTML = '';
-
-  INSTANT_DUNGEONS.forEach(dg => {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);';
-    const costStr = Object.entries(dg.cost).map(([k,v])=>`${itemIconHTML(k==='gold'?'gold':'expPot','13px')}${fmt(v)}`).join('');
-    const rewStr  = Object.entries(dg.reward).map(([k,v])=>`${itemIconHTML(k==='gold'?'gold':'expPot','13px')}${fmt(v)}`).join('');
-    row.innerHTML = `
-      <span style="font-size:22px">${dg.icon}</span>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:700;color:var(--text)">${dg.name}</div>
-        <div style="font-size:10px;color:var(--text3)">コスト: ${costStr} → 報酬: ${rewStr}</div>
-      </div>`;
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-gold btn-sm';
-    btn.textContent = '即時完了';
-    const canAfford = Object.entries(dg.cost).every(([k,v])=>(gState.player[k]||0)>=v);
-    btn.disabled = !canAfford;
-    btn.addEventListener('click', () => runInstantDungeon(dg));
-    row.appendChild(btn);
-    el.appendChild(row);
-  });
-}
-
-function runInstantDungeon(dg) {
-  const canAfford = Object.entries(dg.cost).every(([k,v])=>(gState.player[k]||0)>=v);
-  if (!canAfford) return;
-  Object.entries(dg.cost).forEach(([k,v]) => { gState.player[k] -= v; });
-  Object.entries(dg.reward).forEach(([k,v]) => { gState.player[k] = (gState.player[k]||0)+v; });
-  saveState();
-  updateTopBar();
-  renderInstantContent();
-  const rewStr = Object.entries(dg.reward).map(([k,v])=>`${itemIconHTML(k==='gold'?'gold':'expPot','13px')}+${fmt(v)}`).join(' ');
-  // 小さい通知表示
-  const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--gold);color:var(--gold2);padding:8px 20px;font-size:13px;z-index:9000;animation:floatUp 2s ease-out forwards;white-space:nowrap;';
-  toast.innerHTML = `${dg.name} 完了! ${rewStr}`;
-  document.body.appendChild(toast);
-  setTimeout(()=>toast.remove(), 2000);
-}
 
 function renderSortieTab() {
   const wrap = document.getElementById('area-list-wrap');
@@ -19876,10 +19822,8 @@ function renderSortieTab() {
     });
   }
 
-  // アビス・コロシアム・即時ダンジョン
   renderAbyssContent();
   renderColosseumContent();
-  renderInstantContent();
 
   // 解放状況テキスト更新
   const lv = gState.player.level;
