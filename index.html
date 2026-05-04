@@ -19124,20 +19124,16 @@ function renderAbyssContent() {
   const cleared = abyss.clearedLayers || [];
   const run     = abyss.currentRun;
   const today   = new Date().toDateString();
-  if (abyss.lastRunDate !== today) { abyss.dailyRuns = 0; abyss.lastRunDate = today; }
-  const maxRuns  = 3 + getVip().abyssExtraRuns;
-  const runsLeft = maxRuns - (abyss.dailyRuns || 0);
   const bestLayer = cleared.length > 0 ? Math.max(...cleared) : 0;
 
   el.innerHTML = '';
 
   // ステータス行
   const stat = document.createElement('div');
-  stat.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px 12px;';
+  stat.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;';
   stat.innerHTML = `
     <div class="base-res-item"><div class="base-res-val">${bestLayer > 0 ? bestLayer+'層' : '—'}</div><div class="base-res-label">📊 最深到達</div></div>
-    <div class="base-res-item"><div class="base-res-val">${cleared.length}/15</div><div class="base-res-label">✅ クリア層</div></div>
-    <div class="base-res-item"><div class="base-res-val" style="color:${runsLeft>0?'var(--text)':'var(--red)'}">${runsLeft}</div><div class="base-res-label">⚡ 挑戦回数</div></div>`;
+    <div class="base-res-item"><div class="base-res-val">${cleared.length}/15</div><div class="base-res-label">✅ クリア層</div></div>`;
   el.appendChild(stat);
 
   // 進行中の探索バナー
@@ -19186,7 +19182,7 @@ function renderAbyssContent() {
       </div>
       <div style="display:flex;gap:6px;align-items:center;">
         ${isCleared ? `<button class="btn btn-outline" style="font-size:11px;padding:4px 8px;" onclick="abyssSweep(${layer.id})">⚡${sweepCost} 周回</button>` : ''}
-        ${isUnlocked && !isActiveRun ? `<button class="btn btn-gold" style="font-size:11px;padding:4px 10px;" onclick="startAbyssLayer(${layer.id})" ${runsLeft <= 0 ? 'disabled' : ''}>挑戦</button>` : ''}
+        ${isUnlocked && !isActiveRun ? `<button class="btn btn-gold" style="font-size:11px;padding:4px 10px;" onclick="startAbyssLayer(${layer.id})">挑戦</button>` : ''}
         ${!isUnlocked ? `<span style="font-size:11px;color:var(--text3)">🔒</span>` : ''}
       </div>`;
     grid.appendChild(row);
@@ -19198,14 +19194,6 @@ function startAbyssLayer(layerId) {
   const units = getFormationUnits();
   if (!units.length) { alert('編成にユニットを設定してください'); return; }
   const abyss = gState.progress.abyss;
-  const today = new Date().toDateString();
-  if (abyss.lastRunDate !== today) { abyss.dailyRuns = 0; abyss.lastRunDate = today; }
-  const maxRuns = 3 + getVip().abyssExtraRuns;
-  if ((abyss.dailyRuns || 0) >= maxRuns) {
-    alert(`アビスの本日の挑戦回数（${maxRuns}回）に達しました。\nVIPランクアップで上限が増えます。`);
-    return;
-  }
-  abyss.dailyRuns = (abyss.dailyRuns || 0) + 1;
   abyss.currentRun = { layerId, stage: 1, buffs: [] };
   saveState();
   renderAbyssContent();
