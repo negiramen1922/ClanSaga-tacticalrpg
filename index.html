@@ -12941,7 +12941,13 @@ function endBattle(victory) {
     document.getElementById('result-drops').innerHTML = isAbyssRetreat
       ? `<div class="drop-item">🏳 アビス撤退 — 最初からやり直し</div>`
       : `<div class="drop-item">🏳 撤退</div><div class="drop-item">${itemIconHTML('gold','14px')} ゴールド ×${retreatGold}（撤退報酬）</div>`;
-    document.getElementById('next-stage-btn').style.display = 'none';
+    // result-btns を撤退用に必ず再構築（アビス勝利後に innerHTML が置換されていても安全に動作）
+    const _retBtns = document.getElementById('result-btns');
+    if (_retBtns) {
+      _retBtns.innerHTML = `
+        <button class="btn btn-outline" onclick="exitBattleToList()">一覧へ</button>
+        <button class="btn btn-gold" onclick="retryBattle()">もう一度</button>`;
+    }
     document.getElementById('battle-result').classList.add('active');
     updateTopBar();
     console.log('[Night] retreat — gold:', retreatGold);
