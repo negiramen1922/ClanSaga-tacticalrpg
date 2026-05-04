@@ -9524,8 +9524,10 @@ function calcStats(unit) {
   let hp     = Math.floor(base.hp  * scale);
   // 固定値（装備・パッシブ・星図盤で強化）
   let spd    = base.spd;
+  let mp     = Math.floor((base.mp || 1600) * scale);
   let pdef   = base.pdef || 0;
   let mdef   = base.mdef || 0;
+  let bres   = base.bres || 0;
   let cri    = base.cri;
   let cridam = base.cridam;
   // パッシブ加算（すべてフラットまたは%）
@@ -9549,7 +9551,8 @@ function calcStats(unit) {
   cri    += af.cri || 0;
   cridam += af.cridam || 0;
   pdef   += (af.pres || af.pdef || 0);
-  mdef   += (af.mres || af.mdef || 0) + (af.bres || 0) + (af.lres || 0);
+  mdef   += (af.mres || af.mdef || 0) + (af.lres || 0);
+  bres   += (af.bres || 0);
   // アクセサリー加算
   const ac = getAccessoryStats(unit);
   if (ac.atkPct) atk = Math.floor(atk * (1 + ac.atkPct / 100));
@@ -9560,12 +9563,14 @@ function calcStats(unit) {
   cri    += ac.cri || 0;
   cridam += ac.cridam || 0;
   pdef   += (ac.pres || ac.pdef || 0);
-  mdef   += (ac.mres || ac.mdef || 0) + (ac.bres || 0) + (ac.lres || 0);
+  mdef   += (ac.mres || ac.mdef || 0) + (ac.lres || 0);
+  bres   += (ac.bres || 0);
   return {
-    atk, hp,
+    atk, hp, mp,
     spd,
     pdef: Math.min(pdef, 99),
     mdef: Math.min(mdef, 99),
+    bres: Math.min(bres, 90),
     cri,
     cridam,
   };
@@ -10366,6 +10371,17 @@ function processShieldDamage(target, rawDmg, hpDmg) {
   return { hpDmg: remainHpDmg, shieldBroke: true };
 }
 
+// 🤍WHITE / 🖤BLACK ダメージによるMP削りとスタッガー発動
+function applyMpDmg(target, mpDmg) {
+  if (!mpDmg || !target.maxMp) return;
+  target.mp = Math.max(0, (target.mp || 0) - mpDmg);
+  if (target.mp <= 0 && !target.staggered) {
+    target.staggered = true;
+    spawnFloatNum(target.uid, '💫STAGGER', 'float-debuff');
+    addLog(`${target.name}: MP枯渇 <span class="tag tag-stagger">STAGGER</span>`, 'trigger');
+  }
+}
+
 function tickShields(all) {
   all.forEach(c => {
     if (!c.shield || c.shieldTurns === undefined) return;
@@ -11015,7 +11031,7 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
     const activeSkillDefs = cls.activeSkills || (unit.selectedSkills||[]).map(sid=>(cls.skillPool||[]).find(s=>s.id===sid)).filter(Boolean);
 
     // イマジンバフ適用
-    let atk = stats.atk, hp = stats.hp, spd = stats.spd, pdef = stats.pdef, mdef = stats.mdef;
+    let atk = stats.atk, hp = stats.hp, mp = stats.mp, spd = stats.spd, pdef = stats.pdef, mdef = stats.mdef, bres = stats.bres || 0;
     if (imagineBuffs) {
       const role = CLASS_DATA[unit.classId]?.role || '';
       const ib = imagineBuffs;
@@ -11058,8 +11074,8 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       classId: unit.classId,
       species: cls.species || null,
       attackTypes: cls.attackTypes || [],
-      maxHp: hp, hp: hp,
-      atk, pdef, mdef,
+      maxHp: hp, hp: hp, maxMp: mp, mp: mp,
+      atk, pdef, mdef, bres,
       spd, cri: stats.cri + passiveCri, cridam: stats.cridam,
       search:  cls2?.baseSearch  ?? 10,
       stealth: (cls2?.baseStealth ?? 5) + passiveStealth,
@@ -11105,9 +11121,12 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       name: enemyData.name, icon: enemyData.icon,
       species: enemyData.species || ENEMY_SPECIES_MAP[enemyData.name] || null,
       maxHp: enemyData.hp, hp: enemyData.hp,
+      maxMp: enemyData.mp || Math.floor(enemyData.hp * 0.6),
+      mp:    enemyData.mp || Math.floor(enemyData.hp * 0.6),
       atk: enemyData.atk,
       pdef: enemyData.pdef || enemyData.pres || 0,
       mdef: enemyData.mdef || enemyData.mres || 0,
+      bres: enemyData.bres || 0,
       spd: enemyData.spd, cri: enemyData.cri||3, cridam: 150,
       hit: enemyData.hit||0, immune: enemyData.immune||0,
       atb: 0, isEnemy: true, dead: false,
@@ -11276,12 +11295,13 @@ function tickBattle() {
     c.atb += c.spd * 0.02 * flinch;
     if (c.atb >= 100) {
       c.atb = 0;
-      // スタッガー: 1ターンスキップ → 解除
+      // スタッガー: 1ターンスキップ → 解除（MP30%回復）
       if (c.staggered) {
         c.staggered  = false;
         c.staggerUsed = true;
+        if (c.maxMp) c.mp = Math.min(c.maxMp, (c.mp || 0) + Math.floor(c.maxMp * 0.30));
         spawnFloatNum(c.uid, 'RECOVER', 'float-buff');
-        addLog(`${c.name}: スタッガー解除`, 'trigger');
+        addLog(`${c.name}: スタッガー解除（MP+30%回復）`, 'trigger');
         return;
       }
       combatantAct(c, bs);
@@ -11807,9 +11827,9 @@ function doAttack(attacker, targets, skill) {
       return;
     }
 
-    // Step7c: クリティカル判定（red/white のみ）
+    // Step7c: クリティカル判定
     const result = computeDmg(attacker, target, skill);
-    let { hpDmg, dmgType } = result;
+    let { hpDmg, mpDmg: skillMpDmg, dmgType } = result;
     // 種族相性ログ（有利/不利時のみ）
     const _specMult = getSpeciesMultiplier(attacker.species, target.species);
     if (_specMult > 1.0) {
@@ -11857,6 +11877,12 @@ function doAttack(attacker, targets, skill) {
 
     // HP適用
     if (mainHpDmg > 0) target.hp = Math.max(0, target.hp - mainHpDmg);
+
+    // MP適用（WHITE/BLACK）
+    if (skillMpDmg > 0) {
+      const criMult = isCrit ? (attacker.cridam || 150) / 100 : 1;
+      applyMpDmg(target, Math.floor(skillMpDmg * criMult));
+    }
 
     const totalDmg = mainHpDmg;
     battleStats.totalDmg += totalDmg;
@@ -12013,10 +12039,11 @@ function performUlt(c, enemies, allies) {
     targetList.forEach(t => {
       if (t.dead) return;
       // computeDmg で耐性・バフ込みのHPダメージを算出
-      let { hpDmg } = computeDmg(c, t, ult);
+      let { hpDmg, mpDmg: ultMpDmg } = computeDmg(c, t, ult);
       // 強制会心
       const cridam = c.cridam || 150;
       if (hpDmg) hpDmg = Math.max(1, Math.floor(hpDmg * cridam / 100));
+      if (ultMpDmg) ultMpDmg = Math.floor(ultMpDmg * cridam / 100);
       battleStats.crits++;
       // シールド処理
       const rawDmg = Math.floor(c.atk * (ult.power || 1));
@@ -12027,6 +12054,7 @@ function performUlt(c, enemies, allies) {
       }
       // HP適用
       if (hpDmg > 0) t.hp = Math.max(0, t.hp - hpDmg);
+      if (ultMpDmg > 0) applyMpDmg(t, ultMpDmg);
       const totalDmg = hpDmg;
       battleStats.totalDmg += totalDmg;
       if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + totalDmg;
@@ -12664,7 +12692,7 @@ function computeDmg(attacker, target, skill) {
     const mdef = Math.min(90, (target.mdef||0));
     const ratio = (skill.effect.maxHpRatioDmg||0.05);
     const hpDmg = Math.max(1, Math.floor(target.maxHp * ratio * (1 - mdef/100)));
-    return { hpDmg, dmgType: 'spec' };
+    return { hpDmg, mpDmg:0, dmgType: 'spec' };
   }
 
   // 現HP割合ダメージ（特殊扱い）
@@ -12672,7 +12700,7 @@ function computeDmg(attacker, target, skill) {
     const mdef = Math.min(90, (target.mdef||0));
     const lvMult = skill.lvBonus ? (skill.lvBonus[skill._cardLv-1]||1.0) : 1.0;
     const hpDmg = Math.max(1, Math.floor(target.hp * (skill.power||0.1) * lvMult * (1 - mdef/100)));
-    return { hpDmg, dmgType: 'spec' };
+    return { hpDmg, mpDmg:0, dmgType: 'spec' };
   }
 
   // 共通: 基礎ATK → ATKバフ → スキル倍率
@@ -12741,17 +12769,40 @@ function computeDmg(attacker, target, skill) {
     return Math.min(90, Math.max(0, res));
   };
 
+  // 🔵 BLUE: 最大HP割合ダメージ
+  if (dmgType === 'blue') {
+    const mdef = getRes(target.mdef||0, ['mdef_up'], ['mdef_down']);
+    const hpDmg = Math.max(1, Math.floor(target.maxHp * (skill.power||0.05) * (1 - mdef/100)));
+    return { hpDmg, mpDmg:0, dmgType:'blue' };
+  }
+
+  // 🤍 WHITE: 精神ダメージ（MPのみ削る。HP不変）
+  if (dmgType === 'white') {
+    const mdef = getRes(target.mdef||0, ['mdef_up'], ['mdef_down']);
+    const mpDmg = Math.max(minDmg, Math.floor(base * (1 - mdef/100) * staggerMult * nightMult));
+    return { hpDmg:0, mpDmg, dmgType:'white' };
+  }
+
+  // 🖤 BLACK: 魔法ダメージ（HP + MP両削り）
+  if (dmgType === 'black') {
+    const mdef = getRes(target.mdef||0, ['mdef_up'], ['mdef_down']);
+    const bres = getRes(target.bres||0, ['bres_up'], ['bres_down']);
+    const hpDmg = Math.max(minDmg, Math.floor(base * (1 - mdef/100) * staggerMult * nightMult));
+    const mpDmg = Math.max(0, Math.floor(base * 0.5 * (1 - bres/100) * staggerMult * nightMult));
+    return { hpDmg, mpDmg, dmgType:'black' };
+  }
+
   if (dmgType === 'spec') {
-    // 特殊ダメージ: mdef耐性
+    // 特殊ダメージ: mdef耐性（HPのみ、BLACKとは別枠）
     const mdef = getRes(target.mdef||0, ['mdef_up'], ['mdef_down']);
     const hpDmg = Math.max(minDmg, Math.floor(base * (1 - mdef/100) * staggerMult * nightMult));
-    return { hpDmg, dmgType: 'spec' };
-  } else {
-    // 物理ダメージ（phys、またはデフォルト）: pdef耐性
-    const pdef = getRes(target.pdef||0, ['pdef_up','rampart','aegis'], ['pdef_down']);
-    const hpDmg = Math.max(minDmg, Math.floor(base * (1 - pdef/100) * staggerMult * nightMult));
-    return { hpDmg, dmgType: 'phys' };
+    return { hpDmg, mpDmg:0, dmgType: 'spec' };
   }
+
+  // 🔴 RED / phys（デフォルト）: 物理ダメージ（HPのみ）
+  const pdef = getRes(target.pdef||0, ['pdef_up','rampart','aegis'], ['pdef_down']);
+  const hpDmg = Math.max(minDmg, Math.floor(base * (1 - pdef/100) * staggerMult * nightMult));
+  return { hpDmg, mpDmg:0, dmgType: 'phys' };
 }
 
 function rollCrit(attacker) {
@@ -13828,7 +13879,7 @@ function playOneOpeningSkill(action, callback) {
 
         // ダメージ計算（computeDmgを使って耐性適用）
         const pseudoSkill = { type: dmgType, power, name: card.name };
-        let { hpDmg } = computeDmg(c, t, pseudoSkill);
+        let { hpDmg, mpDmg: openingMpDmg } = computeDmg(c, t, pseudoSkill);
         hpDmg = Math.max(hpDmg > 0 ? 1 : 0, hpDmg);
 
         // シールド処理
@@ -13840,6 +13891,7 @@ function playOneOpeningSkill(action, callback) {
         }
 
         if (hpDmg > 0) t.hp = Math.max(0, t.hp - hpDmg);
+        if (openingMpDmg > 0) applyMpDmg(t, openingMpDmg);
         if (t.hp <= 0) { t.hp = 0; t.dead = true; }
         const totalDmg = hpDmg;
         battleStats.totalDmg += totalDmg;
