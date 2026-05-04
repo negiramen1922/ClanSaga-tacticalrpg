@@ -7758,6 +7758,42 @@ function claimAchievement(id) {
 // お知らせデータ
 const NEWS_DATA = [
   {
+    id: 'news_012',
+    type: 'update',
+    title: '⚙️ バージョン1.01アップデート内容',
+    date: '2026-05-04',
+    summary: '周回ボタン追加・アーティファクト詳細画面刷新・タレントシステム改修（Lv.40解放）・アビスダイブ解放バグ修正など多数の改善を実施しました。',
+    body: `<h4>🔄 バベル周回ボタンを追加</h4>
+<p>クリア済みのバベルステージに「周回」ボタンが追加されました。スタミナを3消費するだけで、戦闘なしにクリア報酬を獲得できます。</p>
+<ul>
+  <li>取得報酬：ゴールド・EXPポット・星晶石（ステージ深度とクリアランクに応じて変動）</li>
+  <li>デイリー・ウィークリーミッションの「バベルクリア」にもカウントされます</li>
+</ul>
+
+<h4>💎 アーティファクト詳細画面を刷新</h4>
+<p>アーティファクト一覧からタップすると、キャラクター詳細と同様の専用詳細画面が開くようになりました。</p>
+<ul>
+  <li>メインステータス（ATK補正・HP補正・現在Lv）の一覧表示</li>
+  <li>パッシブ効果の条件・タイプ・説明を見やすく表示</li>
+  <li>強化（レベルアップ）・覚醒（ランクアップ）・スキルアップ・凸（星座強化）を1画面で操作可能</li>
+  <li>各操作時に効果音が追加</li>
+</ul>
+
+<h4>🔧 アーティファクト重複時の凸素材付与を修正</h4>
+<p>ガチャ・ストーリー初回クリア報酬で既に所持しているアーティファクトが入手された際、凸素材として正しく加算されるよう修正しました。</p>
+
+<h4>✨ タレントシステムを改修</h4>
+<p>「パッシブスキル」を「タレント」に名称変更し、付与タイミングを見直しました。</p>
+<ul>
+  <li>タレントはガチャ召喚時ではなく、<b>ユニットがLv.40に到達した時点</b>で解放されます</li>
+  <li>アカウントで初めてLv.40ユニットが誕生した際、タレントの使い方を説明するチュートリアルが開始されます</li>
+  <li>タレントプールから「RED耐性アップ」「WHITE耐性アップ」を削除し、より汎用性の高い効果に絞りました</li>
+</ul>
+
+<h4>🌊 アビスダイブ解放表示を修正</h4>
+<p>エリア1の全ステージをクリアしてもアビスダイブが「Clan Lv.31で解放」と表示されていたバグを修正しました。正しくアビスダイブのクリア状況が表示されるようになります。</p>`,
+  },
+  {
     id: 'news_011',
     type: 'campaign',
     title: '🎊 ver.1.00 スタートダッシュイベント開催！',
@@ -19176,35 +19212,6 @@ function onAbyssVictory(layerId, stage) {
     shuffle(pool);
     showAbyssBuffChoice(pool.slice(0, 3), layerId, stage);
   }
-
-  // 層一覧
-  const listEl = document.createElement('div');
-  listEl.style.cssText = 'padding:6px 12px 12px;';
-  ABYSS_LAYERS.forEach(layer => {
-    const cleared = clearedLayers.includes(layer.id);
-    const isActive = inRun && currentRun.layerId === layer.id;
-    const unlocked = layer.id === 1 || clearedLayers.includes(layer.id - 1);
-    const area = BABEL_AREAS.find(a => a.id === layer.areaId);
-    const borderColor = cleared ? 'var(--gold)' : isActive ? 'var(--accent2)' : 'var(--border)';
-    const row = document.createElement('div');
-    row.style.cssText = `display:flex;align-items:center;gap:8px;padding:7px 8px;margin-bottom:4px;background:var(--bg3);border:1px solid ${borderColor};opacity:${unlocked?1:0.45};`;
-    row.innerHTML = `
-      <span style="font-size:16px;min-width:22px;text-align:center">${area?.icon||'🌀'}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:700;color:${cleared?'var(--gold)':isActive?'var(--accent2)':'var(--text)'}">第${layer.id}層${cleared?' ✓':isActive?' ▶':''}</div>
-        <div style="font-size:10px;color:var(--text3)">${area?.name||''} · ${layer.rec} · ${'★'.repeat(layer.accRarity)}</div>
-      </div>`;
-    if (!inRun && unlocked) {
-      const btn = document.createElement('button');
-      btn.className = `btn btn-sm ${cleared ? 'btn-outline' : 'btn-gold'}`;
-      btn.style.minWidth = '52px';
-      btn.textContent = cleared ? '再挑戦' : '挑戦';
-      btn.addEventListener('click', () => startAbyssLayer(layer.id));
-      row.appendChild(btn);
-    }
-    listEl.appendChild(row);
-  });
-  el.appendChild(listEl);
 }
 
 function showAbyssBuffChoice(choices, layerId, stage) {
@@ -19212,7 +19219,6 @@ function showAbyssBuffChoice(choices, layerId, stage) {
   const isBossNext = stage === 5;
   const overlay  = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(5,6,8,0.95);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px;';
-  const isBoss = nextStage === 6;
   overlay.innerHTML = `
     <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;letter-spacing:3px">${layer.name} ステージ${stage} クリア！</div>
     <div style="font-size:13px;color:var(--text2)">バフを1つ選択してください${isBossNext ? ' — 次はボス！' : ''}</div>`;
