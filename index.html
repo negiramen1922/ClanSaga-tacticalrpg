@@ -13277,8 +13277,8 @@ function endBattle(victory) {
       const nextStage = (battleContext.stage || 1) + 1;
       const nextLabel = nextStage === 6 ? 'BOSS' : `ステージ${nextStage}`;
       resultBtnsEl.innerHTML = `
-        <button class="btn btn-gold" style="flex:2" onclick="abyssResultContinue()">▶ ${nextLabel}へ</button>
-        <button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="abyssResultRetreat()">🏳 撤退</button>`;
+        <button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="abyssResultRetreat()">🏳 撤退</button>
+        <button class="btn btn-gold" style="flex:2" onclick="abyssResultContinue()">▶ ${nextLabel}へ</button>`;
     } else {
       // ボス撃破（層クリア）：閉じるだけ
       resultBtnsEl.innerHTML = `
