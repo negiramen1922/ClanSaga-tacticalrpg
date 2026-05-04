@@ -847,10 +847,11 @@ img.item-icon {
 
 /* STATUS EFFECTS */
 .status-icons { display: flex; gap: 2px; flex-wrap: wrap; margin-top: 3px; }
-.status-icon { 
+.status-icon {
   font-size: 10px; background: var(--bg2); padding: 1px 3px;
   border: 1px solid var(--border); font-family: 'Rajdhani'; color: var(--text2);
 }
+.status-icon .si-count { font-size: 9px; opacity: 0.8; margin-left: 1px; }
 .status-icon.atk-up { border-color: var(--orange); color: var(--orange); }
 .status-icon.hp-up { border-color: var(--green); color: var(--green); }
 .status-icon.pdef-up  { border-color: #ff8866; color: #ff8866; }
@@ -7794,6 +7795,40 @@ const NEWS_DATA = [
 <p>エリア1の全ステージをクリアしてもアビスダイブが「Clan Lv.31で解放」と表示されていたバグを修正しました。正しくアビスダイブのクリア状況が表示されるようになります。</p>`,
   },
   {
+    id: 'news_013',
+    type: 'update',
+    title: '⚙️ バージョン1.011アップデート内容',
+    date: '2026-05-04',
+    summary: 'アビスダイブ改善・一時停止メニュー・バフ重複表示・まとめて周回・スタミナ仕様変更など多数の改善を実施しました。',
+    body: `<h4>🌊 アビスダイブを大幅改善</h4>
+<ul>
+  <li>ステージクリア後のバフ選択で次の戦闘に進めないバグを修正しました</li>
+  <li>撤退するとその層の最初からやり直しになるよう変更しました（敗北と同じ扱い）</li>
+  <li>挑戦回数の1日上限を撤廃しました。何度でも挑戦できます</li>
+</ul>
+
+<h4>⏸ 一時停止メニューを追加</h4>
+<p>戦闘画面の左上ボタンが「⏸ 一時停止」に変わりました。押すとバトルが一時停止し、「続ける」か「撤退する」を選べます。</p>
+
+<h4>🔄 まとめて周回に対応</h4>
+<p>バベルステージとアビスダイブの周回ボタンを押すと、周回数を選択できるようになりました。</p>
+<ul>
+  <li>×1 / ×3 / ×5 / ×10 のプリセットボタン、またはMAX（スタミナが許す最大数）で一括周回</li>
+  <li>周回数に応じた必要スタミナをリアルタイムで確認できます</li>
+</ul>
+
+<h4>⚡ スタミナ仕様を変更</h4>
+<ul>
+  <li>バベルステージへの出撃時にスタミナ <b>⚡10</b> を消費するようになりました</li>
+  <li>バベル周回もスタミナ ⚡10 に統一しました</li>
+  <li>アビスダイブの出撃はスタミナ消費なし。周回のみ消費します</li>
+  <li>スタミナ上限がクランレベルに応じて増加するようになりました（Lv.1=上限100、Lv.2以降は1レベルごとに+5）</li>
+</ul>
+
+<h4>✨ バフ・デバフ表示を改善</h4>
+<p>キャラクターに同じバフ・デバフが複数スタックされている場合、「⬆ATK×3」のように1つにまとめて表示されるようになりました。</p>`,
+  },
+  {
     id: 'news_011',
     type: 'campaign',
     title: '🎊 ver.1.00 スタートダッシュイベント開催！',
@@ -8467,7 +8502,7 @@ function openVipPanel() {
       </div>
       <div style="font-size:11px;color:var(--text2);line-height:1.8">
         ${tier>0?`💠 デイリー星晶石 +${b.dailyCrystal}個<br>`:''}
-        ⚡ スタミナ上限 ${b.staminaMax}<br>
+        ⚡ スタミナ上限 ${b.staminaMax}+（Clan Lv-1）×5<br>
         ⛏️ 鉱山貯蓄上限 ${b.mineCapHours}時間<br>
         📋 フォーメーション保存数 ${b.presetSlots}枠<br>
         ⚔️ アビス挑戦回数 ${3 + b.abyssExtraRuns}回/日<br>
@@ -10075,7 +10110,7 @@ function openStageList(areaId) {
         const sweepBtn = document.createElement('button');
         sweepBtn.className = 'stage-sweep-btn';
         sweepBtn.textContent = '🔄 周回';
-        sweepBtn.addEventListener('click', (e) => { e.stopPropagation(); sweepBabelStage(areaId, s.id); });
+        sweepBtn.addEventListener('click', (e) => { e.stopPropagation(); openSweepCountPicker('babel', { areaId, stageId: s.id }); });
         row.appendChild(sweepBtn);
       }
       const btn = document.createElement('button');
@@ -10104,38 +10139,138 @@ function closeStageList() {
   currentAreaId = null;
 }
 
-function sweepBabelStage(areaId, stageId) {
-  const SWEEP_COST = 3;
-  if (!consumeStamina(SWEEP_COST)) {
-    showBonusToast(`スタミナが不足しています（必要: ${SWEEP_COST}）`);
-    return;
+// ── 周回カウントピッカー ──────────────────────────────────────
+let _sweepCtx = null;
+
+function openSweepCountPicker(type, data) {
+  if (document.getElementById('sweep-count-picker')) return;
+  const cost = type === 'babel' ? 10 : abyssSweepCost(data.layerId);
+  const stamina = staminaRegenInfo().cur;
+  const maxCount = Math.max(1, Math.floor(stamina / cost));
+  let label = '';
+  if (type === 'babel') {
+    const area  = BABEL_AREAS.find(a => a.id === data.areaId);
+    const stage = area?.stages.find(s => s.id === data.stageId);
+    label = `${area?.name || ''} — ${stage?.name || ''}`;
+  } else {
+    label = ABYSS_LAYERS.find(l => l.id === data.layerId)?.name || '';
   }
+  _sweepCtx = { type, data, cost, maxCount };
+
+  const presets = [1, 3, 5, 10].filter(n => n <= maxCount);
+  if (!presets.includes(maxCount)) presets.push(maxCount);
+  const presetsHtml = presets.map(n =>
+    `<button onclick="_sweepSetCount(${n})" style="padding:6px 10px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-family:'Rajdhani';font-size:13px;font-weight:700;cursor:pointer;">×${n}${n===maxCount&&maxCount>10?' (MAX)':''}</button>`
+  ).join('');
+
+  const ov = document.createElement('div');
+  ov.id = 'sweep-count-picker';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(5,6,8,0.92);display:flex;align-items:center;justify-content:center;padding:16px;';
+  ov.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--border);width:100%;max-width:320px;padding:22px 18px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--text);">🔄 周回設定</div>
+      <div style="font-size:11px;color:var(--text3);">${label}</div>
+      <div style="font-size:12px;color:var(--text2);">スタミナ ⚡${stamina} &nbsp;／&nbsp; 1回 ⚡${cost}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${presetsHtml}</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:12px;color:var(--text2);white-space:nowrap;">周回数</span>
+        <input id="sweep-count-input" type="number" min="1" max="${maxCount}" value="1"
+          style="width:72px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 8px;font-size:15px;font-family:'Rajdhani';font-weight:700;"
+          oninput="_sweepUpdateCost()">
+        <span id="sweep-cost-label" style="font-size:11px;color:var(--text3);">⚡${cost}</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="_sweepConfirm()" style="flex:1;padding:11px;background:var(--accent);border:none;color:#fff;font-family:'Rajdhani';font-size:14px;font-weight:700;cursor:pointer;">周回する</button>
+        <button onclick="_sweepClose()" style="padding:11px 16px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-family:'Rajdhani';font-size:14px;cursor:pointer;">キャンセル</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+
+function _sweepSetCount(n) {
+  const inp = document.getElementById('sweep-count-input');
+  if (inp) { inp.value = n; _sweepUpdateCost(); }
+}
+
+function _sweepUpdateCost() {
+  if (!_sweepCtx) return;
+  const inp = document.getElementById('sweep-count-input');
+  const lbl = document.getElementById('sweep-cost-label');
+  const n = Math.max(1, Math.min(_sweepCtx.maxCount, parseInt(inp?.value) || 1));
+  if (lbl) lbl.textContent = `⚡${_sweepCtx.cost * n}`;
+}
+
+function _sweepClose() {
+  const ov = document.getElementById('sweep-count-picker');
+  if (ov) ov.remove();
+  _sweepCtx = null;
+}
+
+function _sweepConfirm() {
+  if (!_sweepCtx) return;
+  const inp = document.getElementById('sweep-count-input');
+  const n = Math.max(1, Math.min(_sweepCtx.maxCount, parseInt(inp?.value) || 1));
+  const { type, data, cost } = _sweepCtx;
+  if (!consumeStamina(cost * n)) {
+    showBonusToast(`スタミナが不足しています（必要: ⚡${cost * n}）`); return;
+  }
+  _sweepClose();
+  if (type === 'babel') _executeBabelSweep(data.areaId, data.stageId, n);
+  else                  _executeAbyssSweep(data.layerId, n);
+}
+
+function _executeBabelSweep(areaId, stageId, n) {
   const stageData = gState.progress.babel.clearedStages[stageId];
   const rank = stageData?.rank || 'B';
   const am = stageId.match(/a(\d+)s(\d+)/);
-  const areaNum = am ? parseInt(am[1]) : 1;
+  const areaNum  = am ? parseInt(am[1]) : 1;
   const stageNum = am ? parseInt(am[2]) : 1;
   const depthMult = 1 + (areaNum - 1) * 2 + (stageNum - 1) * 0.15;
   let goldBase  = Math.floor(150 * depthMult);
   let etherBase = Math.floor(40  * depthMult);
-  if ([8, 12, 15, 20].includes(stageNum)) {
-    goldBase  = Math.floor(goldBase  * 2.5);
-    etherBase = Math.floor(etherBase * 2.5);
-  }
+  if ([8, 12, 15, 20].includes(stageNum)) { goldBase = Math.floor(goldBase * 2.5); etherBase = Math.floor(etherBase * 2.5); }
   const rankMult = rank === 'S' ? 1.3 : rank === 'A' ? 1.1 : 1.0;
-  const gold  = Math.floor((goldBase  + Math.random() * goldBase  * 0.2) * rankMult);
-  const ether = Math.floor((etherBase + Math.random() * etherBase * 0.2) * rankMult);
-  const coin  = Math.floor(gold / 50);
-  gState.player.gold += gold;
-  gState.player.ether += ether;
-  gState.player.starCrystal = (gState.player.starCrystal || 0) + coin;
-  gState.missions.daily.babelClears  = (gState.missions.daily.babelClears  || 0) + 1;
-  gState.missions.weekly.babelClears = (gState.missions.weekly.babelClears || 0) + 1;
-  checkAchievements();
-  saveState();
-  updateTopBar();
-  const lines = [`🔄 周回完了！（スタミナ -${SWEEP_COST}）`, `ゴールド +${gold}`, `EXPポット +${ether}`, coin > 0 ? `星晶石 +${coin}` : null].filter(Boolean).join('　');
+  let totalGold = 0, totalEther = 0, totalCoin = 0;
+  for (let i = 0; i < n; i++) {
+    const gold  = Math.floor((goldBase  + Math.random() * goldBase  * 0.2) * rankMult);
+    const ether = Math.floor((etherBase + Math.random() * etherBase * 0.2) * rankMult);
+    totalGold += gold; totalEther += ether; totalCoin += Math.floor(gold / 50);
+  }
+  gState.player.gold  += totalGold;
+  gState.player.ether += totalEther;
+  gState.player.starCrystal = (gState.player.starCrystal || 0) + totalCoin;
+  gState.missions.daily.babelClears  = (gState.missions.daily.babelClears  || 0) + n;
+  gState.missions.weekly.babelClears = (gState.missions.weekly.babelClears || 0) + n;
+  checkAchievements(); saveState(); updateTopBar();
+  const lines = [
+    `🔄 ×${n} 周回完了！（⚡-${10 * n}）`,
+    `ゴールド +${fmt(totalGold)}`,
+    `EXPポット +${fmt(totalEther)}`,
+    totalCoin > 0 ? `星晶石 +${totalCoin}` : null,
+  ].filter(Boolean).join('　');
   showBonusToast(lines);
+}
+
+function _executeAbyssSweep(layerId, n) {
+  const layer = ABYSS_LAYERS.find(l => l.id === layerId);
+  if (!gState.accessories) gState.accessories = [];
+  const gained = [];
+  for (let i = 0; i < n; i++) {
+    const acc = generateAccessory(layer.accRarity);
+    gState.accessories.push(acc);
+    gained.push(acc);
+  }
+  saveState(); updateTopBar();
+  const cost = abyssSweepCost(layerId) * n;
+  const set      = ACCESSORY_SETS.find(s => s.id === gained[0]?.setId);
+  const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
+  const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--purple);color:var(--text);padding:10px 16px;border-radius:4px;z-index:9999;font-size:12px;text-align:center;pointer-events:none;';
+  t.innerHTML = `⚡-${cost} ×${n} 周回完了！<br><span style="color:${rarColor};font-weight:700">${rarLabel} アクセサリー ×${n}</span>`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+  renderAbyssContent();
 }
 
 // ============================================================
@@ -10638,7 +10773,7 @@ function renderBattle() {
         if (hpText) hpText.innerHTML = `${fmt(Math.max(0,u.hp))} / ${fmt(u.maxHp)}${u.shield>0?` <span style="color:#88aaff">🛡${fmt(u.shield)}</span>`:''}`;
         existing.classList.toggle('dead', !!u.dead);
         existing.classList.toggle('staggered', !!u.staggered);
-        const buffHtml = [...(u.buffs||[]),...(u.debuffs||[])].map(b=>`<div class="status-icon ${b.cssClass||''}">${b.icon||'?'}</div>`).join('');
+        const buffHtml = buildBuffHtml(u.buffs, u.debuffs);
         const statusIcons = q('.status-icons');
         if (statusIcons) statusIcons.innerHTML = buffHtml;
       }
@@ -10650,11 +10785,24 @@ function renderBattle() {
   updateTimer();
 }
 
+function buildBuffHtml(buffs, debuffs) {
+  const all = [...(buffs||[]), ...(debuffs||[])];
+  const map = new Map();
+  all.forEach(b => {
+    const key = b.type || b.icon || '?';
+    if (map.has(key)) map.get(key).count++;
+    else map.set(key, { b, count: 1 });
+  });
+  return [...map.values()].map(({ b, count }) =>
+    `<div class="status-icon ${b.cssClass||''}">${b.icon||'?'}${count > 1 ? `<span class="si-count">×${count}</span>` : ''}</div>`
+  ).join('');
+}
+
 function combatantCardHTML(c) {
   const hpPct = c.maxHp > 0 ? Math.max(0,(c.hp/c.maxHp)*100) : 0;
   const shieldPct = (c.shield && c.maxHp > 0) ? Math.min(100,(c.shield/c.maxHp)*100) : 0;
   const atbPct = c.atb;
-  const buffHtml = [...(c.buffs||[]),...(c.debuffs||[])].map(b=>`<div class="status-icon ${b.cssClass||''}">${b.icon||'?'}</div>`).join('');
+  const buffHtml = buildBuffHtml(c.buffs, c.debuffs);
   const ultPct = c.ultGauge || 0;
   const ultReady = ultPct >= 100;
   const ultSection = !c.isEnemy ? `
@@ -10769,6 +10917,11 @@ function pauseMenuRetreat() {
 function startBabelBattle(areaId, stageId) {
   const area = BABEL_AREAS.find(a=>a.id===areaId);
   const stage = area.stages.find(s=>s.id===stageId);
+  const BATTLE_COST = 10;
+  if (!consumeStamina(BATTLE_COST)) {
+    showBonusToast(`スタミナが不足しています（必要: ⚡${BATTLE_COST}）`);
+    return;
+  }
   battleContext = { type:'babel', areaId, stageId, stageName: area.name + ' - ' + stage.name, waves: stage.enemies };
   if (stageId === 'a1s1') flowTutAdvance('battle_start');
   closeStageList();
@@ -16765,7 +16918,9 @@ const MINE_MAX_HOURS = 50;
 const STAMINA_REGEN_MIN = 6; // 1スタミナ回復に何分かかるか
 
 function staminaMax() {
-  return getVip().staminaMax;
+  const lv = gState?.player?.level || 1;
+  const levelBonus = (lv - 1) * 5; // Lv.1=+0, Lv.2=+5, Lv.3=+10…
+  return getVip().staminaMax + levelBonus;
 }
 
 function calcStamina() {
@@ -19124,20 +19279,16 @@ function renderAbyssContent() {
   const cleared = abyss.clearedLayers || [];
   const run     = abyss.currentRun;
   const today   = new Date().toDateString();
-  if (abyss.lastRunDate !== today) { abyss.dailyRuns = 0; abyss.lastRunDate = today; }
-  const maxRuns  = 3 + getVip().abyssExtraRuns;
-  const runsLeft = maxRuns - (abyss.dailyRuns || 0);
   const bestLayer = cleared.length > 0 ? Math.max(...cleared) : 0;
 
   el.innerHTML = '';
 
   // ステータス行
   const stat = document.createElement('div');
-  stat.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px 12px;';
+  stat.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;';
   stat.innerHTML = `
     <div class="base-res-item"><div class="base-res-val">${bestLayer > 0 ? bestLayer+'層' : '—'}</div><div class="base-res-label">📊 最深到達</div></div>
-    <div class="base-res-item"><div class="base-res-val">${cleared.length}/15</div><div class="base-res-label">✅ クリア層</div></div>
-    <div class="base-res-item"><div class="base-res-val" style="color:${runsLeft>0?'var(--text)':'var(--red)'}">${runsLeft}</div><div class="base-res-label">⚡ 挑戦回数</div></div>`;
+    <div class="base-res-item"><div class="base-res-val">${cleared.length}/15</div><div class="base-res-label">✅ クリア層</div></div>`;
   el.appendChild(stat);
 
   // 進行中の探索バナー
@@ -19185,8 +19336,8 @@ function renderAbyssContent() {
         <div style="font-size:10px;color:var(--text3)">${layer.rec} &nbsp;|&nbsp; 報酬: <span style="color:${rarColor}">${rarLabel}</span></div>
       </div>
       <div style="display:flex;gap:6px;align-items:center;">
-        ${isCleared ? `<button class="btn btn-outline" style="font-size:11px;padding:4px 8px;" onclick="abyssSweep(${layer.id})">⚡${sweepCost} 周回</button>` : ''}
-        ${isUnlocked && !isActiveRun ? `<button class="btn btn-gold" style="font-size:11px;padding:4px 10px;" onclick="startAbyssLayer(${layer.id})" ${runsLeft <= 0 ? 'disabled' : ''}>挑戦</button>` : ''}
+        ${isCleared ? `<button class="btn btn-outline" style="font-size:11px;padding:4px 8px;" onclick="openSweepCountPicker('abyss',{layerId:${layer.id}})">⚡${sweepCost} 周回</button>` : ''}
+        ${isUnlocked && !isActiveRun ? `<button class="btn btn-gold" style="font-size:11px;padding:4px 10px;" onclick="startAbyssLayer(${layer.id})">挑戦</button>` : ''}
         ${!isUnlocked ? `<span style="font-size:11px;color:var(--text3)">🔒</span>` : ''}
       </div>`;
     grid.appendChild(row);
@@ -19198,14 +19349,6 @@ function startAbyssLayer(layerId) {
   const units = getFormationUnits();
   if (!units.length) { alert('編成にユニットを設定してください'); return; }
   const abyss = gState.progress.abyss;
-  const today = new Date().toDateString();
-  if (abyss.lastRunDate !== today) { abyss.dailyRuns = 0; abyss.lastRunDate = today; }
-  const maxRuns = 3 + getVip().abyssExtraRuns;
-  if ((abyss.dailyRuns || 0) >= maxRuns) {
-    alert(`アビスの本日の挑戦回数（${maxRuns}回）に達しました。\nVIPランクアップで上限が増えます。`);
-    return;
-  }
-  abyss.dailyRuns = (abyss.dailyRuns || 0) + 1;
   abyss.currentRun = { layerId, stage: 1, buffs: [] };
   saveState();
   renderAbyssContent();
@@ -19310,31 +19453,7 @@ function giveAbyssLayerReward(layerId) {
 }
 
 function abyssSweep(layerId) {
-  if (!(gState.progress.abyss.clearedLayers || []).includes(layerId)) {
-    alert('この層はまだクリアしていません。'); return;
-  }
-  const cost = abyssSweepCost(layerId);
-  const info = staminaRegenInfo();
-  if (info.cur < cost) {
-    alert(`スタミナが不足しています。\n必要: ⚡${cost} / 現在: ⚡${info.cur}`);
-    return;
-  }
-  consumeStamina(cost);
-  const layer = ABYSS_LAYERS.find(l => l.id === layerId);
-  if (!gState.accessories) gState.accessories = [];
-  const acc      = generateAccessory(layer.accRarity);
-  gState.accessories.push(acc);
-  saveState();
-  updateTopBar();
-  const set      = ACCESSORY_SETS.find(s => s.id === acc.setId);
-  const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
-  const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
-  const t = document.createElement('div');
-  t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--purple);color:var(--text);padding:10px 16px;border-radius:4px;z-index:9999;font-size:12px;text-align:center;pointer-events:none;';
-  t.innerHTML = `⚡-${cost} 周回完了！<br><span style="color:${rarColor};font-weight:700">${rarLabel} ${set?.name || 'アクセサリー'}</span> ${acc.mainStat.label}+${acc.mainStat.val}`;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3500);
-  renderAbyssContent();
+  openSweepCountPicker('abyss', { layerId });
 }
 
 function retreatAbyss() {
