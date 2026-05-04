@@ -1266,16 +1266,49 @@ img.item-icon {
 
 /* ===== HOME ENHANCEMENTS ===== */
 #login-bonus-banner {
-  background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(155,107,222,0.1));
+  background: linear-gradient(135deg, rgba(201,168,76,0.12), rgba(155,107,222,0.08));
   border: 1px solid var(--gold); padding: 12px 14px; margin-bottom: 12px;
-  display: flex; align-items: center; gap: 12px;
 }
-#login-bonus-banner .lb-icon { font-size: 28px; }
-#login-bonus-banner .lb-text h4 { font-family: 'Cinzel', serif; font-size: 13px; color: var(--gold); }
-#login-bonus-banner .lb-text p { font-size: 11px; color: var(--text2); margin-top: 2px; }
+#login-bonus-banner .lb-header {
+  font-family: 'Cinzel', serif; font-size: 13px; color: var(--gold);
+  margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+}
+#login-bonus-banner .lb-calendar {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 10px;
+}
+#login-bonus-banner .lb-day {
+  border: 1px solid var(--border); padding: 6px 2px; text-align: center;
+  background: var(--bg3); display: flex; flex-direction: column; align-items: center; gap: 3px;
+  min-width: 0;
+}
+#login-bonus-banner .lb-day.lb-claimed {
+  opacity: 0.45; border-color: var(--border);
+}
+#login-bonus-banner .lb-day.lb-today {
+  border-color: var(--gold); background: rgba(201,168,76,0.12);
+  box-shadow: 0 0 8px rgba(201,168,76,0.3);
+}
+#login-bonus-banner .lb-day.lb-tomorrow { border-color: rgba(155,107,222,0.5); }
+#login-bonus-banner .lb-day-num {
+  font-size: 9px; color: var(--text3); font-family: 'Rajdhani'; font-weight: 700;
+}
+#login-bonus-banner .lb-day-tag {
+  font-size: 9px; font-weight: 700; font-family: 'Rajdhani'; letter-spacing: 0.5px;
+}
+#login-bonus-banner .lb-day-tag.tag-today { color: var(--gold); }
+#login-bonus-banner .lb-day-tag.tag-tomorrow { color: var(--purple); }
+#login-bonus-banner .lb-day-tag.tag-done { color: var(--text3); }
+#login-bonus-banner .lb-day-reward {
+  font-size: 9px; color: var(--text2); line-height: 1.3; text-align: center; word-break: break-all;
+}
 #login-bonus-banner .lb-claim {
-  margin-left: auto; background: var(--gold); border: none; color: #0a0b0f;
-  font-family: 'Rajdhani'; font-size: 13px; font-weight: 700; padding: 8px 16px; cursor: pointer;
+  width: 100%; background: var(--gold); border: none; color: #0a0b0f;
+  font-family: 'Rajdhani'; font-size: 14px; font-weight: 700; padding: 10px; cursor: pointer;
+  letter-spacing: 1px;
+}
+#login-bonus-banner .lb-claim:hover { background: var(--gold2); }
+#login-bonus-banner .lb-claimed-msg {
+  text-align: center; font-size: 11px; color: var(--text3); padding: 4px 0;
 }
 #home-notices { margin-bottom: 8px; }
 .home-notice {
@@ -8742,48 +8775,83 @@ function checkLoginBonus() {
   const today = new Date().toDateString();
   const p = gState.player;
   if (!p.lastLoginDate) p.lastLoginDate = '';
-  if (!p.loginStreak) p.loginStreak = 0;
+  if (!p.loginStreak)   p.loginStreak   = 0;
 
-  if (p.lastLoginDate === today) {
-    document.getElementById('login-bonus-banner').style.display = 'none';
-    return;
+  const alreadyClaimed = p.lastLoginDate === today;
+
+  // ストリーク計算（未受取の場合のみ更新）
+  if (!alreadyClaimed) {
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (p.lastLoginDate === yesterday) {
+      p.loginStreak = ((p.loginStreak || 0) % 7) + 1;
+    } else {
+      p.loginStreak = 1;
+    }
   }
 
-  // ストリーク計算
-  const yesterday = new Date(Date.now() - 86400000).toDateString();
-  if (p.lastLoginDate === yesterday) {
-    p.loginStreak = ((p.loginStreak||0) % 7) + 1;
-  } else {
-    p.loginStreak = 1;
-  }
-
-  const bonus = LOGIN_BONUS[(p.loginStreak-1) % 7];
+  const todayIdx = (p.loginStreak - 1) % 7; // 0-based
   const banner = document.getElementById('login-bonus-banner');
-  banner.style.display = 'flex';
-  banner.innerHTML = `
-    <div class="lb-icon">🎁</div>
-    <div class="lb-text">
-      <h4>ログインボーナス ${p.loginStreak}日目</h4>
-      <p>${bonus.rewards.map(r=>r.label).join(' + ')}</p>
-    </div>
-    <button class="lb-claim" id="lb-claim-btn">受取</button>`;
+  banner.style.display = 'block';
 
-  document.getElementById('lb-claim-btn').addEventListener('click', () => {
-    (bonus.rewards||[]).forEach(r => {
-      if (r.type === 'starMapPoints') p.starMapPoints = (p.starMapPoints||0) + r.amount;
-      else p[r.type] = (p[r.type]||0) + r.amount;
+  // カレンダーセルを生成
+  const cells = LOGIN_BONUS.map((b, i) => {
+    const isPast    = i < todayIdx || (i === todayIdx && alreadyClaimed);
+    const isToday   = i === todayIdx;
+    const isTomorrow   = i === todayIdx + 1;
+    const isDayAfter   = i === todayIdx + 2;
+
+    let dayClass = '';
+    let tagClass = '';
+    let tagText  = '';
+    if (isPast) {
+      dayClass = 'lb-claimed';
+      tagText  = alreadyClaimed && isToday ? '受取済' : '✓';
+      tagClass = 'tag-done';
+    } else if (isToday) {
+      dayClass = 'lb-today';
+      tagText  = '★ 今日！';
+      tagClass = 'tag-today';
+    } else if (isTomorrow) {
+      dayClass = 'lb-tomorrow';
+      tagText  = '明日';
+      tagClass = 'tag-tomorrow';
+    } else if (isDayAfter) {
+      tagText  = '明後日';
+      tagClass = 'tag-tomorrow';
+    }
+
+    const rewardHtml = b.rewards.map(r => `<span>${r.label}</span>`).join('<br>');
+    return `
+      <div class="lb-day ${dayClass}">
+        <div class="lb-day-num">DAY ${i + 1}</div>
+        ${tagText ? `<div class="lb-day-tag ${tagClass}">${tagText}</div>` : ''}
+        <div class="lb-day-reward">${rewardHtml}</div>
+      </div>`;
+  }).join('');
+
+  const todayBonus = LOGIN_BONUS[todayIdx];
+  banner.innerHTML = `
+    <div class="lb-header">🎁 ログインボーナス &nbsp;<span style="font-family:'Rajdhani';font-size:12px;color:var(--text3);font-weight:400">${p.loginStreak}日目</span></div>
+    <div class="lb-calendar">${cells}</div>
+    ${!alreadyClaimed
+      ? `<button class="lb-claim" id="lb-claim-btn">🎁 今日のボーナスを受け取る（${todayBonus.rewards.map(r=>r.label).join(' + ')}）</button>`
+      : `<div class="lb-claimed-msg">✓ 本日分は受取済です。明日またお越しください！</div>`}`;
+
+  if (!alreadyClaimed) {
+    document.getElementById('lb-claim-btn').addEventListener('click', () => {
+      (todayBonus.rewards || []).forEach(r => {
+        if (r.type === 'starMapPoints') p.starMapPoints = (p.starMapPoints || 0) + r.amount;
+        else p[r.type] = (p[r.type] || 0) + r.amount;
+      });
+      p.lastLoginDate = today;
+      gState.missions.daily.loginBonus  = (gState.missions.daily.loginBonus  || 0) + 1;
+      gState.missions.weekly.loginCount = (gState.missions.weekly.loginCount || 0) + 1;
+      if (gState.missions.event) gState.missions.event.loginBonus = (gState.missions.event.loginBonus || 0) + 1;
+      saveState();
+      updateTopBar();
+      checkLoginBonus(); // カレンダーを受取済み状態に再描画
     });
-    p.lastLoginDate = today;
-    // デイリーミッション: ログインボーナス受取カウント
-    gState.missions.daily.loginBonus  = (gState.missions.daily.loginBonus||0)  + 1;
-    // ウィークリーミッション: ログイン回数カウント
-    gState.missions.weekly.loginCount = (gState.missions.weekly.loginCount||0) + 1;
-    // イベントミッション: ログインボーナス受取カウント
-    if (gState.missions.event) gState.missions.event.loginBonus = (gState.missions.event.loginBonus||0) + 1;
-    saveState();
-    updateTopBar();
-    banner.style.display = 'none';
-  });
+  }
 }
 
 // ============================================================
