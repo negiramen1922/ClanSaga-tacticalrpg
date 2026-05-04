@@ -2647,7 +2647,7 @@ img.item-icon {
         <div class="tab-title">ドロップ</div>
         <div class="drop-items" id="result-drops"></div>
       </div>
-      <div class="result-btns">
+      <div class="result-btns" id="result-btns">
         <button class="btn btn-outline" onclick="exitBattleToList()">一覧へ</button>
         <button class="btn btn-gold" onclick="retryBattle()">もう一度</button>
         <button class="btn btn-blue" id="next-stage-btn" onclick="nextStage()">次へ▶</button>
@@ -13221,8 +13221,27 @@ function endBattle(victory) {
   const dropEl = document.getElementById('result-drops');
   dropEl.innerHTML = drops.map(d=>`<div class="drop-item">${d.name}</div>`).join('');
 
-  const nextBtn = document.getElementById('next-stage-btn');
-  nextBtn.style.display = victory && hasNextStage() ? '' : 'none';
+  const resultBtnsEl = document.getElementById('result-btns');
+  if (victory && battleContext?.type === 'abyss') {
+    const run = gState.progress.abyss.currentRun;
+    if (run) {
+      // 通常ステージ勝利：次へ or 撤退
+      resultBtnsEl.innerHTML = `
+        <button class="btn btn-gold" style="flex:2" onclick="abyssResultContinue()">▶ ステージ${run.stage}へ</button>
+        <button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="abyssResultRetreat()">🏳 撤退</button>`;
+    } else {
+      // ボス撃破（層クリア）：閉じるだけ
+      resultBtnsEl.innerHTML = `
+        <button class="btn btn-gold" style="width:100%" onclick="exitBattle()">確認</button>`;
+    }
+  } else {
+    resultBtnsEl.innerHTML = `
+      <button class="btn btn-outline" onclick="exitBattleToList()">一覧へ</button>
+      <button class="btn btn-gold" onclick="retryBattle()">もう一度</button>
+      <button class="btn btn-blue" id="next-stage-btn" onclick="nextStage()">次へ▶</button>`;
+    const nextBtn = document.getElementById('next-stage-btn');
+    if (nextBtn) nextBtn.style.display = victory && hasNextStage() ? '' : 'none';
+  }
 
   document.getElementById('battle-result').classList.add('active');
   renderSortieTab();
@@ -19359,6 +19378,21 @@ function continueAbyssRun() {
   const run = gState.progress.abyss.currentRun;
   if (!run) return;
   startAbyssStage(run.layerId, run.stage);
+}
+
+function abyssResultContinue() {
+  document.getElementById('battle-result').classList.remove('active');
+  continueAbyssRun();
+}
+
+function abyssResultRetreat() {
+  gState.progress.abyss.currentRun = null;
+  saveState();
+  document.getElementById('battle-result').classList.remove('active');
+  document.getElementById('battle-screen').classList.remove('active');
+  Audio.stopBgm();
+  Audio.playHome();
+  renderAbyssContent();
 }
 
 function startAbyssStage(layerId, stage) {
