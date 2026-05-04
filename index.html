@@ -511,6 +511,8 @@ img.item-icon {
 .star-gold { color: var(--gold); }
 .star-empty { color: var(--text3); }
 .stage-item .start-btn { background: var(--accent); color: white; border: none; padding: 6px 14px; cursor: pointer; font-size: 12px; font-family: 'Rajdhani'; font-weight: 700; }
+.stage-item .stage-sweep-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); padding: 5px 10px; cursor: pointer; font-size: 11px; font-family: 'Rajdhani'; font-weight: 700; margin-right: 4px; transition: all 0.15s; }
+.stage-item .stage-sweep-btn:hover { border-color: var(--accent); color: var(--accent2); }
 .stage-item.stage-locked { opacity: 0.55; pointer-events: none; background: var(--bg2); }
 .stage-item.stage-locked:hover { background: var(--bg2); }
 
@@ -2469,19 +2471,6 @@ img.item-icon {
         </div>
         <div class="area-list" id="colosseum-panel">
           <div id="colosseum-content"></div>
-        </div>
-      </div>
-      <div class="content-section">
-        <div class="section-header" onclick="toggleSection(this,'instant-dungeons')">
-          <span class="sec-icon">⚡</span>
-          <div>
-            <div class="sec-title">即時ダンジョン</div>
-            <div class="sec-sub">EXPポット・ゴールド専用ダンジョン</div>
-          </div>
-          <span class="sec-arrow">▶</span>
-        </div>
-        <div class="area-list" id="instant-dungeons">
-          <div id="instant-content"></div>
         </div>
       </div>
     </div>
@@ -7169,6 +7158,10 @@ function normalizeState() {
     // 既存プレイヤーでS5クリア済みなら鉱山チュートリアルは不要
     gState.tutorial.mineDone = !!(gState.progress?.babel?.clearedStages?.['a1s5']);
   }
+  if (gState.tutorial.abyssDone === undefined) {
+    // 既存プレイヤーでa1s10クリア済みならアビスチュートリアルは不要
+    gState.tutorial.abyssDone = !!(gState.progress?.babel?.clearedStages?.['a1s10']);
+  }
 
   // beginnerMissions
   if (!gState.beginnerMissions) gState.beginnerMissions = { vanguardGiven:false, archerGiven:false };
@@ -10015,11 +10008,18 @@ function openStageList(areaId) {
       <div class="stage-rank">${cleared ? stars : (isLocked ? '' : '<span style="color:var(--text3)">☆☆☆</span>')}</div>`;
 
     if (!isLocked) {
+      if (cleared) {
+        const sweepBtn = document.createElement('button');
+        sweepBtn.className = 'stage-sweep-btn';
+        sweepBtn.textContent = '🔄 周回';
+        sweepBtn.addEventListener('click', (e) => { e.stopPropagation(); sweepBabelStage(areaId, s.id); });
+        row.appendChild(sweepBtn);
+      }
       const btn = document.createElement('button');
       btn.className = 'start-btn';
       btn.textContent = '出撃';
       if (areaId === 'area1' && i === 0) btn.id = 'ft-s1-btn';
-      btn.addEventListener('click', () => startBabelBattle(areaId, s.id));
+      btn.addEventListener('click', (e) => { e.stopPropagation(); startBabelBattle(areaId, s.id); });
       row.appendChild(btn);
     }
 
@@ -10039,6 +10039,40 @@ function openStageList(areaId) {
 function closeStageList() {
   document.getElementById('stage-list-modal').classList.remove('open');
   currentAreaId = null;
+}
+
+function sweepBabelStage(areaId, stageId) {
+  const SWEEP_COST = 3;
+  if (!consumeStamina(SWEEP_COST)) {
+    showBonusToast(`スタミナが不足しています（必要: ${SWEEP_COST}）`);
+    return;
+  }
+  const stageData = gState.progress.babel.clearedStages[stageId];
+  const rank = stageData?.rank || 'B';
+  const am = stageId.match(/a(\d+)s(\d+)/);
+  const areaNum = am ? parseInt(am[1]) : 1;
+  const stageNum = am ? parseInt(am[2]) : 1;
+  const depthMult = 1 + (areaNum - 1) * 2 + (stageNum - 1) * 0.15;
+  let goldBase  = Math.floor(150 * depthMult);
+  let etherBase = Math.floor(40  * depthMult);
+  if ([8, 12, 15, 20].includes(stageNum)) {
+    goldBase  = Math.floor(goldBase  * 2.5);
+    etherBase = Math.floor(etherBase * 2.5);
+  }
+  const rankMult = rank === 'S' ? 1.3 : rank === 'A' ? 1.1 : 1.0;
+  const gold  = Math.floor((goldBase  + Math.random() * goldBase  * 0.2) * rankMult);
+  const ether = Math.floor((etherBase + Math.random() * etherBase * 0.2) * rankMult);
+  const coin  = Math.floor(gold / 50);
+  gState.player.gold += gold;
+  gState.player.ether += ether;
+  gState.player.starCrystal = (gState.player.starCrystal || 0) + coin;
+  gState.missions.daily.babelClears  = (gState.missions.daily.babelClears  || 0) + 1;
+  gState.missions.weekly.babelClears = (gState.missions.weekly.babelClears || 0) + 1;
+  checkAchievements();
+  saveState();
+  updateTopBar();
+  const lines = [`🔄 周回完了！（スタミナ -${SWEEP_COST}）`, `ゴールド +${gold}`, `EXPポット +${ether}`, coin > 0 ? `星晶石 +${coin}` : null].filter(Boolean).join('　');
+  showBonusToast(lines);
 }
 
 // ============================================================
@@ -12739,6 +12773,8 @@ function endBattle(victory) {
       if (_isFirstClear) {
         // 鉱山アンロック (S5初クリア)
         if (battleContext.stageId === 'a1s5') setTimeout(() => triggerMineUnlock(), 1500);
+        // アビスアンロック (エリア1最終S10初クリア)
+        if (battleContext.stageId === 'a1s10') setTimeout(() => triggerAbyssUnlock(), 2000);
         const _crystal = getFirstClearCrystal(battleContext.stageId);
         if (_crystal > 0) {
           gState.player.starCrystal = (gState.player.starCrystal||0) + _crystal;
@@ -18795,8 +18831,8 @@ function renderAbyssContent() {
   if (!el) return;
   const lv = gState.player.level;
 
-  if (lv < 31) {
-    el.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3)">🔒 Clan Lv.31で解放されます（現在: Lv.${lv}）</div>`;
+  if (!isAbyssUnlocked()) {
+    el.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3)">🔒 エリア1（翠緑の草原）を全ステージクリアすると解放されます</div>`;
     return;
   }
 
@@ -20472,7 +20508,8 @@ function clearFlowSpotlight() {
 }
 
 function flowTutNext() {
-  if (mineTutState.active) { mineTutNext(); return; }
+  if (mineTutState.active)  { mineTutNext();  return; }
+  if (abyssTutState.active) { abyssTutNext(); return; }
   const step = FLOW_STEPS[flowTutState.stepIdx];
   if (!step) return;
   if (step.isLast) {
@@ -20638,6 +20675,80 @@ function endMineTutorial() {
   if (!gState) return;
   if (!gState.tutorial) gState.tutorial = {};
   gState.tutorial.mineDone = true;
+  saveState();
+}
+
+// ============================================================
+//  ABYSS UNLOCK & ABYSS TUTORIAL
+// ============================================================
+
+function isAbyssUnlocked() {
+  return !!(gState?.progress?.babel?.clearedStages?.['a1s10']);
+}
+
+function triggerAbyssUnlock() {
+  renderAbyssContent();
+  if (!gState.tutorial.abyssDone) startAbyssTutorial();
+}
+
+const ABYSS_TUT_STEPS = [
+  {
+    id: 'ab_unlocked', type: 'info', icon: '🏔️',
+    title: 'アビスダイブ解放！',
+    getText: () => 'エリア1クリアおめでとう！\n\n「アビスダイブ」が解放されました。\nアクセサリーを入手できる\nローグライクダンジョンです！',
+    btnText: '詳しく見る',
+    spotlight: null,
+  },
+  {
+    id: 'ab_explain', type: 'info', icon: '💍',
+    title: 'アクセサリーとは？',
+    getText: () => 'アクセサリーはキャラに装備できる\n強化アイテムです。\n\nアビスは層ごとに強敵と戦うダンジョンで\nクリアするとアクセサリーが獲得できます。\n\n出撃 → アビスダイブ から挑戦しましょう！',
+    btnText: '閉じる',
+    spotlight: null,
+    isLast: true,
+  },
+];
+
+let abyssTutState = { active: false, stepIdx: 0 };
+
+function startAbyssTutorial() {
+  if (!gState || gState.tutorial?.abyssDone) return;
+  abyssTutState = { active: true, stepIdx: 0 };
+  renderAbyssTutStep();
+}
+
+function renderAbyssTutStep() {
+  const step = ABYSS_TUT_STEPS[abyssTutState.stepIdx];
+  if (!step) { endAbyssTutorial(); return; }
+
+  document.getElementById('ft-icon').textContent     = step.icon;
+  document.getElementById('ft-title').textContent    = step.title;
+  document.getElementById('ft-text').textContent     = step.getText();
+  document.getElementById('ft-progress').textContent = `${abyssTutState.stepIdx + 1} / ${ABYSS_TUT_STEPS.length}`;
+
+  const btn = document.getElementById('ft-btn');
+  btn.style.display = 'block';
+  btn.textContent = step.btnText || '次へ';
+
+  document.getElementById('flow-tut').style.display = 'block';
+  clearFlowSpotlight();
+}
+
+function abyssTutNext() {
+  const step = ABYSS_TUT_STEPS[abyssTutState.stepIdx];
+  if (!step) return;
+  if (step.isLast) { endAbyssTutorial(); return; }
+  abyssTutState.stepIdx++;
+  renderAbyssTutStep();
+}
+
+function endAbyssTutorial() {
+  abyssTutState.active = false;
+  document.getElementById('flow-tut').style.display = 'none';
+  clearFlowSpotlight();
+  if (!gState) return;
+  if (!gState.tutorial) gState.tutorial = {};
+  gState.tutorial.abyssDone = true;
   saveState();
 }
 </script>
