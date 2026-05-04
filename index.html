@@ -8468,7 +8468,7 @@ function openVipPanel() {
       </div>
       <div style="font-size:11px;color:var(--text2);line-height:1.8">
         ${tier>0?`💠 デイリー星晶石 +${b.dailyCrystal}個<br>`:''}
-        ⚡ スタミナ上限 ${b.staminaMax}（+Clan Lv×10ごとに+10）<br>
+        ⚡ スタミナ上限 ${b.staminaMax}+（Clan Lv-1）×5<br>
         ⛏️ 鉱山貯蓄上限 ${b.mineCapHours}時間<br>
         📋 フォーメーション保存数 ${b.presetSlots}枠<br>
         ⚔️ アビス挑戦回数 ${3 + b.abyssExtraRuns}回/日<br>
@@ -16885,7 +16885,7 @@ const STAMINA_REGEN_MIN = 6; // 1スタミナ回復に何分かかるか
 
 function staminaMax() {
   const lv = gState?.player?.level || 1;
-  const levelBonus = Math.floor(lv / 10) * 10; // Lv.10ごとに+10
+  const levelBonus = (lv - 1) * 5; // Lv.1=+0, Lv.2=+5, Lv.3=+10…
   return getVip().staminaMax + levelBonus;
 }
 
