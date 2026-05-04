@@ -19772,7 +19772,9 @@ function renderSortieTab() {
   if (abyssSub) {
     const cl = (gState.progress.abyss.clearedLayers||[]);
     const best = cl.length > 0 ? Math.max(...cl) : 0;
-    abyssSub.textContent = lv>=31 ? `クリア: ${cl.length}/15層 (最深 ${best||0}層)` : 'Clan Lv.31で解放';
+    abyssSub.textContent = isAbyssUnlocked()
+      ? `クリア: ${cl.length}/15層 (最深 ${best||0}層)`
+      : 'エリア1クリアで解放';
   }
   const colSub = document.getElementById('colosseum-sub');
   if (colSub) colSub.textContent = lv>=31 ? `ランク: ${gState.progress.colosseum.rank||1}` : 'Clan Lv.31で解放';
