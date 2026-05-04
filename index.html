@@ -12787,11 +12787,18 @@ function endBattle(victory) {
         const _fcPool = ARTIFACT_POOL.filter(d => d.rarity === _fcRarity);
         if (_fcPool.length) {
           const _fcDef = _fcPool[Math.floor(Math.random() * _fcPool.length)];
-          const _fcUid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
           if (!gState.artifacts) gState.artifacts = [];
-          gState.artifacts.push({ id: _fcDef.id, uid: _fcUid, level: 0, rank: 0 });
           const _rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
-          drops.push({ name:`${_fcDef.icon} <span style="color:${_rarColor[_fcRarity]};font-weight:700">${_fcRarity}</span> 【${_fcDef.name}】（初回クリア）` });
+          const _fcAlready = gState.artifacts.find(a => a.id === _fcDef.id);
+          if (_fcAlready) {
+            if (!gState.player.afDuplicates) gState.player.afDuplicates = {};
+            gState.player.afDuplicates[_fcDef.id] = (gState.player.afDuplicates[_fcDef.id]||0) + 1;
+            drops.push({ name:`${_fcDef.icon} <span style="color:${_rarColor[_fcRarity]};font-weight:700">${_fcRarity}</span> 【${_fcDef.name}】 凸素材+1（初回クリア）` });
+          } else {
+            const _fcUid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+            gState.artifacts.push({ id: _fcDef.id, uid: _fcUid, level: 0, rank: 0, conste: 0 });
+            drops.push({ name:`${_fcDef.icon} <span style="color:${_rarColor[_fcRarity]};font-weight:700">${_fcRarity}</span> 【${_fcDef.name}】（初回クリア）` });
+          }
         }
       }
       // エリアクリア時のイマジンアンロック判定
@@ -17215,107 +17222,273 @@ function renderArtifactListTab() {
 }
 
 function openArtifactDetail(uid) {
-  const inst = (gState.artifacts || []).find(a => a.uid === uid);
-  if (!inst) return;
-  const def = ARTIFACT_POOL.find(d => d.id === inst.id);
-  if (!def) return;
-  const lv      = inst.level  || 0;
-  const conste  = inst.conste || 0;
-  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
-  const rc = rarColor[def.rarity] || 'var(--text3)';
-  const equippedBy = gState.ownedUnits.find(u => u.equippedArtifact === uid);
-  const dupCount = (gState.player.afDuplicates || {})[def.id] || 0;
-  const canConste = conste < 9 && dupCount >= 1;
-
-  const ov = document.createElement('div');
+  let ov = document.getElementById('af-detail-modal');
+  if (ov) { ov.innerHTML = _buildAfDetailHTML(uid); return; }
+  ov = document.createElement('div');
+  ov.id = 'af-detail-modal';
   ov.className = 'modal-overlay open';
-  ov.style.zIndex = '9990';
-
-  const effHTML = (def.effects || []).map(eff =>
-    `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:11px;color:var(--text2)">${eff.name||eff.type}</span>
-      <span style="font-size:11px;color:var(--accent2)">${eff.desc||''}</span>
-    </div>`
-  ).join('');
-
-  // 凸ドット表示
-  const consteDots = Array.from({length:9}, (_,i) =>
-    `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 1px;background:${i<conste?'var(--gold)':'var(--border)'}"></span>`
-  ).join('');
-
-  ov.innerHTML = `<div class="modal-panel" style="max-width:360px">
-    <div class="modal-header">
-      <h3 style="color:${rc}">${def.icon} ${def.name}${conste>0?` <span style="font-size:12px;color:var(--gold)">+${conste}</span>`:''}</h3>
-      <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="text-align:center;margin-bottom:8px">
-        <span style="font-size:11px;background:${rc};color:#0a0b0f;padding:2px 10px;border-radius:10px;font-weight:700">${def.rarity}</span>
-      </div>
-      <div style="text-align:center;margin-bottom:12px">${consteDots}</div>
-      <div style="display:flex;gap:16px;justify-content:center;margin-bottom:12px">
-        <div style="text-align:center">
-          <div style="font-size:10px;color:var(--text3)">ATK</div>
-          <div style="font-size:16px;font-weight:700;color:var(--orange)">+${afMainScale(def.mainStat?.atk||0, lv, conste)}</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:10px;color:var(--text3)">HP</div>
-          <div style="font-size:16px;font-weight:700;color:var(--green)">+${afMainScale(def.mainStat?.hp||0, lv, conste)}</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:10px;color:var(--text3)">Lv</div>
-          <div style="font-size:16px;font-weight:700;color:var(--gold)">${lv}</div>
-        </div>
-      </div>
-      ${effHTML ? `<div style="margin-bottom:12px">${effHTML}</div>` : ''}
-      <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);padding:10px;border-radius:6px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:11px;color:var(--text3)">凸 ${conste} / 9　凸素材: ${dupCount}個</span>
-          <span style="font-size:10px;color:var(--text3)">凸ごとにATK・HP +10%</span>
-        </div>
-        <button class="btn btn-sm" onclick="constellateArtifact('${uid}',this.closest('.modal-overlay'))"
-          style="width:100%;background:${canConste?'rgba(201,168,76,0.2)':'rgba(80,80,80,0.15)'};color:${canConste?'var(--gold)':'var(--text3)'};border:1px solid ${canConste?'rgba(201,168,76,0.5)':'var(--border)'};"
-          ${canConste?'':'disabled'}>
-          ✦ 凸する（素材×1 → +${conste+1}凸）${conste>=9?' ※MAX':''}
-        </button>
-      </div>
-      ${equippedBy
-        ? `<div style="background:rgba(74,127,255,0.1);border:1px solid var(--accent);padding:10px;border-radius:6px;margin-bottom:12px">
-            <div style="font-size:11px;color:var(--text3);margin-bottom:4px">装備中のキャラ</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              ${classIconHTML(equippedBy.classId,'32px')}
-              <div>
-                <div style="font-size:13px;font-weight:700">${equippedBy.name}</div>
-                <div style="font-size:10px;color:var(--text3)">${CLASS_DATA[equippedBy.classId]?.name||''}</div>
-              </div>
-              <button class="btn btn-sm btn-outline" style="margin-left:auto" onclick="this.closest('.modal-overlay').remove();openUnitDetail('${equippedBy.uid}')">詳細</button>
-            </div>
-          </div>`
-        : `<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0 12px">未装備</div>`}
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-blue" style="flex:1" onclick="this.closest('.modal-overlay').remove();openSmithyPanel('enhance')">🔧 強化</button>
-        <button class="btn btn-outline" style="flex:1;color:var(--red);border-color:rgba(224,85,85,0.4)" onclick="this.closest('.modal-overlay').remove();openSmithyPanel('melt')">🔥 売却</button>
-      </div>
-    </div>
-  </div>`;
+  ov.style.cssText = 'z-index:9990;align-items:center;justify-content:center;padding:8px;';
+  ov.innerHTML = _buildAfDetailHTML(uid);
   document.body.appendChild(ov);
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
 }
 
-function constellateArtifact(uid, overlayEl) {
+function _afDetailClose() {
+  const ov = document.getElementById('af-detail-modal');
+  if (ov) ov.remove();
+}
+
+function _buildAfDetailHTML(uid) {
   const inst = (gState.artifacts || []).find(a => a.uid === uid);
+  if (!inst) return '';
+  const def = ARTIFACT_POOL.find(d => d.id === inst.id);
+  if (!def) return '';
+  const lv      = inst.level   || 0;
+  const rank    = inst.rank    || 0;
+  const conste  = inst.conste  || 0;
+  const skillLv = inst.skillLv || 0;
+  const maxLv   = AF_RANK_MAX[rank];
+  const atLvMax = lv >= maxLv;
+  const atRankMax = rank >= 3;
+  const atSkMax   = skillLv >= 3;
+  const atConsteMax = conste >= 9;
+  const rc = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' }[def.rarity] || 'var(--text3)';
+  const p  = gState.player;
+  const atomStone = p.atomStone || { t1:0 };
+  const atomCore  = p.atomCore  || { t1:0 };
+  const rune      = p.runeStone || { t1:0, t2:0, t3:0 };
+  const dupCount  = (p.afDuplicates || {})[def.id] || 0;
+  const equippedBy = gState.ownedUnits.find(u => u.equippedArtifact === uid);
+  const enhCost   = afEnhanceCost(lv);
+  const canEnhance = !atLvMax && atomStone.t1 >= (enhCost.t1||0);
+  const rkCost    = !atRankMax ? AF_RANKUP_COST[rank] : null;
+  const canRankUp = !atRankMax && atLvMax && rkCost && atomCore.t1 >= (rkCost.t1||0);
+  const skCost    = !atSkMax ? AF_SKILL_COST[skillLv] : null;
+  const canSkillUp = !atSkMax && skCost &&
+    rune.t1 >= (skCost.t1||0) && rune.t2 >= (skCost.t2||0) && rune.t3 >= (skCost.t3||0);
+  const canConste = !atConsteMax && dupCount >= 1;
+  const rankStars = '★'.repeat(rank) + '☆'.repeat(3 - rank);
+  const lvPct = Math.min(100, lv / maxLv * 100).toFixed(0);
+  const atkVal = afMainScale(def.mainStat?.atk || 0, lv, conste);
+  const hpVal  = afMainScale(def.mainStat?.hp  || 0, lv, conste);
+  const consteDots = Array.from({length:9}, (_,i) =>
+    `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 1px;background:${i<conste?'var(--gold)':'var(--border)'}"></span>`
+  ).join('');
+  const condTypeLabel = { A:'全キャラ', B:'ロール', C:'クラス', D:'種族', E:'攻撃タイプ', F:'戦況', G:'編成' };
+  const condColors    = { A:'var(--accent2)', B:'var(--orange)', C:'var(--gold)', D:'var(--green)', E:'var(--purple)', F:'var(--text3)', G:'var(--text3)' };
+  const statKeyLbl    = { atkPct:'ATK%', hpPct:'HP%', spd:'SPD', cri:'CRI%', cridam:'CRIDAM%', pres:'RED耐性', mres:'WHITE耐性', bres:'BLACK耐性', lres:'BLUE耐性', skillPw:'スキルPw', dmgReduce:'被ダメ減%' };
+  const conditionsHTML = (def.conditions||[]).map(cond => {
+    const cc = condColors[cond.type] || 'var(--text2)';
+    const inactive = (cond.type === 'F' || cond.type === 'G');
+    const reqDisp = cond.req ? (SPECIES_LABELS?.[cond.req] || cond.req) : '';
+    const statsVals = (cond.stats||[]).map(s => `${statKeyLbl[s.key]||s.key} +${afCondValue(s,lv)}`).join(' · ');
+    return `<div style="background:var(--bg2);border:1px solid ${inactive?'var(--border)':cc+'44'};border-radius:5px;padding:8px 10px;margin-bottom:6px;${inactive?'opacity:0.65':''}">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+        <span style="font-size:9px;background:${cc}22;color:${cc};padding:1px 6px;border-radius:3px;font-weight:700">${condTypeLabel[cond.type]||cond.type}${reqDisp?': '+reqDisp:''}</span>
+        ${inactive?'<span style="font-size:9px;color:var(--text3)">戦闘時のみ</span>':''}
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:2px">${cond.desc||''}</div>
+      <div style="font-size:11px;color:${cc};font-weight:700">${statsVals}</div>
+    </div>`;
+  }).join('');
+  const skCostStr = !atSkMax && skCost ? (skCost.t1?`ルーンT1×${skCost.t1}`:skCost.t2?`T2×${skCost.t2}`:`T3×${skCost.t3}`) : '';
+  const baseRefund = { N:2000, SR:5000, SSR:10000 }[def.rarity] || 2000;
+  const goldRefund = baseRefund + Math.floor(lv / 5) * 100;
+  return `<div class="unit-detail-panel" style="overflow-y:auto;max-height:90vh;">
+    <div class="udp-header" style="gap:14px">
+      <div style="font-size:44px;filter:drop-shadow(0 0 10px ${rc})">${def.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Cinzel',serif;font-size:18px;color:${rc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${def.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${def.kind||''} · ${rankStars}</div>
+        <div style="margin-top:5px;display:flex;align-items:center;gap:8px">
+          <span style="background:${rc};color:#0a0b0f;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">${def.rarity}</span>
+          ${conste>0?`<span style="font-size:11px;color:var(--gold);font-weight:700">+${conste}凸</span>`:''}
+        </div>
+        <div style="margin-top:5px">${consteDots}</div>
+      </div>
+      <button class="close-btn" onclick="_afDetailClose()">✕</button>
+    </div>
+    <div class="udp-section">
+      <div class="udp-section-title">MAIN STATS</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="text-align:center;flex:1;background:var(--bg2);padding:8px 4px;border-radius:4px">
+          <div style="font-size:10px;color:var(--text3)">ATK</div>
+          <div style="font-size:18px;font-weight:700;color:var(--orange)">+${atkVal}</div>
+        </div>
+        <div style="text-align:center;flex:1;background:var(--bg2);padding:8px 4px;border-radius:4px">
+          <div style="font-size:10px;color:var(--text3)">HP</div>
+          <div style="font-size:18px;font-weight:700;color:var(--green)">+${hpVal}</div>
+        </div>
+        <div style="text-align:center;flex:1;background:var(--bg2);padding:8px 4px;border-radius:4px">
+          <div style="font-size:10px;color:var(--text3)">Lv</div>
+          <div style="font-size:18px;font-weight:700;color:var(--gold)">${lv}<span style="font-size:10px;color:var(--text3)">/${maxLv}</span></div>
+        </div>
+      </div>
+      <div style="background:var(--bg2);border-radius:3px;height:5px;overflow:hidden">
+        <div style="height:100%;width:${lvPct}%;background:linear-gradient(90deg,var(--accent),var(--gold));"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:3px;text-align:right">Rank ${rank} · ${lv}/${maxLv}</div>
+    </div>
+    <div class="udp-section">
+      <div class="udp-section-title">PASSIVE EFFECTS</div>
+      ${conditionsHTML}
+    </div>
+    <div class="udp-section">
+      <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>ENHANCE</span>
+        <span style="font-size:10px;color:var(--text2);font-weight:normal">秘石T1:${atomStone.t1||0}　コアT1:${atomCore.t1||0}</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-blue btn-sm" ${canEnhance?'':'disabled'} onclick="afDetailEnhance('${uid}')">
+          +1 強化 ${atLvMax?'(上限達成)':'(秘石T1×'+(enhCost.t1||0)+')'}
+        </button>
+        ${!atRankMax
+          ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid var(--gold);" ${canRankUp?'':'disabled'} onclick="afDetailRankUp('${uid}')">Rank${rank+1}へ (コアT1×${rkCost?.t1||0})</button>`
+          : `<span style="font-size:11px;color:var(--gold);padding:4px 0">★ Rank最大</span>`}
+      </div>
+    </div>
+    <div class="udp-section">
+      <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>ARTIFACT SKILL</span>
+        <span style="font-size:10px;color:var(--text2);font-weight:normal">スキルLv ${skillLv} / 3</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <div style="flex:1;display:flex;gap:3px">
+          ${Array.from({length:3},(_,i)=>`<div style="flex:1;height:4px;border-radius:2px;background:${i<skillLv?'var(--purple)':'var(--border)'}"></div>`).join('')}
+        </div>
+        ${!atSkMax
+          ? `<button class="btn btn-sm" style="background:rgba(160,80,240,0.15);color:#c084fc;border:1px solid #c084fc;" ${canSkillUp?'':'disabled'} onclick="afDetailSkillUp('${uid}')">スキルLv↑ (${skCostStr})</button>`
+          : `<span style="font-size:11px;color:#c084fc;padding:4px 0">★ スキル最大</span>`}
+      </div>
+      <div style="font-size:10px;color:var(--text3)">神刻ルーン: T1×${rune.t1||0} / T2×${rune.t2||0} / T3×${rune.t3||0}</div>
+    </div>
+    <div class="udp-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <div class="udp-section-title" style="margin-bottom:2px">CONSTELLATION (凸)</div>
+          <div style="font-size:10px;color:var(--text3)">凸素材: ${dupCount}個 · 凸ごとATK・HP +10%</div>
+        </div>
+        <div style="font-size:15px;font-weight:700;color:var(--gold)">${conste} / 9</div>
+      </div>
+      <button class="btn btn-sm" style="width:100%;background:${canConste?'rgba(201,168,76,0.2)':'rgba(80,80,80,0.1)'};color:${canConste?'var(--gold)':'var(--text3)'};border:1px solid ${canConste?'rgba(201,168,76,0.5)':'var(--border)'};"
+        ${canConste?'':'disabled'} onclick="afDetailConstellate('${uid}')">
+        ✦ 凸する（素材×1）→ +${conste+1}凸${conste>=9?' ★MAX':''}
+      </button>
+    </div>
+    ${equippedBy ? `<div class="udp-section">
+      <div class="udp-section-title">EQUIPPED BY</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${classIconHTML(equippedBy.classId,'32px')}
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700">${equippedBy.name}</div>
+          <div style="font-size:10px;color:var(--text3)">${CLASS_DATA[equippedBy.classId]?.name||''}</div>
+        </div>
+        <button class="btn btn-sm btn-outline" onclick="_afDetailClose();openUnitDetail('${equippedBy.uid}')">詳細</button>
+      </div>
+    </div>` : ''}
+    <div style="padding:12px 16px">
+      <button class="btn" style="width:100%;background:rgba(224,85,85,0.1);color:var(--red);border:1px solid rgba(224,85,85,0.3);" onclick="afDetailMelt('${uid}')">
+        🔥 売却 (ゴールド +${fmt(goldRefund)})
+      </button>
+    </div>
+  </div>`;
+}
+
+function afDetailEnhance(uid) {
+  const inst = (gState.artifacts||[]).find(a=>a.uid===uid);
   if (!inst) return;
-  const conste = inst.conste || 0;
+  const lv = inst.level||0, rank = inst.rank||0;
+  if (lv >= AF_RANK_MAX[rank]) return;
+  const cost = afEnhanceCost(lv);
+  const stone = gState.player.atomStone||{t1:0};
+  if (stone.t1 < (cost.t1||0)) { showBonusToast('アトム秘石T1が不足しています'); return; }
+  stone.t1 -= cost.t1||0;
+  gState.player.atomStone = stone;
+  inst.level = lv + 1;
+  saveState();
+  Audio.buff();
+  const ov = document.getElementById('af-detail-modal');
+  if (ov) ov.innerHTML = _buildAfDetailHTML(uid);
+}
+
+function afDetailRankUp(uid) {
+  const inst = (gState.artifacts||[]).find(a=>a.uid===uid);
+  if (!inst) return;
+  const rank = inst.rank||0;
+  if (rank >= 3) return;
+  const lv = inst.level||0;
+  if (lv < AF_RANK_MAX[rank]) return;
+  const cost = AF_RANKUP_COST[rank];
+  const core = gState.player.atomCore||{t1:0};
+  if (core.t1 < (cost.t1||0)) { showBonusToast('アトミックコアT1が不足しています'); return; }
+  core.t1 -= cost.t1||0;
+  gState.player.atomCore = core;
+  inst.rank = rank + 1;
+  saveState();
+  Audio.awaken();
+  const def = ARTIFACT_POOL.find(d=>d.id===inst.id);
+  toast(`${def?.icon||''} 【${def?.name||'AF'}】 Rank${inst.rank} へランクアップ！`);
+  const ov = document.getElementById('af-detail-modal');
+  if (ov) ov.innerHTML = _buildAfDetailHTML(uid);
+}
+
+function afDetailSkillUp(uid) {
+  const inst = (gState.artifacts||[]).find(a=>a.uid===uid);
+  if (!inst) return;
+  const skillLv = inst.skillLv||0;
+  if (skillLv >= 3) return;
+  const cost = AF_SKILL_COST[skillLv];
+  const rune = gState.player.runeStone||{t1:0,t2:0,t3:0};
+  if (rune.t1<(cost.t1||0)||rune.t2<(cost.t2||0)||rune.t3<(cost.t3||0)) { showBonusToast('神刻ルーンが不足しています'); return; }
+  rune.t1-=cost.t1||0; rune.t2-=cost.t2||0; rune.t3-=cost.t3||0;
+  gState.player.runeStone = rune;
+  inst.skillLv = skillLv + 1;
+  saveState();
+  Audio.buff();
+  const def = ARTIFACT_POOL.find(d=>d.id===inst.id);
+  toast(`${def?.icon||''} スキルLv${inst.skillLv} に上昇！`);
+  const ov = document.getElementById('af-detail-modal');
+  if (ov) ov.innerHTML = _buildAfDetailHTML(uid);
+}
+
+function afDetailConstellate(uid) {
+  const inst = (gState.artifacts||[]).find(a=>a.uid===uid);
+  if (!inst) return;
+  const conste = inst.conste||0;
   if (conste >= 9) return;
-  const dupCount = (gState.player.afDuplicates || {})[inst.id] || 0;
+  const dupCount = (gState.player.afDuplicates||{})[inst.id]||0;
   if (dupCount < 1) return;
   inst.conste = conste + 1;
   gState.player.afDuplicates[inst.id]--;
   saveState();
-  const def = ARTIFACT_POOL.find(d => d.id === inst.id);
-  toast(`${def?.icon||''} 【${def?.name||'AF'}】 +${inst.conste}凸！ATK・HP +${inst.conste*10}%`);
+  Audio.itemGet();
+  const def = ARTIFACT_POOL.find(d=>d.id===inst.id);
+  toast(`${def?.icon||''} +${inst.conste}凸！ ATK・HP +${inst.conste*10}%`);
+  const ov = document.getElementById('af-detail-modal');
+  if (ov) ov.innerHTML = _buildAfDetailHTML(uid);
+}
+
+function afDetailMelt(uid) {
+  const idx = (gState.artifacts||[]).findIndex(a=>a.uid===uid);
+  if (idx < 0) return;
+  const inst = gState.artifacts[idx];
+  const def = ARTIFACT_POOL.find(d=>d.id===inst.id);
+  const baseRefund = def ? ({N:2000,SR:5000,SSR:10000}[def.rarity]||2000) : 2000;
+  const lv = inst.level||0;
+  const goldRefund = baseRefund + Math.floor(lv/5)*100;
+  if (!confirm(`${def?.name||'このAF'}を売却しますか？\nゴールド +${fmt(goldRefund)} を獲得します。`)) return;
+  gState.ownedUnits.forEach(u => { if (u.equippedArtifact===uid) u.equippedArtifact=null; });
+  gState.player.gold = (gState.player.gold||0) + goldRefund;
+  gState.artifacts.splice(idx, 1);
+  saveState(); updateTopBar();
+  _afDetailClose();
+  renderArtifactListTab();
+  toast(`${def?.icon||''} ${def?.name||'AF'} を売却（ゴールド +${fmt(goldRefund)}）`);
+}
+
+function constellateArtifact(uid, overlayEl) {
   if (overlayEl) overlayEl.remove();
-  openArtifactDetail(uid);
+  afDetailConstellate(uid);
 }
 
 // ===== アクセサリー一覧ページ =====
@@ -17534,6 +17707,7 @@ function skillUpArtifact(idx) {
   gState.player.runeStone = rune;
   af.skillLv = skillLv + 1;
   saveState();
+  Audio.buff();
   toast(`${ARTIFACT_POOL.find(d=>d.id===af.id)?.name||'AF'} スキルLv${af.skillLv} に上昇！`);
   renderSmithyContent();
 }
@@ -17552,6 +17726,7 @@ function enhanceArtifact(idx) {
   gState.player.atomStone = stone;
   af.level = lv + 1;
   saveState();
+  Audio.buff();
   renderSmithyContent();
 }
 
@@ -17569,6 +17744,7 @@ function rankUpArtifact(idx) {
   gState.player.atomCore = core;
   af.rank = rank + 1;
   saveState();
+  Audio.awaken();
   toast(`${ARTIFACT_POOL.find(d=>d.id===af.id)?.name||'AF'} をRank${af.rank}にランクアップ！`);
   renderSmithyContent();
 }
@@ -18318,13 +18494,19 @@ function doArtifactGacha() {
   const def = pool[Math.floor(Math.random() * pool.length)];
   if (!def) return;
   if (!gState.artifacts) gState.artifacts = [];
-  const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
-  gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0 });
+  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
+  const already = gState.artifacts.find(a => a.id === def.id);
+  if (already) {
+    if (!gState.player.afDuplicates) gState.player.afDuplicates = {};
+    gState.player.afDuplicates[def.id] = (gState.player.afDuplicates[def.id]||0) + 1;
+    showBonusToast(`${def.icon} 【${def.name}】 重複 → 凸素材+1`, true);
+  } else {
+    const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+    gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0, conste: 0 });
+    showBonusToast(`${def.icon} <span style="color:${rarColor[def.rarity]};font-weight:700">${def.rarity}</span> 【${def.name}】 鋳造完了！`, true);
+  }
   saveState();
   updateTopBar();
-  // 結果表示
-  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
-  showBonusToast(`${def.icon} <span style="color:${rarColor[def.rarity]};font-weight:700">${def.rarity}</span> 【${def.name}】 鋳造完了！`, true);
   renderArtifactForge(document.getElementById('smithy-content'));
 }
 
