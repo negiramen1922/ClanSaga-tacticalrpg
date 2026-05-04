@@ -1340,11 +1340,6 @@ img.item-icon {
 .mi2-claim { background: var(--gold); border: none; color: #0a0b0f; padding: 4px 12px; cursor: pointer; font-family: 'Rajdhani'; font-weight: 700; font-size: 12px; }
 .mi2-done { font-size: 11px; color: var(--text3); }
 
-/* 売却モード */
-.unit-card.sell-mode { cursor: pointer; }
-.unit-card.sell-mode:hover { border-color: var(--red); }
-.unit-card.sell-selected { border-color: var(--red) !important; background: rgba(224,85,85,0.08); }
-.sell-confirm-bar { display: flex; gap: 8px; padding: 8px; background: rgba(224,85,85,0.1); border: 1px solid var(--red); margin-bottom: 8px; }
 
 /* ===== HOME ENHANCEMENTS ===== */
 #base-resources-bar { display:flex;gap:8px;padding:10px 0 4px;flex-wrap:wrap;margin-bottom:8px; }
@@ -2278,7 +2273,7 @@ img.item-icon {
           <button onclick="closeHamburger();openAccountModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;">🔗 アカウント設定</button>
           <a href="https://docs.google.com/forms/d/e/1FAIpQLSdOyYrYSKMvdOJrdJtxhwG80aQ6Pd9z4nzYycyGylSt9IbqBQ/viewform?usp=header" target="_blank" rel="noopener" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;">📩 お問い合わせ</a>
         </div>
-        ver. 1.00 · Clan Saga
+        <span id="hm-version">ver. 1.02 · Clan Saga</span>
         <div style="margin-top:6px;font-size:9px;color:var(--text3);line-height:1.6;text-align:center;">
           BGM: <a href="https://youtu.be/DJPoUKKSDwY?si=1aaLg3tfrO6UzABe" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">古の世界地図</a>
           ／ <a href="https://youtu.be/EOlXXpqlS5k?si=YKRfyB3hGQsdY9Fj" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">Prairie4</a>
@@ -2378,11 +2373,6 @@ img.item-icon {
             <option value="priest">プリースト</option>
             <option value="assassin">アサシン</option>
           </select>
-          <button id="sell-mode-btn" class="btn btn-outline btn-sm" onclick="toggleSellMode()">${itemIconHTML('gold','14px')} 売却</button>
-        </div>
-        <div id="sell-mode-bar" style="display:none;background:rgba(224,85,85,0.1);border:1px solid var(--red);padding:8px 10px;margin-bottom:8px;font-size:12px;color:var(--red);display:none;align-items:center;gap:8px">
-          <span>売却モード: ユニットを選択してください</span>
-          <button class="btn btn-outline btn-sm" onclick="toggleSellMode()" style="margin-left:auto">キャンセル</button>
         </div>
       </div>
       <div id="unit-grid-wrap"></div>
@@ -2458,7 +2448,6 @@ img.item-icon {
       <!-- パーティスロット（6人） -->
       <div style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
         <h3 style="font-size:12px;color:var(--text2)">パーティ <span id="party-slot-label" style="font-size:10px;color:var(--text3)"></span></h3>
-        <button class="btn btn-gold btn-sm" onclick="openRecruitPanel()">⚔️ 雇用</button>
       </div>
       <div id="party-slots" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px"></div>
 
@@ -5373,6 +5362,8 @@ const PASSIVE_POOL = [
   { id:'drain',   name:'吸血',        stats:['DRAIN'],  levels:[{val:8,desc:'吸血8%'},{val:14,desc:'吸血14%'},{val:20,desc:'吸血20%'}] },
 ];
 
+const GAME_VERSION = '1.02';
+
 const BABEL_AREAS = [
   {
     id:'area1', name:'翠緑の草原', icon:'🌿', recAtk:'推奨 1人Lv1〜2人Lv5', boss:'スカーボア',
@@ -7322,6 +7313,41 @@ function normalizeState() {
   if (!gState.player.afDuplicates) gState.player.afDuplicates = {};
   (gState.artifacts || []).forEach(af => { if (af.conste === undefined) af.conste = 0; });
 
+  // 重複キャラ変換: 同一classIdで複数体いる場合、最高レベルの1体を残して凸素材に変換
+  if (!gState._dupUnitConvertDone) {
+    const byClass = {};
+    (gState.ownedUnits || []).forEach(u => {
+      if (!u?.classId) return;
+      if (!byClass[u.classId]) byClass[u.classId] = [];
+      byClass[u.classId].push(u);
+    });
+    const toRemove = new Set();
+    let totalSpecFrag = 0, totalGenFrag = 0;
+    Object.values(byClass).forEach(group => {
+      if (group.length <= 1) return;
+      // 最高レベルを持つ1体を残す
+      group.sort((a, b) => (gState.unitProgress[b.uid]?.level||1) - (gState.unitProgress[a.uid]?.level||1));
+      const [keep, ...dupes] = group;
+      dupes.forEach(u => {
+        toRemove.add(u.uid);
+        const specFrag = 15, genFrag = 3;
+        if (!gState.player.unitFragments) gState.player.unitFragments = {};
+        gState.player.unitFragments[u.classId] = (gState.player.unitFragments[u.classId]||0) + specFrag;
+        gState.player.genericFragments = (gState.player.genericFragments||0) + genFrag;
+        totalSpecFrag += specFrag; totalGenFrag += genFrag;
+        delete gState.unitProgress[u.uid];
+      });
+    });
+    if (toRemove.size > 0) {
+      gState.ownedUnits = gState.ownedUnits.filter(u => !toRemove.has(u.uid));
+      gState.presets.forEach(pr => {
+        pr.formation.slots = (pr.formation.slots||[]).map(id => toRemove.has(id) ? undefined : id);
+      });
+      gState._dupUnitConvertMsg = `重複キャラ${toRemove.size}体を凸素材に変換しました（専用×${totalSpecFrag}、汎用×${totalGenFrag}）`;
+    }
+    gState._dupUnitConvertDone = true;
+  }
+
   console.log('[normalizeState] done');
 }
 
@@ -7455,6 +7481,8 @@ function updateHamburgerInfo() {
     vipLbl.textContent = vip.label ? `VIP特典（${vip.label}）` : 'VIP特典';
     vipLbl.style.color = vip.color || '';
   }
+  const verEl = document.getElementById('hm-version');
+  if (verEl) verEl.textContent = `ver. ${GAME_VERSION} · Clan Saga`;
   updateHmAccountInfo();
 }
 
@@ -8346,6 +8374,10 @@ function launchApp() {
   document.getElementById('overlay').classList.remove('visible');
   document.getElementById('app').classList.add('active');
 
+  // 旧キャッシュ対策: 即時ダンジョンの残骸要素を非表示化
+  const _ic = document.getElementById('instant-content');
+  if (_ic) { const _ip = _ic.closest('.content-section'); if (_ip) _ip.style.display='none'; else _ic.style.display='none'; }
+
   // セーブデータを確実に正規化（loadState後でも再実行）
   normalizeState();
 
@@ -8434,6 +8466,14 @@ function launchApp() {
     delete gState._pendingCardRefundMsg;
     saveState();
     setTimeout(() => showBonusToast(`📦 ${msg}`), 2500);
+  }
+
+  // 重複キャラ変換通知
+  if (gState._dupUnitConvertMsg) {
+    const msg = gState._dupUnitConvertMsg;
+    delete gState._dupUnitConvertMsg;
+    saveState();
+    setTimeout(() => showBonusToast(`✦ ${msg}`), 3000);
   }
 
   // 初回チュートリアル自動起動
@@ -8858,19 +8898,6 @@ function checkLoginBonus() {
 //  CHARA TAB
 // ============================================================
 
-let sellMode = false;
-let sellSelected = new Set();
-
-function toggleSellMode() {
-  sellMode = !sellMode;
-  sellSelected.clear();
-  const bar = document.getElementById('sell-mode-bar');
-  const btn = document.getElementById('sell-mode-btn');
-  if (bar) bar.style.display = sellMode ? 'flex' : 'none';
-  if (btn) btn.innerHTML = sellMode ? '✕ 解除' : `${itemIconHTML('gold','14px')} 売却`;
-  renderCharaTab();
-}
-
 function getRarity(unit) {
   return '';
 }
@@ -8887,10 +8914,8 @@ function renderCharaTab() {
 
   let units = [...gState.ownedUnits];
 
-  // フィルター
   if (filterVal !== 'all') units = units.filter(u=>u.classId===filterVal);
 
-  // ソート
   if (sortVal === 'lv_desc') units.sort((a,b)=>(gState.unitProgress[b.uid]?.level||1)-(gState.unitProgress[a.uid]?.level||1));
   else if (sortVal === 'lv_asc') units.sort((a,b)=>(gState.unitProgress[a.uid]?.level||1)-(gState.unitProgress[b.uid]?.level||1));
   else if (sortVal === 'class') units.sort((a,b)=>a.classId.localeCompare(b.classId));
@@ -8899,24 +8924,12 @@ function renderCharaTab() {
     return rv(b)-rv(a);
   });
 
-  // イベントリスナー付け直し
   const sort = document.getElementById('chara-sort');
   const filter = document.getElementById('chara-filter');
   if (sort && !sort._bound) { sort._bound=true; sort.addEventListener('change', renderCharaTab); }
   if (filter && !filter._bound) { filter._bound=true; filter.addEventListener('change', renderCharaTab); }
 
-  // 売却確認バー
-  let html = '';
-  if (sellMode && sellSelected.size > 0) {
-    const totalGold = [...sellSelected].reduce((s, uid) => {
-      const u = gState.ownedUnits.find(x=>x.uid===uid);
-      const prog = u ? (gState.unitProgress[uid]?.level||1) : 1;
-      return s + 100 * prog;
-    }, 0);
-    wrap.innerHTML = `<div class="sell-confirm-bar"><span style="color:var(--red);font-size:12px">選択中: ${sellSelected.size}体 → 💰${fmt(totalGold)}</span><button class="btn btn-sm" style="background:var(--red);color:white;border:none;cursor:pointer;margin-left:auto" onclick="executeSellUnits()">売却実行</button></div>`;
-  } else {
-    wrap.innerHTML = '';
-  }
+  wrap.innerHTML = '';
 
   const grid = document.createElement('div');
   grid.className = 'unit-grid';
@@ -8930,58 +8943,20 @@ function renderCharaTab() {
       const c = p.lv>=3?'gold':p.lv>=2?'purple':'gray';
       return `<div class="passive-dot ${c}"></div>`;
     }).join('');
-    const isSelected = sellSelected.has(u.uid);
     const card = document.createElement('div');
-    card.className = `unit-card ${rarity} ${sellMode?'sell-mode':''} ${isSelected?'sell-selected':''}`;
+    card.className = `unit-card ${rarity}`;
     card.innerHTML = `
       <div class="class-icon-big">${classIconHTML(u.classId,"56px")}</div>
       <div class="unit-name">${u.name}</div>
       <div class="unit-class" style="display:flex;align-items:center;justify-content:center;gap:5px">${roleIconHTML(u.classId,'16px')} ${cls.role} / ${cls.name}</div>
       <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:3px;">${speciesBadgeHTML(cls.species)}</div>
       <div class="unit-lv">Lv.${prog.level}</div>
-      <div class="passive-dots">${dotHtml}</div>
-      ${sellMode ? `<div style="font-size:10px;color:var(--red);margin-top:4px">💰${fmt(100*prog.level)}</div>` : ''}`;
-
-    if (sellMode) {
-      card.addEventListener('click', () => {
-        if (sellSelected.has(u.uid)) sellSelected.delete(u.uid);
-        else sellSelected.add(u.uid);
-        renderCharaTab();
-      });
-    } else {
-      card.addEventListener('click', () => openUnitDetail(u.uid));
-    }
+      <div class="passive-dots">${dotHtml}</div>`;
+    card.addEventListener('click', () => openUnitDetail(u.uid));
     grid.appendChild(card);
   });
 
   wrap.appendChild(grid);
-}
-
-function executeSellUnits() {
-  if (sellSelected.size === 0) return;
-  // 編成から外す
-  const preset = gState.presets[gState.activePreset];
-  let totalGold = 0;
-  sellSelected.forEach(uid => {
-    const u = gState.ownedUnits.find(x=>x.uid===uid);
-    if (!u) return;
-    const prog = gState.unitProgress[uid]?.level||1;
-    totalGold += 100 * prog;
-    // 全プリセットから除去
-    gState.presets.forEach(pr => {
-      pr.formation.slots = (pr.formation.slots||[]).map(id=>id===uid?undefined:id);
-    });
-    delete gState.unitProgress[uid];
-  });
-  gState.ownedUnits = gState.ownedUnits.filter(u=>!sellSelected.has(u.uid));
-  gState.player.gold += totalGold;
-  sellSelected.clear();
-  sellMode = false;
-  saveState();
-  updateTopBar();
-  renderCharaTab();
-  renderFormationTab();
-  renderHomeTab();
 }
 
 function openUnitDetail(uid) {
@@ -14017,125 +13992,6 @@ function playOneOpeningSkill(action, callback) {
 
 
 
-// 各クラスの雇用コスト定義
-const RECRUIT_CONFIG = {
-  warrior:    { name:'ウォリアー',    costType:'gold',    cost:500,  desc:'ATK特化の近接アタッカー' },
-  vanguard:   { name:'ヴァンガード',  costType:'gold',    cost:800,  desc:'高HP・高防御のタンク' },
-  archer:     { name:'アーチャー',    costType:'gold',    cost:600,  desc:'高SPD・会心の遠距離アタッカー' },
-  sentinel:   { name:'センチネル',    costType:'gold',    cost:700,  desc:'カウンター特化の鉄壁タンク' },
-  shooter:    { name:'シューター',    costType:'gold',    cost:650,  desc:'精密射撃と高CRIの遠距離アタッカー' },
-  lancer:     { name:'ランサー',      costType:'gold',    cost:600,  desc:'突貫と貫通ダメージが得意な近接アタッカー' },
-  priest:     { name:'プリースト',    costType:'crystal', cost:500,  desc:'HP/MP回復・デバフ解除のヒーラー' },
-  assassin:   { name:'アサシン',      costType:'crystal', cost:800,  desc:'最速・最高会心。昼は潜伏、夜は無双の近接アタッカー' },
-  berserker:  { name:'バーサーカー',  costType:'crystal', cost:800,  desc:'HP消費で爆発的な火力を発揮するアタッカー' },
-  caster:     { name:'キャスター',    costType:'crystal', cost:800,  desc:'魔法連鎖と属性耐性ダウンで全体を制圧するレンジ' },
-  minstrel:   { name:'ミンストレル',  costType:'crystal', cost:700,  desc:'歌の力で仲間を強化する万能サポート' },
-  professor:  { name:'プロフェッサー',costType:'crystal', cost:800,  desc:'デバフ強化と解析で敵を弱体化するレンジ' },
-  alchemist:  { name:'アルケミスト',  costType:'crystal', cost:700,  desc:'変成術と賢者の石で仲間を回復するサポート' },
-  thief:      { name:'シーフ',        costType:'crystal', cost:800,  desc:'バフ奪取と陽動で戦況を操る高機動スカウト' },
-};
-
-function openRecruitPanel() {
-  const ov = document.createElement('div');
-  ov.id = 'recruit-overlay';
-  ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(5,6,8,0.97);overflow-y:auto;padding:16px;';
-
-  const gold    = gState.player.gold || 0;
-  const crystal = gState.player.starCrystal || 0; // used for all gacha
-
-  let html = `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <button onclick="closeRecruitPanel()" style="background:none;border:1px solid var(--border);color:var(--text2);padding:4px 12px;cursor:pointer;font-size:13px">◀ 戻る</button>
-      <span style="font-family:'Cinzel',serif;color:var(--gold);font-size:16px;letter-spacing:2px">⚔️ タヴァーン — 雇用</span>
-    </div>
-    <div style="background:var(--bg3);border:1px solid var(--border);padding:10px 14px;margin-bottom:14px;display:flex;gap:16px;font-size:13px">
-      <span>${itemIconHTML('gold','14px')} ゴールド: <b style="color:var(--gold2)">${fmt(gold)}</b></span>
-      <span>${itemIconHTML('crystal','14px')} 星晶石: <b style="color:#89e3ff">${fmt(crystal)}</b></span>
-    </div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">
-      ✨ 星晶石はバベルの塔 初回クリア報酬・実績で獲得できます
-    </div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">クラスを選んで仲間を雇用しましょう。雇用したユニットは「キャラ」タブから確認できます。</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">`;
-
-  Object.entries(RECRUIT_CONFIG).forEach(([classId, cfg]) => {
-    const cls = CLASS_DATA[classId];
-    if (!cls) return;
-    const isCrystalClass = cfg.costType === 'crystal';
-    const canAfford = isCrystalClass ? crystal >= cfg.cost : gold >= cfg.cost;
-    const costHtml  = isCrystalClass
-      ? `${itemIconHTML('crystal','13px')} <span style="color:#89e3ff">星晶石 ×${fmt(cfg.cost)}</span>`
-      : `${itemIconHTML('gold','13px')} ${fmt(cfg.cost)}`;
-    html += `
-      <div style="background:var(--bg3);border:1px solid var(--border);padding:12px;display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;align-items:center;gap:8px">
-          ${classIconHTML(classId,'36px')}
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--text)">${cfg.name}</div>
-            <div style="font-size:10px;color:var(--text3)">${cls.role}</div>
-          </div>
-        </div>
-        <div style="font-size:11px;color:var(--text2)">${cfg.desc}</div>
-        <div style="font-size:10px;color:var(--text3);display:grid;grid-template-columns:1fr 1fr;gap:3px">
-          <span>HP: ${(cls.baseStats?.hp||0).toLocaleString()}</span>
-          <span>ATK: ${(cls.baseStats?.atk||0).toLocaleString()}</span>
-          <span>SPD: ${cls.baseStats?.spd||0}</span>
-          <span>MP: ${(cls.baseStats?.mp||0).toLocaleString()}</span>
-        </div>
-        <div style="font-size:11px;color:${canAfford?'var(--gold2)':'var(--text3)'}">${costHtml}</div>
-        <button
-          onclick="recruitUnit('${classId}')"
-          ${canAfford ? '' : 'disabled'}
-          style="background:${canAfford?'linear-gradient(135deg,#8b6a1f,#c9a84c)':'var(--bg2)'};border:none;color:${canAfford?'#0a0b0f':'var(--text3)'};padding:8px;cursor:${canAfford?'pointer':'default'};font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700">
-          ${canAfford ? '雇用する' : '素材不足'}
-        </button>
-      </div>`;
-  });
-
-  html += '</div>';
-  ov.innerHTML = html;
-  document.body.appendChild(ov);
-}
-
-function closeRecruitPanel() {
-  const ov = document.getElementById('recruit-overlay');
-  if (ov) ov.remove();
-}
-
-function recruitUnit(classId) {
-  const cfg = RECRUIT_CONFIG[classId];
-  if (!cfg) return;
-  if (cfg.costType === 'crystal') {
-    if ((gState.player.starCrystal||0) < cfg.cost) { alert('星晶石が不足しています'); return; }
-    gState.player.starCrystal -= cfg.cost;
-  } else {
-    if ((gState.player.gold||0) < cfg.cost) { alert('ゴールドが不足しています'); return; }
-    gState.player.gold -= cfg.cost;
-  }
-
-  const uid = 'u_' + Date.now() + '_r';
-  const unit = makeUnit(classId, uid);
-  gState.ownedUnits.push(unit);
-  gState.unitProgress[uid] = { level:1, exp:0 };
-  giveStarterCardsForClass(classId); // ★1カード付与
-
-  saveState();
-  updateTopBar();
-  checkAchievements();
-
-  // パネルを更新して反映
-  closeRecruitPanel();
-  openRecruitPanel();
-
-  // フラッシュ通知
-  const flash = document.createElement('div');
-  const cls = CLASS_DATA[classId];
-  flash.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,var(--gold),var(--gold2));color:#0a0b0f;padding:10px 24px;border-radius:20px;font-size:13px;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.4);white-space:nowrap;animation:flashOut 3s forwards';
-  flash.textContent = `✅ ${unit.name}（${cls.name}）を雇用しました！`;
-  document.body.appendChild(flash);
-  setTimeout(() => flash.remove(), 3000);
-  Audio.buff();
-}
 
 // ============================================================
 //  GACHA
@@ -19902,68 +19758,6 @@ function rerollCelestialSubs(idx) {
   renderCelestialContent();
 }
 
-// ============================================================
-//  PHASE 4: INSTANT DUNGEONS
-// ============================================================
-
-const INSTANT_DUNGEONS = [
-  { id:'memory1', name:'記憶の回廊 Lv.1', icon:'📜', type:'ether',
-    cost:{ gold:200 }, reward:{ ether:500 }, time:60 },
-  { id:'memory2', name:'記憶の回廊 Lv.2', icon:'📜', type:'ether',
-    cost:{ gold:500 }, reward:{ ether:1500 }, time:60 },
-  { id:'memory3', name:'記憶の回廊 Lv.3', icon:'📜', type:'ether',
-    cost:{ gold:1200 }, reward:{ ether:4000 }, time:60 },
-  { id:'gold1',   name:'黄金の地下室 Lv.1', icon:'gold', type:'gold',
-    cost:{ ether:100 }, reward:{ gold:1000 }, time:60 },
-  { id:'gold2',   name:'黄金の地下室 Lv.2', icon:'gold', type:'gold',
-    cost:{ ether:300 }, reward:{ gold:3500 }, time:60 },
-  { id:'gold3',   name:'黄金の地下室 Lv.3', icon:'gold', type:'gold',
-    cost:{ ether:800 }, reward:{ gold:10000 }, time:60 },
-];
-
-function renderInstantContent() {
-  const el = document.getElementById('instant-content');
-  if (!el) return;
-  el.innerHTML = '';
-
-  INSTANT_DUNGEONS.forEach(dg => {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);';
-    const costStr = Object.entries(dg.cost).map(([k,v])=>`${itemIconHTML(k==='gold'?'gold':'expPot','13px')}${fmt(v)}`).join('');
-    const rewStr  = Object.entries(dg.reward).map(([k,v])=>`${itemIconHTML(k==='gold'?'gold':'expPot','13px')}${fmt(v)}`).join('');
-    row.innerHTML = `
-      <span style="font-size:22px">${dg.icon}</span>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:700;color:var(--text)">${dg.name}</div>
-        <div style="font-size:10px;color:var(--text3)">コスト: ${costStr} → 報酬: ${rewStr}</div>
-      </div>`;
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-gold btn-sm';
-    btn.textContent = '即時完了';
-    const canAfford = Object.entries(dg.cost).every(([k,v])=>(gState.player[k]||0)>=v);
-    btn.disabled = !canAfford;
-    btn.addEventListener('click', () => runInstantDungeon(dg));
-    row.appendChild(btn);
-    el.appendChild(row);
-  });
-}
-
-function runInstantDungeon(dg) {
-  const canAfford = Object.entries(dg.cost).every(([k,v])=>(gState.player[k]||0)>=v);
-  if (!canAfford) return;
-  Object.entries(dg.cost).forEach(([k,v]) => { gState.player[k] -= v; });
-  Object.entries(dg.reward).forEach(([k,v]) => { gState.player[k] = (gState.player[k]||0)+v; });
-  saveState();
-  updateTopBar();
-  renderInstantContent();
-  const rewStr = Object.entries(dg.reward).map(([k,v])=>`${itemIconHTML(k==='gold'?'gold':'expPot','13px')}+${fmt(v)}`).join(' ');
-  // 小さい通知表示
-  const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--gold);color:var(--gold2);padding:8px 20px;font-size:13px;z-index:9000;animation:floatUp 2s ease-out forwards;white-space:nowrap;';
-  toast.innerHTML = `${dg.name} 完了! ${rewStr}`;
-  document.body.appendChild(toast);
-  setTimeout(()=>toast.remove(), 2000);
-}
 
 function renderSortieTab() {
   const wrap = document.getElementById('area-list-wrap');
@@ -20028,10 +19822,8 @@ function renderSortieTab() {
     });
   }
 
-  // アビス・コロシアム・即時ダンジョン
   renderAbyssContent();
   renderColosseumContent();
-  renderInstantContent();
 
   // 解放状況テキスト更新
   const lv = gState.player.level;
