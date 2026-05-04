@@ -362,7 +362,7 @@ img.item-icon {
 .skill-info .skill-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
 .skill-cd { font-family: 'Rajdhani', sans-serif; font-size: 12px; color: var(--text3); margin-left: auto; white-space: nowrap; }
 
-/* PASSIVES */
+/* TALENTS */
 .passive-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .passive-card {
   background: var(--bg3); border: 1px solid var(--border); padding: 10px;
@@ -511,6 +511,8 @@ img.item-icon {
 .star-gold { color: var(--gold); }
 .star-empty { color: var(--text3); }
 .stage-item .start-btn { background: var(--accent); color: white; border: none; padding: 6px 14px; cursor: pointer; font-size: 12px; font-family: 'Rajdhani'; font-weight: 700; }
+.stage-item .stage-sweep-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); padding: 5px 10px; cursor: pointer; font-size: 11px; font-family: 'Rajdhani'; font-weight: 700; margin-right: 4px; transition: all 0.15s; }
+.stage-item .stage-sweep-btn:hover { border-color: var(--accent); color: var(--accent2); }
 .stage-item.stage-locked { opacity: 0.55; pointer-events: none; background: var(--bg2); }
 .stage-item.stage-locked:hover { background: var(--bg2); }
 
@@ -2469,19 +2471,6 @@ img.item-icon {
         </div>
         <div class="area-list" id="colosseum-panel">
           <div id="colosseum-content"></div>
-        </div>
-      </div>
-      <div class="content-section">
-        <div class="section-header" onclick="toggleSection(this,'instant-dungeons')">
-          <span class="sec-icon">⚡</span>
-          <div>
-            <div class="sec-title">即時ダンジョン</div>
-            <div class="sec-sub">EXPポット・ゴールド専用ダンジョン</div>
-          </div>
-          <span class="sec-arrow">▶</span>
-        </div>
-        <div class="area-list" id="instant-dungeons">
-          <div id="instant-content"></div>
         </div>
       </div>
     </div>
@@ -5341,16 +5330,14 @@ function calcCardLv(count) { return 1; } // 旧互換スタブ
 
 // ============================================================
 const PASSIVE_POOL = [
-  { id:'hp_inc',   name:'HP増加',     stats:['HP'], levels:[{val:10,desc:'HP+10%'},{val:18,desc:'HP+18%'},{val:28,desc:'HP+28%'}] },
-  { id:'atk_inc',  name:'ATK増加',    stats:['ATK'], levels:[{val:10,desc:'ATK+10%'},{val:18,desc:'ATK+18%'},{val:28,desc:'ATK+28%'}] },
-  { id:'spd_inc',  name:'SPD増加',    stats:['SPD'], levels:[{val:12,desc:'SPD+12'},{val:20,desc:'SPD+20'},{val:30,desc:'SPD+30'}] },
-  { id:'pres_inc', name:'RED耐性',  stats:['PRES'], levels:[{val:6,desc:'RED耐性+6'},{val:12,desc:'RED耐性+12'},{val:18,desc:'RED耐性+18'}] },
-  { id:'mres_inc', name:'WHITE耐性',stats:['MRES'], levels:[{val:6,desc:'WHITE耐性+6'},{val:12,desc:'WHITE耐性+12'},{val:18,desc:'WHITE耐性+18'}] },
-  { id:'cri_inc',  name:'会心率',     stats:['CRI'], levels:[{val:8,desc:'会心率+8%'},{val:13,desc:'会心率+13%'},{val:20,desc:'会心率+20%'}] },
-  { id:'cridam',   name:'会心ダメージ',stats:['CRIDAM'], levels:[{val:20,desc:'会心ダメ+20%'},{val:32,desc:'会心ダメ+32%'},{val:45,desc:'会心ダメ+45%'}] },
-  { id:'reduce',   name:'被ダメ軽減', stats:['RED'], levels:[{val:6,desc:'被ダメ-6%'},{val:10,desc:'被ダメ-10%'},{val:15,desc:'被ダメ-15%'}] },
-  { id:'heal_up',  name:'回復効果',   stats:['HEAL'], levels:[{val:15,desc:'回復+15%'},{val:25,desc:'回復+25%'},{val:40,desc:'回復+40%'}] },
-  { id:'drain',    name:'吸血',       stats:['DRAIN'], levels:[{val:8,desc:'吸血8%'},{val:14,desc:'吸血14%'},{val:20,desc:'吸血20%'}] },
+  { id:'hp_inc',  name:'HP増加',      stats:['HP'],     levels:[{val:10,desc:'HP+10%'},{val:18,desc:'HP+18%'},{val:28,desc:'HP+28%'}] },
+  { id:'atk_inc', name:'ATK増加',     stats:['ATK'],    levels:[{val:10,desc:'ATK+10%'},{val:18,desc:'ATK+18%'},{val:28,desc:'ATK+28%'}] },
+  { id:'spd_inc', name:'SPD増加',     stats:['SPD'],    levels:[{val:12,desc:'SPD+12'},{val:20,desc:'SPD+20'},{val:30,desc:'SPD+30'}] },
+  { id:'cri_inc', name:'会心率',      stats:['CRI'],    levels:[{val:8,desc:'会心率+8%'},{val:13,desc:'会心率+13%'},{val:20,desc:'会心率+20%'}] },
+  { id:'cridam',  name:'会心ダメージ', stats:['CRIDAM'], levels:[{val:20,desc:'会心ダメ+20%'},{val:32,desc:'会心ダメ+32%'},{val:45,desc:'会心ダメ+45%'}] },
+  { id:'reduce',  name:'被ダメ軽減',  stats:['RED'],    levels:[{val:6,desc:'被ダメ-6%'},{val:10,desc:'被ダメ-10%'},{val:15,desc:'被ダメ-15%'}] },
+  { id:'heal_up', name:'回復効果',    stats:['HEAL'],   levels:[{val:15,desc:'回復+15%'},{val:25,desc:'回復+25%'},{val:40,desc:'回復+40%'}] },
+  { id:'drain',   name:'吸血',        stats:['DRAIN'],  levels:[{val:8,desc:'吸血8%'},{val:14,desc:'吸血14%'},{val:20,desc:'吸血20%'}] },
 ];
 
 const BABEL_AREAS = [
@@ -7001,7 +6988,6 @@ function defaultState(clanName) {
 function makeUnit(classId, uid) {
   uid = uid || ('u_' + Date.now() + '_' + Math.random().toString(36).slice(2,7));
   const cls = CLASS_DATA[classId];
-  const passives = rollPassives();
   const ult = cls.ultimates[Math.floor(Math.random()*cls.ultimates.length)];
   const defaultSkills = (cls.activeSkills||cls.skillPool||[]).map(s=>s.id);
   // tactics: スキルごとに {priority, trigger, enabled}
@@ -7009,7 +6995,7 @@ function makeUnit(classId, uid) {
     skillId: sid, priority: i, trigger: 'none', enabled: true
   }));
   return {
-    uid, classId, name:cls.name, passives,
+    uid, classId, name:cls.name, passives: [], // passives unlocked at Lv.40
     ultimateId: ult.id,
     selectedSkills: defaultSkills,
     tactics: defaultTactics,
@@ -7168,6 +7154,16 @@ function normalizeState() {
   if (gState.tutorial.mineDone === undefined) {
     // 既存プレイヤーでS5クリア済みなら鉱山チュートリアルは不要
     gState.tutorial.mineDone = !!(gState.progress?.babel?.clearedStages?.['a1s5']);
+  }
+  if (gState.tutorial.abyssDone === undefined) {
+    // 既存プレイヤーでa1s10クリア済みならアビスチュートリアルは不要
+    gState.tutorial.abyssDone = !!(gState.progress?.babel?.clearedStages?.['a1s10']);
+  }
+  if (gState.tutorial.passiveDone === undefined) {
+    // 既存プレイヤーでLv40以上のキャラがいればパッシブチュートリアルは不要
+    gState.tutorial.passiveDone = (gState.ownedUnits||[]).some(u =>
+      ((gState.unitProgress?.[u.uid]?.level) || 1) >= 40
+    );
   }
 
   // beginnerMissions
@@ -7347,7 +7343,7 @@ function openItemsMenu() {
       [iH('expPot'), 'EXPポット', p.ether, ''],
       [iH('awakePot'), '覚醒ポット', p.awakePot||0, ''],
       [`<span style="font-size:22px">⛏️</span>`, 'ミスリル', p.mithril||0, ''],
-      [`<span style="font-size:22px">🔑</span>`, 'パッシブキー', p.passiveKey||0, ''],
+      [`<span style="font-size:22px">🔑</span>`, 'タレントキー', p.passiveKey||0, ''],
     ])}
     ${section('アクセサリー素材', [
       [iH('stardust'), '星屑の砂', p.stardust||0, 'amber'],
@@ -8295,7 +8291,11 @@ function launchApp() {
       const cls = CLASS_DATA[u.classId];
       if (cls) u.selectedSkills = (cls.activeSkills||cls.skillPool||[]).map(s=>s.id);
     }
-    if (!u.passives) u.passives = rollPassives();
+    if (u.passives == null) {
+      // 既存ユニット互換: Lv40以上なら付与済みとして扱い、未満は空で統一
+      const lv = (gState.unitProgress?.[u.uid]?.level) || 1;
+      u.passives = lv >= 40 ? rollPassives() : [];
+    }
     if (u.equippedArtifact === undefined) u.equippedArtifact = null;
     if (!u.equippedAccessories) u.equippedAccessories = {A:null,B:null,C:null,D:null,E:null,F:null};
     else { ['D','E','F'].forEach(s=>{ if(u.equippedAccessories[s]===undefined) u.equippedAccessories[s]=null; }); }
@@ -8895,7 +8895,7 @@ function openUnitDetail(uid) {
       </div>
     </div>
     <div style="font-size:10px;color:var(--text3);margin-top:6px;padding:4px 6px;background:var(--bg2);">
-      ★ 固定値は装備・パッシブ・星図盤で強化できます
+      ★ 固定値は装備・タレント・星図盤で強化できます
     </div>`;
 
   // Fixed Skills HTML — skill-type image icons
@@ -8972,15 +8972,22 @@ function openUnitDetail(uid) {
 
   // Passive HTML
   const ROMAN = ['I','II','III'];
-  const passiveHTML = (u.passives||[]).map((p, i) => {
-    const lvLabel = ROMAN[p.lv-1] || '';
-    const locked  = p.locked || false;
-    return `<div class="passive-card" style="position:relative">
-      <button class="pkey-lock-btn" data-idx="${i}" title="パッシブキーで固定" style="position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;font-size:15px;padding:2px;line-height:1">${locked?'🔒':'🔓'}</button>
-      <div class="passive-name">${p.name} ${lvLabel}</div>
-      <div class="passive-effect">${p.effect}</div>
-    </div>`;
-  }).join('');
+  const passivesUnlocked = (u.passives||[]).length > 0;
+  const passiveHTML = passivesUnlocked
+    ? (u.passives||[]).map((p, i) => {
+        const lvLabel = ROMAN[p.lv-1] || '';
+        const locked  = p.locked || false;
+        return `<div class="passive-card" style="position:relative">
+          <button class="pkey-lock-btn" data-idx="${i}" title="タレントキーで固定" style="position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;font-size:15px;padding:2px;line-height:1">${locked?'🔒':'🔓'}</button>
+          <div class="passive-name">${p.name} ${lvLabel}</div>
+          <div class="passive-effect">${p.effect}</div>
+        </div>`;
+      }).join('')
+    : `<div style="background:var(--bg2);border:1px dashed var(--border);border-radius:6px;padding:14px;text-align:center;grid-column:1/-1">
+        <div style="font-size:22px;margin-bottom:5px">🔒</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:3px">タレント未解放</div>
+        <div style="font-size:11px;color:var(--text3)">Lv.40 に到達すると解放されます</div>
+      </div>`;
 
   const inner = document.getElementById('udp-inner');
   const expNeed = lvUpCost(prog.level);
@@ -9050,9 +9057,9 @@ function openUnitDetail(uid) {
       ${passiveSkillsHTML}
     </div>
     <div class="udp-section">
-      <div class="udp-section-title">PASSIVES</div>
+      <div class="udp-section-title">TALENTS</div>
       <div class="passive-list">${passiveHTML}</div>
-      <button id="udp-reroll-btn" class="btn btn-outline btn-sm" style="margin-top:8px">${buildRerollLabel(u)}</button>
+      ${passivesUnlocked ? `<button id="udp-reroll-btn" class="btn btn-outline btn-sm" style="margin-top:8px">${buildRerollLabel(u)}</button>` : ''}
     </div>
     <div class="udp-section">
       <div class="udp-section-title">ULTIMATE</div>
@@ -9090,7 +9097,7 @@ function openUnitDetail(uid) {
       <button id="udp-close-btn" class="btn btn-outline" style="flex:1">閉じる</button>
     </div>`;
 
-  document.getElementById('udp-reroll-btn').addEventListener('click', () => rerollPassives(uid));
+  document.getElementById('udp-reroll-btn')?.addEventListener('click', () => rerollPassives(uid));
   document.getElementById('udp-close-btn').addEventListener('click', closeUnitDetail);
   document.getElementById('udp-add-party-btn')?.addEventListener('click', () => {
     const preset = gState.presets[gState.activePreset];
@@ -9263,6 +9270,7 @@ function levelUpUnit(uid, times) {
   if (!u) return;
   const prog = gState.unitProgress[u.uid] || {level:1,exp:0};
   const limit = getAwakeLimit(u.uid);
+  const prevLevel = prog.level;
   let leveled = 0;
   for (let i=0;i<times;i++) {
     if (prog.level >= 100) break;
@@ -9280,6 +9288,11 @@ function levelUpUnit(uid, times) {
     }
     return;
   }
+  // Lv.40到達でパッシブ解放
+  const crossedLv40 = prevLevel < 40 && prog.level >= 40;
+  if (crossedLv40 && (!u.passives || u.passives.length === 0)) {
+    u.passives = rollPassives();
+  }
   gState.unitProgress[u.uid] = prog;
   Audio.buff();
   // デイリーミッション: クラス強化カウント
@@ -9290,6 +9303,14 @@ function levelUpUnit(uid, times) {
   renderCharaTab();
   openUnitDetail(uid);
   flowTutAdvance('level_up_unit');
+  // パッシブ解放チュートリアル
+  if (crossedLv40) {
+    if (!gState.tutorial.passiveDone) {
+      setTimeout(() => startPassiveTutorial(), 800);
+    } else {
+      setTimeout(() => showBonusToast('✨ タレントが解放されました！'), 500);
+    }
+  }
 }
 
 function toggleSkill(uid, skillId, rowEl) {
@@ -9309,7 +9330,7 @@ function toggleSkill(uid, skillId, rowEl) {
 function buildRerollLabel(unit) {
   const locked = (unit.passives||[]).filter(p=>p.locked).length;
   const keyPart = locked > 0 ? ` + ${itemIconHTML('passiveKey','12px')}×${locked}` : '';
-  return `パッシブリロール（${itemIconHTML('gold','12px')}1,000${keyPart}）`;
+  return `タレントリロール（${itemIconHTML('gold','12px')}1,000${keyPart}）`;
 }
 
 function rollPartialPassives(lockedPassives) {
@@ -9341,10 +9362,11 @@ function rerollPassives(uid) {
   const REROLL_COST = 1000;
   const u = gState.ownedUnits.find(x=>x.uid===uid);
   if (!u) return;
+  if (!u.passives || u.passives.length === 0) { showBonusToast('Lv.40 でタレントが解放されます'); return; }
   const locked = (u.passives||[]).filter(pa=>pa.locked);
   const keysNeeded = locked.length;
   if (p.starCrystal < REROLL_COST) { alert(`星晶石が不足しています（必要: ${REROLL_COST}）`); return; }
-  if (keysNeeded > 0 && (p.passiveKey||0) < keysNeeded) { alert(`パッシブキーが不足しています（必要: ${keysNeeded}個）`); return; }
+  if (keysNeeded > 0 && (p.passiveKey||0) < keysNeeded) { alert(`タレントキーが不足しています（必要: ${keysNeeded}個）`); return; }
   p.starCrystal -= REROLL_COST;
   if (keysNeeded > 0) p.passiveKey -= keysNeeded;
   u.passives = rollPartialPassives(locked);
@@ -9376,8 +9398,6 @@ function calcStats(unit) {
     if (p.id==='atk_inc')  atk    = Math.floor(atk*(1+val/100));
     if (p.id==='hp_inc')   hp     = Math.floor(hp *(1+val/100));
     if (p.id==='spd_inc')  spd   += val;
-    if (p.id==='pres_inc' || p.id==='pdef_inc') pdef += val;
-    if (p.id==='mres_inc' || p.id==='mdef_inc') mdef += val;
     if (p.id==='cri_inc')  cri   += val;
     if (p.id==='cridam')   cridam += val;
   });
@@ -10015,11 +10035,18 @@ function openStageList(areaId) {
       <div class="stage-rank">${cleared ? stars : (isLocked ? '' : '<span style="color:var(--text3)">☆☆☆</span>')}</div>`;
 
     if (!isLocked) {
+      if (cleared) {
+        const sweepBtn = document.createElement('button');
+        sweepBtn.className = 'stage-sweep-btn';
+        sweepBtn.textContent = '🔄 周回';
+        sweepBtn.addEventListener('click', (e) => { e.stopPropagation(); sweepBabelStage(areaId, s.id); });
+        row.appendChild(sweepBtn);
+      }
       const btn = document.createElement('button');
       btn.className = 'start-btn';
       btn.textContent = '出撃';
       if (areaId === 'area1' && i === 0) btn.id = 'ft-s1-btn';
-      btn.addEventListener('click', () => startBabelBattle(areaId, s.id));
+      btn.addEventListener('click', (e) => { e.stopPropagation(); startBabelBattle(areaId, s.id); });
       row.appendChild(btn);
     }
 
@@ -10039,6 +10066,40 @@ function openStageList(areaId) {
 function closeStageList() {
   document.getElementById('stage-list-modal').classList.remove('open');
   currentAreaId = null;
+}
+
+function sweepBabelStage(areaId, stageId) {
+  const SWEEP_COST = 3;
+  if (!consumeStamina(SWEEP_COST)) {
+    showBonusToast(`スタミナが不足しています（必要: ${SWEEP_COST}）`);
+    return;
+  }
+  const stageData = gState.progress.babel.clearedStages[stageId];
+  const rank = stageData?.rank || 'B';
+  const am = stageId.match(/a(\d+)s(\d+)/);
+  const areaNum = am ? parseInt(am[1]) : 1;
+  const stageNum = am ? parseInt(am[2]) : 1;
+  const depthMult = 1 + (areaNum - 1) * 2 + (stageNum - 1) * 0.15;
+  let goldBase  = Math.floor(150 * depthMult);
+  let etherBase = Math.floor(40  * depthMult);
+  if ([8, 12, 15, 20].includes(stageNum)) {
+    goldBase  = Math.floor(goldBase  * 2.5);
+    etherBase = Math.floor(etherBase * 2.5);
+  }
+  const rankMult = rank === 'S' ? 1.3 : rank === 'A' ? 1.1 : 1.0;
+  const gold  = Math.floor((goldBase  + Math.random() * goldBase  * 0.2) * rankMult);
+  const ether = Math.floor((etherBase + Math.random() * etherBase * 0.2) * rankMult);
+  const coin  = Math.floor(gold / 50);
+  gState.player.gold += gold;
+  gState.player.ether += ether;
+  gState.player.starCrystal = (gState.player.starCrystal || 0) + coin;
+  gState.missions.daily.babelClears  = (gState.missions.daily.babelClears  || 0) + 1;
+  gState.missions.weekly.babelClears = (gState.missions.weekly.babelClears || 0) + 1;
+  checkAchievements();
+  saveState();
+  updateTopBar();
+  const lines = [`🔄 周回完了！（スタミナ -${SWEEP_COST}）`, `ゴールド +${gold}`, `EXPポット +${ether}`, coin > 0 ? `星晶石 +${coin}` : null].filter(Boolean).join('　');
+  showBonusToast(lines);
 }
 
 // ============================================================
@@ -12739,6 +12800,8 @@ function endBattle(victory) {
       if (_isFirstClear) {
         // 鉱山アンロック (S5初クリア)
         if (battleContext.stageId === 'a1s5') setTimeout(() => triggerMineUnlock(), 1500);
+        // アビスアンロック (エリア1最終S10初クリア)
+        if (battleContext.stageId === 'a1s10') setTimeout(() => triggerAbyssUnlock(), 2000);
         const _crystal = getFirstClearCrystal(battleContext.stageId);
         if (_crystal > 0) {
           gState.player.starCrystal = (gState.player.starCrystal||0) + _crystal;
@@ -12751,11 +12814,18 @@ function endBattle(victory) {
         const _fcPool = ARTIFACT_POOL.filter(d => d.rarity === _fcRarity);
         if (_fcPool.length) {
           const _fcDef = _fcPool[Math.floor(Math.random() * _fcPool.length)];
-          const _fcUid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
           if (!gState.artifacts) gState.artifacts = [];
-          gState.artifacts.push({ id: _fcDef.id, uid: _fcUid, level: 0, rank: 0 });
           const _rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
-          drops.push({ name:`${_fcDef.icon} <span style="color:${_rarColor[_fcRarity]};font-weight:700">${_fcRarity}</span> 【${_fcDef.name}】（初回クリア）` });
+          const _fcAlready = gState.artifacts.find(a => a.id === _fcDef.id);
+          if (_fcAlready) {
+            if (!gState.player.afDuplicates) gState.player.afDuplicates = {};
+            gState.player.afDuplicates[_fcDef.id] = (gState.player.afDuplicates[_fcDef.id]||0) + 1;
+            drops.push({ name:`${_fcDef.icon} <span style="color:${_rarColor[_fcRarity]};font-weight:700">${_fcRarity}</span> 【${_fcDef.name}】 凸素材+1（初回クリア）` });
+          } else {
+            const _fcUid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+            gState.artifacts.push({ id: _fcDef.id, uid: _fcUid, level: 0, rank: 0, conste: 0 });
+            drops.push({ name:`${_fcDef.icon} <span style="color:${_rarColor[_fcRarity]};font-weight:700">${_fcRarity}</span> 【${_fcDef.name}】（初回クリア）` });
+          }
         }
       }
       // エリアクリア時のイマジンアンロック判定
@@ -17179,107 +17249,273 @@ function renderArtifactListTab() {
 }
 
 function openArtifactDetail(uid) {
-  const inst = (gState.artifacts || []).find(a => a.uid === uid);
-  if (!inst) return;
-  const def = ARTIFACT_POOL.find(d => d.id === inst.id);
-  if (!def) return;
-  const lv      = inst.level  || 0;
-  const conste  = inst.conste || 0;
-  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
-  const rc = rarColor[def.rarity] || 'var(--text3)';
-  const equippedBy = gState.ownedUnits.find(u => u.equippedArtifact === uid);
-  const dupCount = (gState.player.afDuplicates || {})[def.id] || 0;
-  const canConste = conste < 9 && dupCount >= 1;
-
-  const ov = document.createElement('div');
+  let ov = document.getElementById('af-detail-modal');
+  if (ov) { ov.innerHTML = _buildAfDetailHTML(uid); return; }
+  ov = document.createElement('div');
+  ov.id = 'af-detail-modal';
   ov.className = 'modal-overlay open';
-  ov.style.zIndex = '9990';
-
-  const effHTML = (def.effects || []).map(eff =>
-    `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:11px;color:var(--text2)">${eff.name||eff.type}</span>
-      <span style="font-size:11px;color:var(--accent2)">${eff.desc||''}</span>
-    </div>`
-  ).join('');
-
-  // 凸ドット表示
-  const consteDots = Array.from({length:9}, (_,i) =>
-    `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 1px;background:${i<conste?'var(--gold)':'var(--border)'}"></span>`
-  ).join('');
-
-  ov.innerHTML = `<div class="modal-panel" style="max-width:360px">
-    <div class="modal-header">
-      <h3 style="color:${rc}">${def.icon} ${def.name}${conste>0?` <span style="font-size:12px;color:var(--gold)">+${conste}</span>`:''}</h3>
-      <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="text-align:center;margin-bottom:8px">
-        <span style="font-size:11px;background:${rc};color:#0a0b0f;padding:2px 10px;border-radius:10px;font-weight:700">${def.rarity}</span>
-      </div>
-      <div style="text-align:center;margin-bottom:12px">${consteDots}</div>
-      <div style="display:flex;gap:16px;justify-content:center;margin-bottom:12px">
-        <div style="text-align:center">
-          <div style="font-size:10px;color:var(--text3)">ATK</div>
-          <div style="font-size:16px;font-weight:700;color:var(--orange)">+${afMainScale(def.mainStat?.atk||0, lv, conste)}</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:10px;color:var(--text3)">HP</div>
-          <div style="font-size:16px;font-weight:700;color:var(--green)">+${afMainScale(def.mainStat?.hp||0, lv, conste)}</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:10px;color:var(--text3)">Lv</div>
-          <div style="font-size:16px;font-weight:700;color:var(--gold)">${lv}</div>
-        </div>
-      </div>
-      ${effHTML ? `<div style="margin-bottom:12px">${effHTML}</div>` : ''}
-      <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);padding:10px;border-radius:6px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:11px;color:var(--text3)">凸 ${conste} / 9　凸素材: ${dupCount}個</span>
-          <span style="font-size:10px;color:var(--text3)">凸ごとにATK・HP +10%</span>
-        </div>
-        <button class="btn btn-sm" onclick="constellateArtifact('${uid}',this.closest('.modal-overlay'))"
-          style="width:100%;background:${canConste?'rgba(201,168,76,0.2)':'rgba(80,80,80,0.15)'};color:${canConste?'var(--gold)':'var(--text3)'};border:1px solid ${canConste?'rgba(201,168,76,0.5)':'var(--border)'};"
-          ${canConste?'':'disabled'}>
-          ✦ 凸する（素材×1 → +${conste+1}凸）${conste>=9?' ※MAX':''}
-        </button>
-      </div>
-      ${equippedBy
-        ? `<div style="background:rgba(74,127,255,0.1);border:1px solid var(--accent);padding:10px;border-radius:6px;margin-bottom:12px">
-            <div style="font-size:11px;color:var(--text3);margin-bottom:4px">装備中のキャラ</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              ${classIconHTML(equippedBy.classId,'32px')}
-              <div>
-                <div style="font-size:13px;font-weight:700">${equippedBy.name}</div>
-                <div style="font-size:10px;color:var(--text3)">${CLASS_DATA[equippedBy.classId]?.name||''}</div>
-              </div>
-              <button class="btn btn-sm btn-outline" style="margin-left:auto" onclick="this.closest('.modal-overlay').remove();openUnitDetail('${equippedBy.uid}')">詳細</button>
-            </div>
-          </div>`
-        : `<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0 12px">未装備</div>`}
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-blue" style="flex:1" onclick="this.closest('.modal-overlay').remove();openSmithyPanel('enhance')">🔧 強化</button>
-        <button class="btn btn-outline" style="flex:1;color:var(--red);border-color:rgba(224,85,85,0.4)" onclick="this.closest('.modal-overlay').remove();openSmithyPanel('melt')">🔥 売却</button>
-      </div>
-    </div>
-  </div>`;
+  ov.style.cssText = 'z-index:9990;align-items:center;justify-content:center;padding:8px;';
+  ov.innerHTML = _buildAfDetailHTML(uid);
   document.body.appendChild(ov);
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
 }
 
-function constellateArtifact(uid, overlayEl) {
+function _afDetailClose() {
+  const ov = document.getElementById('af-detail-modal');
+  if (ov) ov.remove();
+}
+
+function _buildAfDetailHTML(uid) {
   const inst = (gState.artifacts || []).find(a => a.uid === uid);
+  if (!inst) return '';
+  const def = ARTIFACT_POOL.find(d => d.id === inst.id);
+  if (!def) return '';
+  const lv      = inst.level   || 0;
+  const rank    = inst.rank    || 0;
+  const conste  = inst.conste  || 0;
+  const skillLv = inst.skillLv || 0;
+  const maxLv   = AF_RANK_MAX[rank];
+  const atLvMax = lv >= maxLv;
+  const atRankMax = rank >= 3;
+  const atSkMax   = skillLv >= 3;
+  const atConsteMax = conste >= 9;
+  const rc = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' }[def.rarity] || 'var(--text3)';
+  const p  = gState.player;
+  const atomStone = p.atomStone || { t1:0 };
+  const atomCore  = p.atomCore  || { t1:0 };
+  const rune      = p.runeStone || { t1:0, t2:0, t3:0 };
+  const dupCount  = (p.afDuplicates || {})[def.id] || 0;
+  const equippedBy = gState.ownedUnits.find(u => u.equippedArtifact === uid);
+  const enhCost   = afEnhanceCost(lv);
+  const canEnhance = !atLvMax && atomStone.t1 >= (enhCost.t1||0);
+  const rkCost    = !atRankMax ? AF_RANKUP_COST[rank] : null;
+  const canRankUp = !atRankMax && atLvMax && rkCost && atomCore.t1 >= (rkCost.t1||0);
+  const skCost    = !atSkMax ? AF_SKILL_COST[skillLv] : null;
+  const canSkillUp = !atSkMax && skCost &&
+    rune.t1 >= (skCost.t1||0) && rune.t2 >= (skCost.t2||0) && rune.t3 >= (skCost.t3||0);
+  const canConste = !atConsteMax && dupCount >= 1;
+  const rankStars = '★'.repeat(rank) + '☆'.repeat(3 - rank);
+  const lvPct = Math.min(100, lv / maxLv * 100).toFixed(0);
+  const atkVal = afMainScale(def.mainStat?.atk || 0, lv, conste);
+  const hpVal  = afMainScale(def.mainStat?.hp  || 0, lv, conste);
+  const consteDots = Array.from({length:9}, (_,i) =>
+    `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 1px;background:${i<conste?'var(--gold)':'var(--border)'}"></span>`
+  ).join('');
+  const condTypeLabel = { A:'全キャラ', B:'ロール', C:'クラス', D:'種族', E:'攻撃タイプ', F:'戦況', G:'編成' };
+  const condColors    = { A:'var(--accent2)', B:'var(--orange)', C:'var(--gold)', D:'var(--green)', E:'var(--purple)', F:'var(--text3)', G:'var(--text3)' };
+  const statKeyLbl    = { atkPct:'ATK%', hpPct:'HP%', spd:'SPD', cri:'CRI%', cridam:'CRIDAM%', pres:'RED耐性', mres:'WHITE耐性', bres:'BLACK耐性', lres:'BLUE耐性', skillPw:'スキルPw', dmgReduce:'被ダメ減%' };
+  const conditionsHTML = (def.conditions||[]).map(cond => {
+    const cc = condColors[cond.type] || 'var(--text2)';
+    const inactive = (cond.type === 'F' || cond.type === 'G');
+    const reqDisp = cond.req ? (SPECIES_LABELS?.[cond.req] || cond.req) : '';
+    const statsVals = (cond.stats||[]).map(s => `${statKeyLbl[s.key]||s.key} +${afCondValue(s,lv)}`).join(' · ');
+    return `<div style="background:var(--bg2);border:1px solid ${inactive?'var(--border)':cc+'44'};border-radius:5px;padding:8px 10px;margin-bottom:6px;${inactive?'opacity:0.65':''}">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+        <span style="font-size:9px;background:${cc}22;color:${cc};padding:1px 6px;border-radius:3px;font-weight:700">${condTypeLabel[cond.type]||cond.type}${reqDisp?': '+reqDisp:''}</span>
+        ${inactive?'<span style="font-size:9px;color:var(--text3)">戦闘時のみ</span>':''}
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:2px">${cond.desc||''}</div>
+      <div style="font-size:11px;color:${cc};font-weight:700">${statsVals}</div>
+    </div>`;
+  }).join('');
+  const skCostStr = !atSkMax && skCost ? (skCost.t1?`ルーンT1×${skCost.t1}`:skCost.t2?`T2×${skCost.t2}`:`T3×${skCost.t3}`) : '';
+  const baseRefund = { N:2000, SR:5000, SSR:10000 }[def.rarity] || 2000;
+  const goldRefund = baseRefund + Math.floor(lv / 5) * 100;
+  return `<div class="unit-detail-panel" style="overflow-y:auto;max-height:90vh;">
+    <div class="udp-header" style="gap:14px">
+      <div style="font-size:44px;filter:drop-shadow(0 0 10px ${rc})">${def.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Cinzel',serif;font-size:18px;color:${rc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${def.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${def.kind||''} · ${rankStars}</div>
+        <div style="margin-top:5px;display:flex;align-items:center;gap:8px">
+          <span style="background:${rc};color:#0a0b0f;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">${def.rarity}</span>
+          ${conste>0?`<span style="font-size:11px;color:var(--gold);font-weight:700">+${conste}凸</span>`:''}
+        </div>
+        <div style="margin-top:5px">${consteDots}</div>
+      </div>
+      <button class="close-btn" onclick="_afDetailClose()">✕</button>
+    </div>
+    <div class="udp-section">
+      <div class="udp-section-title">MAIN STATS</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="text-align:center;flex:1;background:var(--bg2);padding:8px 4px;border-radius:4px">
+          <div style="font-size:10px;color:var(--text3)">ATK</div>
+          <div style="font-size:18px;font-weight:700;color:var(--orange)">+${atkVal}</div>
+        </div>
+        <div style="text-align:center;flex:1;background:var(--bg2);padding:8px 4px;border-radius:4px">
+          <div style="font-size:10px;color:var(--text3)">HP</div>
+          <div style="font-size:18px;font-weight:700;color:var(--green)">+${hpVal}</div>
+        </div>
+        <div style="text-align:center;flex:1;background:var(--bg2);padding:8px 4px;border-radius:4px">
+          <div style="font-size:10px;color:var(--text3)">Lv</div>
+          <div style="font-size:18px;font-weight:700;color:var(--gold)">${lv}<span style="font-size:10px;color:var(--text3)">/${maxLv}</span></div>
+        </div>
+      </div>
+      <div style="background:var(--bg2);border-radius:3px;height:5px;overflow:hidden">
+        <div style="height:100%;width:${lvPct}%;background:linear-gradient(90deg,var(--accent),var(--gold));"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:3px;text-align:right">Rank ${rank} · ${lv}/${maxLv}</div>
+    </div>
+    <div class="udp-section">
+      <div class="udp-section-title">PASSIVE EFFECTS</div>
+      ${conditionsHTML}
+    </div>
+    <div class="udp-section">
+      <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>ENHANCE</span>
+        <span style="font-size:10px;color:var(--text2);font-weight:normal">秘石T1:${atomStone.t1||0}　コアT1:${atomCore.t1||0}</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-blue btn-sm" ${canEnhance?'':'disabled'} onclick="afDetailEnhance('${uid}')">
+          +1 強化 ${atLvMax?'(上限達成)':'(秘石T1×'+(enhCost.t1||0)+')'}
+        </button>
+        ${!atRankMax
+          ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid var(--gold);" ${canRankUp?'':'disabled'} onclick="afDetailRankUp('${uid}')">Rank${rank+1}へ (コアT1×${rkCost?.t1||0})</button>`
+          : `<span style="font-size:11px;color:var(--gold);padding:4px 0">★ Rank最大</span>`}
+      </div>
+    </div>
+    <div class="udp-section">
+      <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>ARTIFACT SKILL</span>
+        <span style="font-size:10px;color:var(--text2);font-weight:normal">スキルLv ${skillLv} / 3</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <div style="flex:1;display:flex;gap:3px">
+          ${Array.from({length:3},(_,i)=>`<div style="flex:1;height:4px;border-radius:2px;background:${i<skillLv?'var(--purple)':'var(--border)'}"></div>`).join('')}
+        </div>
+        ${!atSkMax
+          ? `<button class="btn btn-sm" style="background:rgba(160,80,240,0.15);color:#c084fc;border:1px solid #c084fc;" ${canSkillUp?'':'disabled'} onclick="afDetailSkillUp('${uid}')">スキルLv↑ (${skCostStr})</button>`
+          : `<span style="font-size:11px;color:#c084fc;padding:4px 0">★ スキル最大</span>`}
+      </div>
+      <div style="font-size:10px;color:var(--text3)">神刻ルーン: T1×${rune.t1||0} / T2×${rune.t2||0} / T3×${rune.t3||0}</div>
+    </div>
+    <div class="udp-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <div class="udp-section-title" style="margin-bottom:2px">CONSTELLATION (凸)</div>
+          <div style="font-size:10px;color:var(--text3)">凸素材: ${dupCount}個 · 凸ごとATK・HP +10%</div>
+        </div>
+        <div style="font-size:15px;font-weight:700;color:var(--gold)">${conste} / 9</div>
+      </div>
+      <button class="btn btn-sm" style="width:100%;background:${canConste?'rgba(201,168,76,0.2)':'rgba(80,80,80,0.1)'};color:${canConste?'var(--gold)':'var(--text3)'};border:1px solid ${canConste?'rgba(201,168,76,0.5)':'var(--border)'};"
+        ${canConste?'':'disabled'} onclick="afDetailConstellate('${uid}')">
+        ✦ 凸する（素材×1）→ +${conste+1}凸${conste>=9?' ★MAX':''}
+      </button>
+    </div>
+    ${equippedBy ? `<div class="udp-section">
+      <div class="udp-section-title">EQUIPPED BY</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${classIconHTML(equippedBy.classId,'32px')}
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700">${equippedBy.name}</div>
+          <div style="font-size:10px;color:var(--text3)">${CLASS_DATA[equippedBy.classId]?.name||''}</div>
+        </div>
+        <button class="btn btn-sm btn-outline" onclick="_afDetailClose();openUnitDetail('${equippedBy.uid}')">詳細</button>
+      </div>
+    </div>` : ''}
+    <div style="padding:12px 16px">
+      <button class="btn" style="width:100%;background:rgba(224,85,85,0.1);color:var(--red);border:1px solid rgba(224,85,85,0.3);" onclick="afDetailMelt('${uid}')">
+        🔥 売却 (ゴールド +${fmt(goldRefund)})
+      </button>
+    </div>
+  </div>`;
+}
+
+function afDetailEnhance(uid) {
+  const inst = (gState.artifacts||[]).find(a=>a.uid===uid);
   if (!inst) return;
-  const conste = inst.conste || 0;
+  const lv = inst.level||0, rank = inst.rank||0;
+  if (lv >= AF_RANK_MAX[rank]) return;
+  const cost = afEnhanceCost(lv);
+  const stone = gState.player.atomStone||{t1:0};
+  if (stone.t1 < (cost.t1||0)) { showBonusToast('アトム秘石T1が不足しています'); return; }
+  stone.t1 -= cost.t1||0;
+  gState.player.atomStone = stone;
+  inst.level = lv + 1;
+  saveState();
+  Audio.buff();
+  const ov = document.getElementById('af-detail-modal');
+  if (ov) ov.innerHTML = _buildAfDetailHTML(uid);
+}
+
+function afDetailRankUp(uid) {
+  const inst = (gState.artifacts||[]).find(a=>a.uid===uid);
+  if (!inst) return;
+  const rank = inst.rank||0;
+  if (rank >= 3) return;
+  const lv = inst.level||0;
+  if (lv < AF_RANK_MAX[rank]) return;
+  const cost = AF_RANKUP_COST[rank];
+  const core = gState.player.atomCore||{t1:0};
+  if (core.t1 < (cost.t1||0)) { showBonusToast('アトミックコアT1が不足しています'); return; }
+  core.t1 -= cost.t1||0;
+  gState.player.atomCore = core;
+  inst.rank = rank + 1;
+  saveState();
+  Audio.awaken();
+  const def = ARTIFACT_POOL.find(d=>d.id===inst.id);
+  toast(`${def?.icon||''} 【${def?.name||'AF'}】 Rank${inst.rank} へランクアップ！`);
+  const ov = document.getElementById('af-detail-modal');
+  if (ov) ov.innerHTML = _buildAfDetailHTML(uid);
+}
+
+function afDetailSkillUp(uid) {
+  const inst = (gState.artifacts||[]).find(a=>a.uid===uid);
+  if (!inst) return;
+  const skillLv = inst.skillLv||0;
+  if (skillLv >= 3) return;
+  const cost = AF_SKILL_COST[skillLv];
+  const rune = gState.player.runeStone||{t1:0,t2:0,t3:0};
+  if (rune.t1<(cost.t1||0)||rune.t2<(cost.t2||0)||rune.t3<(cost.t3||0)) { showBonusToast('神刻ルーンが不足しています'); return; }
+  rune.t1-=cost.t1||0; rune.t2-=cost.t2||0; rune.t3-=cost.t3||0;
+  gState.player.runeStone = rune;
+  inst.skillLv = skillLv + 1;
+  saveState();
+  Audio.buff();
+  const def = ARTIFACT_POOL.find(d=>d.id===inst.id);
+  toast(`${def?.icon||''} スキルLv${inst.skillLv} に上昇！`);
+  const ov = document.getElementById('af-detail-modal');
+  if (ov) ov.innerHTML = _buildAfDetailHTML(uid);
+}
+
+function afDetailConstellate(uid) {
+  const inst = (gState.artifacts||[]).find(a=>a.uid===uid);
+  if (!inst) return;
+  const conste = inst.conste||0;
   if (conste >= 9) return;
-  const dupCount = (gState.player.afDuplicates || {})[inst.id] || 0;
+  const dupCount = (gState.player.afDuplicates||{})[inst.id]||0;
   if (dupCount < 1) return;
   inst.conste = conste + 1;
   gState.player.afDuplicates[inst.id]--;
   saveState();
-  const def = ARTIFACT_POOL.find(d => d.id === inst.id);
-  toast(`${def?.icon||''} 【${def?.name||'AF'}】 +${inst.conste}凸！ATK・HP +${inst.conste*10}%`);
+  Audio.itemGet();
+  const def = ARTIFACT_POOL.find(d=>d.id===inst.id);
+  toast(`${def?.icon||''} +${inst.conste}凸！ ATK・HP +${inst.conste*10}%`);
+  const ov = document.getElementById('af-detail-modal');
+  if (ov) ov.innerHTML = _buildAfDetailHTML(uid);
+}
+
+function afDetailMelt(uid) {
+  const idx = (gState.artifacts||[]).findIndex(a=>a.uid===uid);
+  if (idx < 0) return;
+  const inst = gState.artifacts[idx];
+  const def = ARTIFACT_POOL.find(d=>d.id===inst.id);
+  const baseRefund = def ? ({N:2000,SR:5000,SSR:10000}[def.rarity]||2000) : 2000;
+  const lv = inst.level||0;
+  const goldRefund = baseRefund + Math.floor(lv/5)*100;
+  if (!confirm(`${def?.name||'このAF'}を売却しますか？\nゴールド +${fmt(goldRefund)} を獲得します。`)) return;
+  gState.ownedUnits.forEach(u => { if (u.equippedArtifact===uid) u.equippedArtifact=null; });
+  gState.player.gold = (gState.player.gold||0) + goldRefund;
+  gState.artifacts.splice(idx, 1);
+  saveState(); updateTopBar();
+  _afDetailClose();
+  renderArtifactListTab();
+  toast(`${def?.icon||''} ${def?.name||'AF'} を売却（ゴールド +${fmt(goldRefund)}）`);
+}
+
+function constellateArtifact(uid, overlayEl) {
   if (overlayEl) overlayEl.remove();
-  openArtifactDetail(uid);
+  afDetailConstellate(uid);
 }
 
 // ===== アクセサリー一覧ページ =====
@@ -17498,6 +17734,7 @@ function skillUpArtifact(idx) {
   gState.player.runeStone = rune;
   af.skillLv = skillLv + 1;
   saveState();
+  Audio.buff();
   toast(`${ARTIFACT_POOL.find(d=>d.id===af.id)?.name||'AF'} スキルLv${af.skillLv} に上昇！`);
   renderSmithyContent();
 }
@@ -17516,6 +17753,7 @@ function enhanceArtifact(idx) {
   gState.player.atomStone = stone;
   af.level = lv + 1;
   saveState();
+  Audio.buff();
   renderSmithyContent();
 }
 
@@ -17533,6 +17771,7 @@ function rankUpArtifact(idx) {
   gState.player.atomCore = core;
   af.rank = rank + 1;
   saveState();
+  Audio.awaken();
   toast(`${ARTIFACT_POOL.find(d=>d.id===af.id)?.name||'AF'} をRank${af.rank}にランクアップ！`);
   renderSmithyContent();
 }
@@ -17814,8 +18053,8 @@ function openMonsterDetail(idx) {
 
 // ===== ショップ =====
 const SHOP_ITEMS = [
-  { id:'passive_key',  icon:'passiveKey', name:'パッシブキー',     desc:'リロール時にパッシブ1枠を固定',price:800, currency:'crystal', gives:'passiveKey', amount:1 },
-  { id:'passive_key3', icon:'passiveKey', name:'パッシブキー×3',   desc:'リロール時にパッシブ1枠を固定（3個）',price:2000,currency:'crystal',gives:'passiveKey',amount:3 },
+  { id:'passive_key',  icon:'passiveKey', name:'タレントキー',     desc:'リロール時にタレント1枠を固定',price:800, currency:'crystal', gives:'passiveKey', amount:1 },
+  { id:'passive_key3', icon:'passiveKey', name:'タレントキー×3',   desc:'リロール時にタレント1枠を固定（3個）',price:2000,currency:'crystal',gives:'passiveKey',amount:3 },
   { id:'ether_pack_s', icon:'expPot', name:'EXPポットパック(S)',  desc:'EXPポット×500',        price:300, currency:'crystal', gives:'ether', amount:500 },
   { id:'ether_pack_l', icon:'expPot', name:'EXPポットパック(L)',  desc:'EXPポット×2000',       price:1000,currency:'crystal', gives:'ether', amount:2000 },
   { id:'mithril_s',    icon:'⛏️', name:'ミスリル×5',        desc:'鍛冶屋で使用',         price:800, currency:'crystal', gives:'mithril', amount:5 },
@@ -18282,13 +18521,19 @@ function doArtifactGacha() {
   const def = pool[Math.floor(Math.random() * pool.length)];
   if (!def) return;
   if (!gState.artifacts) gState.artifacts = [];
-  const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
-  gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0 });
+  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
+  const already = gState.artifacts.find(a => a.id === def.id);
+  if (already) {
+    if (!gState.player.afDuplicates) gState.player.afDuplicates = {};
+    gState.player.afDuplicates[def.id] = (gState.player.afDuplicates[def.id]||0) + 1;
+    showBonusToast(`${def.icon} 【${def.name}】 重複 → 凸素材+1`, true);
+  } else {
+    const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+    gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0, conste: 0 });
+    showBonusToast(`${def.icon} <span style="color:${rarColor[def.rarity]};font-weight:700">${def.rarity}</span> 【${def.name}】 鋳造完了！`, true);
+  }
   saveState();
   updateTopBar();
-  // 結果表示
-  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
-  showBonusToast(`${def.icon} <span style="color:${rarColor[def.rarity]};font-weight:700">${def.rarity}</span> 【${def.name}】 鋳造完了！`, true);
   renderArtifactForge(document.getElementById('smithy-content'));
 }
 
@@ -18795,8 +19040,8 @@ function renderAbyssContent() {
   if (!el) return;
   const lv = gState.player.level;
 
-  if (lv < 31) {
-    el.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3)">🔒 Clan Lv.31で解放されます（現在: Lv.${lv}）</div>`;
+  if (!isAbyssUnlocked()) {
+    el.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3)">🔒 エリア1（翠緑の草原）を全ステージクリアすると解放されます</div>`;
     return;
   }
 
@@ -19527,7 +19772,9 @@ function renderSortieTab() {
   if (abyssSub) {
     const cl = (gState.progress.abyss.clearedLayers||[]);
     const best = cl.length > 0 ? Math.max(...cl) : 0;
-    abyssSub.textContent = lv>=31 ? `クリア: ${cl.length}/15層 (最深 ${best||0}層)` : 'Clan Lv.31で解放';
+    abyssSub.textContent = isAbyssUnlocked()
+      ? `クリア: ${cl.length}/15層 (最深 ${best||0}層)`
+      : 'エリア1クリアで解放';
   }
   const colSub = document.getElementById('colosseum-sub');
   if (colSub) colSub.textContent = lv>=31 ? `ランク: ${gState.progress.colosseum.rank||1}` : 'Clan Lv.31で解放';
@@ -20472,7 +20719,9 @@ function clearFlowSpotlight() {
 }
 
 function flowTutNext() {
-  if (mineTutState.active) { mineTutNext(); return; }
+  if (mineTutState.active)    { mineTutNext();    return; }
+  if (abyssTutState.active)   { abyssTutNext();   return; }
+  if (passiveTutState.active) { passiveTutNext(); return; }
   const step = FLOW_STEPS[flowTutState.stepIdx];
   if (!step) return;
   if (step.isLast) {
@@ -20638,6 +20887,142 @@ function endMineTutorial() {
   if (!gState) return;
   if (!gState.tutorial) gState.tutorial = {};
   gState.tutorial.mineDone = true;
+  saveState();
+}
+
+// ============================================================
+//  ABYSS UNLOCK & ABYSS TUTORIAL
+// ============================================================
+
+function isAbyssUnlocked() {
+  return !!(gState?.progress?.babel?.clearedStages?.['a1s10']);
+}
+
+function triggerAbyssUnlock() {
+  renderAbyssContent();
+  if (!gState.tutorial.abyssDone) startAbyssTutorial();
+}
+
+const ABYSS_TUT_STEPS = [
+  {
+    id: 'ab_unlocked', type: 'info', icon: '🏔️',
+    title: 'アビスダイブ解放！',
+    getText: () => 'エリア1クリアおめでとう！\n\n「アビスダイブ」が解放されました。\nアクセサリーを入手できる\nローグライクダンジョンです！',
+    btnText: '詳しく見る',
+    spotlight: null,
+  },
+  {
+    id: 'ab_explain', type: 'info', icon: '💍',
+    title: 'アクセサリーとは？',
+    getText: () => 'アクセサリーはキャラに装備できる\n強化アイテムです。\n\nアビスは層ごとに強敵と戦うダンジョンで\nクリアするとアクセサリーが獲得できます。\n\n出撃 → アビスダイブ から挑戦しましょう！',
+    btnText: '閉じる',
+    spotlight: null,
+    isLast: true,
+  },
+];
+
+let abyssTutState = { active: false, stepIdx: 0 };
+
+function startAbyssTutorial() {
+  if (!gState || gState.tutorial?.abyssDone) return;
+  abyssTutState = { active: true, stepIdx: 0 };
+  renderAbyssTutStep();
+}
+
+function renderAbyssTutStep() {
+  const step = ABYSS_TUT_STEPS[abyssTutState.stepIdx];
+  if (!step) { endAbyssTutorial(); return; }
+
+  document.getElementById('ft-icon').textContent     = step.icon;
+  document.getElementById('ft-title').textContent    = step.title;
+  document.getElementById('ft-text').textContent     = step.getText();
+  document.getElementById('ft-progress').textContent = `${abyssTutState.stepIdx + 1} / ${ABYSS_TUT_STEPS.length}`;
+
+  const btn = document.getElementById('ft-btn');
+  btn.style.display = 'block';
+  btn.textContent = step.btnText || '次へ';
+
+  document.getElementById('flow-tut').style.display = 'block';
+  clearFlowSpotlight();
+}
+
+function abyssTutNext() {
+  const step = ABYSS_TUT_STEPS[abyssTutState.stepIdx];
+  if (!step) return;
+  if (step.isLast) { endAbyssTutorial(); return; }
+  abyssTutState.stepIdx++;
+  renderAbyssTutStep();
+}
+
+function endAbyssTutorial() {
+  abyssTutState.active = false;
+  document.getElementById('flow-tut').style.display = 'none';
+  clearFlowSpotlight();
+  if (!gState) return;
+  if (!gState.tutorial) gState.tutorial = {};
+  gState.tutorial.abyssDone = true;
+  saveState();
+}
+
+// ============================================================
+//  PASSIVE SKILL TUTORIAL (triggered on first Lv.40 unit)
+// ============================================================
+
+const PASSIVE_TUT_STEPS = [
+  {
+    id: 'pt_unlocked', type: 'info', icon: '✨',
+    title: 'タレント解放！',
+    getText: () => 'Lv.40 に到達しました！\n\n「タレント」が解放されました。\n\nタレントは戦闘中つねに効果を発揮する\n永続的な強化スキルです。\n3種類がランダムで付与されます。',
+    btnText: '次へ',
+    spotlight: null,
+  },
+  {
+    id: 'pt_reroll', type: 'info', icon: '🔄',
+    title: 'リロールで変更できます',
+    getText: () => 'タレントが気に入らない場合は\n星晶石×1000で「リロール」できます。\n\n🔒 ボタンでタレントを固定した後にリロールすると\n固定したタレントは変更されません！\n\nキャラ詳細の TALENTS 欄から操作できます。',
+    btnText: '了解！',
+    spotlight: null,
+    isLast: true,
+  },
+];
+
+let passiveTutState = { active: false, stepIdx: 0 };
+
+function startPassiveTutorial() {
+  if (!gState || gState.tutorial?.passiveDone) return;
+  passiveTutState = { active: true, stepIdx: 0 };
+  renderPassiveTutStep();
+}
+
+function renderPassiveTutStep() {
+  const step = PASSIVE_TUT_STEPS[passiveTutState.stepIdx];
+  if (!step) { endPassiveTutorial(); return; }
+  document.getElementById('ft-icon').textContent     = step.icon;
+  document.getElementById('ft-title').textContent    = step.title;
+  document.getElementById('ft-text').textContent     = step.getText();
+  document.getElementById('ft-progress').textContent = `${passiveTutState.stepIdx + 1} / ${PASSIVE_TUT_STEPS.length}`;
+  const btn = document.getElementById('ft-btn');
+  btn.style.display = 'block';
+  btn.textContent = step.btnText || '次へ';
+  document.getElementById('flow-tut').style.display = 'block';
+  clearFlowSpotlight();
+}
+
+function passiveTutNext() {
+  const step = PASSIVE_TUT_STEPS[passiveTutState.stepIdx];
+  if (!step) return;
+  if (step.isLast) { endPassiveTutorial(); return; }
+  passiveTutState.stepIdx++;
+  renderPassiveTutStep();
+}
+
+function endPassiveTutorial() {
+  passiveTutState.active = false;
+  document.getElementById('flow-tut').style.display = 'none';
+  clearFlowSpotlight();
+  if (!gState) return;
+  if (!gState.tutorial) gState.tutorial = {};
+  gState.tutorial.passiveDone = true;
   saveState();
 }
 </script>
