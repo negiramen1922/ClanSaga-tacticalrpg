@@ -847,10 +847,11 @@ img.item-icon {
 
 /* STATUS EFFECTS */
 .status-icons { display: flex; gap: 2px; flex-wrap: wrap; margin-top: 3px; }
-.status-icon { 
+.status-icon {
   font-size: 10px; background: var(--bg2); padding: 1px 3px;
   border: 1px solid var(--border); font-family: 'Rajdhani'; color: var(--text2);
 }
+.status-icon .si-count { font-size: 9px; opacity: 0.8; margin-left: 1px; }
 .status-icon.atk-up { border-color: var(--orange); color: var(--orange); }
 .status-icon.hp-up { border-color: var(--green); color: var(--green); }
 .status-icon.pdef-up  { border-color: #ff8866; color: #ff8866; }
@@ -10638,7 +10639,7 @@ function renderBattle() {
         if (hpText) hpText.innerHTML = `${fmt(Math.max(0,u.hp))} / ${fmt(u.maxHp)}${u.shield>0?` <span style="color:#88aaff">🛡${fmt(u.shield)}</span>`:''}`;
         existing.classList.toggle('dead', !!u.dead);
         existing.classList.toggle('staggered', !!u.staggered);
-        const buffHtml = [...(u.buffs||[]),...(u.debuffs||[])].map(b=>`<div class="status-icon ${b.cssClass||''}">${b.icon||'?'}</div>`).join('');
+        const buffHtml = buildBuffHtml(u.buffs, u.debuffs);
         const statusIcons = q('.status-icons');
         if (statusIcons) statusIcons.innerHTML = buffHtml;
       }
@@ -10650,11 +10651,24 @@ function renderBattle() {
   updateTimer();
 }
 
+function buildBuffHtml(buffs, debuffs) {
+  const all = [...(buffs||[]), ...(debuffs||[])];
+  const map = new Map();
+  all.forEach(b => {
+    const key = b.type || b.icon || '?';
+    if (map.has(key)) map.get(key).count++;
+    else map.set(key, { b, count: 1 });
+  });
+  return [...map.values()].map(({ b, count }) =>
+    `<div class="status-icon ${b.cssClass||''}">${b.icon||'?'}${count > 1 ? `<span class="si-count">×${count}</span>` : ''}</div>`
+  ).join('');
+}
+
 function combatantCardHTML(c) {
   const hpPct = c.maxHp > 0 ? Math.max(0,(c.hp/c.maxHp)*100) : 0;
   const shieldPct = (c.shield && c.maxHp > 0) ? Math.min(100,(c.shield/c.maxHp)*100) : 0;
   const atbPct = c.atb;
-  const buffHtml = [...(c.buffs||[]),...(c.debuffs||[])].map(b=>`<div class="status-icon ${b.cssClass||''}">${b.icon||'?'}</div>`).join('');
+  const buffHtml = buildBuffHtml(c.buffs, c.debuffs);
   const ultPct = c.ultGauge || 0;
   const ultReady = ultPct >= 100;
   const ultSection = !c.isEnemy ? `
