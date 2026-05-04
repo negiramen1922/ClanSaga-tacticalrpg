@@ -12695,8 +12695,13 @@ function endBattle(victory) {
     const m = Math.floor(secs/60);
     const s = secs%60;
     const timeStr = `${m}:${s.toString().padStart(2,'0')}`;
-    // 撤退報酬：少量のゴールド
-    const retreatGold = Math.floor(Math.random()*50)+20;
+    // アビス撤退 → ランをリセット（最初からやり直し）
+    const isAbyssRetreat = battleContext?.type === 'abyss';
+    if (isAbyssRetreat && gState?.progress?.abyss?.currentRun) {
+      gState.progress.abyss.currentRun = null;
+    }
+    // 撤退報酬：少量のゴールド（アビスは撤退報酬なし）
+    const retreatGold = isAbyssRetreat ? 0 : Math.floor(Math.random()*50)+20;
     gState.player.gold += retreatGold;
     saveState();
     // 結果画面（撤退表示）
@@ -12707,8 +12712,9 @@ function endBattle(victory) {
     document.getElementById('res-dmg').textContent = fmt(battleStats.totalDmg);
     document.getElementById('res-crits').textContent = battleStats.crits;
     document.getElementById('result-chart').innerHTML = '';
-    document.getElementById('result-drops').innerHTML =
-      `<div class="drop-item">🏳 撤退</div><div class="drop-item">${itemIconHTML('gold','14px')} ゴールド ×${retreatGold}（撤退報酬）</div>`;
+    document.getElementById('result-drops').innerHTML = isAbyssRetreat
+      ? `<div class="drop-item">🏳 アビス撤退 — 最初からやり直し</div>`
+      : `<div class="drop-item">🏳 撤退</div><div class="drop-item">${itemIconHTML('gold','14px')} ゴールド ×${retreatGold}（撤退報酬）</div>`;
     document.getElementById('next-stage-btn').style.display = 'none';
     document.getElementById('battle-result').classList.add('active');
     updateTopBar();
@@ -13073,6 +13079,12 @@ function exitBattle() {
   battleRunning = false;
   Audio.stopBgm();
   Audio.playHome();
+  // アビス戦闘中に戻るボタン → 撤退扱いでランをリセット
+  if (battleContext?.type === 'abyss' && gState?.progress?.abyss?.currentRun) {
+    gState.progress.abyss.currentRun = null;
+    saveState();
+    renderAbyssContent();
+  }
   document.getElementById('battle-screen').classList.remove('active');
   document.getElementById('battle-result').classList.remove('active');
 }
