@@ -13226,8 +13226,10 @@ function endBattle(victory) {
     const run = gState.progress.abyss.currentRun;
     if (run) {
       // 通常ステージ勝利：次へ or 撤退
+      const nextStage = (battleContext.stage || 1) + 1;
+      const nextLabel = nextStage === 6 ? 'BOSS' : `ステージ${nextStage}`;
       resultBtnsEl.innerHTML = `
-        <button class="btn btn-gold" style="flex:2" onclick="abyssResultContinue()">▶ ステージ${run.stage}へ</button>
+        <button class="btn btn-gold" style="flex:2" onclick="abyssResultContinue()">▶ ${nextLabel}へ</button>
         <button class="btn btn-outline" style="border-color:var(--red);color:var(--red)" onclick="abyssResultRetreat()">🏳 撤退</button>`;
     } else {
       // ボス撃破（層クリア）：閉じるだけ
