@@ -3210,19 +3210,35 @@ const Audio = (() => {
       osc(pitch * 3,  'sine',     0.04, 0.12, seGain, t + dt);
     });
   }
+  function seAwaken() {
+    const c = getCtx(); const t = c.currentTime;
+    // 低音ドン → パワーコード → キラキラ上昇（覚醒解放感）
+    osc(80,   'sine',     0.30, 0.60, seGain, t);
+    osc(120,  'sine',     0.25, 0.40, seGain, t + 0.05);
+    osc(220,  'sawtooth', 0.25, 0.50, seGain, t + 0.12);
+    osc(440,  'sawtooth', 0.20, 0.45, seGain, t + 0.18);
+    osc(880,  'sine',     0.25, 0.35, seGain, t + 0.25);
+    osc(1320, 'sine',     0.20, 0.30, seGain, t + 0.32);
+    osc(1760, 'sine',     0.15, 0.25, seGain, t + 0.38);
+    osc(2637, 'sine',     0.12, 0.20, seGain, t + 0.44);
+  }
 
   // ---- BGM ジェネレーター ----
   // 共通: ループ再生のためstopFnを返す
+  let _bgmGen = 0; // BGM切替のたびにインクリメント。非同期ロード競合を防ぐ
+
   function stopBgm() {
+    _bgmGen++;
     if (currentBgm) { try { currentBgm(); } catch(e){} currentBgm = null; }
   }
 
   // -- ホームBGM: MP3ファイル再生 --
   function bgmHome() {
     stopBgm();
+    const gen = _bgmGen;
     const c = getCtx();
     const playBuf = (buf) => {
-      if (!buf) return;
+      if (gen !== _bgmGen || !buf) return; // 別BGMに切り替わっていたら無視
       const src = c.createBufferSource();
       src.buffer = buf;
       src.loop = true;
@@ -3252,9 +3268,10 @@ const Audio = (() => {
 
   function bgmBattle() {
     stopBgm();
+    const gen = _bgmGen;
     const c = getCtx();
     const playBuf = (buf) => {
-      if (!buf) return;
+      if (gen !== _bgmGen || !buf) return; // 別BGMに切り替わっていたら無視
       const src = c.createBufferSource();
       src.buffer = buf;
       src.loop = true;
@@ -3343,6 +3360,7 @@ const Audio = (() => {
     night:       () => { try { seNight(); }       catch(e){} },
     itemGet:     () => { try { seItemGet(); }     catch(e){} },
     mineUpgrade: () => { try { seMineUpgrade(); } catch(e){} },
+    awaken:      () => { try { seAwaken(); }      catch(e){} },
     // BGM
     playHome:    () => { try { bgmHome(); }    catch(e){} },
     playBattle:  () => { try { bgmBattle(); }  catch(e){} },
@@ -9228,6 +9246,7 @@ function awakenUnit(uid) {
   gState.player.awakePot -= cost;
   prog.awakeCount++;
   gState.unitProgress[uid] = prog;
+  Audio.awaken();
   saveState();
   updateTopBar();
   openUnitDetail(uid);
@@ -9262,6 +9281,7 @@ function levelUpUnit(uid, times) {
     return;
   }
   gState.unitProgress[u.uid] = prog;
+  Audio.buff();
   // デイリーミッション: クラス強化カウント
   gState.missions.daily.classUpgrade = (gState.missions.daily.classUpgrade||0) + 1;
   checkAchievements();
