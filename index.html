@@ -9175,9 +9175,9 @@ function openUnitDetail(uid) {
     {t1:10,t2: 1,t3:0},  // Lv4→5
     {t1:12,t2: 3,t3:0},  // Lv5→6
     {t1:15,t2: 5,t3:0},  // Lv6→7
-    {t1:15,t2: 7,t3:0},  // Lv7→8
-    {t1:15,t2: 7,t3:1},  // Lv8→9
-    {t1:15,t2:10,t3:3},  // Lv9→10
+    {t1:15,t2: 7,t3:1},  // Lv7→8
+    {t1:15,t2:10,t3:3},  // Lv8→9
+    {t1:20,t2:12,t3:5},  // Lv9→10
   ];
   const activeSkillsHTML = (cls.activeSkills||[]).map(sk => {
     const bColor = _skillBorderColor[sk.type] || 'var(--border)';
@@ -9406,9 +9406,9 @@ function skillUpChar(uid, skillId) {
     {t1:10,t2: 1,t3:0},
     {t1:12,t2: 3,t3:0},
     {t1:15,t2: 5,t3:0},
-    {t1:15,t2: 7,t3:0},
     {t1:15,t2: 7,t3:1},
     {t1:15,t2:10,t3:3},
+    {t1:20,t2:12,t3:5},
   ];
   const cost = KSCOST[skLv - 1];
   const kyoKey = {'アタッカー':'warrior','タンク':'vanguard','レンジ':'ranger','サポート':'support','スカウト':'scout','トリックスター':'trickster'}[cls.role] || 'warrior';
@@ -18903,9 +18903,9 @@ const AF_SKILL_COST = [
   { t1:10, t2: 1, t3:0 },  // 3→4
   { t1:12, t2: 3, t3:0 },  // 4→5
   { t1:15, t2: 5, t3:0 },  // 5→6
-  { t1:15, t2: 7, t3:0 },  // 6→7
-  { t1:15, t2: 7, t3:1 },  // 7→8
-  { t1:15, t2:10, t3:3 },  // 8→9
+  { t1:15, t2: 7, t3:1 },  // 6→7
+  { t1:15, t2:10, t3:3 },  // 7→8
+  { t1:20, t2:12, t3:5 },  // 8→9
   { t1:20, t2:12, t3:5 },  // 9→10
 ];
 
