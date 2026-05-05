@@ -3258,6 +3258,58 @@ const Audio = (() => {
     osc(1100, 'sine', 0.14, 0.12, seGain, t + 0.09);
     osc(1320, 'sine', 0.10, 0.18, seGain, t + 0.17);
   }
+  function sePassiveReroll() {
+    const c = getCtx(); const t = c.currentTime;
+    // ガラガラ不規則音 → 決定音
+    [0, 0.06, 0.12, 0.18, 0.24, 0.30].forEach((dt, i) => {
+      osc(300 + i * 60, 'sawtooth', 0.05, 0.22, seGain, t + dt);
+      osc(450 + i * 40, 'square',   0.03, 0.12, seGain, t + dt + 0.02);
+    });
+    osc(784,  'sine', 0.20, 0.38, seGain, t + 0.40);
+    osc(1047, 'sine', 0.18, 0.32, seGain, t + 0.47);
+    osc(1319, 'sine', 0.14, 0.28, seGain, t + 0.53);
+  }
+  function seUltReady() {
+    const c = getCtx(); const t = c.currentTime;
+    // ビリビリ上昇 → チャージ完了フラッシュ
+    osc(100,  'sawtooth', 0.18, 0.35, seGain, t);
+    osc(200,  'sawtooth', 0.18, 0.32, seGain, t + 0.07);
+    osc(400,  'square',   0.16, 0.28, seGain, t + 0.14);
+    osc(800,  'sine',     0.20, 0.28, seGain, t + 0.20);
+    osc(1200, 'sine',     0.24, 0.32, seGain, t + 0.26);
+    osc(1600, 'sine',     0.20, 0.28, seGain, t + 0.30);
+  }
+  function seAbyssClear() {
+    const c = getCtx(); const t = c.currentTime;
+    // 短いファンファーレ + 余韻
+    const notes = [523, 659, 784, 1047];
+    notes.forEach((f, i) => {
+      osc(f,   'sine',     0.22, 0.38, seGain, t + i * 0.10);
+      osc(f*2, 'triangle', 0.10, 0.18, seGain, t + i * 0.10);
+    });
+    osc(1319, 'sine',     0.35, 0.55, seGain, t + 0.45);
+    osc(1047, 'triangle', 0.18, 0.45, seGain, t + 0.52);
+  }
+  function seMissionClear() {
+    const c = getCtx(); const t = c.currentTime;
+    // チェック完了: 上昇3音 + キラ余韻
+    osc(523,  'sine', 0.18, 0.18, seGain, t);
+    osc(784,  'sine', 0.20, 0.18, seGain, t + 0.10);
+    osc(1047, 'sine', 0.22, 0.28, seGain, t + 0.20);
+    osc(1568, 'sine', 0.14, 0.35, seGain, t + 0.34);
+  }
+  function seTalentUnlock() {
+    const c = getCtx(); const t = c.currentTime;
+    // 低音から高音へ: 神秘的な解放感
+    osc(130, 'sine', 0.60, 0.45, seGain, t);
+    osc(260, 'sine', 0.50, 0.42, seGain, t + 0.18);
+    osc(520, 'sine', 0.40, 0.38, seGain, t + 0.33);
+    [1047, 1319, 1568, 2093].forEach((f, i) => {
+      osc(f,       'sine', 0.30, 0.35, seGain, t + 0.46 + i * 0.09);
+      osc(f * 1.5, 'sine', 0.10, 0.14, seGain, t + 0.46 + i * 0.09);
+    });
+    osc(2637, 'sine', 0.18, 0.40, seGain, t + 0.85);
+  }
 
   // ---- BGM ジェネレーター ----
   // 共通: ループ再生のためstopFnを返す
@@ -3400,6 +3452,11 @@ const Audio = (() => {
     equip:         () => { try { seEquip(); }          catch(e){} },
     constellation: () => { try { seConstellation(); }  catch(e){} },
     shopBuy:       () => { try { seShopBuy(); }        catch(e){} },
+    passiveReroll: () => { try { sePassiveReroll(); }  catch(e){} },
+    ultReady:      () => { try { seUltReady(); }       catch(e){} },
+    abyssClear:    () => { try { seAbyssClear(); }     catch(e){} },
+    missionClear:  () => { try { seMissionClear(); }   catch(e){} },
+    talentUnlock:  () => { try { seTalentUnlock(); }   catch(e){} },
     // BGM
     playHome:    () => { try { bgmHome(); }    catch(e){} },
     playBattle:  () => { try { bgmBattle(); }  catch(e){} },
@@ -9452,7 +9509,8 @@ function levelUpUnit(uid, times) {
     u.passives = rollPassives();
   }
   gState.unitProgress[u.uid] = prog;
-  Audio.buff();
+  if (crossedLv40) Audio.talentUnlock();
+  else Audio.buff();
   // デイリーミッション: クラス強化カウント
   gState.missions.daily.classUpgrade = (gState.missions.daily.classUpgrade||0) + 1;
   checkAchievements();
@@ -9529,6 +9587,7 @@ function rerollPassives(uid) {
   if (keysNeeded > 0) p.passiveKey -= keysNeeded;
   u.passives = rollPartialPassives(locked);
   saveState();
+  Audio.passiveReroll();
   openUnitDetail(uid);
   updateTopBar();
 }
@@ -12798,7 +12857,9 @@ function rollResist(target, skill) {
 
 function gainUltGauge(c, amt) {
   if (c.isEnemy) return;
-  c.ultGauge = Math.min(100, (c.ultGauge || 0) + amt);
+  const prev = c.ultGauge || 0;
+  c.ultGauge = Math.min(100, prev + amt);
+  if (prev < 100 && c.ultGauge >= 100) Audio.ultReady();
 }
 
 // デバフ付与判定（命中/免疫システム）
@@ -16771,7 +16832,7 @@ function claimMission(type, id, rewardStr) {
     });
   }
   giveRewardStr(rewardStr);
-  Audio.itemGet();
+  Audio.missionClear();
 
   if (type==='daily') {
     gState.missions.dailyClaimed[id] = true;
@@ -19394,6 +19455,7 @@ function onAbyssVictory(layerId, stage) {
     abyss.bestLayer = Math.max(abyss.bestLayer || 0, layerId);
     abyss.currentRun = null;
     saveState();
+    Audio.abyssClear();
     giveAbyssLayerReward(layerId);
     renderAbyssContent();
   } else {
