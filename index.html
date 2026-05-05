@@ -11732,6 +11732,7 @@ function setSpeedBtn(s) {
 function tickBattle() {
   const bs = battleState;
   if (!bs || !battleRunning) return;
+  if (bs.waitingSkillUid) return; // 手動スキル選択待ち中はバトル全体を停止
   // elapsed を tick ごとに加算（倍速対応）
   bs.elapsed = (bs.elapsed || 0) + (50 * battleSpeed);
   updateTimer();
@@ -11763,7 +11764,6 @@ function tickBattle() {
   // Tick ATB for all alive（ひるみ: ATB蓄積-50%）
   const all = [...bs.allies, ...bs.enemies].filter(c=>!c.dead);
   all.forEach(c => {
-    if (bs.waitingSkillUid === c.uid) return; // 手動スキル選択待ち中はATBを止める
     const flinch = getFlinchMult(c);
     c.atb += c.spd * 0.02 * flinch;
     if (c.atb >= 100) {
