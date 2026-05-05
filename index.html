@@ -3233,6 +3233,31 @@ const Audio = (() => {
     osc(1760, 'sine',     0.15, 0.25, seGain, t + 0.38);
     osc(2637, 'sine',     0.12, 0.20, seGain, t + 0.44);
   }
+  function seEquip() {
+    const c = getCtx(); const t = c.currentTime;
+    // シャキン: 金属的な装備音
+    osc(1400, 'sawtooth', 0.04, 0.40, seGain, t);
+    osc(1000, 'sawtooth', 0.07, 0.30, seGain, t + 0.03);
+    osc(700,  'square',   0.05, 0.20, seGain, t + 0.07);
+    osc(1800, 'sine',     0.04, 0.10, seGain, t + 0.01);
+  }
+  function seConstellation() {
+    const c = getCtx(); const t = c.currentTime;
+    // ドン → キラキラ上昇: 凸解放感
+    osc(80,   'sine',     0.35, 0.55, seGain, t);
+    osc(160,  'sine',     0.20, 0.40, seGain, t + 0.06);
+    [1047, 1319, 1568, 2093, 2637].forEach((f, i) => {
+      osc(f,     'sine', 0.22, 0.25, seGain, t + 0.12 + i * 0.07);
+      osc(f * 2, 'sine', 0.07, 0.10, seGain, t + 0.12 + i * 0.07);
+    });
+  }
+  function seShopBuy() {
+    const c = getCtx(); const t = c.currentTime;
+    // コイン: 高音3連
+    osc(880,  'sine', 0.12, 0.12, seGain, t);
+    osc(1100, 'sine', 0.14, 0.12, seGain, t + 0.09);
+    osc(1320, 'sine', 0.10, 0.18, seGain, t + 0.17);
+  }
 
   // ---- BGM ジェネレーター ----
   // 共通: ループ再生のためstopFnを返す
@@ -3370,8 +3395,11 @@ const Audio = (() => {
     opening:  () => { try { seOpeningSkill(); } catch(e){} },
     night:       () => { try { seNight(); }       catch(e){} },
     itemGet:     () => { try { seItemGet(); }     catch(e){} },
-    mineUpgrade: () => { try { seMineUpgrade(); } catch(e){} },
-    awaken:      () => { try { seAwaken(); }      catch(e){} },
+    mineUpgrade:   () => { try { seMineUpgrade(); }    catch(e){} },
+    awaken:        () => { try { seAwaken(); }         catch(e){} },
+    equip:         () => { try { seEquip(); }          catch(e){} },
+    constellation: () => { try { seConstellation(); }  catch(e){} },
+    shopBuy:       () => { try { seShopBuy(); }        catch(e){} },
     // BGM
     playHome:    () => { try { bgmHome(); }    catch(e){} },
     playBattle:  () => { try { bgmBattle(); }  catch(e){} },
@@ -9295,6 +9323,7 @@ function skillUpChar(uid, skillId) {
   gState.unitProgress[uid] = prog;
   const sk = (cls.activeSkills||[]).find(s => s.id === skillId);
   saveState();
+  Audio.buff();
   toast(`${u.name} 【${sk?.name||'スキル'}】 Lv.${skLv + 1} に上昇！`);
   openUnitDetail(uid);
 }
@@ -17679,7 +17708,7 @@ function afDetailConstellate(uid) {
   inst.conste = conste + 1;
   gState.player.afDuplicates[inst.id]--;
   saveState();
-  Audio.itemGet();
+  Audio.constellation();
   const def = ARTIFACT_POOL.find(d=>d.id===inst.id);
   toast(`${def?.icon||''} +${inst.conste}凸！ ATK・HP +${inst.conste*10}%`);
   const ov = document.getElementById('af-detail-modal');
@@ -18357,6 +18386,7 @@ function buyShopItem(item) {
     gState.player[item.gives] = (gState.player[item.gives]||0) + item.amount;
   }
   saveState();
+  Audio.shopBuy();
   updateTopBar();
   renderShopContent();
 }
@@ -18630,6 +18660,7 @@ function equipArtifact(uid, afUid) {
   if (!u) return;
   u.equippedArtifact = afUid;
   saveState();
+  Audio.equip();
   const slot = document.getElementById('udp-artifact-slot');
   if (slot) slot.innerHTML = renderUnitArtifactSlot(u);
 }
@@ -18904,6 +18935,7 @@ function equipAccessory(uid, slot, accUid) {
   if (!u.equippedAccessories) u.equippedAccessories={A:null,B:null,C:null,D:null,E:null,F:null};
   u.equippedAccessories[slot]=accUid;
   saveState();
+  Audio.equip();
   document.querySelectorAll('.modal-overlay[style*="z-index: 700"], .modal-overlay[style*="z-index:700"]').forEach(el=>el.remove());
   refreshUnitAccessoryUI(uid);
 }
