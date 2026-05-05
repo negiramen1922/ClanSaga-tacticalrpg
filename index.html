@@ -7220,8 +7220,9 @@ function normalizeState() {
       if (typeof af.enhance === 'number' && af.level === undefined) {
         return { uid: af.uid, id: af.id, level: af.enhance || 0, rank: 0 };
       }
-      if (af.level === undefined) af.level = 0;
-      if (af.rank  === undefined) af.rank  = 0;
+      if (af.level    === undefined) af.level    = 0;
+      if (af.rank     === undefined) af.rank     = 0;
+      if (!af.skillLv)               af.skillLv  = 1; // Lv1スタートに統一
       return af;
     });
 
@@ -17892,7 +17893,7 @@ function _buildAfDetailHTML(uid) {
   const lv      = inst.level   || 0;
   const rank    = inst.rank    || 0;
   const conste  = inst.conste  || 0;
-  const skillLv = inst.skillLv || 0;
+  const skillLv = inst.skillLv || 1;
   const maxLv   = AF_RANK_MAX[rank];
   const atLvMax = lv >= maxLv;
   const atRankMax = rank >= 3;
@@ -17909,7 +17910,7 @@ function _buildAfDetailHTML(uid) {
   const canEnhance = !atLvMax && atomStone.t1 >= (enhCost.t1||0);
   const rkCost    = !atRankMax ? AF_RANKUP_COST[rank] : null;
   const canRankUp = !atRankMax && atLvMax && rkCost && atomCore.t1 >= (rkCost.t1||0);
-  const skCost    = !atSkMax ? AF_SKILL_COST[skillLv] : null;
+  const skCost    = !atSkMax ? AF_SKILL_COST[skillLv - 1] : null;
   const canSkillUp = !atSkMax && skCost &&
     rune.t1 >= (skCost.t1||0) && rune.t2 >= (skCost.t2||0) && rune.t3 >= (skCost.t3||0);
   const canConste = !atConsteMax && dupCount >= 1;
@@ -18081,9 +18082,9 @@ function afDetailRankUp(uid) {
 function afDetailSkillUp(uid) {
   const inst = (gState.artifacts||[]).find(a=>a.uid===uid);
   if (!inst) return;
-  const skillLv = inst.skillLv||0;
+  const skillLv = inst.skillLv||1;
   if (skillLv >= 10) return;
-  const cost = AF_SKILL_COST[skillLv];
+  const cost = AF_SKILL_COST[skillLv - 1];
   const rune = gState.player.runeStone||{t1:0,t2:0,t3:0};
   if (rune.t1<(cost.t1||0)||rune.t2<(cost.t2||0)||rune.t3<(cost.t3||0)) { showBonusToast('神刻ルーンが不足しています'); return; }
   rune.t1-=cost.t1||0; rune.t2-=cost.t2||0; rune.t3-=cost.t3||0;
@@ -18296,9 +18297,9 @@ function renderArtifactEnhance(el) {
     const rkLabel = atRankMax ? '' : `コアT1×${rkCost?.t1||0}`;
 
     // スキルレベルアップ可否
-    const skillLv    = af.skillLv || 0;
+    const skillLv    = af.skillLv || 1;
     const atSkillMax = skillLv >= 10;
-    const skCost     = AF_SKILL_COST[skillLv];
+    const skCost     = AF_SKILL_COST[skillLv - 1];
     const rune       = p.runeStone || { t1:0, t2:0, t3:0 };
     const canSkillUp = !atSkillMax && skCost &&
       (rune.t1 >= (skCost.t1||0) && rune.t2 >= (skCost.t2||0) && rune.t3 >= (skCost.t3||0));
@@ -18342,9 +18343,9 @@ function renderArtifactEnhance(el) {
 function skillUpArtifact(idx) {
   const af = gState.artifacts[idx];
   if (!af) return;
-  const skillLv = af.skillLv || 0;
+  const skillLv = af.skillLv || 1;
   if (skillLv >= 10) return;
-  const cost = AF_SKILL_COST[skillLv];
+  const cost = AF_SKILL_COST[skillLv - 1];
   const rune = gState.player.runeStone || { t1:0, t2:0, t3:0 };
   if (rune.t1 < (cost.t1||0) || rune.t2 < (cost.t2||0) || rune.t3 < (cost.t3||0)) return;
   rune.t1 -= cost.t1 || 0;
@@ -18897,16 +18898,15 @@ const AF_RANKUP_COST = [
 ];
 // AFスキルレベルアップ素材（神刻ルーン）Lv0→10
 const AF_SKILL_COST = [
-  { t1: 3, t2: 0, t3:0 },  // 0→1
-  { t1: 5, t2: 0, t3:0 },  // 1→2
-  { t1: 7, t2: 0, t3:0 },  // 2→3
-  { t1:10, t2: 1, t3:0 },  // 3→4
-  { t1:12, t2: 3, t3:0 },  // 4→5
-  { t1:15, t2: 5, t3:0 },  // 5→6
-  { t1:15, t2: 7, t3:1 },  // 6→7
-  { t1:15, t2:10, t3:3 },  // 7→8
-  { t1:20, t2:12, t3:5 },  // 8→9
-  { t1:20, t2:12, t3:5 },  // 9→10
+  { t1: 3, t2: 0, t3:0 },  // Lv1→2
+  { t1: 5, t2: 0, t3:0 },  // Lv2→3
+  { t1: 7, t2: 0, t3:0 },  // Lv3→4
+  { t1:10, t2: 1, t3:0 },  // Lv4→5
+  { t1:12, t2: 3, t3:0 },  // Lv5→6
+  { t1:15, t2: 5, t3:0 },  // Lv6→7
+  { t1:15, t2: 7, t3:1 },  // Lv7→8
+  { t1:15, t2:10, t3:3 },  // Lv8→9
+  { t1:20, t2:12, t3:5 },  // Lv9→10
 ];
 
 // 条件が満たされているか判定
