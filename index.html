@@ -2868,6 +2868,7 @@ img.item-icon {
       <div class="lab-tab" onclick="switchClanHallTab('mine')">⛏️ 鉱山</div>
       <div class="lab-tab" onclick="switchClanHallTab('lab')">🧪 研究所</div>
       <div class="lab-tab" onclick="switchClanHallTab('alch')">⚗️ 錬金工房</div>
+      <div class="lab-tab" onclick="switchClanHallTab('expedition')">🗺️ 遠征</div>
     </div>
     <div id="clan-hall-body"></div>
   </div>
@@ -7092,6 +7093,7 @@ function defaultState(clanName) {
     ownedCards: [],   // フェーズ1: 所持スキルカード一覧
     mine:{ lastCollected:Date.now(), level:{ speed:1, cap:1 } },
     lab:{ level:1, slots:[{ role:null, tier:'t1', lastCollected:Date.now() }] },
+    expeditions:{ slots:[{ regionId:null, startedAt:null }] },
     starMap:{ unlockedNodes:[] },
     library:{ discovered:[] },
     gacha:{
@@ -7204,6 +7206,8 @@ function normalizeState() {
   if (!p.kyoten) p.kyoten = { warrior:{t1:0,t2:0,t3:0}, vanguard:{t1:0,t2:0,t3:0}, ranger:{t1:0,t2:0,t3:0}, support:{t1:0,t2:0,t3:0}, trickster:{t1:0,t2:0,t3:0}, scout:{t1:0,t2:0,t3:0} }; // 響典
   if (!gState.lab) gState.lab = { level:1, slots:[{ role:null, tier:'t1', lastCollected:Date.now() }] };
   if (!Array.isArray(gState.lab.slots)) gState.lab.slots = [{ role:null, tier:'t1', lastCollected:Date.now() }];
+  if (!gState.expeditions) gState.expeditions = { slots:[{ regionId:null, startedAt:null }] };
+  if (!Array.isArray(gState.expeditions.slots)) gState.expeditions.slots = [{ regionId:null, startedAt:null }];
   if (!p.eiyuutan) p.eiyuutan = { warrior:0, vanguard:0, ranger:0, support:0, trickster:0, scout:0 }; // 英雄譚
   if (p.stardust === undefined) p.stardust = 0;
   if (p.cryptoSoulT1 === undefined) p.cryptoSoulT1 = 0;
@@ -17328,7 +17332,7 @@ function switchClanHallTab(tab) {
 }
 
 function renderClanHall() {
-  const tabKeys = ['mine', 'lab', 'alch'];
+  const tabKeys = ['mine', 'lab', 'alch', 'expedition'];
   const tabs = document.querySelectorAll('#clan-hall-tabs .lab-tab');
   tabs.forEach((t, i) => t.classList.toggle('active', tabKeys[i] === _clanHallTab));
 
@@ -17345,6 +17349,9 @@ function renderClanHall() {
   } else if (_clanHallTab === 'lab') {
     body.innerHTML = '<div id="lab-content"></div>';
     _renderClanHallLabTab(document.getElementById('lab-content'));
+  } else if (_clanHallTab === 'expedition') {
+    body.innerHTML = '<div id="expedition-content"></div>';
+    _renderExpedition(document.getElementById('expedition-content'));
   } else {
     body.innerHTML = '<div id="lab-content"></div>';
     _renderLabAlch(document.getElementById('lab-content'), gState.lab);
@@ -17584,6 +17591,146 @@ function _renderLabAlch(el, lab) {
   });
 
   el.appendChild(wrap);
+}
+
+// ===== 遠征 =====
+const EXPEDITION_REGIONS = [
+  {
+    id:'cave', icon:'⛏️', name:'石灰の洞窟', durationH:2,
+    desc:'序盤の洞窟。アトム秘石T1・T2が手に入る。',
+    rewards:[
+      { label:'アトム秘石T1', give:(p)=>{ const n=_expRandInt(3,8); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t1+=n; return `${itemIconHTML('atomT1','13px')} ×${n}`; } },
+      { label:'アトム秘石T2', chance:0.5, give:(p)=>{ const n=_expRandInt(1,3); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t2=(p.atomStone.t2||0)+n; return `${itemIconHTML('atomT2','13px')} ×${n}`; } },
+    ],
+  },
+  {
+    id:'valley', icon:'💎', name:'星晶の谷', durationH:4,
+    desc:'美しい渓谷。アトム秘石T2・T3とアトミックコアが取れる。',
+    rewards:[
+      { label:'アトム秘石T2', give:(p)=>{ const n=_expRandInt(2,5); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t2=(p.atomStone.t2||0)+n; return `${itemIconHTML('atomT2','13px')} ×${n}`; } },
+      { label:'アトム秘石T3', chance:0.4, give:(p)=>{ (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t3=(p.atomStone.t3||0)+1; return `${itemIconHTML('atomT3','13px')} ×1`; } },
+      { label:'アトミックコア', chance:0.6, give:(p)=>{ const n=_expRandInt(1,3); (p.atomCore=p.atomCore||{t1:0}).t1=(p.atomCore.t1||0)+n; return `${itemIconHTML('atomCore','13px')} ×${n}`; } },
+    ],
+  },
+  {
+    id:'tower', icon:'🗼', name:'廃墟の塔', durationH:6,
+    desc:'謎めいた廃墟。星屑の砂と神刻ルーンが出る。',
+    rewards:[
+      { label:'星屑の砂', give:(p)=>{ const n=_expRandInt(8,20); p.stardust=(p.stardust||0)+n; return `${itemIconHTML('stardust','13px')} ×${n}`; } },
+      { label:'神刻ルーンT1', chance:0.7, give:(p)=>{ const n=_expRandInt(1,3); (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t1=(p.runeStone.t1||0)+n; return `${itemIconHTML('runeT1','13px')} ×${n}`; } },
+      { label:'神刻ルーンT2', chance:0.3, give:(p)=>{ (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t2=(p.runeStone.t2||0)+1; return `${itemIconHTML('runeT2','13px')} ×1`; } },
+    ],
+  },
+  {
+    id:'peak', icon:'⛰️', name:'霊峰の奥地', durationH:8,
+    desc:'伝説の霊山。高レアなAF素材と英雄譚が手に入る。',
+    rewards:[
+      { label:'アトム秘石T3', give:(p)=>{ const n=_expRandInt(1,2); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t3=(p.atomStone.t3||0)+n; return `${itemIconHTML('atomT3','13px')} ×${n}`; } },
+      { label:'神刻ルーンT2', chance:0.5, give:(p)=>{ const n=_expRandInt(1,2); (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t2=(p.runeStone.t2||0)+n; return `${itemIconHTML('runeT2','13px')} ×${n}`; } },
+      { label:'神刻ルーンT3', chance:0.25, give:(p)=>{ (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t3=(p.runeStone.t3||0)+1; return `${itemIconHTML('runeT3','13px')} ×1`; } },
+    ],
+  },
+];
+// クランLvに応じた遠征スロット数
+function _expSlotCount() {
+  const lv = gState.player.level || 1;
+  if (lv >= 30) return 3;
+  if (lv >= 15) return 2;
+  return 1;
+}
+function _expRandInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function expeditionStart(slotIdx, regionId) {
+  if (!gState.expeditions) gState.expeditions = { slots: [] };
+  while (gState.expeditions.slots.length <= slotIdx) gState.expeditions.slots.push({ regionId:null, startedAt:null });
+  gState.expeditions.slots[slotIdx] = { regionId, startedAt: Date.now() };
+  saveState();
+  renderClanHall();
+}
+
+function expeditionCollect(slotIdx) {
+  const slot = (gState.expeditions?.slots || [])[slotIdx];
+  if (!slot?.regionId || !slot.startedAt) return;
+  const region = EXPEDITION_REGIONS.find(r => r.id === slot.regionId);
+  if (!region) return;
+  const elapsedH = (Date.now() - slot.startedAt) / 3600000;
+  if (elapsedH < region.durationH) return;
+
+  const p = gState.player;
+  const got = [];
+  region.rewards.forEach(r => {
+    if (r.chance === undefined || Math.random() < r.chance) {
+      got.push(r.give(p));
+    }
+  });
+  gState.expeditions.slots[slotIdx] = { regionId: null, startedAt: null };
+  saveState();
+  toast(`${region.icon} 遠征帰還！ ${got.join(' ')}`);
+  renderClanHall();
+}
+
+function _renderExpedition(el) {
+  const slotCount = _expSlotCount();
+  const slots = gState.expeditions?.slots || [];
+  while (slots.length < slotCount) slots.push({ regionId: null, startedAt: null });
+
+  let html = `<div class="lab-body">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">遠征に出発するとアイテムを持ち帰ります。スロットは Clan Lv.15 で2枠、Lv.30 で3枠に増えます。</div>`;
+
+  for (let i = 0; i < slotCount; i++) {
+    const slot = slots[i] || { regionId: null, startedAt: null };
+    const region = slot.regionId ? EXPEDITION_REGIONS.find(r => r.id === slot.regionId) : null;
+    const now = Date.now();
+    const elapsedH = region && slot.startedAt ? (now - slot.startedAt) / 3600000 : 0;
+    const done = region && elapsedH >= region.durationH;
+    const pct = region ? Math.min(100, (elapsedH / region.durationH) * 100) : 0;
+    const remaining = region && !done ? (() => {
+      const remSec = Math.max(0, Math.round((region.durationH * 3600000 - (now - slot.startedAt)) / 1000));
+      const h = Math.floor(remSec / 3600), m = Math.floor((remSec % 3600) / 60);
+      return h > 0 ? `${h}時間${m}分` : `${m}分`;
+    })() : '';
+
+    html += `<div class="lab-slot" style="margin-bottom:10px">
+      <div class="lab-slot-hd" style="font-size:12px;font-weight:700;color:var(--text2)">📤 遠征スロット ${i + 1}</div>`;
+
+    if (!region) {
+      // 未出発 → 地域選択
+      html += `<div style="font-size:11px;color:var(--text3);margin-bottom:8px">出発先を選んでください：</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">`;
+      EXPEDITION_REGIONS.forEach(reg => {
+        html += `<button onclick="expeditionStart(${i},'${reg.id}')" style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:8px;text-align:left;cursor:pointer">
+          <div style="font-size:16px">${reg.icon}</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text)">${reg.name}</div>
+          <div style="font-size:10px;color:var(--accent2)">${reg.durationH}時間</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:2px">${reg.desc}</div>
+        </button>`;
+      });
+      html += `</div>`;
+    } else if (done) {
+      // 帰還済み
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:20px">${region.icon}</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--green)">${region.name} — 帰還完了！</div>
+          <div style="font-size:10px;color:var(--text3)">${region.rewards.map(r=>r.label).join(' / ')}</div>
+        </div>
+        <button onclick="expeditionCollect(${i})" class="btn btn-gold btn-sm" style="margin-left:auto">回収</button>
+      </div>`;
+    } else {
+      // 遠征中
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:20px">${region.icon}</span>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:700;color:var(--text)">${region.name} 遠征中…</div>
+          <div style="font-size:10px;color:var(--text3)">残り ${remaining}</div>
+        </div>
+      </div>
+      <div class="lab-prog"><div class="lab-prog-fill" style="width:${pct.toFixed(1)}%"></div></div>`;
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+  el.innerHTML = html;
 }
 
 // ===== 鍛冶屋 =====
