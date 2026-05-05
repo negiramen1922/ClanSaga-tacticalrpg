@@ -2387,7 +2387,7 @@ img.item-icon {
           <option value="SR">SR</option>
           <option value="N">N</option>
         </select>
-        <button class="btn btn-outline btn-sm" onclick="openSmithyPanel('enhance')">🔧 強化・売却</button>
+        <button class="btn btn-outline btn-sm" onclick="openSmithyPanel('enhance')">🔧 強化</button>
       </div>
       <div id="artifact-list-wrap"></div>
     </div>
@@ -2516,7 +2516,7 @@ img.item-icon {
         <div class="base-card" id="base-smithy" onclick="openSmithyPanel()">
           <div class="bc-icon">🔨</div>
           <div class="bc-name">鍛冶屋</div>
-          <div class="bc-locked" id="smithy-locked-txt">強化・売却</div>
+          <div class="bc-locked" id="smithy-locked-txt">強化</div>
         </div>
         <div class="base-card" id="base-starmap" onclick="openStarMapPanel()">
           <div class="bc-icon">🌟</div>
@@ -17471,22 +17471,7 @@ function renderSmithyContent() {
   const el = document.getElementById('smithy-content');
   el.innerHTML = '';
 
-  const tabs = document.createElement('div');
-  tabs.className = 'smithy-tabs';
-  [['enhance','🔧 強化'],['melt','🔥 売却']].forEach(([id,label])=>{
-    const t = document.createElement('div');
-    t.className = 'smithy-tab' + (smithyActiveTab===id?' active':'');
-    t.textContent = label;
-    t.addEventListener('click', ()=>{ smithyActiveTab=id; renderSmithyContent(); });
-    tabs.appendChild(t);
-  });
-  el.appendChild(tabs);
-
-  if (smithyActiveTab === 'enhance') {
-    renderArtifactEnhance(el);
-  } else if (smithyActiveTab === 'melt') {
-    renderArtifactMelt(el);
-  }
+  renderArtifactEnhance(el);
 }
 
 // ===== アーティファクト一覧ページ =====
@@ -17600,8 +17585,6 @@ function _buildAfDetailHTML(uid) {
     </div>`;
   }).join('');
   const skCostStr = !atSkMax && skCost ? (skCost.t1?`ルーンT1×${skCost.t1}`:skCost.t2?`T2×${skCost.t2}`:`T3×${skCost.t3}`) : '';
-  const baseRefund = { N:2000, SR:5000, SSR:10000 }[def.rarity] || 2000;
-  const goldRefund = baseRefund + Math.floor(lv / 5) * 100;
   return `<div class="unit-detail-panel" style="overflow-y:auto;max-height:90vh;">
     <div class="udp-header" style="gap:14px">
       <div style="font-size:44px;filter:drop-shadow(0 0 10px ${rc})">${def.icon}</div>
@@ -17694,11 +17677,6 @@ function _buildAfDetailHTML(uid) {
         <button class="btn btn-sm btn-outline" onclick="_afDetailClose();openUnitDetail('${equippedBy.uid}')">詳細</button>
       </div>
     </div>` : ''}
-    <div style="padding:12px 16px">
-      <button class="btn" style="width:100%;background:rgba(224,85,85,0.1);color:var(--red);border:1px solid rgba(224,85,85,0.3);" onclick="afDetailMelt('${uid}')">
-        🔥 売却 (ゴールド +${fmt(goldRefund)})
-      </button>
-    </div>
   </div>`;
 }
 
@@ -17774,24 +17752,6 @@ function afDetailConstellate(uid) {
   toast(`${def?.icon||''} +${inst.conste}凸！ ATK・HP +${inst.conste*10}%`);
   const ov = document.getElementById('af-detail-modal');
   if (ov) ov.innerHTML = _buildAfDetailHTML(uid);
-}
-
-function afDetailMelt(uid) {
-  const idx = (gState.artifacts||[]).findIndex(a=>a.uid===uid);
-  if (idx < 0) return;
-  const inst = gState.artifacts[idx];
-  const def = ARTIFACT_POOL.find(d=>d.id===inst.id);
-  const baseRefund = def ? ({N:2000,SR:5000,SSR:10000}[def.rarity]||2000) : 2000;
-  const lv = inst.level||0;
-  const goldRefund = baseRefund + Math.floor(lv/5)*100;
-  if (!confirm(`${def?.name||'このAF'}を売却しますか？\nゴールド +${fmt(goldRefund)} を獲得します。`)) return;
-  gState.ownedUnits.forEach(u => { if (u.equippedArtifact===uid) u.equippedArtifact=null; });
-  gState.player.gold = (gState.player.gold||0) + goldRefund;
-  gState.artifacts.splice(idx, 1);
-  saveState(); updateTopBar();
-  _afDetailClose();
-  renderArtifactListTab();
-  toast(`${def?.icon||''} ${def?.name||'AF'} を売却（ゴールド +${fmt(goldRefund)}）`);
 }
 
 function constellateArtifact(uid, overlayEl) {
@@ -18055,42 +18015,6 @@ function rankUpArtifact(idx) {
   Audio.awaken();
   toast(`${ARTIFACT_POOL.find(d=>d.id===af.id)?.name||'AF'} をRank${af.rank}にランクアップ！`);
   renderSmithyContent();
-}
-
-// ===== アーティファクト売却タブ =====
-function renderArtifactMelt(el) {
-  const owned = gState.artifacts||[];
-  if (!owned.length) {
-    const h = document.createElement('div');
-    h.className = 'empty-hint';
-    h.textContent = '売却できるAFがありません';
-    el.appendChild(h);
-    return;
-  }
-  owned.forEach((af, i) => {
-    const def = ARTIFACT_POOL.find(d => d.id === af.id);
-    if (!def) return;
-    const lv = af.level || 0;
-    // 売却還元: ミスリル（ランクと強化段階に応じて）
-    const baseRefund = { N:20, SR:50, SSR:100 }[def.rarity] || 20;
-    const refund = baseRefund + Math.floor(lv / 5);
-    const rarityColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' }[def.rarity];
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;border-radius:6px;';
-    row.innerHTML = `<span style="font-size:20px">${def.icon}</span>
-      <div style="flex:1">
-        <div style="font-size:12px;font-weight:700;color:var(--text)">${def.name} <span style="color:${rarityColor}">[${def.rarity}]</span></div>
-        <div style="font-size:10px;color:var(--text3)">Lv${lv} · ATK+${afMainScale(def.mainStat.atk||0,lv)} HP+${afMainScale(def.mainStat.hp||0,lv)}</div>
-      </div>
-      <span style="font-size:11px;color:var(--gold);margin-right:8px">⛏️+${refund}</span>`;
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-sm';
-    btn.style.cssText = 'background:rgba(224,85,85,0.15);color:var(--red);border:1px solid rgba(224,85,85,0.3);';
-    btn.textContent = '売却';
-    btn.addEventListener('click', () => meltArtifact(i));
-    row.appendChild(btn);
-    el.appendChild(row);
-  });
 }
 
 // ===== 星図盤 =====
@@ -18512,7 +18436,7 @@ function renderBaseTab() {
   const smithyTxt = document.getElementById('smithy-locked-txt');
   const starTxt   = document.getElementById('starmap-locked-txt');
   const libTxt    = document.getElementById('library-locked-txt');
-  if (smithyTxt) smithyTxt.textContent = '鋳造・強化・売却';
+  if (smithyTxt) smithyTxt.textContent = '鋳造・強化';
   if (starTxt)   starTxt.textContent   = lv>=11 ? 'ノードを解放して強化' : 'Clan Lv.11で解放';
   if (libTxt)    libTxt.textContent    = `収集: ${new Set(gState.ownedUnits.map(u=>u.classId)).size}/${Object.keys(CLASS_DATA).length}クラス`;
 
@@ -18776,7 +18700,6 @@ function renderArtifactForge(el) {
         <span style="font-weight:700">${def.name}</span>
         ${equippedBy?`<span style="font-size:9px;color:var(--accent2);margin-left:4px">[${equippedBy.name}]</span>`:''}
         <div style="color:var(--text3);margin-top:2px">Lv.${inst.level||0} / Rank${inst.rank||0}</div>
-        <button class="btn btn-sm" onclick="meltArtifact(${idx})" style="margin-top:4px;font-size:9px;background:rgba(224,85,85,0.12);color:var(--red);border-color:rgba(224,85,85,0.3)">売却(💰+${{N:2000,SR:5000,SSR:10000}[def.rarity]||2000}G)</button>
       </div>`;
     });
     forgeHtml += `</div>`;
@@ -18818,22 +18741,6 @@ function doArtifactGacha() {
   saveState();
   updateTopBar();
   renderArtifactForge(document.getElementById('smithy-content'));
-}
-
-function meltArtifact(idx) {
-  const inst = (gState.artifacts||[])[idx];
-  if (!inst) return;
-  const def = ARTIFACT_POOL.find(d => d.id === inst.id);
-  const baseRefund = def ? ({ N:2000, SR:5000, SSR:10000 }[def.rarity] || 2000) : 2000;
-  const lv = inst.level || 0;
-  const refund = baseRefund + Math.floor(lv / 5) * 100;
-  // 装備中のユニットから外す
-  gState.ownedUnits.forEach(u => { if (u.equippedArtifact === inst.uid) u.equippedArtifact = null; });
-  gState.player.gold = (gState.player.gold||0) + refund;
-  gState.artifacts.splice(idx, 1);
-  saveState();
-  updateTopBar();
-  renderSmithyContent();
 }
 
 // ===== アクセサリー関数群 =====
