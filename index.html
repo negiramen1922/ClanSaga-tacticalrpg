@@ -9434,8 +9434,8 @@ function ultUpChar(uid) {
   const cls = CLASS_DATA[u.classId];
   const prog = gState.unitProgress[uid] || { level:1 };
   const ultLv = prog.ultLv || 1;
-  if (ultLv >= 4) return;
-  const costs = [1, 2, 3];
+  if (ultLv >= 10) return;
+  const costs = [1, 2, 3, 5, 7, 10, 12, 15, 20];
   const cost = costs[ultLv - 1];
   const roleKey = {'アタッカー':'warrior','タンク':'vanguard','レンジ':'ranger','サポート':'support','スカウト':'scout','トリックスター':'trickster'}[cls.role] || 'warrior';
   if (!gState.player.eiyuutan) gState.player.eiyuutan = {};
@@ -9447,6 +9447,36 @@ function ultUpChar(uid) {
   const ult = cls.ultimates?.find(x => x.id === u.ultimateId) || cls.ultimates?.[0];
   saveState();
   toast(`${u.name} 【${ult?.name||'必殺技'}】 Lv.${ultLv + 1} に強化！`);
+  openUnitDetail(uid);
+}
+
+// キャラ凸: SSR spec×60+gen×10 / SR spec×15+gen×0 per level, max 6
+function getCharRarity(classId) {
+  if ((CHAR_POOL[3]||[]).includes(classId)) return 3;
+  if ((CHAR_POOL[2]||[]).includes(classId)) return 2;
+  return 2;
+}
+function charConsteCost(classId) {
+  const rarity = getCharRarity(classId);
+  return rarity === 3 ? { spec: 60, gen: 10 } : { spec: 15, gen: 0 };
+}
+function constellateChar(uid) {
+  const u = gState.ownedUnits.find(x => x.uid === uid);
+  if (!u) return;
+  const prog = gState.unitProgress[uid] || { level: 1 };
+  const conste = prog.conste || 0;
+  if (conste >= 6) return;
+  const cost = charConsteCost(u.classId);
+  if (!gState.player.unitFragments) gState.player.unitFragments = {};
+  const specHave = gState.player.unitFragments[u.classId] || 0;
+  const genHave  = gState.player.genericFragments || 0;
+  if (specHave < cost.spec || genHave < cost.gen) return;
+  gState.player.unitFragments[u.classId] = specHave - cost.spec;
+  if (cost.gen > 0) gState.player.genericFragments = genHave - cost.gen;
+  prog.conste = conste + 1;
+  gState.unitProgress[uid] = prog;
+  saveState();
+  toast(`${u.name} ★${prog.conste}凸！ ATK・HP +${prog.conste * 5}%`);
   openUnitDetail(uid);
 }
 
@@ -9684,6 +9714,12 @@ function calcStats(unit) {
   cridam += ac.cridam || 0;
   pdef   += (ac.pres || ac.pdef || 0);
   mdef   += (ac.mres || ac.mdef || 0) + (ac.bres || 0) + (ac.lres || 0);
+  // キャラ凸ボーナス: +5% ATK・HP per conste level
+  const _conste = prog.conste || 0;
+  if (_conste > 0) {
+    atk = Math.floor(atk * (1 + _conste * 0.05));
+    hp  = Math.floor(hp  * (1 + _conste * 0.05));
+  }
   return {
     atk, hp,
     spd,
@@ -12108,7 +12144,7 @@ function doAttack(attacker, targets, skill) {
 }
 
 function performUlt(c, enemies, allies) {
-  const _ultLvMult = [1.0, 1.10, 1.25, 1.50][(c.ultLv||1)-1] || 1.0;
+  const _ultLvMult = [1.0, 1.10, 1.25, 1.50, 1.75, 2.00, 2.30, 2.60, 3.00, 3.50][(c.ultLv||1)-1] || 1.0;
   const _ultBoost  = 1 + ((c._ultBoostPct||0) / 100);
   const ult = (_ultLvMult > 1.0 || _ultBoost > 1.0)
     ? { ...c.ultimate, power: (c.ultimate.power||1)*_ultLvMult*_ultBoost, shieldRatio: (c.ultimate.shieldRatio||0.5)*_ultLvMult }
@@ -16082,13 +16118,13 @@ function renderTacticsOrderList() {
     el.appendChild(sec3);
 
     const _ultLv = prog.ultLv || 1;
-    const _atUltMax = _ultLv >= 4;
-    const _ultCosts = [1, 2, 3];
+    const _atUltMax = _ultLv >= 10;
+    const _ultCosts = [1, 2, 3, 5, 7, 10, 12, 15, 20];
     const _ultUpCost = _atUltMax ? 0 : _ultCosts[_ultLv - 1];
     const _eiyuutanRoleKey = {'アタッカー':'warrior','タンク':'vanguard','レンジ':'ranger','サポート':'support','スカウト':'scout','トリックスター':'trickster'}[cls.role] || 'warrior';
     const _eiyuutanHave = (gState.player.eiyuutan || {})[_eiyuutanRoleKey] || 0;
     const _canUltUp = !_atUltMax && _eiyuutanHave >= _ultUpCost;
-    const _ultLvMults = ['×1.00','×1.10','×1.25','×1.50'];
+    const _ultLvMults = ['×1.00','×1.10','×1.25','×1.50','×1.75','×2.00','×2.30','×2.60','×3.00','×3.50'];
     const _eiyuutanIconKey = `eiyuutan${_eiyuutanRoleKey.charAt(0).toUpperCase()+_eiyuutanRoleKey.slice(1)}`;
     const _ultUpBtn = _atUltMax
       ? `<span style="font-size:9px;color:var(--green);font-weight:700">MAX</span>`
@@ -16115,6 +16151,55 @@ function renderTacticsOrderList() {
         ${_ultUpBtn}
       </div>`;
     el.appendChild(ultRow);
+  }
+
+  // ────────────────────────────────────────
+  // セクション4: キャラ凸
+  // ────────────────────────────────────────
+  {
+    const _conste = prog.conste || 0;
+    const _atConsteMax = _conste >= 6;
+    const _consteCost = charConsteCost(u.classId);
+    const _specHave = (gState.player.unitFragments || {})[u.classId] || 0;
+    const _genHave  = gState.player.genericFragments || 0;
+    const _canConste = !_atConsteMax && _specHave >= _consteCost.spec && _genHave >= _consteCost.gen;
+    const _rarityLbl = getCharRarity(u.classId) === 3 ? 'SSR' : 'SR';
+    const _consteDots = Array.from({length:6}, (_,i) =>
+      `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 2px;background:${i<_conste?'var(--gold)':'var(--border)'}"></span>`
+    ).join('');
+    const _costStr = _consteCost.gen > 0
+      ? `専用素材×${_consteCost.spec} + 汎用×${_consteCost.gen}`
+      : `専用素材×${_consteCost.spec}`;
+    const _haveStr = _consteCost.gen > 0
+      ? `専用 ${_specHave} / 汎用 ${_genHave}`
+      : `専用 ${_specHave}`;
+    const _consteBtn = _atConsteMax
+      ? `<span style="font-size:9px;color:var(--gold);font-weight:700">★MAX</span>`
+      : `<button onclick="constellateChar('${uid}')" style="font-size:10px;padding:2px 7px;background:${_canConste?'rgba(240,180,50,0.2)':'rgba(60,60,60,0.2)'};color:${_canConste?'var(--gold)':'var(--text3)'};border:1px solid ${_canConste?'rgba(240,180,50,0.5)':'var(--border)'};border-radius:4px;cursor:${_canConste?'pointer':'default'}" ${_canConste?'':'disabled'}>★${_conste+1}凸へ</button>`;
+    const sec4 = document.createElement('div');
+    sec4.className = 'tac-section-label';
+    sec4.style.marginTop = '10px';
+    sec4.textContent = '★ キャラ凸';
+    el.appendChild(sec4);
+    const consteRow = document.createElement('div');
+    consteRow.style.cssText = `
+      background:linear-gradient(135deg,rgba(240,180,50,0.08),rgba(240,120,50,0.06));
+      border:1px solid rgba(240,180,50,0.3);border-left:3px solid var(--gold);
+      padding:8px 10px;
+    `;
+    consteRow.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid rgba(240,180,50,0.2);">
+        <span style="font-size:13px">★</span>
+        <span style="font-size:11px;font-weight:700;color:var(--gold);">キャラ凸 ${_conste} / 6</span>
+        <span style="font-size:9px;color:var(--text3);padding:1px 5px;border:1px solid var(--border);border-radius:3px;margin-left:2px">${_rarityLbl}</span>
+        <span style="margin-left:auto">${_consteDots}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">ATK・HP +${_conste * 5}%（最大+30%）</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
+        <span style="font-size:10px;color:var(--text3);">${_costStr}<br><span style="color:var(--text2)">${_haveStr}</span></span>
+        ${_consteBtn}
+      </div>`;
+    el.appendChild(consteRow);
   }
 
   saveState(); // tactics同期を保存
