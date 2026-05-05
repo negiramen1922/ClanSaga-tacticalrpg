@@ -21,15 +21,10 @@
 Claude CodeはNotionのMCPツールを使ってタスク・仕様・ゲームデータを読み書きできる。
 実装前に必ず仕様ページを参照し、完了後はタスクを更新すること。
 
-**メインハブ（新）**: https://www.notion.so/Clam-Saga-Tactical-RPG-0ae0d58e7492821eb15181bffb7927b0
-
-> ⚠️ 上記の新しいハブページにアクセスできない場合は、Notionインテグレーションとの共有設定を確認すること。
-> 共有設定が完了するまでは旧ハブ（下記）を参照する。
-
-### 開発管理ページ（旧ハブ配下）
+### 開発管理ページ
 | 用途 | URL |
 |------|-----|
-| プロジェクトハブ（旧） | https://www.notion.so/33568b72a0b78075bb92f00eda31500d |
+| プロジェクトハブ | https://www.notion.so/Clam-Saga-Tactical-RPG-33568b72a0b78075bb92f00eda31500d |
 | タスクリスト（つぎやること） | https://www.notion.so/34868b72a0b7803f8c0bddd309fb021f |
 | 企画メモ（追加要素） | https://www.notion.so/32e68b72a0b78186ad17d860dcd01fd0 |
 | 設計書 v1.0 | https://www.notion.so/33a68b72a0b7809bbfb8e3d5bd9722db |
@@ -47,7 +42,7 @@ Claude CodeはNotionのMCPツールを使ってタスク・仕様・ゲームデ
 ## 開発ワークフロー
 
 ### セッション開始時
-1. 新ハブページ（または旧ハブの「つぎやること」）をNotionで確認する
+1. プロジェクトハブまたは「つぎやること」をNotionで確認する
 2. 実装する機能に関連する設計書・DBページを参照して仕様を理解する
 
 ### 実装完了後
