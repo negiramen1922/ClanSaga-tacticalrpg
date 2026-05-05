@@ -8803,8 +8803,7 @@ function renderHomeTab() {
     if (!cls) return;
     const prog = gState.unitProgress[u.uid] || {level:1};
     const rarity = getRarity(u);
-    const _miniRankIcon = CHAR_RANKS[prog.rank||0]?.icon||'🟤';
-    el.innerHTML += `<div class="unit-slot-mini ${rarity}"><span class="class-icon">${classIconHTML(u.classId,"32px","border-radius:4px")}</span><div class="unit-info"><div class="name">${u.name}</div><div class="lv" style="display:flex;align-items:center;gap:3px">${roleIconHTML(u.classId,"12px")} Lv.${prog.level} ${_miniRankIcon}</div></div></div>`;
+    el.innerHTML += `<div class="unit-slot-mini ${rarity}"><span class="class-icon">${classIconHTML(u.classId,"32px","border-radius:4px")}</span><div class="unit-info"><div class="name">${u.name}</div><div class="lv" style="display:flex;align-items:center;gap:3px">${roleIconHTML(u.classId,"12px")} Lv.${prog.level}</div></div></div>`;
   };
   // 前3枠はhome-front、後3枠はhome-back（表示上の区分のみ）
   for (let i=0;i<3;i++) { renderMini(slots[i], frontEl); }
@@ -9725,10 +9724,6 @@ function calcStats(unit) {
     atk = Math.floor(atk * (1 + _conste * 0.05));
     hp  = Math.floor(hp  * (1 + _conste * 0.05));
   }
-  // キャラランクボーナス
-  const _rankDef = CHAR_RANKS[prog.rank || 0] || CHAR_RANKS[0];
-  if (_rankDef.atkPct > 0) atk = Math.floor(atk * (1 + _rankDef.atkPct / 100));
-  if (_rankDef.hpPct  > 0) hp  = Math.floor(hp  * (1 + _rankDef.hpPct  / 100));
   return {
     atk, hp,
     spd,
@@ -13398,11 +13393,6 @@ function endBattle(victory) {
       const starPt = 3;
       drops.push({ name:`⭐ スターPt ×`+starPt });
       gState.player.starMapPoints = (gState.player.starMapPoints||0) + starPt;
-      // 試練石ドロップ（難易度に応じて増量）
-      const sh = SHRINE_STAGES.find(s => s.id === battleContext.shrineId);
-      const _stoneDrop = sh ? (sh.diff || 1) * 2 : 2;
-      gState.player.rankStones = (gState.player.rankStones || 0) + _stoneDrop;
-      drops.push({ name:`⬆ 試練石 ×${_stoneDrop}` });
     }
     if (battleContext.type==='abyss') {
       onAbyssVictory(battleContext.layerId, battleContext.stage);
@@ -16228,47 +16218,6 @@ function renderTacticsOrderList() {
     el.appendChild(consteRow);
   }
 
-  // ────────────────────────────────────────
-  // セクション5: キャラランク
-  // ────────────────────────────────────────
-  {
-    const _rank = prog.rank || 0;
-    const _rankDef = CHAR_RANKS[_rank];
-    const _atRankMax = _rank >= CHAR_RANKS.length - 1;
-    const _nextRank  = _atRankMax ? null : CHAR_RANKS[_rank + 1];
-    const _rankStones = gState.player.rankStones || 0;
-    const _canRankUp = !_atRankMax && _rankStones >= (_nextRank?.cost || 0);
-    const _rankDots = CHAR_RANKS.map((r, i) =>
-      `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 2px;background:${i <= _rank ? 'var(--accent2)' : 'var(--border)'}" title="${r.label}"></span>`
-    ).join('');
-    const _rankUpBtn = _atRankMax
-      ? `<span style="font-size:9px;color:var(--accent2);font-weight:700">MAX</span>`
-      : `<button onclick="charRankUp('${uid}')" style="font-size:10px;padding:2px 7px;background:${_canRankUp?'rgba(74,180,255,0.2)':'rgba(60,60,60,0.2)'};color:${_canRankUp?'var(--accent2)':'var(--text3)'};border:1px solid ${_canRankUp?'rgba(74,180,255,0.5)':'var(--border)'};border-radius:4px;cursor:${_canRankUp?'pointer':'default'}" ${_canRankUp?'':'disabled'}>${_nextRank?.icon} ${_nextRank?.label}へ</button>`;
-    const sec5 = document.createElement('div');
-    sec5.className = 'tac-section-label';
-    sec5.style.marginTop = '10px';
-    sec5.textContent = '⬆ キャラランク';
-    el.appendChild(sec5);
-    const rankRow = document.createElement('div');
-    rankRow.style.cssText = `
-      background:linear-gradient(135deg,rgba(74,180,255,0.08),rgba(74,127,255,0.06));
-      border:1px solid rgba(74,180,255,0.3);border-left:3px solid var(--accent2);
-      padding:8px 10px;
-    `;
-    rankRow.innerHTML = `
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid rgba(74,180,255,0.2);">
-        <span style="font-size:14px">${_rankDef.icon}</span>
-        <span style="font-size:11px;font-weight:700;color:var(--accent2);">${_rankDef.label} ランク</span>
-        <span style="margin-left:auto">${_rankDots}</span>
-      </div>
-      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">ATK・HP +${_rankDef.atkPct}%（最大+50%）</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
-        <span style="font-size:10px;color:var(--text3);">${_atRankMax ? 'ランク最大' : `試練石×${_nextRank?.cost}`}<br><span style="color:var(--text2)">所持 ${_rankStones}</span></span>
-        ${_rankUpBtn}
-      </div>`;
-    el.appendChild(rankRow);
-  }
-
   saveState(); // tactics同期を保存
 
   // ── イベント: 優先度プルダウン ──
@@ -17683,29 +17632,6 @@ const EXPEDITION_REGIONS = [
   },
 ];
 // クランLvに応じた遠征スロット数
-// ===== キャラランクアップ =====
-const CHAR_RANKS = [
-  { name:'C',  icon:'🟤', label:'カッパー',    cost:0,   atkPct:0,  hpPct:0  },
-  { name:'B',  icon:'⚪', label:'シルバー',    cost:15,  atkPct:10, hpPct:10 },
-  { name:'A',  icon:'🟡', label:'ゴールド',    cost:30,  atkPct:20, hpPct:20 },
-  { name:'S',  icon:'🔵', label:'プラチナ',    cost:60,  atkPct:35, hpPct:35 },
-  { name:'SS', icon:'💜', label:'オリハルコン', cost:120, atkPct:50, hpPct:50 },
-];
-function charRankUp(uid) {
-  const u = gState.ownedUnits.find(x => x.uid === uid);
-  if (!u) return;
-  const prog = gState.unitProgress[uid] || { level:1 };
-  const rank = prog.rank || 0;
-  if (rank >= CHAR_RANKS.length - 1) return;
-  const nextRank = CHAR_RANKS[rank + 1];
-  if ((gState.player.rankStones || 0) < nextRank.cost) return;
-  gState.player.rankStones = (gState.player.rankStones || 0) - nextRank.cost;
-  prog.rank = rank + 1;
-  gState.unitProgress[uid] = prog;
-  saveState();
-  toast(`${u.name} ランクアップ！ ${CHAR_RANKS[rank].icon} → ${nextRank.icon} ${nextRank.label} （ATK/HP +${nextRank.atkPct}%）`);
-  openUnitDetail(uid);
-}
 
 function _expSlotCount() {
   const lv = gState.player.level || 1;
@@ -21338,7 +21264,6 @@ document.addEventListener('DOMContentLoaded', () => {
       { id:'dbg_ether',       label:'EXPポット',      key:'ether' },
       { id:'dbg_awakePot',    label:'覚醒ポット',      key:'awakePot' },
       { id:'dbg_genericFrag', label:'汎用凸素材',      key:'genericFragments' },
-      { id:'dbg_rankStones',  label:'試練石',           key:'rankStones' },
       { id:'dbg_stardust',    label:'星屑の砂',        key:'stardust' },
       { id:'dbg_afMileage',   label:'AFマイレージ',    key:'afMileage' },
       { id:'dbg_charMileage', label:'キャラマイレージ', key:'charMileage' },
@@ -21378,8 +21303,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.applyDebugValues = function() {
     const p = gState.player;
-    const numKeys = ['starCrystal','gold','ether','awakePot','genericFragments','stardust','afMileage','charMileage','stamina','vipLevel','rankStones'];
-    const ids     = ['dbg_starCrystal','dbg_gold','dbg_ether','dbg_awakePot','dbg_genericFrag','dbg_stardust','dbg_afMileage','dbg_charMileage','dbg_stamina','dbg_vipLevel','dbg_rankStones'];
+    const numKeys = ['starCrystal','gold','ether','awakePot','genericFragments','stardust','afMileage','charMileage','stamina','vipLevel'];
+    const ids     = ['dbg_starCrystal','dbg_gold','dbg_ether','dbg_awakePot','dbg_genericFrag','dbg_stardust','dbg_afMileage','dbg_charMileage','dbg_stamina','dbg_vipLevel'];
     ids.forEach((id, i) => {
       const el = document.getElementById(id);
       if (el) p[numKeys[i]] = Math.max(0, parseInt(el.value)||0);
