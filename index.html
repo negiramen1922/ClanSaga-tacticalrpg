@@ -9161,14 +9161,22 @@ function openUnitDetail(uid) {
   const openingSkillHTML = cls.openingSkill ? (() => {
     const sk = cls.openingSkill;
     const bColor = _skillBorderColor[sk.type] || 'var(--gold)';
+    const opLv = (prog.skillLevels||{})[sk.id] || 1;
+    const _acts = cls.activeSkills || [];
+    const _lv1 = (prog.skillLevels||{})[_acts[0]?.id] || 1;
+    const _lv2 = _acts[1] ? ((prog.skillLevels||{})[_acts[1].id] || 1) : _lv1;
+    const _calcNote = `スキル1(Lv${_lv1}) + スキル2(Lv${_lv2}) ÷ 2`;
     return `
     <div class="sk-card" style="border-color:rgba(201,168,76,0.4);border-left-color:${bColor};">
       <div class="sk-card-header">
         <span class="sk-card-name">${sk.name}</span>
-        ${_typeIcon('assets/images/card-type-opening.png','開幕','tac-badge-type-opn')}
+        <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          ${_typeIcon('assets/images/card-type-opening.png','開幕','tac-badge-type-opn')}
+          <span style="font-size:9px;font-weight:700;color:var(--gold);font-family:'Rajdhani'">Lv.${opLv}</span>
+        </span>
       </div>
       <div class="sk-card-desc">${sk.desc || ''}</div>
-      <div class="sk-card-meta">${_skillTypeBadge(sk.type)}</div>
+      <div style="font-size:9px;color:var(--text3);margin-top:3px">⟳ ${_calcNote} の平均（切捨て）</div>
     </div>`;
   })() : '';
   const _kyoRoleKey = {'アタッカー':'Warrior','タンク':'Vanguard','レンジ':'Ranger','サポート':'Support','スカウト':'Scout','トリックスター':'Trickster'}[cls.role] || 'Warrior';
@@ -9213,14 +9221,22 @@ function openUnitDetail(uid) {
       <div class="sk-card-meta" style="display:flex;align-items:center;justify-content:space-between;gap:4px">${_skillTypeBadge(sk.type, sk.cd)} ${skUpBtn}</div>
     </div>`;
   }).join('');
-  const passiveSkillsHTML = (cls.passiveSkills||[]).map(sk => `
+  const passiveSkillsHTML = (cls.passiveSkills||[]).map((sk, pIdx) => {
+    const pLv = (prog.skillLevels||{})[sk.id] || 1;
+    const linkedActName = (cls.activeSkills||[])[pIdx]?.name;
+    return `
     <div class="sk-card" style="border-color:rgba(100,200,100,0.3);border-left:3px solid var(--green,#60c060);">
       <div class="sk-card-header">
         <span class="sk-card-name">${sk.name}</span>
-        ${_typeIcon('assets/images/card-type-passive.png','パッシブ','tac-badge-type-pas')}
+        <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          ${_typeIcon('assets/images/card-type-passive.png','パッシブ','tac-badge-type-pas')}
+          <span style="font-size:9px;font-weight:700;color:var(--green);font-family:'Rajdhani'">Lv.${pLv}</span>
+        </span>
       </div>
       <div class="sk-card-desc">${sk.desc || ''}</div>
-    </div>`).join('');
+      ${linkedActName ? `<div style="font-size:9px;color:var(--text3);margin-top:3px">⟳ ${linkedActName} と連動</div>` : ''}
+    </div>`;
+  }).join('');
 
   // Passive HTML
   const ROMAN = ['I','II','III'];
@@ -9425,6 +9441,22 @@ function skillUpChar(uid, skillId) {
   bag.t3 -= cost.t3 || 0;
   gState.player.kyoten[kyoKey] = bag;
   prog.skillLevels[skillId] = skLv + 1;
+  // アクティブスキル1→パッシブ1、スキル2→パッシブ2 に連動
+  const _actIdx = (cls.activeSkills || []).findIndex(s => s.id === skillId);
+  if (_actIdx === 0 || _actIdx === 1) {
+    const _linkedPassive = (cls.passiveSkills || [])[_actIdx];
+    if (_linkedPassive) {
+      const _pLv = prog.skillLevels[_linkedPassive.id] || 1;
+      if (_pLv < 10) prog.skillLevels[_linkedPassive.id] = _pLv + 1;
+    }
+  }
+  // 開幕スキルレベル = floor((アクティブ1 + アクティブ2) / 2)
+  if (cls.openingSkill) {
+    const _acts = cls.activeSkills || [];
+    const _lv1 = prog.skillLevels[_acts[0]?.id] || 1;
+    const _lv2 = _acts[1] ? (prog.skillLevels[_acts[1].id] || 1) : _lv1;
+    prog.skillLevels[cls.openingSkill.id] = Math.max(1, Math.floor((_lv1 + _lv2) / 2));
+  }
   gState.unitProgress[uid] = prog;
   const sk = (cls.activeSkills||[]).find(s => s.id === skillId);
   saveState();
