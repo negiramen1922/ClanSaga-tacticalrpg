@@ -9168,7 +9168,11 @@ function openUnitDetail(uid) {
   })() : '';
   const _kyoRoleKey = {'アタッカー':'Warrior','タンク':'Vanguard','レンジ':'Ranger','サポート':'Support','スカウト':'Scout','トリックスター':'Trickster'}[cls.role] || 'Warrior';
   const _kyoBag = (gState.player.kyoten||{})[_kyoRoleKey.toLowerCase()] || {t1:0,t2:0,t3:0};
-  const _KSCOST = [{t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1}];
+  const _KSCOST = [
+    {t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1},  // Lv1→4
+    {t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1},  // Lv4→7
+    {t1:0,t2:2,t3:1},{t1:0,t2:0,t3:2},{t1:0,t2:0,t3:3},  // Lv7→10
+  ];
   const activeSkillsHTML = (cls.activeSkills||[]).map(sk => {
     const bColor = _skillBorderColor[sk.type] || 'var(--border)';
     const isSupport = sk.type === 'buff';
@@ -9176,12 +9180,12 @@ function openUnitDetail(uid) {
     const typeLabelText = isSupport ? '支援' : '攻撃';
     const typeLabelCls  = isSupport ? 'tac-badge-type-sup' : 'tac-badge-type-atk';
     const skLv = (prog.skillLevels||{})[sk.id] || 1;
-    const atSkMax = skLv >= 4;
+    const atSkMax = skLv >= 10;
     const skCost = atSkMax ? null : _KSCOST[skLv - 1];
     const canSkUp = skCost && _kyoBag.t1>=(skCost.t1||0) && _kyoBag.t2>=(skCost.t2||0) && _kyoBag.t3>=(skCost.t3||0);
     const skIconKey = `kyoten${_kyoRoleKey}T${skLv <= 3 ? skLv : 3}`;
-    const skCostStr = skCost ? (skCost.t1 ? `T1×${skCost.t1}` : skCost.t2 ? `T2×${skCost.t2}` : `T3×${skCost.t3}`) : '';
-    const skHaveStr = skCost ? (skCost.t1 ? `${_kyoBag.t1}` : skCost.t2 ? `${_kyoBag.t2}` : `${_kyoBag.t3}`) : '';
+    const skCostStr = skCost ? [skCost.t1?`T1×${skCost.t1}`:'',skCost.t2?`T2×${skCost.t2}`:'',skCost.t3?`T3×${skCost.t3}`:''].filter(Boolean).join('+') : '';
+    const skHaveStr = skCost ? (skCost.t3 ? `${_kyoBag.t3}` : skCost.t2 ? `${_kyoBag.t2}` : `${_kyoBag.t1}`) : '';
     const skUpBtn = atSkMax
       ? `<span style="font-size:9px;color:var(--green);font-weight:700">MAX</span>`
       : `<button onclick="skillUpChar('${uid}','${sk.id}')" style="font-size:10px;padding:2px 7px;display:inline-flex;align-items:center;gap:3px;background:${canSkUp?'rgba(200,160,40,0.2)':'rgba(60,60,60,0.2)'};color:${canSkUp?'var(--gold)':'var(--text3)'};border:1px solid ${canSkUp?'rgba(200,160,40,0.4)':'var(--border)'};border-radius:4px;cursor:${canSkUp?'pointer':'default'}" ${canSkUp?'':'disabled'}>${itemIconHTML(skIconKey,'11px')} ${skCostStr}<span style="font-size:8px;opacity:0.7">(${skHaveStr})</span> →Lv.${skLv+1}</button>`;
@@ -9388,8 +9392,12 @@ function skillUpChar(uid, skillId) {
   const prog = gState.unitProgress[uid] || {level:1};
   if (!prog.skillLevels) prog.skillLevels = {};
   const skLv = prog.skillLevels[skillId] || 1;
-  if (skLv >= 4) return;
-  const KSCOST = [{t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1}];
+  if (skLv >= 10) return;
+  const KSCOST = [
+    {t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1},
+    {t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1},
+    {t1:0,t2:2,t3:1},{t1:0,t2:0,t3:2},{t1:0,t2:0,t3:3},
+  ];
   const cost = KSCOST[skLv - 1];
   const kyoKey = {'アタッカー':'warrior','タンク':'vanguard','レンジ':'ranger','サポート':'support','スカウト':'scout','トリックスター':'trickster'}[cls.role] || 'warrior';
   if (!gState.player.kyoten) gState.player.kyoten = {};
@@ -17876,7 +17884,7 @@ function _buildAfDetailHTML(uid) {
   const maxLv   = AF_RANK_MAX[rank];
   const atLvMax = lv >= maxLv;
   const atRankMax = rank >= 3;
-  const atSkMax   = skillLv >= 3;
+  const atSkMax   = skillLv >= 10;
   const atConsteMax = conste >= 9;
   const rc = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' }[def.rarity] || 'var(--text3)';
   const p  = gState.player;
@@ -17976,11 +17984,11 @@ function _buildAfDetailHTML(uid) {
     <div class="udp-section">
       <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center">
         <span>ARTIFACT SKILL</span>
-        <span style="font-size:10px;color:var(--text2);font-weight:normal">スキルLv ${skillLv} / 3</span>
+        <span style="font-size:10px;color:var(--text2);font-weight:normal">スキルLv ${skillLv} / 10</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
         <div style="flex:1;display:flex;gap:3px">
-          ${Array.from({length:3},(_,i)=>`<div style="flex:1;height:4px;border-radius:2px;background:${i<skillLv?'var(--purple)':'var(--border)'}"></div>`).join('')}
+          ${Array.from({length:10},(_,i)=>`<div style="flex:1;height:4px;border-radius:2px;background:${i<skillLv?'var(--purple)':'var(--border)'}"></div>`).join('')}
         </div>
         ${!atSkMax
           ? `<button class="btn btn-sm" style="background:rgba(160,80,240,0.15);color:#c084fc;border:1px solid #c084fc;" ${canSkillUp?'':'disabled'} onclick="afDetailSkillUp('${uid}')">スキルLv↑ (${skCostStr})</button>`
@@ -18062,7 +18070,7 @@ function afDetailSkillUp(uid) {
   const inst = (gState.artifacts||[]).find(a=>a.uid===uid);
   if (!inst) return;
   const skillLv = inst.skillLv||0;
-  if (skillLv >= 3) return;
+  if (skillLv >= 10) return;
   const cost = AF_SKILL_COST[skillLv];
   const rune = gState.player.runeStone||{t1:0,t2:0,t3:0};
   if (rune.t1<(cost.t1||0)||rune.t2<(cost.t2||0)||rune.t3<(cost.t3||0)) { showBonusToast('神刻ルーンが不足しています'); return; }
@@ -18277,7 +18285,7 @@ function renderArtifactEnhance(el) {
 
     // スキルレベルアップ可否
     const skillLv    = af.skillLv || 0;
-    const atSkillMax = skillLv >= 3;
+    const atSkillMax = skillLv >= 10;
     const skCost     = AF_SKILL_COST[skillLv];
     const rune       = p.runeStone || { t1:0, t2:0, t3:0 };
     const canSkillUp = !atSkillMax && skCost &&
@@ -18290,7 +18298,7 @@ function renderArtifactEnhance(el) {
         <span style="font-size:20px">${def.icon}</span>
         <div style="flex:1">
           <div style="font-size:12px;font-weight:700;color:var(--text)">${def.name} <span style="color:${rarityColor}">[${def.rarity}]</span></div>
-          <div style="font-size:10px;color:var(--text3)">Lv${lv}/${maxLv} (Rank${rank}) スキルLv${skillLv}/3 · ATK+${afMainScale(def.mainStat.atk||0,lv)} HP+${afMainScale(def.mainStat.hp||0,lv)}</div>
+          <div style="font-size:10px;color:var(--text3)">Lv${lv}/${maxLv} (Rank${rank}) スキルLv${skillLv}/10 · ATK+${afMainScale(def.mainStat.atk||0,lv)} HP+${afMainScale(def.mainStat.hp||0,lv)}</div>
         </div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -18323,7 +18331,7 @@ function skillUpArtifact(idx) {
   const af = gState.artifacts[idx];
   if (!af) return;
   const skillLv = af.skillLv || 0;
-  if (skillLv >= 3) return;
+  if (skillLv >= 10) return;
   const cost = AF_SKILL_COST[skillLv];
   const rune = gState.player.runeStone || { t1:0, t2:0, t3:0 };
   if (rune.t1 < (cost.t1||0) || rune.t2 < (cost.t2||0) || rune.t3 < (cost.t3||0)) return;
@@ -18875,11 +18883,18 @@ const AF_RANKUP_COST = [
   { t1:300 },  // rank 1→2
   { t1:800 },  // rank 2→3
 ];
-// AFスキルレベルアップ素材（神刻ルーン）Lv0→1, 1→2, 2→3
+// AFスキルレベルアップ素材（神刻ルーン）Lv0→10
 const AF_SKILL_COST = [
-  { t1:3, t2:0, t3:0 },  // skillLv 0→1
-  { t1:0, t2:2, t3:0 },  // skillLv 1→2
-  { t1:0, t2:0, t3:1 },  // skillLv 2→3
+  { t1:3, t2:0, t3:0 },  // 0→1
+  { t1:0, t2:2, t3:0 },  // 1→2
+  { t1:0, t2:0, t3:1 },  // 2→3
+  { t1:3, t2:0, t3:0 },  // 3→4
+  { t1:0, t2:2, t3:0 },  // 4→5
+  { t1:0, t2:0, t3:1 },  // 5→6
+  { t1:0, t2:2, t3:1 },  // 6→7
+  { t1:0, t2:0, t3:2 },  // 7→8
+  { t1:0, t2:0, t3:2 },  // 8→9
+  { t1:0, t2:0, t3:3 },  // 9→10
 ];
 
 // 条件が満たされているか判定
