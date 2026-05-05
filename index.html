@@ -7116,6 +7116,21 @@ function normalizeState() {
       if (af.rank  === undefined) af.rank  = 0;
       return af;
     });
+
+    // 重複排除: 1IDにつき1インスタンス。余剰はafDuplicatesへ移行
+    if (!p.afDuplicates) p.afDuplicates = {};
+    const _afMap = {};
+    gState.artifacts.forEach(af => {
+      if (!_afMap[af.id]) {
+        _afMap[af.id] = af;
+      } else {
+        // ランク→レベル→凸の順で強い方を残す
+        const _score = a => (a.rank||0)*1000 + (a.level||0)*10 + (a.conste||0);
+        if (_score(af) > _score(_afMap[af.id])) _afMap[af.id] = af;
+        p.afDuplicates[af.id] = (p.afDuplicates[af.id]||0) + 1;
+      }
+    });
+    gState.artifacts = Object.values(_afMap);
   }
 
   // 配列系
