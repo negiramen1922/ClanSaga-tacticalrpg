@@ -1455,8 +1455,16 @@ img.item-icon {
   50%      { opacity:0.55; box-shadow:0 0 10px rgba(200,200,255,0.7); }
 }
 .combatant-card.staggered { animation:stagger-pulse 0.55s ease-in-out infinite; border-color:#9090ee !important; }
-.float-dmg-phys  { color:#e07a3a !important; }
-.float-dmg-spec  { color:#7ab4ff !important; }
+@keyframes specPop {
+  0%   { transform: translateY(0) scale(1.6);    opacity: 1; }
+  15%  { transform: translateY(-6px) scale(1.0); opacity: 1; }
+  70%  { transform: translateY(-26px) scale(1.0); opacity: 1; }
+  100% { transform: translateY(-44px) scale(0.8); opacity: 0; }
+}
+.float-dmg-phys  { font-size:20px; color:#e07a3a !important; }
+.float-dmg-phys.crit { font-size:26px; }
+.float-dmg-spec  { font-size:20px; color:#7ab4ff !important; animation: specPop 0.9s ease-out forwards; }
+.float-dmg-spec.crit { font-size:26px; }
 .float-dmg-red   { color:#ff7755 !important; }
 .float-dmg-white { color:#88bbff !important; }
 .float-dmg-black { color:#ff7755 !important; }
@@ -3879,7 +3887,7 @@ const CLASS_DATA = {
     skillPool: [],
     ultimates: [
       { id:'au_stormcross', name:'ストームクロス',
-        effect:'ランダムな敵に🔵BLUE×10連射（1発：現在HPの4%）',
+        effect:'ランダムな敵に✨×10連射（1発：現在HPの4%）',
         power:0.04, type:'spec', target:'random_multi', hits:10 },
     ],
   },
@@ -4951,8 +4959,8 @@ const CARDS = {
     type:'attack', rarity:3, cd:10, target:'single',
     effect:{ type:'blue_hp_mp', hpRatio:0.15, mpRatio:0.15 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔵単体 最大HP・MPそれぞれ15%のBLUEダメージ',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔵単体 最大HP・MPの${Math.round(15*m)}%ダメージ`;},
+    desc:'✨単体 最大HP・MPそれぞれ15%ダメージ',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`✨単体 最大HP・MPの${Math.round(15*m)}%ダメージ`;},
   },
 
   'ar_deluge_arrow': {
@@ -4960,8 +4968,8 @@ const CARDS = {
     type:'attack', rarity:3, cd:10, target:'all',
     effect:{ type:'blue_hp_mp', hpRatio:0.08, mpRatio:0.08 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔵全体 最大HP・MPそれぞれ8%のBLUEダメージ',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔵全体 最大HP・MPの${Math.round(8*m)}%ダメージ`;},
+    desc:'✨全体 最大HP・MPそれぞれ8%ダメージ',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`✨全体 最大HP・MPの${Math.round(8*m)}%ダメージ`;},
   },
 
   'ar_marking': {
@@ -11732,6 +11740,7 @@ function setSpeedBtn(s) {
 function tickBattle() {
   const bs = battleState;
   if (!bs || !battleRunning) return;
+  if (bs.waitingSkillUid) return; // 手動スキル選択待ち中はバトル全体を停止
   // elapsed を tick ごとに加算（倍速対応）
   bs.elapsed = (bs.elapsed || 0) + (50 * battleSpeed);
   updateTimer();
@@ -11763,7 +11772,6 @@ function tickBattle() {
   // Tick ATB for all alive（ひるみ: ATB蓄積-50%）
   const all = [...bs.allies, ...bs.enemies].filter(c=>!c.dead);
   all.forEach(c => {
-    if (bs.waitingSkillUid === c.uid) return; // 手動スキル選択待ち中はATBを止める
     const flinch = getFlinchMult(c);
     c.atb += c.spd * 0.02 * flinch;
     if (c.atb >= 100) {
@@ -12514,7 +12522,8 @@ function performUlt(c, enemies, allies) {
     targetList.forEach(t => {
       if (t.dead) return;
       // computeDmg で耐性・バフ込みのHPダメージを算出
-      let { hpDmg } = computeDmg(c, t, ult);
+      let { hpDmg, dmgType: _ultFrontDmgType } = computeDmg(c, t, ult);
+      const _ultFrontClr = _ultFrontDmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
       // 強制会心
       const cridam = c.cridam || 150;
       if (hpDmg) hpDmg = Math.max(1, Math.floor(hpDmg * cridam / 100));
@@ -12534,7 +12543,7 @@ function performUlt(c, enemies, allies) {
       spawnBall(c.uid, t.uid, 'ult');
       setTimeout(() => {
         flashCard(t.uid, 'hit');
-        if (hpDmg > 0) spawnFloatNum(t.uid, '⚡'+hpDmg, 'float-dmg crit');
+        if (hpDmg > 0) spawnFloatNum(t.uid, '⚡'+hpDmg, _ultFrontClr+' crit');
       }, 300);
       if (t.hp <= 0) {
         t.hp = 0; t.dead = true;
@@ -12597,7 +12606,7 @@ function performUlt(c, enemies, allies) {
         spawnBall(c.uid, td.uid, 'ult');
         setTimeout(() => {
           flashCard(td.uid, 'hit');
-          spawnFloatNum(td.uid, `🔵${d}`, 'float-dmg');
+          spawnFloatNum(td.uid, String(d), 'float-dmg-spec');
         }, 200);
       }, delay);
       delay += 150;
@@ -12609,7 +12618,7 @@ function performUlt(c, enemies, allies) {
         }, delay + 200);
       }
     }
-    addLog(`${c.name} → ランダム敵に🔵BLUE ×${hits}連射`, 'damage');
+    addLog(`${c.name} → ランダム敵に×${hits}連射`, 'damage');
     return;
   }
 
@@ -12658,7 +12667,8 @@ function performUlt(c, enemies, allies) {
   const targetList = (ult.target==='all') ? [...liveEnemies] : liveEnemies.slice(0,1);
   targetList.forEach(t => {
     if (t.dead) return;
-    let { hpDmg: dmg } = computeDmg(c, t, ult);
+    let { hpDmg: dmg, dmgType: _ultDmgType } = computeDmg(c, t, ult);
+    const _ultClr = _ultDmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
     const isCrit = ult.forceCrit ? true : rollCrit(c);
     if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
     dmg = Math.max(1, dmg);
@@ -12669,7 +12679,7 @@ function performUlt(c, enemies, allies) {
     spawnBall(c.uid, t.uid, 'ult');
     setTimeout(() => {
       flashCard(t.uid, 'hit');
-      spawnFloatNum(t.uid, isCrit ? '⚡'+dmg : String(dmg), isCrit ? 'float-dmg crit' : 'float-dmg');
+      spawnFloatNum(t.uid, isCrit ? '⚡'+dmg : String(dmg), isCrit ? _ultClr+' crit' : _ultClr);
     }, 300);
     if (t.hp <= 0) {
       t.hp = 0; t.dead = true;
