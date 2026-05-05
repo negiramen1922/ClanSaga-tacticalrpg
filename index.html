@@ -9019,12 +9019,12 @@ function openUnitDetail(uid) {
     return `<img src="${src}" style="width:${size}px;height:${size}px;object-fit:contain;vertical-align:middle;">`;
   };
   const _skillTypeBadge = (type, cd) => {
-    const dmgLabel = { red:'RED', black:'BLACK', white:'WHITE', blue:'BLUE', buff:'支援' }[type] || type;
-    const dmgColor = { red:'#e08080', black:'#c090b0', white:'#a8a8e0', blue:'#7ab4ff', buff:'var(--green)' }[type] || 'var(--text3)';
+    const dmgLabel = { phys:'物理', spec:'特殊', red:'RED', black:'BLACK', white:'WHITE', blue:'BLUE', buff:'支援' }[type] || type;
+    const dmgColor = { phys:'var(--orange)', spec:'#7ab4ff', red:'#e08080', black:'#c090b0', white:'#a8a8e0', blue:'#7ab4ff', buff:'var(--green)' }[type] || 'var(--text3)';
     const cdStr = cd ? `<span class="tac-badge tac-badge-cd" style="margin-left:3px;">CD:${cd}</span>` : '';
     return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;color:${dmgColor};font-weight:700;">${_skTypeImg(type,12)} ${dmgLabel}</span>${cdStr}`;
   };
-  const _skillBorderColor = { red:'#e06060', black:'#a06080', white:'#9090d0', blue:'#4a7fff', buff:'var(--accent)' };
+  const _skillBorderColor = { phys:'#e07a3a', spec:'#4a7fff', red:'#e06060', black:'#a06080', white:'#9090d0', blue:'#4a7fff', buff:'var(--accent)' };
   const _typeIcon = (src, label, cls) => `
     <span style="display:inline-flex;align-items:center;gap:3px;">
       <img src="${src}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">
@@ -9058,9 +9058,10 @@ function openUnitDetail(uid) {
     const canSkUp = skCost && _kyoBag.t1>=(skCost.t1||0) && _kyoBag.t2>=(skCost.t2||0) && _kyoBag.t3>=(skCost.t3||0);
     const skIconKey = `kyoten${_kyoRoleKey}T${skLv <= 3 ? skLv : 3}`;
     const skCostStr = skCost ? (skCost.t1 ? `T1×${skCost.t1}` : skCost.t2 ? `T2×${skCost.t2}` : `T3×${skCost.t3}`) : '';
+    const skHaveStr = skCost ? (skCost.t1 ? `${_kyoBag.t1}` : skCost.t2 ? `${_kyoBag.t2}` : `${_kyoBag.t3}`) : '';
     const skUpBtn = atSkMax
       ? `<span style="font-size:9px;color:var(--green);font-weight:700">MAX</span>`
-      : `<button onclick="skillUpChar('${uid}','${sk.id}')" style="font-size:10px;padding:2px 7px;display:inline-flex;align-items:center;gap:3px;background:${canSkUp?'rgba(200,160,40,0.2)':'rgba(60,60,60,0.2)'};color:${canSkUp?'var(--gold)':'var(--text3)'};border:1px solid ${canSkUp?'rgba(200,160,40,0.4)':'var(--border)'};border-radius:4px;cursor:${canSkUp?'pointer':'default'}" ${canSkUp?'':'disabled'}>${itemIconHTML(skIconKey,'11px')} ${skCostStr} →Lv.${skLv+1}</button>`;
+      : `<button onclick="skillUpChar('${uid}','${sk.id}')" style="font-size:10px;padding:2px 7px;display:inline-flex;align-items:center;gap:3px;background:${canSkUp?'rgba(200,160,40,0.2)':'rgba(60,60,60,0.2)'};color:${canSkUp?'var(--gold)':'var(--text3)'};border:1px solid ${canSkUp?'rgba(200,160,40,0.4)':'var(--border)'};border-radius:4px;cursor:${canSkUp?'pointer':'default'}" ${canSkUp?'':'disabled'}>${itemIconHTML(skIconKey,'11px')} ${skCostStr}<span style="font-size:8px;opacity:0.7">(${skHaveStr})</span> →Lv.${skLv+1}</button>`;
     return `
     <div class="sk-card" style="border-left:3px solid ${bColor};">
       <div class="sk-card-header">
