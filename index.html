@@ -2274,8 +2274,7 @@ img.item-icon {
         <div class="hm-item" onclick="closeHamburger();openMissionModal()"><img src="assets/images/nav-mission.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>ミッション</span></div>
         <div class="hm-item" onclick="closeHamburger();openGacha()">✨<span>ガチャ</span></div>
         <div class="hm-item" onclick="closeHamburger();openLibraryMonsterBook()">📚<span>大図書館（図鑑）</span></div>
-        <div class="hm-item" onclick="closeHamburger();openMineIfUnlocked()"><img src="assets/images/nav-mine.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>鉱山</span></div>
-        <div class="hm-item" onclick="closeHamburger();openLab()">🔬<span>研究所</span></div>
+        <div class="hm-item" onclick="closeHamburger();openClanHall()">🏰<span>クランホール</span></div>
         <div class="hm-item" onclick="closeHamburger();openHelpModal()"><img src="assets/images/nav-help.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>チュートリアル・ヘルプ</span></div>
         <div class="hm-item" onclick="closeHamburger();openVipPanel()">👑<span id="hm-vip-label">VIP特典</span></div>
         <div class="hm-divider"></div>
@@ -2359,8 +2358,7 @@ img.item-icon {
         <div class="quick-btn" onclick="switchTab('chara')"><img src="assets/images/nav-chara.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> キャラ</div>
         <div class="quick-btn" onclick="openMissionModal()"><img src="assets/images/nav-mission.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> <span id="mission-badge-text">ミッション</span></div>
         <div class="quick-btn" onclick="openGacha()">✨ ガチャ</div>
-        <div class="quick-btn" id="mine-quick-btn" onclick="openMineIfUnlocked()"><img src="assets/images/nav-mine.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> <span id="mine-quick-text">鉱山</span></div>
-        <div class="quick-btn" onclick="openLab()">🔬 <span>研究所</span></div>
+        <div class="quick-btn" id="mine-quick-btn" onclick="openClanHall('mine')">🏰 <span id="mine-quick-text">クランホール</span></div>
         <div class="quick-btn" onclick="switchTab('artifact')">🔩 AF一覧</div>
         <div class="quick-btn" onclick="switchTab('acc')">💍 アクセサリー</div>
         <div class="quick-btn" onclick="openItemsMenu()">🎒 持ち物</div>
@@ -2525,15 +2523,10 @@ img.item-icon {
           <div class="bc-name">ガチャ</div>
           <div class="bc-desc">キャラ・アーティファクト召喚</div>
         </div>
-        <div class="base-card" id="base-mine" onclick="openMineIfUnlocked()">
-          <div class="bc-icon">⛏️</div>
-          <div class="bc-name">鉱山</div>
-          <div id="mine-badge-desc" class="bc-desc">資源を自動採取</div>
-        </div>
-        <div class="base-card" onclick="openLab()">
-          <div class="bc-icon">🔬</div>
-          <div class="bc-name">研究所</div>
-          <div class="bc-desc">響典素材を生産・合成</div>
+        <div class="base-card" id="base-clan-hall" onclick="openClanHall()">
+          <div class="bc-icon">🏰</div>
+          <div class="bc-name">クランホール</div>
+          <div id="mine-badge-desc" class="bc-desc">鉱山・研究所・錬金工房</div>
         </div>
         <div class="base-card" id="base-smithy" onclick="openSmithyPanel()">
           <div class="bc-icon">🔨</div>
@@ -2865,24 +2858,18 @@ img.item-icon {
     </div>
   </div>
 </div>
-<div class="modal-overlay" id="mine-modal">
-  <div class="modal-panel">
+<div class="modal-overlay" id="clan-hall-modal">
+  <div class="modal-panel" style="max-width:520px">
     <div class="modal-header">
-      <h3>⛏️ 鉱山</h3>
-      <button class="close-btn" onclick="closeMine()">✕</button>
+      <h3>🏰 クランホール</h3>
+      <button class="close-btn" onclick="closeClanHall()">✕</button>
     </div>
-    <div class="mine-content" id="mine-content"></div>
-  </div>
-</div>
-
-<!-- LAB MODAL -->
-<div class="modal-overlay" id="lab-modal">
-  <div class="modal-panel" style="max-width:480px">
-    <div class="modal-header">
-      <h3>🔬 研究所</h3>
-      <button class="close-btn" onclick="closeLab()">✕</button>
+    <div class="lab-tabs" id="clan-hall-tabs">
+      <div class="lab-tab" onclick="switchClanHallTab('mine')">⛏️ 鉱山</div>
+      <div class="lab-tab" onclick="switchClanHallTab('lab')">🧪 研究所</div>
+      <div class="lab-tab" onclick="switchClanHallTab('alch')">⚗️ 錬金工房</div>
     </div>
-    <div id="lab-content"></div>
+    <div id="clan-hall-body"></div>
   </div>
 </div>
 
@@ -8901,7 +8888,7 @@ function renderHomeNotices() {
     const n = document.createElement('div');
     n.className = 'home-notice';
     n.innerHTML = '⛏️ 鉱山の貯蔵がほぼ満杯です！採取してください';
-    n.addEventListener('click', openMine);
+    n.addEventListener('click', () => openClanHall('mine'));
     el.appendChild(n);
   }
   const claimable = DAILY_MISSIONS.filter(m => m.cur()>=m.req && !gState.missions.dailyClaimed[m.id]);
@@ -15864,23 +15851,10 @@ function unequipCard(uid, slotIndex) {
 }
 // ============================================================
 
-function openMine() {
-  renderMineContent();
-  document.getElementById('mine-modal').classList.add('open');
-}
-
-function closeMine() {
-  document.getElementById('mine-modal').classList.remove('open');
-}
-
-function openLab() {
-  renderLabContent();
-  document.getElementById('lab-modal').classList.add('open');
-}
-
-function closeLab() {
-  document.getElementById('lab-modal').classList.remove('open');
-}
+function openMine()  { openClanHall('mine'); }
+function closeMine() { closeClanHall(); }
+function openLab()   { openClanHall('lab'); }
+function closeLab()  { closeClanHall(); }
 
 // ============================================================
 //  TACTICS SYSTEM
@@ -16935,18 +16909,14 @@ function showBonusToast(msg, isHtml=false) {
 // ============================================================
 
 function renderMineExpiry() {
-  const desc = document.getElementById('mine-badge-desc');
+  const desc  = document.getElementById('mine-badge-desc');
   const qText = document.getElementById('mine-quick-text');
-  if (!isMineUnlocked()) {
-    if (desc)  { desc.style.color = 'var(--red)'; desc.textContent = 'S5クリアで解放'; }
-    if (qText) qText.textContent = '🔒 鉱山';
-    return;
-  }
-  // 鉱山バッジ更新
-  const y = calcMineYield();
-  const pct = Math.round((y.gold / y.capGold) * 100);
-  if (desc)  { desc.style.color = ''; desc.innerHTML = '資源を自動採取' + (pct >= 80 ? ' <span class="mine-badge">採取可</span>' : ''); }
-  if (qText) qText.textContent = '鉱山';
+  const badge = isMineUnlocked() && (() => {
+    const y = calcMineYield();
+    return Math.round((y.gold / y.capGold) * 100) >= 80;
+  })();
+  if (desc)  { desc.style.color = ''; desc.innerHTML = '鉱山・研究所・錬金工房' + (badge ? ' <span class="mine-badge">採取可</span>' : ''); }
+  if (qText) qText.textContent = 'クランホール' + (badge ? '!' : '');
 }
 
 // ============================================================
@@ -17221,6 +17191,70 @@ function upgradeMine(type) {
   renderMineContent();
 }
 
+// ===== クランホール =====
+let _clanHallTab = 'mine';
+
+function openClanHall(tab) {
+  if (tab) _clanHallTab = tab;
+  renderClanHall();
+  document.getElementById('clan-hall-modal').classList.add('open');
+}
+
+function closeClanHall() {
+  document.getElementById('clan-hall-modal').classList.remove('open');
+}
+
+function switchClanHallTab(tab) {
+  _clanHallTab = tab;
+  renderClanHall();
+}
+
+function renderClanHall() {
+  const tabKeys = ['mine', 'lab', 'alch'];
+  const tabs = document.querySelectorAll('#clan-hall-tabs .lab-tab');
+  tabs.forEach((t, i) => t.classList.toggle('active', tabKeys[i] === _clanHallTab));
+
+  const body = document.getElementById('clan-hall-body');
+  if (!body) return;
+
+  if (_clanHallTab === 'mine') {
+    if (!isMineUnlocked()) {
+      body.innerHTML = '<div style="padding:32px 16px;text-align:center;color:var(--text3)">ストーリーS5クリアで解放</div>';
+      return;
+    }
+    body.innerHTML = '<div class="mine-content" id="mine-content"></div>';
+    renderMineContent();
+  } else if (_clanHallTab === 'lab') {
+    body.innerHTML = '<div id="lab-content"></div>';
+    _renderClanHallLabTab(document.getElementById('lab-content'));
+  } else {
+    body.innerHTML = '<div id="lab-content"></div>';
+    _renderLabAlch(document.getElementById('lab-content'), gState.lab);
+  }
+}
+
+// 研究所タブ（生産）のレベルバーつきレンダリング
+function _renderClanHallLabTab(el) {
+  const lab = gState.lab;
+  const cfg = _labCfg();
+  const isMax = cfg.lv >= LAB_LEVEL_CFG.length;
+  const canUpg = !isMax && gState.player.gold >= cfg.upgCost;
+
+  const lvBar = document.createElement('div');
+  lvBar.className = 'lab-lv-bar';
+  lvBar.innerHTML = `
+    <span style="font-size:12px;color:var(--text3)">研究所 Lv.${cfg.lv}</span>
+    <span style="font-size:11px;color:var(--text3)">スロット×${cfg.slots} / 速度×${cfg.speedMult}</span>
+    <span style="flex:1"></span>
+    ${isMax
+      ? `<span style="font-size:11px;color:var(--gold)">MAX</span>`
+      : `<button class="btn btn-sm ${canUpg?'btn-blue':'btn-outline'}" onclick="upgradeLabLevel()" ${canUpg?'':'disabled'} style="font-size:11px">
+           Lv.${cfg.lv+1}へ強化 ${itemIconHTML('gold','11px')}${fmt(cfg.upgCost)}
+         </button>`}`;
+  el.appendChild(lvBar);
+  _renderLabProduce(el, lab, cfg);
+}
+
 // ===== 研究所 =====
 let _labTab = 'produce';
 let _labAlchRole = 'warrior';
@@ -17251,7 +17285,7 @@ function collectLabSlot(idx) {
   const roleInfo = LAB_ROLES.find(r => r.key === slot.role);
   const tLbl = (slot.tier || 't1').toUpperCase();
   toast(`${roleInfo?.label || slot.role} 響典${tLbl} ×${qty} 回収！`);
-  renderLabContent();
+  renderClanHall();
 }
 
 function collectAllLab() {
@@ -17270,7 +17304,7 @@ function collectAllLab() {
   saveState();
   updateTopBar();
   toast(`研究所: 計 ${total}個の素材を回収しました！`);
-  renderLabContent();
+  renderClanHall();
 }
 
 function upgradeLabLevel() {
@@ -17290,7 +17324,7 @@ function upgradeLabLevel() {
   saveState();
   updateTopBar();
   toast(`研究所 Lv.${lab.level} にアップグレード！`);
-  renderLabContent();
+  renderClanHall();
 }
 
 function labAlchemy(fromTier, toTier, role) {
@@ -17307,39 +17341,7 @@ function labAlchemy(fromTier, toTier, role) {
   updateTopBar();
   const roleInfo = LAB_ROLES.find(r => r.key === role);
   toast(`${roleInfo?.label || role} 響典${toTier.toUpperCase()} ×1 合成完了！`);
-  renderLabContent();
-}
-
-function renderLabContent() {
-  const el = document.getElementById('lab-content');
-  if (!el) return;
-  const lab = gState.lab;
-  const cfg = _labCfg();
-  const isMax = cfg.lv >= LAB_LEVEL_CFG.length;
-  const canUpg = !isMax && gState.player.gold >= cfg.upgCost;
-
-  // タブ + レベル行
-  el.innerHTML = `
-    <div class="lab-tabs">
-      <div class="lab-tab${_labTab==='produce'?' active':''}" onclick="_labTab='produce';renderLabContent()">🧪 生産</div>
-      <div class="lab-tab${_labTab==='alch'?' active':''}" onclick="_labTab='alch';renderLabContent()">⚗️ 錬金工房</div>
-    </div>
-    <div class="lab-lv-bar">
-      <span style="font-size:12px;color:var(--text3)">研究所 Lv.${cfg.lv}</span>
-      <span style="font-size:11px;color:var(--text3)">スロット×${cfg.slots} / 速度×${cfg.speedMult}</span>
-      <span style="flex:1"></span>
-      ${isMax
-        ? `<span style="font-size:11px;color:var(--gold)">MAX</span>`
-        : `<button class="btn btn-sm ${canUpg?'btn-blue':'btn-outline'}" onclick="upgradeLabLevel()" ${canUpg?'':'disabled'} style="font-size:11px">
-             Lv.${cfg.lv+1}へ強化 ${itemIconHTML('gold','11px')}${fmt(cfg.upgCost)}
-           </button>`}
-    </div>`;
-
-  if (_labTab === 'produce') {
-    _renderLabProduce(el, lab, cfg);
-  } else {
-    _renderLabAlch(el, lab);
-  }
+  renderClanHall();
 }
 
 function _renderLabProduce(el, lab, cfg) {
@@ -17377,8 +17379,8 @@ function _renderLabProduce(el, lab, cfg) {
 
     slotEl.innerHTML = `<div class="lab-slot-hd">
       <span class="lab-slot-no">SLOT ${i+1}</span>
-      <select class="lab-slot-sel" onchange="gState.lab.slots[${i}].role=this.value;gState.lab.slots[${i}].lastCollected=Date.now();saveState();renderLabContent()">${roleOpts}</select>
-      <select class="lab-slot-sel" style="max-width:55px" onchange="gState.lab.slots[${i}].tier=this.value;gState.lab.slots[${i}].lastCollected=Date.now();saveState();renderLabContent()">${tierOpts}</select>
+      <select class="lab-slot-sel" onchange="gState.lab.slots[${i}].role=this.value;gState.lab.slots[${i}].lastCollected=Date.now();saveState();renderClanHall()">${roleOpts}</select>
+      <select class="lab-slot-sel" style="max-width:55px" onchange="gState.lab.slots[${i}].tier=this.value;gState.lab.slots[${i}].lastCollected=Date.now();saveState();renderClanHall()">${tierOpts}</select>
     </div>`;
 
     if (slot.role) {
@@ -17428,7 +17430,7 @@ function _renderLabAlch(el, lab) {
   roleSelEl.className = 'lab-slot-sel';
   roleSelEl.style.cssText = 'width:100%;margin-bottom:14px;';
   roleSelEl.innerHTML = LAB_ROLES.map(r => `<option value="${r.key}"${_labAlchRole===r.key?' selected':''}>${r.label}</option>`).join('');
-  roleSelEl.addEventListener('change', e => { _labAlchRole = e.target.value; renderLabContent(); });
+  roleSelEl.addEventListener('change', e => { _labAlchRole = e.target.value; renderClanHall(); });
   wrap.appendChild(roleSelEl);
 
   const role = _labAlchRole;
