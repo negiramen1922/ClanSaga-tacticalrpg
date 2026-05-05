@@ -688,7 +688,24 @@ img.item-icon {
 .ult-card-fill { height: 100%; background: linear-gradient(90deg, var(--purple), #c084fc); transition: width 0.3s; border-radius: 2px; }
 .ult-card-text { font-family: 'Rajdhani', sans-serif; font-size: 9px; color: var(--purple); margin-top: 1px; display: flex; align-items: center; gap: 3px; }
 .ult-card-text.ready { color: #c084fc; animation: ultPulse 0.8s ease-in-out infinite; }
+.ult-card-text.manual-tap { color: #ffd700; font-weight: 700; }
 @keyframes ultPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.ult-tap-ready { cursor: pointer; border: 1px solid rgba(255,215,0,0.6) !important; animation: ultTapPulse 0.7s ease-in-out infinite; }
+@keyframes ultTapPulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,0.4)} 50%{box-shadow:0 0 8px 3px rgba(255,215,0,0.5)} }
+/* 戦闘モードバー */
+.battle-mode-bar { display: flex; align-items: center; gap: 4px; padding: 3px 8px; background: var(--bg2); border-top: 1px solid var(--border); flex-shrink: 0; }
+.mode-btn { font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700; padding: 2px 8px; border: 1px solid var(--border); cursor: pointer; letter-spacing: 0.5px; }
+.mode-btn.mode-auto   { background: rgba(76,175,110,0.15); color: var(--green); border-color: rgba(76,175,110,0.4); }
+.mode-btn.mode-manual { background: rgba(201,168,76,0.15); color: var(--gold); border-color: rgba(201,168,76,0.5); }
+.imagine-active-btn { font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700; padding: 2px 10px; margin-left: auto; background: linear-gradient(135deg,rgba(192,132,252,0.2),rgba(99,102,241,0.2)); border: 1px solid rgba(192,132,252,0.5); color: #c084fc; cursor: pointer; line-height: 1.3; text-align: center; }
+.imagine-active-btn:disabled { opacity: 0.45; cursor: default; color: var(--text3); border-color: var(--border); background: var(--bg3); }
+/* 手動スキル選択パネル */
+#skill-manual-panel { flex-direction: column; background: rgba(10,12,30,0.96); border-top: 1px solid var(--gold); padding: 6px 8px; flex-shrink: 0; }
+.skill-panel-name { font-family: 'Cinzel',serif; font-size: 11px; color: var(--gold); margin-bottom: 4px; }
+.skill-panel-buttons { display: flex; flex-wrap: wrap; gap: 4px; }
+.skill-panel-btn { font-family: 'Rajdhani',sans-serif; font-size: 11px; font-weight: 700; padding: 4px 10px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); cursor: pointer; }
+.skill-panel-btn.sk-cd { opacity: 0.4; cursor: not-allowed; }
+.skill-panel-btn.skill-panel-ult { background: rgba(192,132,252,0.2); border-color: rgba(192,132,252,0.6); color: #c084fc; }
 
 .battle-center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .battle-center .vs-text { font-family: 'Cinzel', serif; color: var(--text3); font-size: 18px; font-weight: 900; }
@@ -2609,6 +2626,17 @@ img.item-icon {
           <button class="speed-btn" onclick="setSpeed(5)">×5</button>
         </div>
         <button id="battle-start-btn" onclick="flowTutAdvance('battle_start_btn');startScoutPhase((r)=>startBattle(r))">BATTLE START</button>
+      </div>
+      <!-- 戦闘スタイル & イマジンアクティブ -->
+      <div class="battle-mode-bar">
+        <button id="btn-skill-mode" class="mode-btn mode-auto" onclick="toggleBattleSkillMode()">スキル AUTO</button>
+        <button id="btn-ult-mode"   class="mode-btn mode-auto" onclick="toggleBattleUltMode()">ULT AUTO</button>
+        <button id="imagine-active-btn" class="imagine-active-btn" onclick="useImagineActiveSkill()" style="display:none">—</button>
+      </div>
+      <!-- 手動スキル選択パネル -->
+      <div id="skill-manual-panel" style="display:none">
+        <div id="skill-panel-name" class="skill-panel-name"></div>
+        <div id="skill-panel-buttons" class="skill-panel-buttons"></div>
       </div>
     </div>
     <div class="battle-log-wrap">
@@ -7107,6 +7135,7 @@ function defaultState(clanName) {
       shrine:{ clearedToday:{} },
     },
     tickets:{ sweep:0, timeSkip:0 },
+    settings: { battleMode: { ultAuto: true, skillAuto: true } },
     missions:{
       daily:{ loginBonus:0, babelClears:0, mineCollect:0, classUpgrade:0, gachaPulls:0 },
       weekly:{ loginCount:0, babelClears:0, gachaPulls:0, dailyClears:0, cardUpgrade:0 },
@@ -7281,6 +7310,8 @@ function normalizeState() {
 
   // tickets / missions
   if (!gState.tickets)  gState.tickets  = { sweep:0, timeSkip:0 };
+  if (!gState.settings) gState.settings = {};
+  if (!gState.settings.battleMode) gState.settings.battleMode = { ultAuto: true, skillAuto: true };
   if (!gState.missions || typeof gState.missions !== 'object') {
     gState.missions = {
       daily:{ loginBonus:0, babelClears:0, mineCollect:0, classUpgrade:0, gachaPulls:0 },
@@ -9782,6 +9813,7 @@ const IMAGINES = [
     id: 'fenrir', name: 'フェンリル', icon: '🐺',
     flavor: '暗闇に潜む巨狼。戦場の熱気に呼応してその牙は研ぎ澄まされる。',
     baseHp: 200, baseAtk: 120,
+    activeSkill: { name:'野生の咆哮', desc:'全体 ATK+25% (2T)', effect:{ atkBuff:25, turns:2 } },
     imagineSkills: [
       { condLabel: 'アタッカー2人以上', cond: 'role_gte:attacker:2', effectLabel: 'アタッカーATK+5%',
         effect: { type:'role_atk_pct', role:'attacker', val:5 } },
@@ -9798,6 +9830,7 @@ const IMAGINES = [
     id: 'unicorn', name: 'ユニコーン', icon: '🦄',
     flavor: '白銀の聖獣。その存在だけで傷ついた者の心と体を癒す。',
     baseHp: 280, baseAtk: 60,
+    activeSkill: { name:'聖なる光', desc:'全体 HP を最大値の15%回復', effect:{ healPct:15 } },
     imagineSkills: [
       { condLabel: 'サポート1人以上', cond: 'role_gte:support:1', effectLabel: '回復効果+10%',
         effect: { type:'all_healUp', val:10 } },
@@ -9814,6 +9847,7 @@ const IMAGINES = [
     id: 'phoenix', name: 'フェニックス', icon: '🔥',
     flavor: '不死の炎鳥。何度倒れようとも炎の翼で再び舞い上がる。',
     baseHp: 220, baseAtk: 100,
+    activeSkill: { name:'炎の加護', desc:'全体 ATK+15% / SPD+20 (2T)', effect:{ atkBuff:15, spdBuff:20, turns:2 } },
     imagineSkills: [
       { condLabel: '3ロール以上混成', cond: 'roles_gte:3', effectLabel: '全体ATK+3% / HP+3%',
         effect: { type:'all_atk_hp_pct', atk:3, hp:3 } },
@@ -9830,6 +9864,7 @@ const IMAGINES = [
     id: 'leviathan', name: 'リヴァイアサン', icon: '🐉',
     flavor: '深海の支配者。その鱗は嵐をも弾き返す鉄壁の守護を与える。',
     baseHp: 350, baseAtk: 40,
+    activeSkill: { name:'鉄壁の鱗', desc:'全体 被ダメ-40% (2T)', effect:{ dmgReduceBuff:40, turns:2 } },
     imagineSkills: [
       { condLabel: 'タンク1人以上', cond: 'role_gte:tank:1', effectLabel: '全体被ダメ-8%',
         effect: { type:'all_dmgReduce', val:8 } },
@@ -9846,6 +9881,7 @@ const IMAGINES = [
     id: 'garuda', name: 'ガルーダ', icon: '🦅',
     flavor: '天空の覇者。その翼がもたらす疾風は仲間の足を加速させる。',
     baseHp: 180, baseAtk: 130,
+    activeSkill: { name:'疾風', desc:'全体 SPD+60 (2T)', effect:{ spdBuff:60, turns:2 } },
     imagineSkills: [
       { condLabel: 'スカウト1人以上', cond: 'role_gte:scout:1', effectLabel: '全体SPD+12 / 索敵+15',
         effect: { type:'all_spd', val:12 } },
@@ -9862,6 +9898,7 @@ const IMAGINES = [
     id: 'chimera', name: 'キメラ', icon: '🦁',
     flavor: '異形の幻獣。様々な力を組み合わせてパーティを支援する。',
     baseHp: 210, baseAtk: 110,
+    activeSkill: { name:'混沌爆発', desc:'全体 ATK+15% / スキルPw+20% (2T)', effect:{ atkBuff:15, skillPwBuff:20, turns:2 } },
     imagineSkills: [
       { condLabel: 'コントロール1人以上', cond: 'role_gte:control:1', effectLabel: 'デバフ付与率+10%',
         effect: { type:'all_skillPw', val:5 } },
@@ -10965,6 +11002,8 @@ function initBattle(waveEnemies, stageName) {
     isNight: false,
     nightElapsed: 0,
     nightPhaseOffered: false,
+    imagineSkillUsed: false,
+    waitingSkillUid: null,
   };
 
   document.getElementById('battle-screen').classList.remove('is-night');
@@ -10989,6 +11028,8 @@ function initBattle(waveEnemies, stageName) {
   document.getElementById('battle-start-btn').disabled = false;
   document.getElementById('battle-log').innerHTML = '';
   setSpeedBtn(1);
+  hideSkillManualPanel();
+  updateBattleModeUI();
   renderBattle();
 }
 
@@ -11026,6 +11067,16 @@ function renderBattle() {
         if (hpFill) { hpFill.style.width = hpPct + '%'; hpFill.className = 'hp-fill' + (hpPct <= 20 ? ' critical' : hpPct <= 50 ? ' low' : ''); }
         const atbFill = q('.atb-fill'); if (atbFill) atbFill.style.width = u.atb + '%';
         const ultFill = q('.ult-card-fill'); if (ultFill) ultFill.style.width = Math.min(100, u.ultGauge||0) + '%';
+        if (!u.isEnemy) {
+          const ultText = q('.ult-card-text');
+          if (ultText) {
+            const _urdy = (u.ultGauge||0) >= 100;
+            const _mUlt = gState.settings?.battleMode?.ultAuto === false;
+            ultText.className = 'ult-card-text' + (_urdy?' ready':'') + (_urdy&&_mUlt?' manual-tap':'');
+            ultText.innerHTML = `<span>${_urdy?'⚡':'◈'}</span><span>${_urdy&&_mUlt?'TAP! ULT':_urdy?'ULT READY':Math.floor(u.ultGauge||0)+'%'}</span>`;
+            existing.classList.toggle('ult-tap-ready', _urdy && _mUlt);
+          }
+        }
         let shFill = q('.shield-fill');
         if (shPct > 0) {
           if (!shFill) { shFill = document.createElement('div'); shFill.className = 'shield-fill'; const wrap = q('.hp-bar-wrap'); if (wrap) wrap.appendChild(shFill); }
@@ -11067,17 +11118,20 @@ function combatantCardHTML(c) {
   const buffHtml = buildBuffHtml(c.buffs, c.debuffs);
   const ultPct = c.ultGauge || 0;
   const ultReady = ultPct >= 100;
+  const isManualUlt = !c.isEnemy && gState.settings?.battleMode?.ultAuto === false;
+  const ultReadyManual = ultReady && isManualUlt;
   const ultSection = !c.isEnemy ? `
     <div class="ult-card-bar"><div class="ult-card-fill" style="width:${Math.min(100,ultPct)}%"></div></div>
-    <div class="ult-card-text ${ultReady?'ready':''}">
-      <span>${ultReady?'⚡':'◈'}</span><span>${ultReady?'ULT READY':Math.floor(ultPct)+'%'}</span>
+    <div class="ult-card-text ${ultReady?'ready':''} ${ultReadyManual?'manual-tap':''}">
+      <span>${ultReady?'⚡':'◈'}</span><span>${ultReadyManual?'TAP! ULT':ultReady?'ULT READY':Math.floor(ultPct)+'%'}</span>
     </div>` : '';
   const leaderBadge = (!c.isEnemy && c.isLeader) ? `<span class="leader-combatant-badge">👑</span>` : '';
   const atkInfo = `<span class="cc-atk">⚔${fmt(c.atk)}</span>`;
   const staggerClass = c.staggered ? ' staggered' : '';
   const rowClass = (c.isEnemy && c.isBackRow) ? ' card-back-row' : ' card-front-row';
+  const clickAttr = !c.isEnemy ? `onclick="handleAllyCardClick('${c.uid}')"` : '';
   return `
-    <div class="combatant-card${staggerClass}${rowClass} ${c.dead?'dead':''}${c.isLeader?' leader-slot':''}" id="cc-${c.uid}">
+    <div class="combatant-card${staggerClass}${rowClass} ${c.dead?'dead':''}${c.isLeader?' leader-slot':''}${ultReadyManual?' ult-tap-ready':''}" id="cc-${c.uid}" ${clickAttr}>
       <div class="cc-name">
         ${leaderBadge}
         <span class="cc-icon">${c.icon}</span>
@@ -11127,6 +11181,183 @@ function updateTimer() {
     if (label) label.textContent = '昼戦残り';
   } else {
     wrap.classList.remove('active');
+  }
+}
+
+// ============================================================
+//  バトルモード（手動/自動）管理
+// ============================================================
+
+function handleAllyCardClick(uid) {
+  if (!battleRunning || !battleState) return;
+  if (gState.settings?.battleMode?.ultAuto !== false) return;
+  const bs = battleState;
+  const c = bs.allies.find(a => a.uid === uid && !a.dead);
+  if (!c || (c.ultGauge||0) < 100) return;
+  c.ultGauge = 0;
+  performUlt(c, bs.enemies.filter(e=>!e.dead), bs.allies.filter(a=>!a.dead));
+  renderBattle();
+}
+
+function showSkillManualPanel(c) {
+  const panel = document.getElementById('skill-manual-panel');
+  if (!panel) return;
+  const nameEl = document.getElementById('skill-panel-name');
+  if (nameEl) nameEl.textContent = c.name + ' — スキル選択';
+  const cardActionSkills = getEquippedActionCards(c);
+  const allSkills = [...(c.skills||[]), ...cardActionSkills];
+  let html = `<button class="skill-panel-btn" onclick="executeManualSkill('${c.uid}','__normal')">⚔️ 通常攻撃</button>`;
+  allSkills.forEach(sk => {
+    const onCd = (c.skillCDs[sk.id]||0) > 0;
+    html += `<button class="skill-panel-btn${onCd?' sk-cd':''}" onclick="executeManualSkill('${c.uid}','${sk.id}')"${onCd?' disabled':''}>
+      ${sk.name}${onCd?` <small>CD:${c.skillCDs[sk.id]}</small>`:''}</button>`;
+  });
+  if ((c.ultGauge||0) >= 100 && c.ultimate) {
+    html += `<button class="skill-panel-btn skill-panel-ult" onclick="executeManualSkill('${c.uid}','__ult')">⚡ ${c.ultimate.name}（必殺）</button>`;
+  }
+  const btnEl = document.getElementById('skill-panel-buttons');
+  if (btnEl) btnEl.innerHTML = html;
+  panel.style.display = 'flex';
+}
+
+function hideSkillManualPanel() {
+  const panel = document.getElementById('skill-manual-panel');
+  if (panel) panel.style.display = 'none';
+}
+
+function executeManualSkill(uid, skillId) {
+  const bs = battleState;
+  if (!bs || !battleRunning) return;
+  const c = bs.allies.find(a => a.uid === uid);
+  if (!c || c.dead) { bs.waitingSkillUid = null; hideSkillManualPanel(); return; }
+  bs.waitingSkillUid = null;
+  hideSkillManualPanel();
+  const enemies = bs.enemies.filter(e=>!e.dead);
+  const allies  = bs.allies.filter(a=>!a.dead);
+  if (skillId === '__ult' && c.ultimate && (c.ultGauge||0) >= 100) {
+    c.ultGauge = 0;
+    performUlt(c, enemies, allies);
+    renderBattle(); return;
+  }
+  if (skillId === '__normal') {
+    const equipBonus = getEquipCardBonus(c);
+    doAttack(c, enemies, { id:'normal', name:'通常攻撃', type:'phys', target:'single', power:1.0 + (equipBonus.powerBonus||0) });
+    gainUltGauge(c, 5);
+    renderBattle(); return;
+  }
+  const cardActionSkills = getEquippedActionCards(c);
+  const allSkills = [...(c.skills||[]), ...cardActionSkills];
+  const sk = allSkills.find(s => s.id === skillId);
+  if (!sk) return;
+  c.skillCDs[sk.id] = sk.cd;
+  if (sk.type === 'buff') {
+    const buffTargets = resolveBuffTargets(sk, c, allies, enemies);
+    addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${buffTargets.map(t=>t.name).join('・')}`, 'trigger');
+    buffTargets.forEach(tgt => applyBuff(tgt, sk, c));
+    gainUltGauge(c, 10);
+  } else if (sk.effect?.type === 'debuff_all') {
+    addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → 敵全体`, 'trigger');
+    enemies.forEach(e => { applyDebuffDirect(e, sk.effect.debuff); spawnFloatNum(e.uid,'🌫️','float-debuff'); });
+    spawnSkillNamePop(c.uid, sk.name, 'buff'); flashCard(c.uid, 'buff');
+    gainUltGauge(c, 8);
+  } else {
+    addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${sk.target==='all'?'敵全体':(enemies[0]?.name||'敵')}`, 'damage');
+    doAttack(c, enemies, sk);
+  }
+  renderBattle();
+}
+
+function useImagineActiveSkill() {
+  const bs = battleState;
+  if (!bs || !battleRunning) return;
+  if (bs.imagineSkillUsed) return;
+  const preset = gState.presets[gState.activePreset];
+  if (!preset?.imagineId) return;
+  const imagineDef = getImagineEntry(preset.imagineId);
+  if (!imagineDef?.activeSkill) return;
+  bs.imagineSkillUsed = true;
+  const sk = imagineDef.activeSkill;
+  const eff = sk.effect;
+  const allies = bs.allies.filter(a => !a.dead);
+  if (eff.healPct) {
+    allies.forEach(a => {
+      const heal = Math.floor(a.maxHp * eff.healPct / 100);
+      a.hp = Math.min(a.maxHp, a.hp + heal);
+      battleStats.unitHeal[a.uid] = (battleStats.unitHeal[a.uid]||0) + heal;
+      spawnFloatNum(a.uid, `💚+${fmt(heal)}`, 'float-heal');
+    });
+  }
+  if (eff.atkBuff) {
+    allies.forEach(a => a.buffs.push({ type:'atk_up', val:eff.atkBuff, turns:eff.turns||2, icon:'⬆ATK', cssClass:'atk-up' }));
+  }
+  if (eff.dmgReduceBuff) {
+    allies.forEach(a => a.buffs.push({ type:'damage_reduce', val:eff.dmgReduceBuff, turns:eff.turns||2, icon:'🔽被ダメ↓', cssClass:'hp-up' }));
+  }
+  if (eff.spdBuff) {
+    allies.forEach(a => {
+      a.spd += eff.spdBuff;
+      a.buffs.push({ type:'spd_up', val:eff.spdBuff, turns:eff.turns||2, icon:'⬆SPD', cssClass:'atk-up' });
+    });
+  }
+  if (eff.skillPwBuff) {
+    allies.forEach(a => a.buffs.push({ type:'skillPw_up', val:eff.skillPwBuff, turns:eff.turns||2, icon:'⬆Pw', cssClass:'atk-up' }));
+  }
+  addLog(`✨ ${imagineDef.name}: <span class="tag tag-buff">${sk.name}</span> ${sk.desc}`, 'trigger');
+  allies.forEach(a => { flashCard(a.uid,'buff'); spawnFloatNum(a.uid,`✨${sk.name}`,'float-buff'); });
+  const btn = document.getElementById('imagine-active-btn');
+  if (btn) { btn.disabled = true; btn.classList.add('used'); btn.innerHTML = `${imagineDef.icon}<br>使用済み`; }
+  renderBattle();
+}
+
+function toggleBattleSkillMode() {
+  if (!gState.settings) gState.settings = {};
+  if (!gState.settings.battleMode) gState.settings.battleMode = { ultAuto:true, skillAuto:true };
+  gState.settings.battleMode.skillAuto = !gState.settings.battleMode.skillAuto;
+  if (gState.settings.battleMode.skillAuto && battleState?.waitingSkillUid) {
+    const c = battleState.allies.find(a => a.uid === battleState.waitingSkillUid);
+    battleState.waitingSkillUid = null;
+    hideSkillManualPanel();
+    if (c && !c.dead) combatantAct(c, battleState);
+  }
+  updateBattleModeUI();
+}
+
+function toggleBattleUltMode() {
+  if (!gState.settings) gState.settings = {};
+  if (!gState.settings.battleMode) gState.settings.battleMode = { ultAuto:true, skillAuto:true };
+  gState.settings.battleMode.ultAuto = !gState.settings.battleMode.ultAuto;
+  updateBattleModeUI();
+}
+
+function updateBattleModeUI() {
+  const bm = gState.settings?.battleMode || {};
+  const skillBtn = document.getElementById('btn-skill-mode');
+  const ultBtn   = document.getElementById('btn-ult-mode');
+  if (skillBtn) {
+    skillBtn.textContent = bm.skillAuto !== false ? 'スキル AUTO' : 'スキル MANUAL';
+    skillBtn.className = 'mode-btn' + (bm.skillAuto !== false ? ' mode-auto' : ' mode-manual');
+  }
+  if (ultBtn) {
+    ultBtn.textContent = bm.ultAuto !== false ? 'ULT AUTO' : 'ULT MANUAL';
+    ultBtn.className = 'mode-btn' + (bm.ultAuto !== false ? ' mode-auto' : ' mode-manual');
+  }
+  // イマジンボタン更新
+  updateImagineActiveBtn();
+}
+
+function updateImagineActiveBtn() {
+  const btn = document.getElementById('imagine-active-btn');
+  if (!btn) return;
+  const preset = gState.presets?.[gState.activePreset];
+  const imagineDef = preset?.imagineId ? getImagineEntry(preset.imagineId) : null;
+  if (!imagineDef?.activeSkill || !battleRunning) { btn.style.display = 'none'; return; }
+  btn.style.display = '';
+  if (battleState?.imagineSkillUsed) {
+    btn.disabled = true; btn.classList.add('used');
+    btn.innerHTML = `${imagineDef.icon}<br>使用済み`;
+  } else {
+    btn.disabled = false; btn.classList.remove('used');
+    btn.innerHTML = `${imagineDef.icon} ${imagineDef.name}<br><small>${imagineDef.activeSkill.name}</small>`;
   }
 }
 
@@ -11386,6 +11617,7 @@ function startBattle(scoutResult) {
   if (battleRunning) return;
   battleRunning = true;
   document.getElementById('battle-start-btn').disabled = true;
+  updateImagineActiveBtn();
   trackEvent('battle_start', {
     stage_id:   (battleContext||{}).stageId || (battleContext||{}).shrineId || String((battleContext||{}).floor||''),
     stage_name: (battleContext||{}).stageName || '',
@@ -11467,6 +11699,7 @@ function tickBattle() {
   // Tick ATB for all alive（ひるみ: ATB蓄積-50%）
   const all = [...bs.allies, ...bs.enemies].filter(c=>!c.dead);
   all.forEach(c => {
+    if (bs.waitingSkillUid === c.uid) return; // 手動スキル選択待ち中はATBを止める
     const flinch = getFlinchMult(c);
     c.atb += c.spd * 0.02 * flinch;
     if (c.atb >= 100) {
@@ -11477,6 +11710,12 @@ function tickBattle() {
         c.staggerUsed = true;
         spawnFloatNum(c.uid, 'RECOVER', 'float-buff');
         addLog(`${c.name}: スタッガー解除`, 'trigger');
+        return;
+      }
+      // スキル手動モード（味方のみ）: パネルを表示して入力待ち
+      if (!c.isEnemy && gState.settings?.battleMode?.skillAuto === false) {
+        bs.waitingSkillUid = c.uid;
+        showSkillManualPanel(c);
         return;
       }
       combatantAct(c, bs);
@@ -11620,11 +11859,14 @@ function combatantAct(c, bs) {
   const criBonus  = eagleBuff.reduce((s,b)=>s+b.val,0);
   c._criOverride  = criBonus ? (c.cri||0)+criBonus : undefined;
 
-  // ULT check
+  // ULT check（手動モード時はカードタップで発動）
   if (!c.isEnemy && c.ultimate && c.ultGauge >= 100) {
-    c.ultGauge = 0;
-    performUlt(c, enemies, allies);
-    return;
+    if (gState.settings?.battleMode?.ultAuto !== false) {
+      c.ultGauge = 0;
+      performUlt(c, enemies, allies);
+      return;
+    }
+    // 手動モード: ゲージ満タン維持のまま通常行動へ
   }
 
   // ===== TACTICS-based skill selection (味方のみ) =====
@@ -12891,6 +13133,9 @@ function computeDmg(attacker, target, skill) {
   }
 
   let power = skill.power || 1.0;
+  // スキルPwバフ（混沌爆発など）
+  const _skillPwBuff = (attacker.buffs||[]).filter(b=>b.type==='skillPw_up').reduce((s,b)=>s+b.val,0);
+  if (_skillPwBuff) power *= (1 + _skillPwBuff / 100);
   // 条件付き追加ダメージ（タイタンスマッシュ: 自身HP50%以上で+Pw）
   if (skill.conditionalPower?.condition === 'self_hp_above_50pct' && attacker.hp >= attacker.maxHp * 0.5) {
     power += skill.conditionalPower.bonusPower;
@@ -13123,6 +13368,10 @@ function getFirstClearCrystal(stageId) {
 function endBattle(victory) {
   if (battleInterval) clearInterval(battleInterval);
   battleRunning = false;
+  hideSkillManualPanel();
+  if (battleState) battleState.waitingSkillUid = null;
+  const _imgBtn = document.getElementById('imagine-active-btn');
+  if (_imgBtn) _imgBtn.style.display = 'none';
   const _pauseOv = document.getElementById('pause-menu-overlay');
   if (_pauseOv) _pauseOv.remove();
   battleState.running = false;
