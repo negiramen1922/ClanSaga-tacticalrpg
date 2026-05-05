@@ -2305,7 +2305,7 @@ img.item-icon {
           <button onclick="closeHamburger();openAccountModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;">🔗 アカウント設定</button>
           <a href="https://docs.google.com/forms/d/e/1FAIpQLSdOyYrYSKMvdOJrdJtxhwG80aQ6Pd9z4nzYycyGylSt9IbqBQ/viewform?usp=header" target="_blank" rel="noopener" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;">📩 お問い合わせ</a>
         </div>
-        <span id="hm-version">ver. 1.02 · Clan Saga</span>
+        <span id="hm-version">ver. 1.10 · Clan Saga</span>
         <div style="margin-top:6px;font-size:9px;color:var(--text3);line-height:1.6;text-align:center;">
           BGM: <a href="https://youtu.be/DJPoUKKSDwY?si=1aaLg3tfrO6UzABe" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">古の世界地図</a>
           ／ <a href="https://youtu.be/EOlXXpqlS5k?si=YKRfyB3hGQsdY9Fj" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">Prairie4</a>
@@ -5496,7 +5496,7 @@ const PASSIVE_POOL = [
   { id:'drain',   name:'吸血',        stats:['DRAIN'],  levels:[{val:8,desc:'吸血8%'},{val:14,desc:'吸血14%'},{val:20,desc:'吸血20%'}] },
 ];
 
-const GAME_VERSION = '1.02';
+const GAME_VERSION = '1.10';
 
 const BABEL_AREAS = [
   {
@@ -7977,6 +7977,70 @@ function claimAchievement(id) {
 
 // お知らせデータ
 const NEWS_DATA = [
+  {
+    id: 'news_014',
+    type: 'update',
+    title: '⚙️ バージョン1.10アップデート内容',
+    date: '2026-05-05',
+    summary: 'イマジンアクティブスキル・バトル手動/自動切替・遠征機能・必殺技Lv10化・キャラ凸・スキルレベル連動など大型アップデートを実施しました。',
+    body: `<h4>✨ イマジンアクティブスキルを追加</h4>
+<p>パーティに装備しているイマジンが、バトル中1回限りの強力なアクティブスキルを使えるようになりました。</p>
+<ul>
+  <li>🐺 フェンリル「野生の咆哮」— 全体 ATK+25% (2ターン)</li>
+  <li>🦄 ユニコーン「聖なる光」— 全体 HP を最大値の15%回復</li>
+  <li>🔥 フェニックス「炎の加護」— 全体 ATK+15% / SPD+20 (2ターン)</li>
+  <li>🐉 リヴァイアサン「鉄壁の鱗」— 全体 被ダメ-40% (2ターン)</li>
+  <li>🦅 ガルーダ「疾風」— 全体 SPD+60 (2ターン)</li>
+  <li>🦁 キメラ「混沌爆発」— 全体 ATK+15% / スキルPw+20% (2ターン)</li>
+</ul>
+<p>バトル中に表示されるイマジンボタンを押すと発動します。使い所を見極めましょう。</p>
+
+<h4>🎮 バトルスタイルを自由に設定できるようになりました</h4>
+<p>バトル画面下部に <b>スキル</b> と <b>ULT（必殺技）</b> の自動/手動切替ボタンを追加しました。</p>
+<ul>
+  <li><b>スキル MANUAL</b>：キャラの行動ターンが来るとスキル選択パネルが表示され、通常攻撃・スキル1・スキル2を自分で選択できます</li>
+  <li><b>ULT MANUAL</b>：必殺技ゲージが満タンになっても自動発動しません。好きなタイミングでキャラカードをタップして発動できます</li>
+  <li>バトル中でも切替可能。やり込みたい時は全て手動、サクサク進めたい時は全て自動に設定できます</li>
+</ul>
+
+<h4>🗺️ 遠征機能を追加</h4>
+<p>クランホールに「遠征」タブが追加されました。キャラを派遣して時間経過でゴールドや素材を獲得できます。</p>
+<ul>
+  <li>4種類の遠征先（石灰の洞窟2h / 星晶の谷4h / 廃墟の塔6h / 霊峰の奥地8h）</li>
+  <li>遠征枠は最大1スロット（今後拡張予定）</li>
+</ul>
+
+<h4>⚡ 必殺技レベルを最大10まで強化できるようになりました</h4>
+<p>必殺技のレベル上限が4から<b>10</b>に引き上げられました。</p>
+<ul>
+  <li>Lv10時の倍率は ×3.50（Lv1の3.5倍）</li>
+  <li>強化素材の消費量もLvに応じて段階的に増加します</li>
+</ul>
+
+<h4>💠 キャラ凸（コンステレーション）システムを追加</h4>
+<p>キャラクターを「凸」することでATK・HPが最大+30%強化されます。</p>
+<ul>
+  <li>最大6凸まで対応（1凸ごとに ATK/HP +5%）</li>
+  <li>強化には専用フラグメント（SSR: 60個、SR: 15個）が必要です</li>
+</ul>
+
+<h4>📈 スキルレベル連動を実装</h4>
+<p>スキルのレベルアップがよりシンプルになりました。</p>
+<ul>
+  <li>アクティブスキル1を強化すると、パッシブスキル1も同時にレベルアップ</li>
+  <li>アクティブスキル2を強化すると、パッシブスキル2も同時にレベルアップ</li>
+  <li>開幕スキルのレベルはアクティブスキル1・2の平均（切り捨て）で自動計算されます</li>
+</ul>
+
+<h4>🧪 アーティファクト強化素材にT2/T3を追加</h4>
+<p>アーティファクトのLv30以上の強化に、上位素材「アトム秘石T2」「アトム秘石T3」が必要になりました。</p>
+<ul>
+  <li>Lv30〜59: T1×3 + T2×1</li>
+  <li>Lv60〜79: T1×3 + T2×1</li>
+  <li>Lv80〜99: T1×5 + T2×3</li>
+  <li>Lv100〜: T1×5 + T2×3 + T3×1</li>
+</ul>`,
+  },
   {
     id: 'news_012',
     type: 'update',
