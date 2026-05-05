@@ -1354,6 +1354,21 @@ img.item-icon {
 .mine-res-bar { height:4px;background:var(--bg2);border-radius:2px;overflow:hidden; }
 .mine-res-bar-fill { height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width 0.4s;border-radius:2px; }
 .mine-upgrade-row { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px; }
+/* ===== 研究所 ===== */
+.lab-tabs { display:flex;border-bottom:1px solid var(--border);margin-bottom:0; }
+.lab-tab { flex:1;text-align:center;padding:9px 4px;font-size:13px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s,border-color 0.2s; }
+.lab-tab.active { color:var(--accent2);border-bottom:2px solid var(--accent2); }
+.lab-body { padding:12px 16px 16px; }
+.lab-lv-bar { display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--border);margin-bottom:0; }
+.lab-slot { background:var(--bg3);border:1px solid var(--border);padding:12px 14px;margin-bottom:8px;border-radius:2px; }
+.lab-slot-hd { display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap; }
+.lab-slot-no { font-size:10px;color:var(--text3);letter-spacing:1px;white-space:nowrap; }
+.lab-slot-sel { background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:12px;padding:4px 6px;flex:1;min-width:70px; }
+.lab-prog { height:4px;background:var(--bg2);border-radius:2px;overflow:hidden;margin-bottom:8px; }
+.lab-prog-fill { height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width 0.4s; }
+.lab-yield-row { display:flex;justify-content:space-between;align-items:center; }
+.lab-yield-val { font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--accent2); }
+.lab-alch-recipe { background:var(--bg3);border:1px solid var(--border);padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap; }
 .smithy-tabs { display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:12px; }
 .smithy-tab { flex:1;padding:8px;text-align:center;font-size:12px;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;transition:all 0.15s; }
 .smithy-tab.active { color:var(--gold);border-bottom-color:var(--gold); }
@@ -2260,6 +2275,7 @@ img.item-icon {
         <div class="hm-item" onclick="closeHamburger();openGacha()">✨<span>ガチャ</span></div>
         <div class="hm-item" onclick="closeHamburger();openLibraryMonsterBook()">📚<span>大図書館（図鑑）</span></div>
         <div class="hm-item" onclick="closeHamburger();openMineIfUnlocked()"><img src="assets/images/nav-mine.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>鉱山</span></div>
+        <div class="hm-item" onclick="closeHamburger();openLab()">🔬<span>研究所</span></div>
         <div class="hm-item" onclick="closeHamburger();openHelpModal()"><img src="assets/images/nav-help.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>チュートリアル・ヘルプ</span></div>
         <div class="hm-item" onclick="closeHamburger();openVipPanel()">👑<span id="hm-vip-label">VIP特典</span></div>
         <div class="hm-divider"></div>
@@ -2344,6 +2360,7 @@ img.item-icon {
         <div class="quick-btn" onclick="openMissionModal()"><img src="assets/images/nav-mission.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> <span id="mission-badge-text">ミッション</span></div>
         <div class="quick-btn" onclick="openGacha()">✨ ガチャ</div>
         <div class="quick-btn" id="mine-quick-btn" onclick="openMineIfUnlocked()"><img src="assets/images/nav-mine.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> <span id="mine-quick-text">鉱山</span></div>
+        <div class="quick-btn" onclick="openLab()">🔬 <span>研究所</span></div>
         <div class="quick-btn" onclick="switchTab('artifact')">🔩 AF一覧</div>
         <div class="quick-btn" onclick="switchTab('acc')">💍 アクセサリー</div>
         <div class="quick-btn" onclick="openItemsMenu()">🎒 持ち物</div>
@@ -2512,6 +2529,11 @@ img.item-icon {
           <div class="bc-icon">⛏️</div>
           <div class="bc-name">鉱山</div>
           <div id="mine-badge-desc" class="bc-desc">資源を自動採取</div>
+        </div>
+        <div class="base-card" onclick="openLab()">
+          <div class="bc-icon">🔬</div>
+          <div class="bc-name">研究所</div>
+          <div class="bc-desc">響典素材を生産・合成</div>
         </div>
         <div class="base-card" id="base-smithy" onclick="openSmithyPanel()">
           <div class="bc-icon">🔨</div>
@@ -2850,6 +2872,17 @@ img.item-icon {
       <button class="close-btn" onclick="closeMine()">✕</button>
     </div>
     <div class="mine-content" id="mine-content"></div>
+  </div>
+</div>
+
+<!-- LAB MODAL -->
+<div class="modal-overlay" id="lab-modal">
+  <div class="modal-panel" style="max-width:480px">
+    <div class="modal-header">
+      <h3>🔬 研究所</h3>
+      <button class="close-btn" onclick="closeLab()">✕</button>
+    </div>
+    <div id="lab-content"></div>
   </div>
 </div>
 
@@ -7071,6 +7104,7 @@ function defaultState(clanName) {
     artifacts:[], runes:[], celestial:[], imagines:[],
     ownedCards: [],   // フェーズ1: 所持スキルカード一覧
     mine:{ lastCollected:Date.now(), level:{ speed:1, cap:1 } },
+    lab:{ level:1, slots:[{ role:null, tier:'t1', lastCollected:Date.now() }] },
     starMap:{ unlockedNodes:[] },
     library:{ discovered:[] },
     gacha:{
@@ -7181,6 +7215,8 @@ function normalizeState() {
   if (!p.atomStone)  p.atomStone  = { t1:0, t2:0, t3:0 };
   if (!p.runeStone)  p.runeStone  = { t1:0, t2:0, t3:0 };   // 神刻ルーン
   if (!p.kyoten) p.kyoten = { warrior:{t1:0,t2:0,t3:0}, vanguard:{t1:0,t2:0,t3:0}, ranger:{t1:0,t2:0,t3:0}, support:{t1:0,t2:0,t3:0}, trickster:{t1:0,t2:0,t3:0}, scout:{t1:0,t2:0,t3:0} }; // 響典
+  if (!gState.lab) gState.lab = { level:1, slots:[{ role:null, tier:'t1', lastCollected:Date.now() }] };
+  if (!Array.isArray(gState.lab.slots)) gState.lab.slots = [{ role:null, tier:'t1', lastCollected:Date.now() }];
   if (!p.eiyuutan) p.eiyuutan = { warrior:0, vanguard:0, ranger:0, support:0, trickster:0, scout:0 }; // 英雄譚
   if (p.stardust === undefined) p.stardust = 0;
   if (p.cryptoSoulT1 === undefined) p.cryptoSoulT1 = 0;
@@ -15837,6 +15873,15 @@ function closeMine() {
   document.getElementById('mine-modal').classList.remove('open');
 }
 
+function openLab() {
+  renderLabContent();
+  document.getElementById('lab-modal').classList.add('open');
+}
+
+function closeLab() {
+  document.getElementById('lab-modal').classList.remove('open');
+}
+
 // ============================================================
 //  TACTICS SYSTEM
 // ============================================================
@@ -16966,6 +17011,32 @@ const MINE_UPGRADE = {
 };
 
 const MINE_MAX_HOURS = 50;
+
+// ===== 研究所設定 =====
+const LAB_ROLES = [
+  { key:'warrior',   label:'アタッカー系',      color:'#e07a3a' },
+  { key:'vanguard',  label:'タンク系',           color:'#4a8fff' },
+  { key:'ranger',    label:'レンジ系',           color:'#4adf86' },
+  { key:'support',   label:'サポート系',         color:'#ffd84a' },
+  { key:'trickster', label:'トリックスター系',   color:'#c47aff' },
+  { key:'scout',     label:'スカウト系',         color:'#7ab4ff' },
+];
+// level設定: slots=スロット数, maxTier=最大ティア, speedMult=速度倍率, upgCost=次Lvへの強化コスト
+const LAB_LEVEL_CFG = [
+  { lv:1, slots:1, maxTier:'t1', speedMult:1.0, upgCost:5000   },
+  { lv:2, slots:2, maxTier:'t2', speedMult:1.0, upgCost:15000  },
+  { lv:3, slots:3, maxTier:'t2', speedMult:1.3, upgCost:40000  },
+  { lv:4, slots:3, maxTier:'t3', speedMult:1.3, upgCost:100000 },
+  { lv:5, slots:4, maxTier:'t3', speedMult:1.5, upgCost:0      }, // MAX
+];
+// T1:2h/個, T2:8h/個, T3:32h/個（speedMultで除算）
+const LAB_BASE_HOURS = { t1:2, t2:8, t3:32 };
+const LAB_MAX_HOURS = 24;
+// 錬金レシピ: fromTierをinQty個＋ゴールドでtoTier×1に変換
+const LAB_ALCH_RECIPES = [
+  { fromTier:'t1', toTier:'t2', inQty:5, gold:300  },
+  { fromTier:'t2', toTier:'t3', inQty:4, gold:1500 },
+];
 const STAMINA_REGEN_MIN = 6; // 1スタミナ回復に何分かかるか
 
 function staminaMax() {
@@ -17148,6 +17219,251 @@ function upgradeMine(type) {
   saveState();
   updateTopBar();
   renderMineContent();
+}
+
+// ===== 研究所 =====
+let _labTab = 'produce';
+let _labAlchRole = 'warrior';
+
+function _labCfg() {
+  return LAB_LEVEL_CFG[Math.min(LAB_LEVEL_CFG.length - 1, (gState.lab.level || 1) - 1)];
+}
+
+function calcLabSlotYield(slot) {
+  if (!slot.role) return 0;
+  const cfg = _labCfg();
+  const hrsPerItem = LAB_BASE_HOURS[slot.tier || 't1'] / cfg.speedMult;
+  const elapsed = Math.min(LAB_MAX_HOURS, (Date.now() - (slot.lastCollected || Date.now())) / 3600000);
+  return Math.floor(elapsed / hrsPerItem);
+}
+
+function collectLabSlot(idx) {
+  const lab = gState.lab;
+  const slot = lab.slots[idx];
+  if (!slot || !slot.role) return;
+  const qty = calcLabSlotYield(slot);
+  if (qty <= 0) { toast('まだ生産中です...'); return; }
+  if (!gState.player.kyoten[slot.role]) gState.player.kyoten[slot.role] = { t1:0, t2:0, t3:0 };
+  gState.player.kyoten[slot.role][slot.tier || 't1'] += qty;
+  slot.lastCollected = Date.now();
+  saveState();
+  updateTopBar();
+  const roleInfo = LAB_ROLES.find(r => r.key === slot.role);
+  const tLbl = (slot.tier || 't1').toUpperCase();
+  toast(`${roleInfo?.label || slot.role} 響典${tLbl} ×${qty} 回収！`);
+  renderLabContent();
+}
+
+function collectAllLab() {
+  const lab = gState.lab;
+  let total = 0;
+  lab.slots.forEach((slot, idx) => {
+    if (!slot.role) return;
+    const qty = calcLabSlotYield(slot);
+    if (qty <= 0) return;
+    if (!gState.player.kyoten[slot.role]) gState.player.kyoten[slot.role] = { t1:0, t2:0, t3:0 };
+    gState.player.kyoten[slot.role][slot.tier || 't1'] += qty;
+    slot.lastCollected = Date.now();
+    total += qty;
+  });
+  if (total === 0) { toast('回収できるものがありません'); return; }
+  saveState();
+  updateTopBar();
+  toast(`研究所: 計 ${total}個の素材を回収しました！`);
+  renderLabContent();
+}
+
+function upgradeLabLevel() {
+  const lab = gState.lab;
+  const curLv = lab.level || 1;
+  const curCfg = LAB_LEVEL_CFG[curLv - 1];
+  if (curLv >= LAB_LEVEL_CFG.length) return;
+  const cost = curCfg.upgCost;
+  if (gState.player.gold < cost) { toast('ゴールドが不足しています'); return; }
+  gState.player.gold -= cost;
+  lab.level = curLv + 1;
+  const nextCfg = LAB_LEVEL_CFG[lab.level - 1];
+  while (lab.slots.length < nextCfg.slots) {
+    lab.slots.push({ role: null, tier: 't1', lastCollected: Date.now() });
+  }
+  Audio.mineUpgrade?.();
+  saveState();
+  updateTopBar();
+  toast(`研究所 Lv.${lab.level} にアップグレード！`);
+  renderLabContent();
+}
+
+function labAlchemy(fromTier, toTier, role) {
+  const recipe = LAB_ALCH_RECIPES.find(r => r.fromTier === fromTier && r.toTier === toTier);
+  if (!recipe) return;
+  if (!gState.player.kyoten[role]) gState.player.kyoten[role] = { t1:0, t2:0, t3:0 };
+  const bag = gState.player.kyoten[role];
+  if ((bag[fromTier] || 0) < recipe.inQty) { toast(`響典${fromTier.toUpperCase()}が${recipe.inQty}個必要です`); return; }
+  if (gState.player.gold < recipe.gold) { toast('ゴールドが不足しています'); return; }
+  bag[fromTier] -= recipe.inQty;
+  bag[toTier] = (bag[toTier] || 0) + 1;
+  gState.player.gold -= recipe.gold;
+  saveState();
+  updateTopBar();
+  const roleInfo = LAB_ROLES.find(r => r.key === role);
+  toast(`${roleInfo?.label || role} 響典${toTier.toUpperCase()} ×1 合成完了！`);
+  renderLabContent();
+}
+
+function renderLabContent() {
+  const el = document.getElementById('lab-content');
+  if (!el) return;
+  const lab = gState.lab;
+  const cfg = _labCfg();
+  const isMax = cfg.lv >= LAB_LEVEL_CFG.length;
+  const canUpg = !isMax && gState.player.gold >= cfg.upgCost;
+
+  // タブ + レベル行
+  el.innerHTML = `
+    <div class="lab-tabs">
+      <div class="lab-tab${_labTab==='produce'?' active':''}" onclick="_labTab='produce';renderLabContent()">🧪 生産</div>
+      <div class="lab-tab${_labTab==='alch'?' active':''}" onclick="_labTab='alch';renderLabContent()">⚗️ 錬金工房</div>
+    </div>
+    <div class="lab-lv-bar">
+      <span style="font-size:12px;color:var(--text3)">研究所 Lv.${cfg.lv}</span>
+      <span style="font-size:11px;color:var(--text3)">スロット×${cfg.slots} / 速度×${cfg.speedMult}</span>
+      <span style="flex:1"></span>
+      ${isMax
+        ? `<span style="font-size:11px;color:var(--gold)">MAX</span>`
+        : `<button class="btn btn-sm ${canUpg?'btn-blue':'btn-outline'}" onclick="upgradeLabLevel()" ${canUpg?'':'disabled'} style="font-size:11px">
+             Lv.${cfg.lv+1}へ強化 ${itemIconHTML('gold','11px')}${fmt(cfg.upgCost)}
+           </button>`}
+    </div>`;
+
+  if (_labTab === 'produce') {
+    _renderLabProduce(el, lab, cfg);
+  } else {
+    _renderLabAlch(el, lab);
+  }
+}
+
+function _renderLabProduce(el, lab, cfg) {
+  const wrap = document.createElement('div');
+  wrap.className = 'lab-body';
+
+  // 全回収ボタン
+  const allBtn = document.createElement('button');
+  allBtn.className = 'btn btn-gold btn-sm';
+  allBtn.style.cssText = 'width:100%;margin-bottom:12px;';
+  allBtn.textContent = '📦 全スロットを回収';
+  allBtn.addEventListener('click', collectAllLab);
+  wrap.appendChild(allBtn);
+
+  const tiers = (tier) => {
+    if (tier === 't1') return ['t1'];
+    if (tier === 't2') return ['t1','t2'];
+    return ['t1','t2','t3'];
+  };
+
+  for (let i = 0; i < cfg.slots; i++) {
+    if (!lab.slots[i]) lab.slots[i] = { role:null, tier:'t1', lastCollected:Date.now() };
+    const slot = lab.slots[i];
+
+    const slotEl = document.createElement('div');
+    slotEl.className = 'lab-slot';
+
+    const availTiers = tiers(cfg.maxTier);
+    const curTier = availTiers.includes(slot.tier) ? slot.tier : 't1';
+    if (slot.tier !== curTier) slot.tier = curTier;
+
+    const roleOpts = `<option value="">-- 役職を選択 --</option>` +
+      LAB_ROLES.map(r => `<option value="${r.key}"${slot.role===r.key?' selected':''}>${r.label}</option>`).join('');
+    const tierOpts = availTiers.map(t => `<option value="${t}"${curTier===t?' selected':''}>${t.toUpperCase()}</option>`).join('');
+
+    slotEl.innerHTML = `<div class="lab-slot-hd">
+      <span class="lab-slot-no">SLOT ${i+1}</span>
+      <select class="lab-slot-sel" onchange="gState.lab.slots[${i}].role=this.value;gState.lab.slots[${i}].lastCollected=Date.now();saveState();renderLabContent()">${roleOpts}</select>
+      <select class="lab-slot-sel" style="max-width:55px" onchange="gState.lab.slots[${i}].tier=this.value;gState.lab.slots[${i}].lastCollected=Date.now();saveState();renderLabContent()">${tierOpts}</select>
+    </div>`;
+
+    if (slot.role) {
+      const hrsPerItem = LAB_BASE_HOURS[curTier] / cfg.speedMult;
+      const elapsed = Math.min(LAB_MAX_HOURS, (Date.now() - (slot.lastCollected || Date.now())) / 3600000);
+      const qty = Math.floor(elapsed / hrsPerItem);
+      const nextPct = ((elapsed % hrsPerItem) / hrsPerItem) * 100;
+      const remainH = hrsPerItem - (elapsed % hrsPerItem);
+      const remHInt = Math.floor(remainH);
+      const remMInt = Math.floor((remainH - remHInt) * 60);
+      const atCap = elapsed >= LAB_MAX_HOURS;
+      const roleInfo = LAB_ROLES.find(r => r.key === slot.role);
+      const roleColor = roleInfo?.color || 'var(--accent2)';
+
+      slotEl.innerHTML += `
+        <div class="lab-prog"><div class="lab-prog-fill" style="width:${nextPct}%"></div></div>
+        <div class="lab-yield-row">
+          <div style="font-size:11px;color:var(--text3)">
+            ${atCap ? '<span style="color:var(--red)">貯蔵上限</span>' : `次まで ${remHInt}h${remMInt}m`}
+          </div>
+          <div class="lab-yield-val" style="color:${roleColor}">${qty}個</div>
+        </div>
+        <button class="btn btn-gold btn-sm" style="width:100%;margin-top:8px" onclick="collectLabSlot(${i})">
+          回収 (${roleInfo?.label || slot.role} 響典${curTier.toUpperCase()} ×${qty})
+        </button>`;
+    } else {
+      slotEl.innerHTML += `<div style="font-size:12px;color:var(--text3);text-align:center;padding:6px 0">役職を選択して生産を開始</div>`;
+    }
+
+    wrap.appendChild(slotEl);
+  }
+  el.appendChild(wrap);
+}
+
+function _renderLabAlch(el, lab) {
+  const wrap = document.createElement('div');
+  wrap.className = 'lab-body';
+
+  // 説明
+  const note = document.createElement('div');
+  note.style.cssText = 'font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.7';
+  note.innerHTML = '低Tier素材を消費してより高Tierに変換します。<br>同一役職のみ変換可能。変換後は元に戻せません。';
+  wrap.appendChild(note);
+
+  // 役職セレクタ
+  const roleSelEl = document.createElement('select');
+  roleSelEl.className = 'lab-slot-sel';
+  roleSelEl.style.cssText = 'width:100%;margin-bottom:14px;';
+  roleSelEl.innerHTML = LAB_ROLES.map(r => `<option value="${r.key}"${_labAlchRole===r.key?' selected':''}>${r.label}</option>`).join('');
+  roleSelEl.addEventListener('change', e => { _labAlchRole = e.target.value; renderLabContent(); });
+  wrap.appendChild(roleSelEl);
+
+  const role = _labAlchRole;
+  const bag = gState.player.kyoten[role] || { t1:0, t2:0, t3:0 };
+  const roleInfo = LAB_ROLES.find(r => r.key === role);
+
+  // 所持数表示
+  const stockEl = document.createElement('div');
+  stockEl.style.cssText = `font-size:12px;color:${roleInfo?.color||'var(--accent2)'};margin-bottom:10px;font-weight:700`;
+  stockEl.textContent = `所持: T1 ×${bag.t1||0} / T2 ×${bag.t2||0} / T3 ×${bag.t3||0}`;
+  wrap.appendChild(stockEl);
+
+  // レシピ一覧
+  LAB_ALCH_RECIPES.forEach(recipe => {
+    const hasItems = (bag[recipe.fromTier] || 0) >= recipe.inQty;
+    const hasGold  = gState.player.gold >= recipe.gold;
+    const canAlch  = hasItems && hasGold;
+    const recipeEl = document.createElement('div');
+    recipeEl.className = 'lab-alch-recipe';
+    recipeEl.innerHTML = `
+      <div style="flex:1;font-size:12px">
+        <span style="color:var(--text)">響典${recipe.fromTier.toUpperCase()} ×${recipe.inQty}</span>
+        <span style="color:var(--text3)"> + </span>
+        <span style="color:${hasGold?'var(--gold)':'var(--red)'}">${itemIconHTML('gold','12px')}${fmt(recipe.gold)}</span>
+        <span style="color:var(--accent2);margin:0 6px">→</span>
+        <span style="color:var(--text)">響典${recipe.toTier.toUpperCase()} ×1</span>
+        ${!hasItems ? `<br><span style="font-size:10px;color:var(--red)">素材不足 (所持:${bag[recipe.fromTier]||0}/${recipe.inQty})</span>` : ''}
+      </div>
+      <button class="btn btn-sm ${canAlch?'btn-blue':'btn-outline'}" onclick="labAlchemy('${recipe.fromTier}','${recipe.toTier}','${role}')" ${canAlch?'':'disabled'}>
+        合成
+      </button>`;
+    wrap.appendChild(recipeEl);
+  });
+
+  el.appendChild(wrap);
 }
 
 // ===== 鍛冶屋 =====
