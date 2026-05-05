@@ -2868,6 +2868,7 @@ img.item-icon {
       <div class="lab-tab" onclick="switchClanHallTab('mine')">⛏️ 鉱山</div>
       <div class="lab-tab" onclick="switchClanHallTab('lab')">🧪 研究所</div>
       <div class="lab-tab" onclick="switchClanHallTab('alch')">⚗️ 錬金工房</div>
+      <div class="lab-tab" onclick="switchClanHallTab('expedition')">🗺️ 遠征</div>
     </div>
     <div id="clan-hall-body"></div>
   </div>
@@ -7092,6 +7093,7 @@ function defaultState(clanName) {
     ownedCards: [],   // フェーズ1: 所持スキルカード一覧
     mine:{ lastCollected:Date.now(), level:{ speed:1, cap:1 } },
     lab:{ level:1, slots:[{ role:null, tier:'t1', lastCollected:Date.now() }] },
+    expeditions:{ slots:[{ regionId:null, startedAt:null }] },
     starMap:{ unlockedNodes:[] },
     library:{ discovered:[] },
     gacha:{
@@ -7204,6 +7206,8 @@ function normalizeState() {
   if (!p.kyoten) p.kyoten = { warrior:{t1:0,t2:0,t3:0}, vanguard:{t1:0,t2:0,t3:0}, ranger:{t1:0,t2:0,t3:0}, support:{t1:0,t2:0,t3:0}, trickster:{t1:0,t2:0,t3:0}, scout:{t1:0,t2:0,t3:0} }; // 響典
   if (!gState.lab) gState.lab = { level:1, slots:[{ role:null, tier:'t1', lastCollected:Date.now() }] };
   if (!Array.isArray(gState.lab.slots)) gState.lab.slots = [{ role:null, tier:'t1', lastCollected:Date.now() }];
+  if (!gState.expeditions) gState.expeditions = { slots:[{ regionId:null, startedAt:null }] };
+  if (!Array.isArray(gState.expeditions.slots)) gState.expeditions.slots = [{ regionId:null, startedAt:null }];
   if (!p.eiyuutan) p.eiyuutan = { warrior:0, vanguard:0, ranger:0, support:0, trickster:0, scout:0 }; // 英雄譚
   if (p.stardust === undefined) p.stardust = 0;
   if (p.cryptoSoulT1 === undefined) p.cryptoSoulT1 = 0;
@@ -7220,8 +7224,9 @@ function normalizeState() {
       if (typeof af.enhance === 'number' && af.level === undefined) {
         return { uid: af.uid, id: af.id, level: af.enhance || 0, rank: 0 };
       }
-      if (af.level === undefined) af.level = 0;
-      if (af.rank  === undefined) af.rank  = 0;
+      if (af.level    === undefined) af.level    = 0;
+      if (af.rank     === undefined) af.rank     = 0;
+      if (!af.skillLv)               af.skillLv  = 1; // Lv1スタートに統一
       return af;
     });
 
@@ -9168,7 +9173,17 @@ function openUnitDetail(uid) {
   })() : '';
   const _kyoRoleKey = {'アタッカー':'Warrior','タンク':'Vanguard','レンジ':'Ranger','サポート':'Support','スカウト':'Scout','トリックスター':'Trickster'}[cls.role] || 'Warrior';
   const _kyoBag = (gState.player.kyoten||{})[_kyoRoleKey.toLowerCase()] || {t1:0,t2:0,t3:0};
-  const _KSCOST = [{t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1}];
+  const _KSCOST = [
+    {t1: 3,t2: 0,t3:0},  // Lv1→2
+    {t1: 5,t2: 0,t3:0},  // Lv2→3
+    {t1: 7,t2: 0,t3:0},  // Lv3→4
+    {t1:10,t2: 1,t3:0},  // Lv4→5
+    {t1:12,t2: 3,t3:0},  // Lv5→6
+    {t1:15,t2: 5,t3:0},  // Lv6→7
+    {t1:15,t2: 7,t3:1},  // Lv7→8
+    {t1:15,t2:10,t3:3},  // Lv8→9
+    {t1:20,t2:12,t3:5},  // Lv9→10
+  ];
   const activeSkillsHTML = (cls.activeSkills||[]).map(sk => {
     const bColor = _skillBorderColor[sk.type] || 'var(--border)';
     const isSupport = sk.type === 'buff';
@@ -9176,12 +9191,12 @@ function openUnitDetail(uid) {
     const typeLabelText = isSupport ? '支援' : '攻撃';
     const typeLabelCls  = isSupport ? 'tac-badge-type-sup' : 'tac-badge-type-atk';
     const skLv = (prog.skillLevels||{})[sk.id] || 1;
-    const atSkMax = skLv >= 4;
+    const atSkMax = skLv >= 10;
     const skCost = atSkMax ? null : _KSCOST[skLv - 1];
     const canSkUp = skCost && _kyoBag.t1>=(skCost.t1||0) && _kyoBag.t2>=(skCost.t2||0) && _kyoBag.t3>=(skCost.t3||0);
     const skIconKey = `kyoten${_kyoRoleKey}T${skLv <= 3 ? skLv : 3}`;
-    const skCostStr = skCost ? (skCost.t1 ? `T1×${skCost.t1}` : skCost.t2 ? `T2×${skCost.t2}` : `T3×${skCost.t3}`) : '';
-    const skHaveStr = skCost ? (skCost.t1 ? `${_kyoBag.t1}` : skCost.t2 ? `${_kyoBag.t2}` : `${_kyoBag.t3}`) : '';
+    const skCostStr = skCost ? [skCost.t1?`T1×${skCost.t1}`:'',skCost.t2?`T2×${skCost.t2}`:'',skCost.t3?`T3×${skCost.t3}`:''].filter(Boolean).join('+') : '';
+    const skHaveStr = skCost ? [skCost.t1?`${_kyoBag.t1}`:'',skCost.t2?`${_kyoBag.t2}`:'',skCost.t3?`${_kyoBag.t3}`:''].filter(Boolean).join('/') : '';
     const skUpBtn = atSkMax
       ? `<span style="font-size:9px;color:var(--green);font-weight:700">MAX</span>`
       : `<button onclick="skillUpChar('${uid}','${sk.id}')" style="font-size:10px;padding:2px 7px;display:inline-flex;align-items:center;gap:3px;background:${canSkUp?'rgba(200,160,40,0.2)':'rgba(60,60,60,0.2)'};color:${canSkUp?'var(--gold)':'var(--text3)'};border:1px solid ${canSkUp?'rgba(200,160,40,0.4)':'var(--border)'};border-radius:4px;cursor:${canSkUp?'pointer':'default'}" ${canSkUp?'':'disabled'}>${itemIconHTML(skIconKey,'11px')} ${skCostStr}<span style="font-size:8px;opacity:0.7">(${skHaveStr})</span> →Lv.${skLv+1}</button>`;
@@ -9388,8 +9403,18 @@ function skillUpChar(uid, skillId) {
   const prog = gState.unitProgress[uid] || {level:1};
   if (!prog.skillLevels) prog.skillLevels = {};
   const skLv = prog.skillLevels[skillId] || 1;
-  if (skLv >= 4) return;
-  const KSCOST = [{t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1}];
+  if (skLv >= 10) return;
+  const KSCOST = [
+    {t1: 3,t2: 0,t3:0},
+    {t1: 5,t2: 0,t3:0},
+    {t1: 7,t2: 0,t3:0},
+    {t1:10,t2: 1,t3:0},
+    {t1:12,t2: 3,t3:0},
+    {t1:15,t2: 5,t3:0},
+    {t1:15,t2: 7,t3:1},
+    {t1:15,t2:10,t3:3},
+    {t1:20,t2:12,t3:5},
+  ];
   const cost = KSCOST[skLv - 1];
   const kyoKey = {'アタッカー':'warrior','タンク':'vanguard','レンジ':'ranger','サポート':'support','スカウト':'scout','トリックスター':'trickster'}[cls.role] || 'warrior';
   if (!gState.player.kyoten) gState.player.kyoten = {};
@@ -9413,8 +9438,8 @@ function ultUpChar(uid) {
   const cls = CLASS_DATA[u.classId];
   const prog = gState.unitProgress[uid] || { level:1 };
   const ultLv = prog.ultLv || 1;
-  if (ultLv >= 4) return;
-  const costs = [1, 2, 3];
+  if (ultLv >= 10) return;
+  const costs = [1, 2, 3, 5, 7, 10, 12, 15, 20];
   const cost = costs[ultLv - 1];
   const roleKey = {'アタッカー':'warrior','タンク':'vanguard','レンジ':'ranger','サポート':'support','スカウト':'scout','トリックスター':'trickster'}[cls.role] || 'warrior';
   if (!gState.player.eiyuutan) gState.player.eiyuutan = {};
@@ -9426,6 +9451,36 @@ function ultUpChar(uid) {
   const ult = cls.ultimates?.find(x => x.id === u.ultimateId) || cls.ultimates?.[0];
   saveState();
   toast(`${u.name} 【${ult?.name||'必殺技'}】 Lv.${ultLv + 1} に強化！`);
+  openUnitDetail(uid);
+}
+
+// キャラ凸: SSR spec×60+gen×10 / SR spec×15+gen×0 per level, max 6
+function getCharRarity(classId) {
+  if ((CHAR_POOL[3]||[]).includes(classId)) return 3;
+  if ((CHAR_POOL[2]||[]).includes(classId)) return 2;
+  return 2;
+}
+function charConsteCost(classId) {
+  const rarity = getCharRarity(classId);
+  return rarity === 3 ? { spec: 60, gen: 10 } : { spec: 15, gen: 0 };
+}
+function constellateChar(uid) {
+  const u = gState.ownedUnits.find(x => x.uid === uid);
+  if (!u) return;
+  const prog = gState.unitProgress[uid] || { level: 1 };
+  const conste = prog.conste || 0;
+  if (conste >= 6) return;
+  const cost = charConsteCost(u.classId);
+  if (!gState.player.unitFragments) gState.player.unitFragments = {};
+  const specHave = gState.player.unitFragments[u.classId] || 0;
+  const genHave  = gState.player.genericFragments || 0;
+  if (specHave < cost.spec || genHave < cost.gen) return;
+  gState.player.unitFragments[u.classId] = specHave - cost.spec;
+  if (cost.gen > 0) gState.player.genericFragments = genHave - cost.gen;
+  prog.conste = conste + 1;
+  gState.unitProgress[uid] = prog;
+  saveState();
+  toast(`${u.name} ★${prog.conste}凸！ ATK・HP +${prog.conste * 5}%`);
   openUnitDetail(uid);
 }
 
@@ -9663,6 +9718,12 @@ function calcStats(unit) {
   cridam += ac.cridam || 0;
   pdef   += (ac.pres || ac.pdef || 0);
   mdef   += (ac.mres || ac.mdef || 0) + (ac.bres || 0) + (ac.lres || 0);
+  // キャラ凸ボーナス: +5% ATK・HP per conste level
+  const _conste = prog.conste || 0;
+  if (_conste > 0) {
+    atk = Math.floor(atk * (1 + _conste * 0.05));
+    hp  = Math.floor(hp  * (1 + _conste * 0.05));
+  }
   return {
     atk, hp,
     spd,
@@ -12087,7 +12148,7 @@ function doAttack(attacker, targets, skill) {
 }
 
 function performUlt(c, enemies, allies) {
-  const _ultLvMult = [1.0, 1.10, 1.25, 1.50][(c.ultLv||1)-1] || 1.0;
+  const _ultLvMult = [1.0, 1.10, 1.25, 1.50, 1.75, 2.00, 2.30, 2.60, 3.00, 3.50][(c.ultLv||1)-1] || 1.0;
   const _ultBoost  = 1 + ((c._ultBoostPct||0) / 100);
   const ult = (_ultLvMult > 1.0 || _ultBoost > 1.0)
     ? { ...c.ultimate, power: (c.ultimate.power||1)*_ultLvMult*_ultBoost, shieldRatio: (c.ultimate.shieldRatio||0.5)*_ultLvMult }
@@ -13274,6 +13335,18 @@ function endBattle(victory) {
           const n = Math.floor(Math.random() * _area) + Math.floor(Math.random()*3) + 2;
           _stone.t1 += n;
           drops.push({ name:`${itemIconHTML('atomT1','14px')} アトム秘石T1 ×${n}` });
+        }
+        // アトム秘石T2: 20%（エリア3以降）
+        if (_area >= 3 && Math.random() < 0.20) {
+          const n = Math.floor(Math.random() * Math.max(1, _area - 2)) + 1;
+          _stone.t2 = (_stone.t2||0) + n;
+          drops.push({ name:`${itemIconHTML('atomT2','14px')} アトム秘石T2 ×${n}` });
+        }
+        // アトム秘石T3: 10%（エリア5以降）
+        if (_area >= 5 && Math.random() < 0.10) {
+          const n = 1;
+          _stone.t3 = (_stone.t3||0) + n;
+          drops.push({ name:`${itemIconHTML('atomT3','14px')} アトム秘石T3 ×${n}` });
         }
         // アトミックコアT1: 10%（エリア2以降）
         if (_area >= 2 && Math.random() < 0.10) {
@@ -16061,13 +16134,13 @@ function renderTacticsOrderList() {
     el.appendChild(sec3);
 
     const _ultLv = prog.ultLv || 1;
-    const _atUltMax = _ultLv >= 4;
-    const _ultCosts = [1, 2, 3];
+    const _atUltMax = _ultLv >= 10;
+    const _ultCosts = [1, 2, 3, 5, 7, 10, 12, 15, 20];
     const _ultUpCost = _atUltMax ? 0 : _ultCosts[_ultLv - 1];
     const _eiyuutanRoleKey = {'アタッカー':'warrior','タンク':'vanguard','レンジ':'ranger','サポート':'support','スカウト':'scout','トリックスター':'trickster'}[cls.role] || 'warrior';
     const _eiyuutanHave = (gState.player.eiyuutan || {})[_eiyuutanRoleKey] || 0;
     const _canUltUp = !_atUltMax && _eiyuutanHave >= _ultUpCost;
-    const _ultLvMults = ['×1.00','×1.10','×1.25','×1.50'];
+    const _ultLvMults = ['×1.00','×1.10','×1.25','×1.50','×1.75','×2.00','×2.30','×2.60','×3.00','×3.50'];
     const _eiyuutanIconKey = `eiyuutan${_eiyuutanRoleKey.charAt(0).toUpperCase()+_eiyuutanRoleKey.slice(1)}`;
     const _ultUpBtn = _atUltMax
       ? `<span style="font-size:9px;color:var(--green);font-weight:700">MAX</span>`
@@ -16094,6 +16167,55 @@ function renderTacticsOrderList() {
         ${_ultUpBtn}
       </div>`;
     el.appendChild(ultRow);
+  }
+
+  // ────────────────────────────────────────
+  // セクション4: キャラ凸
+  // ────────────────────────────────────────
+  {
+    const _conste = prog.conste || 0;
+    const _atConsteMax = _conste >= 6;
+    const _consteCost = charConsteCost(u.classId);
+    const _specHave = (gState.player.unitFragments || {})[u.classId] || 0;
+    const _genHave  = gState.player.genericFragments || 0;
+    const _canConste = !_atConsteMax && _specHave >= _consteCost.spec && _genHave >= _consteCost.gen;
+    const _rarityLbl = getCharRarity(u.classId) === 3 ? 'SSR' : 'SR';
+    const _consteDots = Array.from({length:6}, (_,i) =>
+      `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 2px;background:${i<_conste?'var(--gold)':'var(--border)'}"></span>`
+    ).join('');
+    const _costStr = _consteCost.gen > 0
+      ? `専用素材×${_consteCost.spec} + 汎用×${_consteCost.gen}`
+      : `専用素材×${_consteCost.spec}`;
+    const _haveStr = _consteCost.gen > 0
+      ? `専用 ${_specHave} / 汎用 ${_genHave}`
+      : `専用 ${_specHave}`;
+    const _consteBtn = _atConsteMax
+      ? `<span style="font-size:9px;color:var(--gold);font-weight:700">★MAX</span>`
+      : `<button onclick="constellateChar('${uid}')" style="font-size:10px;padding:2px 7px;background:${_canConste?'rgba(240,180,50,0.2)':'rgba(60,60,60,0.2)'};color:${_canConste?'var(--gold)':'var(--text3)'};border:1px solid ${_canConste?'rgba(240,180,50,0.5)':'var(--border)'};border-radius:4px;cursor:${_canConste?'pointer':'default'}" ${_canConste?'':'disabled'}>★${_conste+1}凸へ</button>`;
+    const sec4 = document.createElement('div');
+    sec4.className = 'tac-section-label';
+    sec4.style.marginTop = '10px';
+    sec4.textContent = '★ キャラ凸';
+    el.appendChild(sec4);
+    const consteRow = document.createElement('div');
+    consteRow.style.cssText = `
+      background:linear-gradient(135deg,rgba(240,180,50,0.08),rgba(240,120,50,0.06));
+      border:1px solid rgba(240,180,50,0.3);border-left:3px solid var(--gold);
+      padding:8px 10px;
+    `;
+    consteRow.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid rgba(240,180,50,0.2);">
+        <span style="font-size:13px">★</span>
+        <span style="font-size:11px;font-weight:700;color:var(--gold);">キャラ凸 ${_conste} / 6</span>
+        <span style="font-size:9px;color:var(--text3);padding:1px 5px;border:1px solid var(--border);border-radius:3px;margin-left:2px">${_rarityLbl}</span>
+        <span style="margin-left:auto">${_consteDots}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">ATK・HP +${_conste * 5}%（最大+30%）</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
+        <span style="font-size:10px;color:var(--text3);">${_costStr}<br><span style="color:var(--text2)">${_haveStr}</span></span>
+        ${_consteBtn}
+      </div>`;
+    el.appendChild(consteRow);
   }
 
   saveState(); // tactics同期を保存
@@ -17210,7 +17332,7 @@ function switchClanHallTab(tab) {
 }
 
 function renderClanHall() {
-  const tabKeys = ['mine', 'lab', 'alch'];
+  const tabKeys = ['mine', 'lab', 'alch', 'expedition'];
   const tabs = document.querySelectorAll('#clan-hall-tabs .lab-tab');
   tabs.forEach((t, i) => t.classList.toggle('active', tabKeys[i] === _clanHallTab));
 
@@ -17227,6 +17349,9 @@ function renderClanHall() {
   } else if (_clanHallTab === 'lab') {
     body.innerHTML = '<div id="lab-content"></div>';
     _renderClanHallLabTab(document.getElementById('lab-content'));
+  } else if (_clanHallTab === 'expedition') {
+    body.innerHTML = '<div id="expedition-content"></div>';
+    _renderExpedition(document.getElementById('expedition-content'));
   } else {
     body.innerHTML = '<div id="lab-content"></div>';
     _renderLabAlch(document.getElementById('lab-content'), gState.lab);
@@ -17466,6 +17591,147 @@ function _renderLabAlch(el, lab) {
   });
 
   el.appendChild(wrap);
+}
+
+// ===== 遠征 =====
+const EXPEDITION_REGIONS = [
+  {
+    id:'cave', icon:'⛏️', name:'石灰の洞窟', durationH:2,
+    desc:'序盤の洞窟。アトム秘石T1・T2が手に入る。',
+    rewards:[
+      { label:'アトム秘石T1', give:(p)=>{ const n=_expRandInt(3,8); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t1+=n; return `${itemIconHTML('atomT1','13px')} ×${n}`; } },
+      { label:'アトム秘石T2', chance:0.5, give:(p)=>{ const n=_expRandInt(1,3); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t2=(p.atomStone.t2||0)+n; return `${itemIconHTML('atomT2','13px')} ×${n}`; } },
+    ],
+  },
+  {
+    id:'valley', icon:'💎', name:'星晶の谷', durationH:4,
+    desc:'美しい渓谷。アトム秘石T2・T3とアトミックコアが取れる。',
+    rewards:[
+      { label:'アトム秘石T2', give:(p)=>{ const n=_expRandInt(2,5); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t2=(p.atomStone.t2||0)+n; return `${itemIconHTML('atomT2','13px')} ×${n}`; } },
+      { label:'アトム秘石T3', chance:0.4, give:(p)=>{ (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t3=(p.atomStone.t3||0)+1; return `${itemIconHTML('atomT3','13px')} ×1`; } },
+      { label:'アトミックコア', chance:0.6, give:(p)=>{ const n=_expRandInt(1,3); (p.atomCore=p.atomCore||{t1:0}).t1=(p.atomCore.t1||0)+n; return `${itemIconHTML('atomCore','13px')} ×${n}`; } },
+    ],
+  },
+  {
+    id:'tower', icon:'🗼', name:'廃墟の塔', durationH:6,
+    desc:'謎めいた廃墟。星屑の砂と神刻ルーンが出る。',
+    rewards:[
+      { label:'星屑の砂', give:(p)=>{ const n=_expRandInt(8,20); p.stardust=(p.stardust||0)+n; return `${itemIconHTML('stardust','13px')} ×${n}`; } },
+      { label:'神刻ルーンT1', chance:0.7, give:(p)=>{ const n=_expRandInt(1,3); (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t1=(p.runeStone.t1||0)+n; return `${itemIconHTML('runeT1','13px')} ×${n}`; } },
+      { label:'神刻ルーンT2', chance:0.3, give:(p)=>{ (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t2=(p.runeStone.t2||0)+1; return `${itemIconHTML('runeT2','13px')} ×1`; } },
+    ],
+  },
+  {
+    id:'peak', icon:'⛰️', name:'霊峰の奥地', durationH:8,
+    desc:'伝説の霊山。高レアなAF素材と英雄譚が手に入る。',
+    rewards:[
+      { label:'アトム秘石T3', give:(p)=>{ const n=_expRandInt(1,2); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t3=(p.atomStone.t3||0)+n; return `${itemIconHTML('atomT3','13px')} ×${n}`; } },
+      { label:'神刻ルーンT2', chance:0.5, give:(p)=>{ const n=_expRandInt(1,2); (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t2=(p.runeStone.t2||0)+n; return `${itemIconHTML('runeT2','13px')} ×${n}`; } },
+      { label:'神刻ルーンT3', chance:0.25, give:(p)=>{ (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t3=(p.runeStone.t3||0)+1; return `${itemIconHTML('runeT3','13px')} ×1`; } },
+    ],
+  },
+];
+// クランLvに応じた遠征スロット数
+
+function _expSlotCount() {
+  const lv = gState.player.level || 1;
+  if (lv >= 30) return 3;
+  if (lv >= 15) return 2;
+  return 1;
+}
+function _expRandInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function expeditionStart(slotIdx, regionId) {
+  if (!gState.expeditions) gState.expeditions = { slots: [] };
+  while (gState.expeditions.slots.length <= slotIdx) gState.expeditions.slots.push({ regionId:null, startedAt:null });
+  gState.expeditions.slots[slotIdx] = { regionId, startedAt: Date.now() };
+  saveState();
+  renderClanHall();
+}
+
+function expeditionCollect(slotIdx) {
+  const slot = (gState.expeditions?.slots || [])[slotIdx];
+  if (!slot?.regionId || !slot.startedAt) return;
+  const region = EXPEDITION_REGIONS.find(r => r.id === slot.regionId);
+  if (!region) return;
+  const elapsedH = (Date.now() - slot.startedAt) / 3600000;
+  if (elapsedH < region.durationH) return;
+
+  const p = gState.player;
+  const got = [];
+  region.rewards.forEach(r => {
+    if (r.chance === undefined || Math.random() < r.chance) {
+      got.push(r.give(p));
+    }
+  });
+  gState.expeditions.slots[slotIdx] = { regionId: null, startedAt: null };
+  saveState();
+  toast(`${region.icon} 遠征帰還！ ${got.join(' ')}`);
+  renderClanHall();
+}
+
+function _renderExpedition(el) {
+  const slotCount = _expSlotCount();
+  const slots = gState.expeditions?.slots || [];
+  while (slots.length < slotCount) slots.push({ regionId: null, startedAt: null });
+
+  let html = `<div class="lab-body">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">遠征に出発するとアイテムを持ち帰ります。スロットは Clan Lv.15 で2枠、Lv.30 で3枠に増えます。</div>`;
+
+  for (let i = 0; i < slotCount; i++) {
+    const slot = slots[i] || { regionId: null, startedAt: null };
+    const region = slot.regionId ? EXPEDITION_REGIONS.find(r => r.id === slot.regionId) : null;
+    const now = Date.now();
+    const elapsedH = region && slot.startedAt ? (now - slot.startedAt) / 3600000 : 0;
+    const done = region && elapsedH >= region.durationH;
+    const pct = region ? Math.min(100, (elapsedH / region.durationH) * 100) : 0;
+    const remaining = region && !done ? (() => {
+      const remSec = Math.max(0, Math.round((region.durationH * 3600000 - (now - slot.startedAt)) / 1000));
+      const h = Math.floor(remSec / 3600), m = Math.floor((remSec % 3600) / 60);
+      return h > 0 ? `${h}時間${m}分` : `${m}分`;
+    })() : '';
+
+    html += `<div class="lab-slot" style="margin-bottom:10px">
+      <div class="lab-slot-hd" style="font-size:12px;font-weight:700;color:var(--text2)">📤 遠征スロット ${i + 1}</div>`;
+
+    if (!region) {
+      // 未出発 → 地域選択
+      html += `<div style="font-size:11px;color:var(--text3);margin-bottom:8px">出発先を選んでください：</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">`;
+      EXPEDITION_REGIONS.forEach(reg => {
+        html += `<button onclick="expeditionStart(${i},'${reg.id}')" style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:8px;text-align:left;cursor:pointer">
+          <div style="font-size:16px">${reg.icon}</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text)">${reg.name}</div>
+          <div style="font-size:10px;color:var(--accent2)">${reg.durationH}時間</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:2px">${reg.desc}</div>
+        </button>`;
+      });
+      html += `</div>`;
+    } else if (done) {
+      // 帰還済み
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:20px">${region.icon}</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--green)">${region.name} — 帰還完了！</div>
+          <div style="font-size:10px;color:var(--text3)">${region.rewards.map(r=>r.label).join(' / ')}</div>
+        </div>
+        <button onclick="expeditionCollect(${i})" class="btn btn-gold btn-sm" style="margin-left:auto">回収</button>
+      </div>`;
+    } else {
+      // 遠征中
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:20px">${region.icon}</span>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:700;color:var(--text)">${region.name} 遠征中…</div>
+          <div style="font-size:10px;color:var(--text3)">残り ${remaining}</div>
+        </div>
+      </div>
+      <div class="lab-prog"><div class="lab-prog-fill" style="width:${pct.toFixed(1)}%"></div></div>`;
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+  el.innerHTML = html;
 }
 
 // ===== 鍛冶屋 =====
@@ -17872,11 +18138,11 @@ function _buildAfDetailHTML(uid) {
   const lv      = inst.level   || 0;
   const rank    = inst.rank    || 0;
   const conste  = inst.conste  || 0;
-  const skillLv = inst.skillLv || 0;
+  const skillLv = inst.skillLv || 1;
   const maxLv   = AF_RANK_MAX[rank];
   const atLvMax = lv >= maxLv;
   const atRankMax = rank >= 3;
-  const atSkMax   = skillLv >= 3;
+  const atSkMax   = skillLv >= 10;
   const atConsteMax = conste >= 9;
   const rc = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' }[def.rarity] || 'var(--text3)';
   const p  = gState.player;
@@ -17886,10 +18152,10 @@ function _buildAfDetailHTML(uid) {
   const dupCount  = (p.afDuplicates || {})[def.id] || 0;
   const equippedBy = gState.ownedUnits.find(u => u.equippedArtifact === uid);
   const enhCost   = afEnhanceCost(lv);
-  const canEnhance = !atLvMax && atomStone.t1 >= (enhCost.t1||0);
+  const canEnhance = !atLvMax && atomStone.t1 >= (enhCost.t1||0) && (atomStone.t2||0) >= (enhCost.t2||0) && (atomStone.t3||0) >= (enhCost.t3||0);
   const rkCost    = !atRankMax ? AF_RANKUP_COST[rank] : null;
   const canRankUp = !atRankMax && atLvMax && rkCost && atomCore.t1 >= (rkCost.t1||0);
-  const skCost    = !atSkMax ? AF_SKILL_COST[skillLv] : null;
+  const skCost    = !atSkMax ? AF_SKILL_COST[skillLv - 1] : null;
   const canSkillUp = !atSkMax && skCost &&
     rune.t1 >= (skCost.t1||0) && rune.t2 >= (skCost.t2||0) && rune.t3 >= (skCost.t3||0);
   const canConste = !atConsteMax && dupCount >= 1;
@@ -17917,7 +18183,7 @@ function _buildAfDetailHTML(uid) {
       <div style="font-size:11px;color:${cc};font-weight:700">${statsVals}</div>
     </div>`;
   }).join('');
-  const skCostStr = !atSkMax && skCost ? (skCost.t1?`ルーンT1×${skCost.t1}`:skCost.t2?`T2×${skCost.t2}`:`T3×${skCost.t3}`) : '';
+  const skCostStr = !atSkMax && skCost ? [skCost.t1?`T1×${skCost.t1}`:'',skCost.t2?`T2×${skCost.t2}`:'',skCost.t3?`T3×${skCost.t3}`:''].filter(Boolean).join('+') : '';
   const baseRefund = { N:2000, SR:5000, SSR:10000 }[def.rarity] || 2000;
   const goldRefund = baseRefund + Math.floor(lv / 5) * 100;
   return `<div class="unit-detail-panel" style="overflow-y:auto;max-height:90vh;">
@@ -17962,11 +18228,11 @@ function _buildAfDetailHTML(uid) {
     <div class="udp-section">
       <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center">
         <span>ENHANCE</span>
-        <span style="font-size:10px;color:var(--text2);font-weight:normal">秘石T1:${atomStone.t1||0}　コアT1:${atomCore.t1||0}</span>
+        <span style="font-size:10px;color:var(--text2);font-weight:normal">T1:${atomStone.t1||0} T2:${atomStone.t2||0} T3:${atomStone.t3||0}　コアT1:${atomCore.t1||0}</span>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-blue btn-sm" ${canEnhance?'':'disabled'} onclick="afDetailEnhance('${uid}')">
-          +1 強化 ${atLvMax?'(上限達成)':'(秘石T1×'+(enhCost.t1||0)+')'}
+          +1 強化 ${atLvMax?'(上限達成)':'('+[enhCost.t1?`T1×${enhCost.t1}`:'',enhCost.t2?`T2×${enhCost.t2}`:'',enhCost.t3?`T3×${enhCost.t3}`:''].filter(Boolean).join('+')+')'}
         </button>
         ${!atRankMax
           ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid var(--gold);" ${canRankUp?'':'disabled'} onclick="afDetailRankUp('${uid}')">Rank${rank+1}へ (コアT1×${rkCost?.t1||0})</button>`
@@ -17976,11 +18242,11 @@ function _buildAfDetailHTML(uid) {
     <div class="udp-section">
       <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center">
         <span>ARTIFACT SKILL</span>
-        <span style="font-size:10px;color:var(--text2);font-weight:normal">スキルLv ${skillLv} / 3</span>
+        <span style="font-size:10px;color:var(--text2);font-weight:normal">スキルLv ${skillLv} / 10</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
         <div style="flex:1;display:flex;gap:3px">
-          ${Array.from({length:3},(_,i)=>`<div style="flex:1;height:4px;border-radius:2px;background:${i<skillLv?'var(--purple)':'var(--border)'}"></div>`).join('')}
+          ${Array.from({length:10},(_,i)=>`<div style="flex:1;height:4px;border-radius:2px;background:${i<skillLv?'var(--purple)':'var(--border)'}"></div>`).join('')}
         </div>
         ${!atSkMax
           ? `<button class="btn btn-sm" style="background:rgba(160,80,240,0.15);color:#c084fc;border:1px solid #c084fc;" ${canSkillUp?'':'disabled'} onclick="afDetailSkillUp('${uid}')">スキルLv↑ (${skCostStr})</button>`
@@ -18026,9 +18292,13 @@ function afDetailEnhance(uid) {
   const lv = inst.level||0, rank = inst.rank||0;
   if (lv >= AF_RANK_MAX[rank]) return;
   const cost = afEnhanceCost(lv);
-  const stone = gState.player.atomStone||{t1:0};
+  const stone = gState.player.atomStone||{t1:0,t2:0,t3:0};
   if (stone.t1 < (cost.t1||0)) { showBonusToast('アトム秘石T1が不足しています'); return; }
+  if ((stone.t2||0) < (cost.t2||0)) { showBonusToast('アトム秘石T2が不足しています'); return; }
+  if ((stone.t3||0) < (cost.t3||0)) { showBonusToast('アトム秘石T3が不足しています'); return; }
   stone.t1 -= cost.t1||0;
+  stone.t2 = (stone.t2||0) - (cost.t2||0);
+  stone.t3 = (stone.t3||0) - (cost.t3||0);
   gState.player.atomStone = stone;
   inst.level = lv + 1;
   saveState();
@@ -18061,9 +18331,9 @@ function afDetailRankUp(uid) {
 function afDetailSkillUp(uid) {
   const inst = (gState.artifacts||[]).find(a=>a.uid===uid);
   if (!inst) return;
-  const skillLv = inst.skillLv||0;
-  if (skillLv >= 3) return;
-  const cost = AF_SKILL_COST[skillLv];
+  const skillLv = inst.skillLv||1;
+  if (skillLv >= 10) return;
+  const cost = AF_SKILL_COST[skillLv - 1];
   const rune = gState.player.runeStone||{t1:0,t2:0,t3:0};
   if (rune.t1<(cost.t1||0)||rune.t2<(cost.t2||0)||rune.t3<(cost.t3||0)) { showBonusToast('神刻ルーンが不足しています'); return; }
   rune.t1-=cost.t1||0; rune.t2-=cost.t2||0; rune.t3-=cost.t3||0;
@@ -18241,7 +18511,7 @@ function renderArtifactEnhance(el) {
   const matDiv = document.createElement('div');
   matDiv.style.cssText = 'padding:10px 12px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);';
   const rune = p.runeStone || { t1:0, t2:0, t3:0 };
-  matDiv.innerHTML = `<div><b>${itemIconHTML('atomT1','13px')} アトム秘石T1:</b> ${atomStone.t1||0}&nbsp;&nbsp;<b>${itemIconHTML('atomCore','13px')} アトミックコアT1:</b> ${atomCore.t1||0}&nbsp;&nbsp;<b>${itemIconHTML('runeT1','13px')} 神刻ルーン</b> T1:${rune.t1} / T2:${rune.t2} / T3:${rune.t3}</div>`;
+  matDiv.innerHTML = `<div style="font-size:11px;line-height:1.8"><b>${itemIconHTML('atomT1','13px')} 秘石:</b> T1:${atomStone.t1||0} / T2:${atomStone.t2||0} / T3:${atomStone.t3||0}&nbsp;&nbsp;<b>${itemIconHTML('atomCore','13px')} コアT1:</b> ${atomCore.t1||0}&nbsp;&nbsp;<b>${itemIconHTML('runeT1','13px')} ルーン:</b> T1:${rune.t1} / T2:${rune.t2} / T3:${rune.t3}</div>`;
   el.appendChild(matDiv);
 
   if (!owned.length) {
@@ -18263,12 +18533,12 @@ function renderArtifactEnhance(el) {
     const rarityColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' }[def.rarity];
 
     const cost = afEnhanceCost(lv);
-    const hasStone = !atMax && atomStone.t1 >= (cost.t1||0);
+    const hasStone = !atMax && atomStone.t1 >= (cost.t1||0) && (atomStone.t2||0) >= (cost.t2||0) && (atomStone.t3||0) >= (cost.t3||0);
 
     const row = document.createElement('div');
     row.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;';
 
-    const costLabel = atMax ? 'Lv上限達成' : `秘石T1×${cost.t1||0}`;
+    const costLabel = atMax ? 'Lv上限達成' : [cost.t1?`T1×${cost.t1}`:'',cost.t2?`T2×${cost.t2}`:'',cost.t3?`T3×${cost.t3}`:''].filter(Boolean).join('+');
 
     // ランクアップ可否
     const rkCost = AF_RANKUP_COST[rank];
@@ -18276,21 +18546,21 @@ function renderArtifactEnhance(el) {
     const rkLabel = atRankMax ? '' : `コアT1×${rkCost?.t1||0}`;
 
     // スキルレベルアップ可否
-    const skillLv    = af.skillLv || 0;
-    const atSkillMax = skillLv >= 3;
-    const skCost     = AF_SKILL_COST[skillLv];
+    const skillLv    = af.skillLv || 1;
+    const atSkillMax = skillLv >= 10;
+    const skCost     = AF_SKILL_COST[skillLv - 1];
     const rune       = p.runeStone || { t1:0, t2:0, t3:0 };
     const canSkillUp = !atSkillMax && skCost &&
       (rune.t1 >= (skCost.t1||0) && rune.t2 >= (skCost.t2||0) && rune.t3 >= (skCost.t3||0));
     const skLabel = atSkillMax ? '' :
-      `ルーンT${skCost?.t1?'1':skCost?.t2?'2':'3'}×${skCost?.t1||skCost?.t2||skCost?.t3}`;
+      [skCost?.t1?`T1×${skCost.t1}`:'',skCost?.t2?`T2×${skCost.t2}`:'',skCost?.t3?`T3×${skCost.t3}`:''].filter(Boolean).join('+');
 
     row.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
         <span style="font-size:20px">${def.icon}</span>
         <div style="flex:1">
           <div style="font-size:12px;font-weight:700;color:var(--text)">${def.name} <span style="color:${rarityColor}">[${def.rarity}]</span></div>
-          <div style="font-size:10px;color:var(--text3)">Lv${lv}/${maxLv} (Rank${rank}) スキルLv${skillLv}/3 · ATK+${afMainScale(def.mainStat.atk||0,lv)} HP+${afMainScale(def.mainStat.hp||0,lv)}</div>
+          <div style="font-size:10px;color:var(--text3)">Lv${lv}/${maxLv} (Rank${rank}) スキルLv${skillLv}/10 · ATK+${afMainScale(def.mainStat.atk||0,lv)} HP+${afMainScale(def.mainStat.hp||0,lv)}</div>
         </div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -18322,9 +18592,9 @@ function renderArtifactEnhance(el) {
 function skillUpArtifact(idx) {
   const af = gState.artifacts[idx];
   if (!af) return;
-  const skillLv = af.skillLv || 0;
-  if (skillLv >= 3) return;
-  const cost = AF_SKILL_COST[skillLv];
+  const skillLv = af.skillLv || 1;
+  if (skillLv >= 10) return;
+  const cost = AF_SKILL_COST[skillLv - 1];
   const rune = gState.player.runeStone || { t1:0, t2:0, t3:0 };
   if (rune.t1 < (cost.t1||0) || rune.t2 < (cost.t2||0) || rune.t3 < (cost.t3||0)) return;
   rune.t1 -= cost.t1 || 0;
@@ -18659,7 +18929,9 @@ const SHOP_ITEMS = [
   { id:'mithril_s',    icon:'⛏️', name:'ミスリル×5',        desc:'鍛冶屋で使用',         price:800, currency:'crystal', gives:'mithril', amount:5 },
   { id:'starpoint_s',  icon:'⭐', name:'スターポイント×10', desc:'星図盤でノード解放',   price:600, currency:'crystal', gives:'starMapPoints', amount:10 },
   { id:'sweep_x5',     icon:'🎫', name:'周回チケット×5',    desc:'バベルステージを即時周回',price:200,currency:'crystal',gives:'sweepTicket',amount:5 },
-  { id:'atom_stone_t1', icon:'atomT1',   name:'アトム秘石T1×10',  desc:'AF強化素材',              price:300, currency:'crystal', gives:'atomStone_t1', amount:10 },
+  { id:'atom_stone_t1', icon:'atomT1',   name:'アトム秘石T1×10',  desc:'AF強化素材（Lv60未満）',    price:300,  currency:'crystal', gives:'atomStone_t1', amount:10 },
+  { id:'atom_stone_t2', icon:'atomT2',   name:'アトム秘石T2×3',   desc:'AF強化素材（Lv60〜79）',    price:500,  currency:'crystal', gives:'atomStone_t2', amount:3  },
+  { id:'atom_stone_t3', icon:'atomT3',   name:'アトム秘石T3×1',   desc:'AF強化素材（Lv80以上）',    price:800,  currency:'crystal', gives:'atomStone_t3', amount:1  },
   { id:'atom_core_t1',  icon:'atomCore', name:'アトミックコアT1×3', desc:'AFランクアップ素材',   price:600, currency:'crystal', gives:'atomCore_t1',  amount:3  },
   { id:'rune_t1',        icon:'runeT1', name:'神刻ルーンT1×3',    desc:'AFスキルLv1解放素材',           price:400,  currency:'crystal', gives:'runeStone_t1', amount:3 },
   { id:'rune_t2',        icon:'runeT2', name:'神刻ルーンT2×2',    desc:'AFスキルLv2解放素材',           price:800,  currency:'crystal', gives:'runeStone_t2', amount:2 },
@@ -18864,10 +19136,11 @@ const AF_RANK_MAX = [30, 60, 80, 100];
 
 // 強化素材消費テーブル（T1のみ使用）
 function afEnhanceCost(level) {
-  if (level < 30) return { t1:1 };
-  if (level < 60) return { t1:3 };
-  if (level < 80) return { t1:8 };
-  return                 { t1:15 };
+  if (level <  30) return { t1:1,  t2:0, t3:0 };
+  if (level <  60) return { t1:3,  t2:0, t3:0 };
+  if (level <  80) return { t1:3,  t2:1, t3:0 };
+  if (level < 100) return { t1:5,  t2:3, t3:0 };
+  return                  { t1:5,  t2:3, t3:1 };
 }
 // ランクアップ素材（atomCore T1のみ使用）
 const AF_RANKUP_COST = [
@@ -18875,11 +19148,17 @@ const AF_RANKUP_COST = [
   { t1:300 },  // rank 1→2
   { t1:800 },  // rank 2→3
 ];
-// AFスキルレベルアップ素材（神刻ルーン）Lv0→1, 1→2, 2→3
+// AFスキルレベルアップ素材（神刻ルーン）Lv0→10
 const AF_SKILL_COST = [
-  { t1:3, t2:0, t3:0 },  // skillLv 0→1
-  { t1:0, t2:2, t3:0 },  // skillLv 1→2
-  { t1:0, t2:0, t3:1 },  // skillLv 2→3
+  { t1: 3, t2: 0, t3:0 },  // Lv1→2
+  { t1: 5, t2: 0, t3:0 },  // Lv2→3
+  { t1: 7, t2: 0, t3:0 },  // Lv3→4
+  { t1:10, t2: 1, t3:0 },  // Lv4→5
+  { t1:12, t2: 3, t3:0 },  // Lv5→6
+  { t1:15, t2: 5, t3:0 },  // Lv6→7
+  { t1:15, t2: 7, t3:1 },  // Lv7→8
+  { t1:15, t2:10, t3:3 },  // Lv8→9
+  { t1:20, t2:12, t3:5 },  // Lv9→10
 ];
 
 // 条件が満たされているか判定
