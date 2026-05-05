@@ -3545,7 +3545,7 @@ const CLASS_DATA = {
     iconImg: 'assets/images/role-warrior.png',
     role: 'アタッカー',
     species: 'hume',
-    attackTypes: ['斬','打'],
+    attackTypes: ['物理'],
     baseStats: { atk:820, hp:3200, pdef:18, mdef:8, spd:80, cri:8, cridam:150 },
     baseSearch:  10,
     baseStealth:  5,
@@ -3557,9 +3557,9 @@ const CLASS_DATA = {
     },
     activeSkills: [
       { id:'ws_sword_strike', name:'ソードストライク', type:'phys', target:'single',
-        power:0.7, hits:3, cd:3, desc:'単体×3回 🔴 Pw:0.7' },
+        power:0.7, hits:3, cd:3, desc:'単体×3回 ⚔️Pw:0.7' },
       { id:'ws_titan_smash', name:'タイタンスマッシュ', type:'phys', target:'single',
-        power:2.0, cd:5, desc:'単体 💜 Pw:2.0（HP50%以上+Pw:1.0）',
+        power:2.0, cd:5, desc:'単体 ⚔️Pw:2.0（HP50%以上+Pw:1.0）',
         conditionalPower:{ condition:'self_hp_above_50pct', bonusPower:1.0 } },
     ],
     passiveSkills: [
@@ -3573,7 +3573,7 @@ const CLASS_DATA = {
     skillPool: [],
     ultimates: [
       { id:'wu_ragnarok', name:'ラグナロクスラッシュ',
-        effect:'前衛🔴全体 Pw:3.5 強制会心（前衛なし→後衛）+ 自身ATK+50%・CRI+30% 2T',
+        effect:'前衛⚔️全体 Pw:3.5 強制会心（前衛なし→後衛）+ 自身ATK+50%・CRI+30% 2T',
         power:3.5, type:'phys', target:'front_row', forceCrit:true,
         selfBuff:{ atk_up:50, cri_up:30, turns:2 } },
     ],
@@ -3585,7 +3585,7 @@ const CLASS_DATA = {
     iconImg: 'assets/images/role-vanguard.png',
     role: 'タンク',
     species: 'hume',
-    attackTypes: ['打'],
+    attackTypes: ['物理'],
     baseStats: { atk:600, hp:4500, pdef:28, mdef:16, spd:60, cri:4, cridam:130 },
     baseSearch:   5,
     baseStealth:  3,
@@ -3609,7 +3609,7 @@ const CLASS_DATA = {
         ]}
       },
       { id:'vg_shield_bash', name:'シールドバッシュ', type:'phys', target:'single',
-        power:0.8, cd:4, desc:'単体 🔴 Pw:0.8 + 恐怖（ATK-10%）',
+        power:0.8, cd:4, desc:'単体 ⚔️Pw:0.8 + 恐怖（ATK-10%）',
         debuff:{ type:'atk_down', val:-10, turns:3 }
       },
     ],
@@ -3635,7 +3635,7 @@ const CLASS_DATA = {
     icon: '✨',
     role: 'ヒーラー',
     species: 'celestia',
-    attackTypes: ['魔'],
+    attackTypes: ['特殊'],
     baseStats: { atk:700, hp:3000, pdef:5, mdef:18, spd:70, cri:5, cridam:140 },
     baseSearch:  10,
     baseStealth:  5,
@@ -3658,7 +3658,7 @@ const CLASS_DATA = {
         desc:'回復量+20%（常時）',
         effect:{ type:'heal_bonus', val:20 } },
       { id:'pr_pass_goddess', name:'女神の祝福', type:'passive',
-        desc:'味方全体WHITE耐性+10%（常時）',
+        desc:'味方全体特殊耐性+10%（常時）',
         effect:{ type:'team_mdef_bonus', val:10 } },
     ],
     skillPool: [],
@@ -3675,24 +3675,24 @@ const CLASS_DATA = {
     icon: '🗡️',
     role: 'スカウト',
     species: 'specter',
-    attackTypes: ['斬','裂'],
+    attackTypes: ['物理'],
     baseStats: { atk:950, hp:2000, pdef:5, mdef:5, spd:118, cri:22, cridam:180 },
     baseSearch:  48,
     baseStealth: 45,
     baseHate:    150,
     openingSkill: {
       id:'as_open_shadow', name:'影潜り', type:'opening', target:'single',
-      desc:'ATK+25%・CRI+15% + 奇襲時🔴Pw:3.0（通常時Pw:1.0） 3T',
+      desc:'ATK+25%・CRI+15% + 奇襲時⚔️Pw:3.0（通常時Pw:1.0） 3T',
       power:3.0,
       effect:{ type:'surprise_burst', normalPw:1.0, surprisePw:3.0 },
       surpriseBuff:[ { type:'atk_up', val:25, turns:3 }, { type:'cri_up', val:15, turns:3 } ]
     },
     activeSkills: [
       { id:'as_poison_blade', name:'毒刃', type:'phys', target:'single',
-        power:1.6, cd:4, desc:'単体 💜 Pw:1.6 + 猛毒3T（ATK×10%/T）',
+        power:1.6, cd:4, desc:'単体 ⚔️Pw:1.6 + 猛毒3T（ATK×10%/T）',
         debuff:{ type:'lethal_poison', val:10, turns:3 } },
       { id:'as_backstab', name:'バックスタブ', type:'phys', target:'single',
-        power:2.0, cd:5, desc:'単体 💜 Pw:2.0（CC中強制会心+Pw:1.0）',
+        power:2.0, cd:5, desc:'単体 ⚔️Pw:2.0（CC中強制会心+Pw:1.0）',
         ccBonus:1.0, ccForceCrit:true },
     ],
     passiveSkills: [
@@ -3706,7 +3706,7 @@ const CLASS_DATA = {
     skillPool: [],
     ultimates: [
       { id:'asu_hunt', name:'影狩り（シャドウハント）',
-        effect:'最もHPの低い敵に🔴Pw4.0(強制会心)+💜Pw2.0。撃破時即再行動(次の最低HP敵を自動追跡)。連続撃破でATK+10%スタック。夜戦中🔴Pw+2.0追加',
+        effect:'最もHPの低い敵に⚔️Pw4.0(強制会心)+⚔️Pw2.0。撃破時即再行動(次の最低HP敵を自動追跡)。連続撃破でATK+10%スタック。夜戦中⚔️Pw+2.0追加',
         power:4.0, type:'phys', target:'lowest_hp', forceCrit:true,
         blackPw:2.0, reattackOnKill:true, killAtkStack:10, nightRedBonus:2.0 },
     ],
@@ -3718,7 +3718,7 @@ const CLASS_DATA = {
     iconImg: 'assets/images/role-ranger.png',
     role: 'レンジ',
     species: 'beast',
-    attackTypes: ['貫'],
+    attackTypes: ['物理'],
     baseStats: { atk:780, hp:2600, pdef:5, mdef:8, spd:85, cri:14, cridam:170 },
     baseSearch:  30,
     baseStealth: 10,
@@ -3726,26 +3726,26 @@ const CLASS_DATA = {
     openingSkill: {
       id:'ar_open_preemptive', name:'先制射撃', type:'phys', target:'random_multi',
       power:0.5, hits:6, cd:0,
-      desc:'ランダム敵×6連射 🔴 Pw:0.5'
+      desc:'ランダム敵×6連射 ⚔️Pw:0.5'
     },
     activeSkills: [
       { id:'ar_pierce', name:'ピアシングアロー', type:'phys', target:'single',
-        power:2.0, cd:4, desc:'単体 🔴 Pw:2.0 貫通矢' },
+        power:2.0, cd:4, desc:'単体 ⚔️Pw:2.0 貫通矢' },
       { id:'ar_rain', name:'アローレイン', type:'phys', target:'all',
-        power:0.7, cd:6, desc:'全体 🔴 Pw:0.7 矢の雨' },
+        power:0.7, cd:6, desc:'全体 ⚔️Pw:0.7 矢の雨' },
     ],
     passiveSkills: [
       { id:'ar_pass_eagle', name:'鷹の目', type:'passive',
         desc:'CRI率常時+8%・ATK+10%',
         effect:{ type:'cri_atk_bonus', cri:8, atk:10 } },
       { id:'ar_pass_weak', name:'弱点狙い', type:'passive',
-        desc:'攻撃した敵のRED耐性-5%（最大5スタック）',
+        desc:'攻撃した敵の物理耐性-5%（最大5スタック）',
         effect:{ type:'pdef_down_on_attack', val:5, maxStacks:5 } },
     ],
     skillPool: [],
     ultimates: [
       { id:'au_stormcross', name:'ストームクロス',
-        effect:'ランダムな敵に🔵BLUE×10連射（1発：現在HPの4%）',
+        effect:'ランダムな敵に✨×10連射（1発：現在HPの4%）',
         power:0.04, type:'spec', target:'random_multi', hits:10 },
     ],
   },
@@ -3753,21 +3753,21 @@ const CLASS_DATA = {
   // ── ウィザード（ヒューム・レンジ）★3 ──
   wizard: {
     name: 'ウィザード', icon: '🧙', iconImg: 'assets/images/role-ranger.png',
-    role: 'レンジ', species: 'hume', attackTypes: ['魔'],
-    baseStats: { atk:850, hp:2400, mp:2200, pres:5, mres:15, bres:3, lres:0, spd:78, cri:10, cridam:155 },
+    role: 'レンジ', species: 'hume', attackTypes: ['特殊'],
+    baseStats: { atk:850, hp:2400, pdef:5, mdef:15, spd:78, cri:10, cridam:155 },
     baseSearch: 20, baseStealth: 5, baseHate: 250,
     openingSkill: {
-      id:'wz_open_arcane', name:'古代魔法陣', type:'red', target:'all',
-      desc:'全体 🔴（魔法）Pw:2.5＋MRES-20%（3T）。奇襲時Pw×1.3',
+      id:'wz_open_arcane', name:'古代魔法陣', type:'spec', target:'all',
+      desc:'全体 ✨（特殊）Pw:2.5＋MDEF-20%（3T）。奇襲時Pw×1.3',
       power:2.5, powerOnSurprise:3.25,
-      debuff:{ type:'mres_down', val:-20, turns:3 }
+      debuff:{ type:'mdef_down', val:-20, turns:3 }
     },
     activeSkills: [
-      { id:'wz_silence', name:'サイレンス', type:'white', target:'single',
-        power:2.5, cd:7, desc:'単体 🔵 Pw:2.5＋沈黙（次スキル封印）',
+      { id:'wz_silence', name:'サイレンス', type:'spec', target:'single',
+        power:2.5, cd:7, desc:'単体 ✨ Pw:2.5＋沈黙（次スキル封印）',
         debuff:{ type:'silence', val:1, turns:1 } },
-      { id:'wz_meteor', name:'メテオストライク', type:'red', target:'all',
-        power:2.0, cd:12, desc:'全体 🔴（魔法）Pw:2.0' },
+      { id:'wz_meteor', name:'メテオストライク', type:'spec', target:'all',
+        power:2.0, cd:12, desc:'全体 ✨（特殊）Pw:2.0' },
     ],
     passiveSkills: [
       { id:'wz_pas_stack', name:'魔力集中', effect:'行動するたびに次スキルPw+15%スタック（最大3）',
@@ -3777,27 +3777,27 @@ const CLASS_DATA = {
     ],
     ultimates: [
       { id:'wu_starcurse', name:'星天の呪詛',
-        effect:'単体⬛Pw:3.0＋WHITE耐性-25%・BLACK耐性-20%（永続）→全体🔴Pw:2.0＋MRES-20%（3T）。奇襲強制会心',
-        target:'single', power:3.0, type:'black',
-        debuff:{ type:'multi_res_down', wres:-25, bres:-20, turns:999 } },
+        effect:'単体✨Pw:3.0＋特殊耐性-25%・特殊耐性-20%（永続）→全体✨Pw:2.0＋MDEF-20%（3T）。奇襲強制会心',
+        target:'single', power:3.0, type:'spec',
+        debuff:{ type:'mdef_down', val:-25, turns:999 } },
     ],
   },
 
   // ── パラディン（セレスティア・タンク）★3 ──
   paladin: {
     name: 'パラディン', icon: '🛡️', iconImg: 'assets/images/role-vanguard.png',
-    role: 'タンク', species: 'celestia', attackTypes: ['聖','打'],
-    baseStats: { atk:700, hp:4200, mp:1800, pres:25, mres:20, bres:10, lres:5, spd:68, cri:6, cridam:145 },
+    role: 'タンク', species: 'celestia', attackTypes: ['物理', '特殊'],
+    baseStats: { atk:700, hp:4200, pdef:25, mdef:20, spd:68, cri:6, cridam:145 },
     baseSearch: 10, baseStealth: 3, baseHate: 500,
     openingSkill: {
       id:'pd_open_holy', name:'聖なる加護', type:'buff', target:'all_ally',
-      desc:'全体シールド（最大HP20%）＋全体WHITE耐性+15%（3T）',
-      effect:{ type:'shield_and_res', shieldRatio:0.20, resType:'wres', resVal:15, turns:3 }
+      desc:'全体シールド（最大HP20%）＋全体特殊耐性+15%（3T）',
+      effect:{ type:'shield_and_mdef', shieldRatio:0.20, mdefVal:15, turns:3 }
     },
     activeSkills: [
-      { id:'pd_holy_strike', name:'聖光撃', type:'red', target:'single',
-        power:2.0, cd:5, desc:'単体 🔴（聖）Pw:2.0＋対象WHITE耐性-15%（2T）',
-        debuff:{ type:'wres_down', val:-15, turns:2 } },
+      { id:'pd_holy_strike', name:'聖光撃', type:'spec', target:'single',
+        power:2.0, cd:5, desc:'単体 ✨（特殊）Pw:2.0＋対象MDEF-15%（2T）',
+        debuff:{ type:'mdef_down', val:-15, turns:2 } },
       { id:'pd_miracle', name:'奇跡の光', type:'buff', target:'all_ally',
         power:0, cd:8, desc:'全体HP回復×1.2＋全デバフ解除',
         effect:{ type:'heal_and_cleanse', healRatio:1.2 } },
@@ -3805,23 +3805,23 @@ const CLASS_DATA = {
     passiveSkills: [
       { id:'pd_pas_heal', name:'奇跡の器', effect:'回復スキル使用時、対象にATKの30%の追加HP回復',
         effect:{ type:'heal_bonus', val:30 } },
-      { id:'pd_pas_bres', name:'聖域の守護', effect:'味方全体BLACK耐性+8%（常時）',
-        effect:{ type:'team_bres', val:8 } },
+      { id:'pd_pas_bres', name:'聖域の守護', effect:'味方全体MDEF+8（常時）',
+        effect:{ type:'team_mdef_bonus', val:8 } },
     ],
     ultimates: [
       { id:'pu_divine', name:'天罰の審判',
-        effect:'単体🔴（聖）Pw:6.0強制会心＋全体HP回復×1.5＋全体全耐性+20%（3T）',
-        target:'single', power:6.0, type:'red', forceCrit:true,
+        effect:'単体✨（特殊）Pw:6.0強制会心＋全体HP回復×1.5＋全体PDEF/MDEF+20%（3T）',
+        target:'single', power:6.0, type:'spec', forceCrit:true,
         allyHeal:{ healRatio:1.5 },
-        allyBuff:{ type:'all_res_up', val:20, turns:3 } },
+        allyBuffs:[{ type:'pdef_up', val:20, turns:3 }, { type:'mdef_up', val:20, turns:3 }] },
     ],
   },
 
   // ── シャーマン（デーモン・サポート）★3 ──
   shaman: {
     name: 'シャーマン', icon: '🔮', iconImg: 'assets/images/role-support.png',
-    role: 'サポート', species: 'daemon', attackTypes: ['魔','裂'],
-    baseStats: { atk:720, hp:2800, mp:2000, pres:8, mres:18, bres:5, lres:0, spd:75, cri:8, cridam:150 },
+    role: 'サポート', species: 'daemon', attackTypes: ['物理', '特殊'],
+    baseStats: { atk:720, hp:2800, pdef:8, mdef:18, spd:75, cri:8, cridam:150 },
     baseSearch: 15, baseStealth: 8, baseHate: 200,
     openingSkill: {
       id:'sh_open_fog', name:'呪いの霧', type:'buff', target:'all_enemy',
@@ -3832,36 +3832,37 @@ const CLASS_DATA = {
       ]}
     },
     activeSkills: [
-      { id:'sh_poison_mist', name:'毒霧散布', type:'black', target:'all',
-        power:0.8, cd:7, desc:'全体 ⬛ Pw:0.8＋猛毒（3T・ATK×0.15/行動）',
+      { id:'sh_poison_mist', name:'毒霧散布', type:'spec', target:'all',
+        power:0.8, cd:7, desc:'全体 ✨ Pw:0.8＋猛毒（3T・ATK×0.15/行動）',
         debuff:{ type:'lethal_poison', val:15, turns:3 } },
-      { id:'sh_curse', name:'弱体の呪い', type:'black', target:'single',
-        power:0.4, cd:5, desc:'単体 ⬛ Pw:0.4＋全耐性-20%・ATK-15%（3T）',
+      { id:'sh_curse', name:'弱体の呪い', type:'spec', target:'single',
+        power:0.4, cd:5, desc:'単体 ✨ Pw:0.4＋全耐性-20%・ATK-15%（3T）',
         effect:{ type:'multi_debuff', debuffs:[
-          { type:'all_res_down', val:-20, turns:3 },
+          { type:'pdef_down', val:-20, turns:3 },
+          { type:'mdef_down', val:-20, turns:3 },
           { type:'atk_down', val:-15, turns:3 },
         ]}},
     ],
     passiveSkills: [
       { id:'sh_pas_debuff', name:'呪いの連鎖', effect:'デバフ中の敵への与ダメ+15%（常時）',
         effect:{ type:'dmg_vs_debuffed', val:15 } },
-      { id:'sh_pas_res', name:'精霊の加護', effect:'味方全体BLACK耐性+8%・状態異常耐性+15%（常時）',
-        effect:{ type:'team_res_passive', bres:8, statusRes:15 } },
+      { id:'sh_pas_res', name:'精霊の加護', effect:'味方全体MDEF+8（常時）',
+        effect:{ type:'team_mdef_bonus', val:8 } },
     ],
     ultimates: [
       { id:'su_grand_curse', name:'大呪詛陣',
-        effect:'全体⬛Pw:1.5＋全ステータス-20%・全耐性-20%（3T）＋猛毒（5T）',
-        target:'all', power:1.5, type:'black',
+        effect:'全体✨Pw:1.5＋全ステータス-20%・全耐性-20%（3T）＋猛毒（5T）',
+        target:'all', power:1.5, type:'spec',
         debuff:{ type:'lethal_poison', val:15, turns:5 },
-        extraDebuff:{ type:'grand_debuff', val:-20, turns:3 } },
+        extraDebuff:{ type:'pdef_down', val:-20, turns:3 } },
     ],
   },
 
   // ── バーサーカー（ビースト・アタッカー）★3 ──
   berserker: {
     name: 'バーサーカー', icon: '🪓',
-    role: 'アタッカー', species: 'beast', attackTypes: ['斬','打'],
-    baseStats: { atk:920, hp:2500, mp:1600, pres:12, mres:8, bres:5, lres:0, spd:98, cri:16, cridam:175 },
+    role: 'アタッカー', species: 'beast', attackTypes: ['物理'],
+    baseStats: { atk:920, hp:2500, pdef:12, mdef:8, spd:98, cri:16, cridam:175 },
     baseSearch: 12, baseStealth: 4, baseHate: 380,
     openingSkill: {
       id:'bk_open_blood', name:'血の覚醒', type:'buff', target:'self',
@@ -3869,11 +3870,11 @@ const CLASS_DATA = {
       effect:{ type:'atk_up_self_dmg', atkVal:30, selfHpCost:10, turns:3, surpriseAtk:50 }
     },
     activeSkills: [
-      { id:'bk_frenzy', name:'狂乱の一撃', type:'red', target:'single',
-        power:2.5, cd:5, desc:'単体 🔴 Pw:2.5（残HP%が低いほどPw+最大+1.5）',
+      { id:'bk_frenzy', name:'狂乱の一撃', type:'phys', target:'single',
+        power:2.5, cd:5, desc:'単体 ⚔️ Pw:2.5（残HP%が低いほどPw+最大+1.5）',
         scaledByMissingHp:{ maxBonus:1.5 } },
-      { id:'bk_rampage', name:'乱舞斬り', type:'red', target:'random_multi',
-        power:0.9, hits:4, cd:6, desc:'ランダム敵×4 🔴 Pw:0.9（低HP時CRI率+20%）',
+      { id:'bk_rampage', name:'乱舞斬り', type:'phys', target:'random_multi',
+        power:0.9, hits:4, cd:6, desc:'ランダム敵×4 ⚔️ Pw:0.9（低HP時CRI率+20%）',
         lowHpCriBonus:20 },
     ],
     passiveSkills: [
@@ -3887,8 +3888,8 @@ const CLASS_DATA = {
     skillPool: [],
     ultimates: [
       { id:'bku_bloodstorm', name:'血嵐乱舞',
-        effect:'自身HP30%消費→ランダム敵×10 🔴 Pw:1.2 強制会心。撃破ごとにATK+8%スタック',
-        power:1.2, type:'red', target:'random_multi', hits:10, forceCrit:true,
+        effect:'自身HP30%消費→ランダム敵×10 ⚔️ Pw:1.2 強制会心。撃破ごとにATK+8%スタック',
+        power:1.2, type:'phys', target:'random_multi', hits:10, forceCrit:true,
         selfHpCost:30, killAtkStack:8 },
     ],
   },
@@ -3896,8 +3897,8 @@ const CLASS_DATA = {
   // ── センチネル（ヒューム・タンク）★2 ──
   sentinel: {
     name: 'センチネル', icon: '🗡️',
-    role: 'タンク', species: 'hume', attackTypes: ['打','貫'],
-    baseStats: { atk:650, hp:4800, mp:2200, pres:30, mres:16, bres:14, lres:5, spd:55, cri:4, cridam:130 },
+    role: 'タンク', species: 'hume', attackTypes: ['物理'],
+    baseStats: { atk:650, hp:4800, pdef:30, mdef:16, spd:55, cri:4, cridam:130 },
     baseSearch: 6, baseStealth: 3, baseHate: 620,
     openingSkill: {
       id:'sn_open_ironwall', name:'鉄壁展開', type:'buff', target:'all_ally',
@@ -3908,8 +3909,8 @@ const CLASS_DATA = {
       { id:'sn_counter_guard', name:'カウンターガード', type:'buff', target:'self',
         power:0, cd:7, desc:'防御姿勢3T（被ダメ-30%・被攻撃時反撃 Pw:0.8）',
         effect:{ type:'counter_stance', dmgReduction:30, counterPower:0.8, turns:3 } },
-      { id:'sn_shield_bash2', name:'大盾突き', type:'red', target:'single',
-        power:1.5, cd:5, desc:'単体 🔴 Pw:1.5 ＋ スタン1T',
+      { id:'sn_shield_bash2', name:'大盾突き', type:'phys', target:'single',
+        power:1.5, cd:5, desc:'単体 ⚔️ Pw:1.5 ＋ スタン1T',
         debuff:{ type:'stun', val:1, turns:1 } },
     ],
     passiveSkills: [
@@ -3923,17 +3924,17 @@ const CLASS_DATA = {
     skillPool: [],
     ultimates: [
       { id:'snu_fortress', name:'不壊の要塞',
-        effect:'自身に完全無敵2T＋味方全体シールド（最大HP40%）＋全耐性+30% 3T',
+        effect:'自身に完全無敵2T＋味方全体シールド（最大HP40%）＋PDEF/MDEF+30 3T',
         power:0, type:'buff', target:'all_ally',
-        selfInvincible:2, shieldRatio:0.40, allResUp:30, resTurns:3 },
+        selfInvincible:2, shieldRatio:0.40, pdefUp:30, mdefUp:30, resTurns:3 },
     ],
   },
 
   // ── シューター（ヒューム・レンジ）★2 ──
   shooter: {
     name: 'シューター', icon: '🔫',
-    role: 'レンジ', species: 'hume', attackTypes: ['貫'],
-    baseStats: { atk:800, hp:2400, mp:1400, pres:6, mres:8, bres:3, lres:0, spd:92, cri:20, cridam:185 },
+    role: 'レンジ', species: 'hume', attackTypes: ['物理'],
+    baseStats: { atk:800, hp:2400, pdef:6, mdef:8, spd:92, cri:20, cridam:185 },
     baseSearch: 32, baseStealth: 12, baseHate: 280,
     openingSkill: {
       id:'sr_open_aim', name:'精密照準', type:'buff', target:'self',
@@ -3944,11 +3945,11 @@ const CLASS_DATA = {
       ]}
     },
     activeSkills: [
-      { id:'sr_snipe', name:'スナイプ', type:'red', target:'single',
-        power:3.5, cd:7, desc:'単体 🔴 Pw:3.5（強制会心）',
+      { id:'sr_snipe', name:'スナイプ', type:'phys', target:'single',
+        power:3.5, cd:7, desc:'単体 ⚔️ Pw:3.5（強制会心）',
         forceCrit:true },
-      { id:'sr_burst', name:'バースト射撃', type:'red', target:'random_multi',
-        power:0.8, hits:5, cd:5, desc:'ランダム敵×5 🔴 Pw:0.8' },
+      { id:'sr_burst', name:'バースト射撃', type:'phys', target:'random_multi',
+        power:0.8, hits:5, cd:5, desc:'ランダム敵×5 ⚔️ Pw:0.8' },
     ],
     passiveSkills: [
       { id:'sr_pas_crieye', name:'狙撃手の眼', type:'passive',
@@ -3961,8 +3962,8 @@ const CLASS_DATA = {
     skillPool: [],
     ultimates: [
       { id:'sru_deadshot', name:'デッドショット',
-        effect:'単体 🔴 Pw:8.0 強制会心（CC中+Pw:4.0追加）',
-        power:8.0, type:'red', target:'single', forceCrit:true,
+        effect:'単体 ⚔️ Pw:8.0 強制会心（CC中+Pw:4.0追加）',
+        power:8.0, type:'phys', target:'single', forceCrit:true,
         ccBonus:4.0 },
     ],
   },
@@ -3970,21 +3971,21 @@ const CLASS_DATA = {
   // ── キャスター（デーモン・レンジ）★3 ──
   caster: {
     name: 'キャスター', icon: '🌀',
-    role: 'レンジ', species: 'daemon', attackTypes: ['魔'],
-    baseStats: { atk:880, hp:2200, mp:2600, pres:5, mres:16, bres:3, lres:0, spd:72, cri:10, cridam:155 },
+    role: 'レンジ', species: 'daemon', attackTypes: ['特殊'],
+    baseStats: { atk:880, hp:2200, pdef:5, mdef:16, spd:72, cri:10, cridam:155 },
     baseSearch: 18, baseStealth: 6, baseHate: 220,
     openingSkill: {
       id:'cs_open_charge', name:'魔力充填', type:'buff', target:'self',
       desc:'MP+30%回復 ＋ 次のスキルPw+50%（1T）',
-      effect:{ type:'mp_regen_and_pw_boost', mpRatio:30, pwBoost:50, turns:1 }
+      effect:{ type:'pw_boost', val:50, turns:1 }
     },
     activeSkills: [
-      { id:'cs_chain', name:'チェインマジック', type:'red', target:'all',
-        power:1.5, cd:8, desc:'全体 🔴（魔法）Pw:1.5 ＋ チェイン追撃Pw:0.8',
+      { id:'cs_chain', name:'チェインマジック', type:'spec', target:'all',
+        power:1.5, cd:8, desc:'全体 ✨（特殊）Pw:1.5 ＋ チェイン追撃Pw:0.8',
         chainHit:{ power:0.8 } },
-      { id:'cs_burst', name:'エレメントバースト', type:'black', target:'single',
-        power:3.0, cd:6, desc:'単体 ⬛ Pw:3.0 ＋ 属性耐性-25% 3T',
-        debuff:{ type:'all_res_down', val:-25, turns:3 } },
+      { id:'cs_burst', name:'エレメントバースト', type:'spec', target:'single',
+        power:3.0, cd:6, desc:'単体 ✨ Pw:3.0 ＋ 属性耐性-25% 3T',
+        debuff:{ type:'mdef_down', val:-25, turns:3 } },
     ],
     passiveSkills: [
       { id:'cs_pas_amp', name:'魔力増幅', type:'passive',
@@ -3997,9 +3998,9 @@ const CLASS_DATA = {
     skillPool: [],
     ultimates: [
       { id:'csu_catastrophe', name:'カタストロフィ',
-        effect:'全体 🔴（魔法）Pw:4.0 ＋ 全耐性-30% 3T。奇襲時強制会心',
-        power:4.0, type:'red', target:'all',
-        debuff:{ type:'all_res_down', val:-30, turns:3 },
+        effect:'全体 ✨（特殊）Pw:4.0 ＋ 全耐性-30% 3T。奇襲時強制会心',
+        power:4.0, type:'spec', target:'all',
+        debuff:{ type:'mdef_down', val:-30, turns:3 },
         surpriseForceCrit:true },
     ],
   },
@@ -4007,8 +4008,8 @@ const CLASS_DATA = {
   // ── ランサー（ビースト・アタッカー）★2 ──
   lancer: {
     name: 'ランサー', icon: '🔱',
-    role: 'アタッカー', species: 'beast', attackTypes: ['貫','斬'],
-    baseStats: { atk:860, hp:2800, mp:1600, pres:14, mres:10, bres:6, lres:0, spd:84, cri:12, cridam:160 },
+    role: 'アタッカー', species: 'beast', attackTypes: ['物理'],
+    baseStats: { atk:860, hp:2800, pdef:14, mdef:10, spd:84, cri:12, cridam:160 },
     baseSearch: 14, baseStealth: 5, baseHate: 350,
     openingSkill: {
       id:'lc_open_charge', name:'突撃準備', type:'buff', target:'self',
@@ -4016,11 +4017,11 @@ const CLASS_DATA = {
       effect:{ type:'atk_and_next_pw', atkVal:25, nextPwBonus:1.0, turns:2 }
     },
     activeSkills: [
-      { id:'lc_dragon_pierce', name:'竜貫き', type:'red', target:'single',
-        power:3.0, cd:5, desc:'単体 🔴 Pw:3.0（後列にも50%貫通ダメージ）',
+      { id:'lc_dragon_pierce', name:'竜貫き', type:'phys', target:'single',
+        power:3.0, cd:5, desc:'単体 ⚔️ Pw:3.0（後列にも50%貫通ダメージ）',
         pierceHit:{ ratio:0.5 } },
-      { id:'lc_moon_slash', name:'円月槍', type:'red', target:'all',
-        power:1.2, cd:7, desc:'全体 🔴 Pw:1.2 ＋ ATK-15% 2T',
+      { id:'lc_moon_slash', name:'円月槍', type:'phys', target:'all',
+        power:1.2, cd:7, desc:'全体 ⚔️ Pw:1.2 ＋ ATK-15% 2T',
         debuff:{ type:'atk_down', val:-15, turns:2 } },
     ],
     passiveSkills: [
@@ -4034,8 +4035,8 @@ const CLASS_DATA = {
     skillPool: [],
     ultimates: [
       { id:'lcu_heaven_thrust', name:'皇槍天衝',
-        effect:'前衛全体 🔴 Pw:4.5（後列に50%貫通）＋ 自身ATK+40%・SPD+20 3T',
-        power:4.5, type:'red', target:'front_row',
+        effect:'前衛全体 ⚔️ Pw:4.5（後列に50%貫通）＋ 自身ATK+40%・SPD+20 3T',
+        power:4.5, type:'phys', target:'front_row',
         pierceHit:{ ratio:0.5 },
         selfBuff:{ atk_up:40, spd_up:20, turns:3 } },
     ],
@@ -4044,8 +4045,8 @@ const CLASS_DATA = {
   // ── ミンストレル（セレスティア・サポート）★3 ──
   minstrel: {
     name: 'ミンストレル', icon: '🎵',
-    role: 'サポート', species: 'celestia', attackTypes: ['魔'],
-    baseStats: { atk:680, hp:2900, mp:2400, pres:6, mres:16, bres:8, lres:0, spd:76, cri:6, cridam:140 },
+    role: 'サポート', species: 'celestia', attackTypes: ['特殊'],
+    baseStats: { atk:680, hp:2900, pdef:6, mdef:16, spd:76, cri:6, cridam:140 },
     baseSearch: 12, baseStealth: 6, baseHate: 180,
     openingSkill: {
       id:'mn_open_inspire', name:'鼓舞の歌', type:'buff', target:'all_ally',
@@ -4065,8 +4066,8 @@ const CLASS_DATA = {
     ],
     passiveSkills: [
       { id:'mn_pas_resonance', name:'戦歌の共鳴', type:'passive',
-        desc:'味方がスキルを使うたびMP+5%回復（全員）',
-        effect:{ type:'team_mp_on_skill', val:5 } },
+        desc:'味方がスキルを使うたびSPD+5（全員）',
+        effect:{ type:'team_spd_bonus', val:5 } },
       { id:'mn_pas_ballad', name:'バラードの加護', type:'passive',
         desc:'味方全体SPD+8（常時）',
         effect:{ type:'team_spd_bonus', val:8 } },
@@ -4074,9 +4075,9 @@ const CLASS_DATA = {
     skillPool: [],
     ultimates: [
       { id:'mnu_symphony', name:'凱旋の交響曲',
-        effect:'味方全体ATK+40%・全耐性+20%・CRI+20% 3T ＋ 全デバフ解除',
+        effect:'味方全体ATK+40%・PDEF/MDEF+20・CRI+20% 3T ＋ 全デバフ解除',
         power:0, type:'buff', target:'all_ally',
-        buffs:[ { type:'atk_up', val:40, turns:3 }, { type:'all_res_up', val:20, turns:3 }, { type:'cri_up', val:20, turns:3 } ],
+        buffs:[ { type:'atk_up', val:40, turns:3 }, { type:'pdef_up', val:20, turns:3 }, { type:'mdef_up', val:20, turns:3 }, { type:'cri_up', val:20, turns:3 } ],
         dispelAll:true },
     ],
   },
@@ -4084,22 +4085,22 @@ const CLASS_DATA = {
   // ── プロフェッサー（ヒューム・レンジ）★3 ──
   professor: {
     name: 'プロフェッサー', icon: '📚',
-    role: 'レンジ', species: 'hume', attackTypes: ['魔'],
-    baseStats: { atk:820, hp:2300, mp:2800, pres:5, mres:14, bres:3, lres:0, spd:70, cri:9, cridam:150 },
+    role: 'レンジ', species: 'hume', attackTypes: ['特殊'],
+    baseStats: { atk:820, hp:2300, pdef:5, mdef:14, spd:70, cri:9, cridam:150 },
     baseSearch: 22, baseStealth: 5, baseHate: 200,
     openingSkill: {
       id:'pf_open_analyze', name:'解析眼', type:'buff', target:'all_enemy',
       desc:'敵全体の全耐性-15% 3T（奇襲時-25%）',
-      effect:{ type:'all_res_down_all', val:-15, turns:3, surpriseVal:-25 }
+      effect:{ type:'all_pdef_mdef_down_all', val:-15, turns:3, surpriseVal:-25 }
     },
     activeSkills: [
-      { id:'pf_gravity', name:'重力魔法', type:'black', target:'all',
-        power:1.0, cd:7, desc:'全体 ⬛ Pw:1.0 ＋ SPD-20・ATK-20% 3T',
+      { id:'pf_gravity', name:'重力魔法', type:'spec', target:'all',
+        power:1.0, cd:7, desc:'全体 ✨ Pw:1.0 ＋ SPD-20・ATK-20% 3T',
         effect:{ type:'multi_debuff', debuffs:[
           { type:'spd_down', val:-20, turns:3 },
           { type:'atk_down', val:-20, turns:3 },
         ]}},
-      { id:'pf_amplify', name:'弱体強化', type:'black', target:'single',
+      { id:'pf_amplify', name:'弱体強化', type:'spec', target:'single',
         power:0, cd:6, desc:'単体のデバフを強化（効果2倍・期間+2T）',
         effect:{ type:'debuff_amplify', multiplier:2, extraTurns:2 } },
     ],
@@ -4114,18 +4115,19 @@ const CLASS_DATA = {
     skillPool: [],
     ultimates: [
       { id:'pfu_forbidden', name:'禁断の理論',
-        effect:'単体 ⬛ Pw:2.0 ＋ 全ステータス-25%・全耐性-25%（永続）→ 全体 🔴 Pw:1.5',
-        power:2.0, type:'black', target:'single',
-        debuff:{ type:'grand_debuff_permanent', statVal:-25, resVal:-25, turns:999 },
-        followUp:{ type:'red', target:'all', power:1.5 } },
+        effect:'単体 ✨ Pw:2.0 ＋ 全ステータス-25%・全耐性-25%（永続）→ 全体 ✨ Pw:1.5',
+        power:2.0, type:'spec', target:'single',
+        debuff:{ type:'pdef_down', val:-25, turns:999 },
+        extraDebuff:{ type:'mdef_down', val:-25, turns:999 },
+        followUp:{ type:'spec', target:'all', power:1.5 } },
     ],
   },
 
   // ── アルケミスト（ヒューム・サポート）★3 ──
   alchemist: {
     name: 'アルケミスト', icon: '⚗️',
-    role: 'サポート', species: 'hume', attackTypes: ['魔'],
-    baseStats: { atk:700, hp:3100, mp:2600, pres:6, mres:14, bres:6, lres:0, spd:74, cri:5, cridam:140 },
+    role: 'サポート', species: 'hume', attackTypes: ['特殊'],
+    baseStats: { atk:700, hp:3100, pdef:6, mdef:14, spd:74, cri:5, cridam:140 },
     baseSearch: 14, baseStealth: 6, baseHate: 190,
     openingSkill: {
       id:'ac_open_brew', name:'賢者の調合', type:'buff', target:'all_ally',
@@ -4138,7 +4140,7 @@ const CLASS_DATA = {
         effect:{ type:'dispel_and_convert_heal', healPerBuff:0.5 } },
       { id:'ac_elixir', name:'エリクサー散布', type:'buff', target:'all_ally',
         power:0, cd:8, desc:'味方全体HP回復×1.2 ＋ 全耐性+15% 2T',
-        effect:{ type:'heal_and_res_all', healRatio:1.2, resVal:15, resTurns:2 } },
+        effect:{ type:'heal_and_pdef_mdef_all', healRatio:1.2, pdefVal:15, mdefVal:15, resTurns:2 } },
     ],
     passiveSkills: [
       { id:'ac_pas_stone', name:'賢者の石', type:'passive',
@@ -4152,7 +4154,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'acu_transmutation', name:'完全変成',
         effect:'敵全体のバフを全解除しバフ数×Pw:0.5ダメージ ＋ 味方全体HP完全回復',
-        power:0.5, type:'black', target:'all',
+        power:0.5, type:'spec', target:'all',
         dispelAndDamage:true, allyFullHeal:true },
     ],
   },
@@ -4160,8 +4162,8 @@ const CLASS_DATA = {
   // ── シーフ（スペクター・スカウト）★3 ──
   thief: {
     name: 'シーフ', icon: '🃏',
-    role: 'スカウト', species: 'specter', attackTypes: ['斬','裂'],
-    baseStats: { atk:870, hp:2100, mp:1800, pres:5, mres:6, bres:8, lres:0, spd:112, cri:18, cridam:178 },
+    role: 'スカウト', species: 'specter', attackTypes: ['物理'],
+    baseStats: { atk:870, hp:2100, pdef:5, mdef:6, spd:112, cri:18, cridam:178 },
     baseSearch: 44, baseStealth: 40, baseHate: 160,
     openingSkill: {
       id:'th_open_shadow_run', name:'影走り', type:'opening', target:'self',
@@ -4170,8 +4172,8 @@ const CLASS_DATA = {
       guaranteeSurprise:true
     },
     activeSkills: [
-      { id:'th_steal', name:'盗む', type:'black', target:'single',
-        power:0.8, cd:5, desc:'単体 ⬛ Pw:0.8 ＋ 対象バフを1つ奪取（自身に付与）',
+      { id:'th_steal', name:'盗む', type:'phys', target:'single',
+        power:0.8, cd:5, desc:'単体 ⚔️ Pw:0.8 ＋ 対象バフを1つ奪取（自身に付与）',
         effect:{ type:'steal_buff', count:1 } },
       { id:'th_decoy', name:'陽動作戦', type:'buff', target:'all_enemy',
         power:0, cd:7, desc:'敵全体のターゲットをランダム変更 ＋ ATK-10% 3T',
@@ -4191,8 +4193,8 @@ const CLASS_DATA = {
     skillPool: [],
     ultimates: [
       { id:'thu_grand_thief', name:'大盗賊の舞い',
-        effect:'ランダム敵×8 ⬛ Pw:1.0（各攻撃時バフ奪取）＋ 奪ったバフを全て自身に付与',
-        power:1.0, type:'black', target:'random_multi', hits:8,
+        effect:'ランダム敵×8 ⚔️ Pw:1.0（各攻撃時バフ奪取）＋ 奪ったバフを全て自身に付与',
+        power:1.0, type:'phys', target:'random_multi', hits:8,
         stealBuff:true, applyStolen:true },
     ],
   },
@@ -4327,8 +4329,8 @@ const CARDS = {
       { type:'mdef_up', val:15, turns:3 },
     ]},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'自身 ATK+30%・RED耐性+15%・WHITE耐性+15%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`ATK+${Math.round(30*m)}%・RED耐性+${Math.round(15*m)}%・WHITE耐性+${Math.round(15*m)}%(3T)`;},
+    desc:'自身 ATK+30%・物理耐性+15%・特殊耐性+15%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`ATK+${Math.round(30*m)}%・物理耐性+${Math.round(15*m)}%・特殊耐性+${Math.round(15*m)}%(3T)`;},
   },
 
   'warrior_battle_ready': {
@@ -4339,8 +4341,8 @@ const CARDS = {
       { type:'mdef_up', val:10, turns:3 },
     ], ultGaugeBonus:15 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'開幕：ATK+20%・BLACK耐性+10%(3T)・ULT+15%',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：ATK+${Math.round(20*m)}%・BLACK耐性+${Math.round(10*m)}%(3T)・ULT+${Math.round(15*m)}%`;},
+    desc:'開幕：ATK+20%・特殊耐性+10%(3T)・ULT+15%',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：ATK+${Math.round(20*m)}%・特殊耐性+${Math.round(10*m)}%(3T)・ULT+${Math.round(15*m)}%`;},
   },
 
   'warrior_passive_iron_vanguard': {
@@ -4359,8 +4361,8 @@ const CARDS = {
     type:'attack', rarity:2, cd:3, target:'single',
     effect:{ type:'damage', power:2.2, damageType:'phys' },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw2.2',
-    descLv:(lv)=>`🔴単体 Pw${(2.2*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}`,
+    desc:'⚔️単体 Pw2.2',
+    descLv:(lv)=>`⚔️単体 Pw${(2.2*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}`,
   },
 
 
@@ -4372,8 +4374,8 @@ const CARDS = {
       debuff:{ type:'flinch', val:1, turns:1 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴全体 Pw1.0 + ひるみ(1T)',
-    descLv:(lv)=>`🔴全体 Pw${(1.0*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + ひるみ(1T)`,
+    desc:'⚔️全体 Pw1.0 + ひるみ(1T)',
+    descLv:(lv)=>`⚔️全体 Pw${(1.0*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + ひるみ(1T)`,
   },
 
   'warrior_iron_will': {
@@ -4393,8 +4395,8 @@ const CARDS = {
       buffs:[ { type:'atk_up', val:30, turns:3 }, { type:'mdef_up', val:20, turns:3 } ],
     }},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'致死をHP1で耐える(1戦1回)。耐えた後ATK+30%・WHITE耐性+20%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`致死をHP1で耐える(1戦1回)。耐えた後ATK+${Math.round(30*m)}%・WHITE耐性+${Math.round(20*m)}%(3T)`;},
+    desc:'致死をHP1で耐える(1戦1回)。耐えた後ATK+30%・特殊耐性+20%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`致死をHP1で耐える(1戦1回)。耐えた後ATK+${Math.round(30*m)}%・特殊耐性+${Math.round(20*m)}%(3T)`;},
   },
 
   // ===== ウォリアー ★3カード =====
@@ -4404,8 +4406,8 @@ const CARDS = {
     type:'attack', rarity:3, cd:5, target:'single',
     effect:{ type:'damage', power:2.8, damageType:'phys', forceCritIfLowHp:true },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw2.8。対象HP50%以下で強制会心',
-    descLv:(lv)=>`🔴単体 Pw${(2.8*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}。対象HP50%以下で強制会心`,
+    desc:'⚔️単体 Pw2.8。対象HP50%以下で強制会心',
+    descLv:(lv)=>`⚔️単体 Pw${(2.8*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}。対象HP50%以下で強制会心`,
   },
 
 
@@ -4420,8 +4422,8 @@ const CARDS = {
       { type:'mdef_up', val:10, turns:3 },
     ], ultGaugeBonus:15 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'開幕：味方全体 ATK+20%・BLACK耐性+10%(3T)・ULT+15%',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：全体 ATK+${Math.round(20*m)}%・BLACK耐性+${Math.round(10*m)}%(3T)・ULT+${Math.round(15*m)}%`;},
+    desc:'開幕：味方全体 ATK+20%・特殊耐性+10%(3T)・ULT+15%',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：全体 ATK+${Math.round(20*m)}%・特殊耐性+${Math.round(10*m)}%(3T)・ULT+${Math.round(15*m)}%`;},
   },
 
 
@@ -4433,8 +4435,8 @@ const CARDS = {
       atkPer:5, bresPer:3, maxStacks:5,
     }},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'会心命中のたびATK+5%・BLACK耐性+3%スタック(最大5)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`会心のたびATK+${Math.round(5*m)}%・BLACK耐性+${Math.round(3*m)}%スタック(最大5)`;},
+    desc:'会心命中のたびATK+5%・特殊耐性+3%スタック(最大5)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`会心のたびATK+${Math.round(5*m)}%・特殊耐性+${Math.round(3*m)}%スタック(最大5)`;},
   },
 
   // ===== ヴァンガード ★1カード =====
@@ -4444,8 +4446,8 @@ const CARDS = {
     type:'attack', rarity:1, cd:4, target:'single',
     effect:{ type:'damage', power:1.0, damageType:'phys', shieldSelf:{ ratio:0.5 } },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw1.0 + 自身シールド(ATK×0.5)',
-    descLv:(lv)=>`🔴単体 Pw${(1.0*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + 自身シールド(ATK×${(0.5*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)})`,
+    desc:'⚔️単体 Pw1.0 + 自身シールド(ATK×0.5)',
+    descLv:(lv)=>`⚔️単体 Pw${(1.0*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + 自身シールド(ATK×${(0.5*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)})`,
   },
 
   'vg_iron_stance': {
@@ -4456,8 +4458,8 @@ const CARDS = {
       { type:'mdef_up',       val:10, turns:3 },
     ]},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'自身 被ダメ-20%・WHITE耐性+10%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`被ダメ-${Math.round(20*m)}%・WHITE耐性+${Math.round(10*m)}%(3T)`;},
+    desc:'自身 被ダメ-20%・特殊耐性+10%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`被ダメ-${Math.round(20*m)}%・特殊耐性+${Math.round(10*m)}%(3T)`;},
   },
 
   'vg_opening_small_shield': {
@@ -4465,8 +4467,8 @@ const CARDS = {
     type:'opening', rarity:1, target:'all_ally',
     effect:{ type:'shield_and_mres', shieldVal:0.3, mresVal:8, mresTurns:3 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'開幕：全員シールド(ATK×0.3) + WHITE耐性+8%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：全員シールド(ATK×${(0.3*m).toFixed(2)}) + WHITE耐性+${Math.round(8*m)}%(3T)`;},
+    desc:'開幕：全員シールド(ATK×0.3) + 特殊耐性+8%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：全員シールド(ATK×${(0.3*m).toFixed(2)}) + 特殊耐性+${Math.round(8*m)}%(3T)`;},
   },
 
   'vg_heavy_shield': {
@@ -4474,8 +4476,8 @@ const CARDS = {
     type:'equip', rarity:1,
     effect:{ type:'normalAttackMod', powerBonus:0.0, shieldSelf:{ ratio:0.2 }, onHitDebuff:{ type:'mdef_down', val:-5, turns:1 } },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'通常攻撃時に自身シールド(ATK×0.2) + 対象BLACK耐性-5%(1T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`自身シールド(ATK×${(0.2*m).toFixed(2)}) + BLACK耐性-${Math.round(5*m)}%(1T)`;},
+    desc:'通常攻撃時に自身シールド(ATK×0.2) + 対象特殊耐性-5%(1T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`自身シールド(ATK×${(0.2*m).toFixed(2)}) + 特殊耐性-${Math.round(5*m)}%(1T)`;},
   },
 
   // ===== ヴァンガード ★2カード =====
@@ -4488,8 +4490,8 @@ const CARDS = {
       hateMax:true,
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'💜全体 Pw0.5 + ヘイト集中(3T) + 自身被ダメ-10%',
-    descLv:(lv)=>`💜全体 Pw${(0.5*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + ヘイト集中・自身被ダメ-${Math.round(10*[1.0,1.2,1.4,1.7,2.0][lv-1])}%`,
+    desc:'⚔️全体 Pw0.5 + ヘイト集中(3T) + 自身被ダメ-10%',
+    descLv:(lv)=>`⚔️全体 Pw${(0.5*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + ヘイト集中・自身被ダメ-${Math.round(10*[1.0,1.2,1.4,1.7,2.0][lv-1])}%`,
   },
 
   'vg_smash_guard': {
@@ -4500,8 +4502,8 @@ const CARDS = {
       extraDebuff:{ type:'mdef_down', val:-10, turns:2 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw1.4 + ATK-15%・WHITE耐性-10%(2T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴単体 Pw${(1.4*m).toFixed(1)} + ATK-${Math.round(15*m)}%・WHITE耐性-${Math.round(10*m)}%(2T)`;},
+    desc:'⚔️単体 Pw1.4 + ATK-15%・特殊耐性-10%(2T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️単体 Pw${(1.4*m).toFixed(1)} + ATK-${Math.round(15*m)}%・特殊耐性-${Math.round(10*m)}%(2T)`;},
   },
 
   'vg_great_shield_slam': {
@@ -4509,8 +4511,8 @@ const CARDS = {
     type:'attack', rarity:2, cd:6, target:'single',
     effect:{ type:'damage', power:1.8, damageType:'phys', debuff:{ type:'flinch', val:1, turns:1 } },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw1.8 + ひるみ(1T)',
-    descLv:(lv)=>`🔴単体 Pw${(1.8*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + ひるみ(1T)`,
+    desc:'⚔️単体 Pw1.8 + ひるみ(1T)',
+    descLv:(lv)=>`⚔️単体 Pw${(1.8*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + ひるみ(1T)`,
   },
 
   'vg_iron_formation': {
@@ -4521,8 +4523,8 @@ const CARDS = {
       { type:'mdef_up', val:15, turns:3 },
     ]},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'味方全体 RED耐性+15%・WHITE耐性+15%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`全体 RED耐性+${Math.round(15*m)}%・WHITE耐性+${Math.round(15*m)}%(3T)`;},
+    desc:'味方全体 物理耐性+15%・特殊耐性+15%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`全体 物理耐性+${Math.round(15*m)}%・特殊耐性+${Math.round(15*m)}%(3T)`;},
   },
 
   'vg_holy_shield': {
@@ -4530,8 +4532,8 @@ const CARDS = {
     type:'support', rarity:2, cd:6, target:'single',
     effect:{ type:'shield_and_bres', shieldVal:1.5, bresVal:10, bresTurns:3 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'味方単体 シールド(ATK×1.5) + BLACK耐性+10%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`シールド(ATK×${(1.5*m).toFixed(1)}) + BLACK耐性+${Math.round(10*m)}%(3T)`;},
+    desc:'味方単体 シールド(ATK×1.5) + 特殊耐性+10%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`シールド(ATK×${(1.5*m).toFixed(1)}) + 特殊耐性+${Math.round(10*m)}%(3T)`;},
   },
 
   'vg_unyielding_will': {
@@ -4557,8 +4559,8 @@ const CARDS = {
     type:'passive', rarity:2,
     effect:{ trigger:'on_shield_break', action:{ type:'damage', target:'attacker', power:0.8, damageType:'phys' } },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'シールドが破壊された時、攻撃者にPw0.8💜BLACK反撃',
-    descLv:(lv)=>`シールド破壊時、攻撃者にPw${(0.8*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}💜BLACK反撃`,
+    desc:'シールドが破壊された時、攻撃者にPw0.8⚔️反撃',
+    descLv:(lv)=>`シールド破壊時、攻撃者にPw${(0.8*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}⚔️反撃`,
   },
 
   // ===== ヴァンガード ★3カード =====
@@ -4572,8 +4574,8 @@ const CARDS = {
       counterPower:0.5, counterType:'phys',
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'💜全体 Pw0.8 + ヘイト集中(5T) + 自身被ダメ-20% + 反撃Pw0.5🔴',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`💜全体 Pw${(0.8*m).toFixed(1)} + ヘイト集中・被ダメ-${Math.round(20*m)}%・反撃Pw${(0.5*m).toFixed(1)}`;},
+    desc:'⚔️全体 Pw0.8 + ヘイト集中(5T) + 自身被ダメ-20% + 反撃Pw0.5⚔️',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️全体 Pw${(0.8*m).toFixed(1)} + ヘイト集中・被ダメ-${Math.round(20*m)}%・反撃Pw${(0.5*m).toFixed(1)}`;},
   },
 
   'vg_vanguard_smash': {
@@ -4581,8 +4583,8 @@ const CARDS = {
     type:'attack', rarity:3, cd:6, target:'single',
     effect:{ type:'damage', power:2.5, damageType:'phys', forceCritIfShield:true, mpBonusPow:0.5 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw2.5。シールド保有中強制会心。MP50%以上でPw+0.5',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴単体 Pw${(2.5*m).toFixed(1)}。シールド時強制会心。MP50%↑+Pw${(0.5*m).toFixed(1)}`;},
+    desc:'⚔️単体 Pw2.5。シールド保有中強制会心。MP50%以上でPw+0.5',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️単体 Pw${(2.5*m).toFixed(1)}。シールド時強制会心。MP50%↑+Pw${(0.5*m).toFixed(1)}`;},
   },
 
   'vg_soul_crusher': {
@@ -4593,8 +4595,8 @@ const CARDS = {
       extraDebuff:{ type:'mdef_down', val:-15, turns:3 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'💜単体 Pw2.0(HP+MP) + WHITE耐性-20%・BLACK耐性-15%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`💜単体 Pw${(2.0*m).toFixed(1)} + WHITE耐性-${Math.round(20*m)}%・BLACK耐性-${Math.round(15*m)}%(3T)`;},
+    desc:'⚔️単体 Pw2.0(HP+MP) + 特殊耐性-20%・特殊耐性-15%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️単体 Pw${(2.0*m).toFixed(1)} + 特殊耐性-${Math.round(20*m)}%・特殊耐性-${Math.round(15*m)}%(3T)`;},
   },
 
   'vg_sacrifice': {
@@ -4624,8 +4626,8 @@ const CARDS = {
       hateMax:true,
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'開幕：敵全体💜Pw1.0 + ATK-20%・WHITE耐性-15%(3T) + ヘイトMAX',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：敵全体💜Pw${(1.0*m).toFixed(1)} + ATK-${Math.round(20*m)}%・WHITE耐性-${Math.round(15*m)}%(3T) + ヘイトMAX`;},
+    desc:'開幕：敵全体⚔️Pw1.0 + ATK-20%・特殊耐性-15%(3T) + ヘイトMAX',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：敵全体⚔️Pw${(1.0*m).toFixed(1)} + ATK-${Math.round(20*m)}%・特殊耐性-${Math.round(15*m)}%(3T) + ヘイトMAX`;},
   },
 
   'vg_opening_vanguard_shield': {
@@ -4633,8 +4635,8 @@ const CARDS = {
     type:'opening', rarity:3, target:'all_ally',
     effect:{ type:'shield_pres_bres', shieldVal:0.8, presVal:20, presTurns:3, bresVal:8, bresTurns:3 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'開幕：全員シールド(ATK×0.8) + 自身PRES+20%(3T) + 全員BLACK耐性+8%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：全員シールド(ATK×${(0.8*m).toFixed(1)}) + PRES+${Math.round(20*m)}%(3T) + BLACK耐性+${Math.round(8*m)}%(3T)`;},
+    desc:'開幕：全員シールド(ATK×0.8) + 自身物理耐性+20%(3T) + 全員特殊耐性+8%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：全員シールド(ATK×${(0.8*m).toFixed(1)}) + 物理耐性+${Math.round(20*m)}%(3T) + 特殊耐性+${Math.round(8*m)}%(3T)`;},
   },
 
   'vg_sanctuary_torch': {
@@ -4642,8 +4644,8 @@ const CARDS = {
     type:'equip', rarity:3,
     effect:{ type:'normalAttackMod', powerBonus:0.1, nightLight:true, lightShield:{ ratio:0.5 }, mresBonus:15 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'通常攻撃Pw+0.1。夜戦照明(命中+30%・ヘイト+800)。照明中シールド自動付与(ATK×0.5/回) + WHITE耐性+15%',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`Pw+${(0.1*m).toFixed(2)}。照明(命中+${Math.round(30*m)}%・ヘイト+${Math.round(800*m)})・シールド(ATK×${(0.5*m).toFixed(1)}/回)・WHITE耐性+${Math.round(15*m)}%`;},
+    desc:'通常攻撃Pw+0.1。夜戦照明(命中+30%・ヘイト+800)。照明中シールド自動付与(ATK×0.5/回) + 特殊耐性+15%',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`Pw+${(0.1*m).toFixed(2)}。照明(命中+${Math.round(30*m)}%・ヘイト+${Math.round(800*m)})・シールド(ATK×${(0.5*m).toFixed(1)}/回)・特殊耐性+${Math.round(15*m)}%`;},
   },
 
   'vg_passive_unbreakable': {
@@ -4653,8 +4655,8 @@ const CARDS = {
       action:{ type:'multi', damageReduce:30, hateBonus:500, mpCondition:{ mres:20, bres:15 } }
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'HP30%以下 被ダメ-30%・ヘイト+500。MP30%以下でさらにWHITE耐性+20%・BLACK耐性+15%',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`HP30%↓ 被ダメ-${Math.round(30*m)}%・ヘイト+${Math.round(500*m)}。MP30%↓ WHITE耐性+${Math.round(20*m)}%・BLACK耐性+${Math.round(15*m)}%`;},
+    desc:'HP30%以下 被ダメ-30%・ヘイト+500。MP30%以下でさらに特殊耐性+20%・特殊耐性+15%',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`HP30%↓ 被ダメ-${Math.round(30*m)}%・ヘイト+${Math.round(500*m)}。MP30%↓ 特殊耐性+${Math.round(20*m)}%・特殊耐性+${Math.round(15*m)}%`;},
   },
 
   'vg_passive_martyr_shield': {
@@ -4673,8 +4675,8 @@ const CARDS = {
     type:'attack', rarity:1, cd:2, target:'single',
     effect:{ type:'damage', power:1.5, damageType:'phys' },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw1.5 CDが短く回転率が高い基本攻撃',
-    descLv:(lv)=>`🔴単体 Pw${(1.5*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}`,
+    desc:'⚔️単体 Pw1.5 CDが短く回転率が高い基本攻撃',
+    descLv:(lv)=>`⚔️単体 Pw${(1.5*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)}`,
   },
 
   'ar_poison_arrow': {
@@ -4682,8 +4684,8 @@ const CARDS = {
     type:'attack', rarity:1, cd:4, target:'single',
     effect:{ type:'damage', power:0.8, damageType:'phys', debuff:{ type:'poison', val:10, turns:3 } },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw0.8 + 毒付与(3T・ATK10%/T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴単体 Pw${(0.8*m).toFixed(1)} + 毒(3T・ATK${Math.round(10*m)}%/T)`;},
+    desc:'⚔️単体 Pw0.8 + 毒付与(3T・ATK10%/T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️単体 Pw${(0.8*m).toFixed(1)} + 毒(3T・ATK${Math.round(10*m)}%/T)`;},
   },
 
   'ar_opening_hawk_eye': {
@@ -4713,8 +4715,8 @@ const CARDS = {
     type:'attack', rarity:2, cd:5, target:'single',
     effect:{ type:'damage', power:2.0, damageType:'spec', debuff:{ type:'silence', val:1, turns:1 } },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🤍単体 Pw2.0 + 沈黙(次スキル1回封印)',
-    descLv:(lv)=>`🤍単体 Pw${(2.0*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + 沈黙`,
+    desc:'✨単体 Pw2.0 + 沈黙(次スキル1回封印)',
+    descLv:(lv)=>`✨単体 Pw${(2.0*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + 沈黙`,
   },
 
   'ar_slowing_arrow': {
@@ -4722,8 +4724,8 @@ const CARDS = {
     type:'attack', rarity:2, cd:5, target:'single',
     effect:{ type:'damage', power:1.8, damageType:'phys', debuff:{ type:'spd_down', val:-20, turns:2 } },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw1.8 + SPD-20(2T)',
-    descLv:(lv)=>`🔴単体 Pw${(1.8*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + SPD-${Math.round(20*[1.0,1.2,1.4,1.7,2.0][lv-1])}(2T)`,
+    desc:'⚔️単体 Pw1.8 + SPD-20(2T)',
+    descLv:(lv)=>`⚔️単体 Pw${(1.8*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + SPD-${Math.round(20*[1.0,1.2,1.4,1.7,2.0][lv-1])}(2T)`,
   },
 
   'ar_break_arrow': {
@@ -4731,8 +4733,8 @@ const CARDS = {
     type:'attack', rarity:2, cd:6, target:'single',
     effect:{ type:'damage', power:1.6, damageType:'phys', debuff:{ type:'mdef_down', val:-15, turns:2 } },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'💜単体 Pw1.6(HP+MP) + BLACK耐性-15%(2T)',
-    descLv:(lv)=>`💜単体 Pw${(1.6*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + BLACK耐性-${Math.round(15*[1.0,1.2,1.4,1.7,2.0][lv-1])}%(2T)`,
+    desc:'⚔️単体 Pw1.6(HP+MP) + 特殊耐性-15%(2T)',
+    descLv:(lv)=>`⚔️単体 Pw${(1.6*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + 特殊耐性-${Math.round(15*[1.0,1.2,1.4,1.7,2.0][lv-1])}%(2T)`,
   },
 
   'ar_hawk_feather': {
@@ -4740,8 +4742,8 @@ const CARDS = {
     type:'attack', rarity:2, cd:5, target:'single',
     effect:{ type:'damage', power:2.0, damageType:'phys', bonusCritPow:1.0 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw2.0 会心時追加Pw+1.0',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴単体 Pw${(2.0*m).toFixed(1)} 会心時+Pw${(1.0*m).toFixed(1)}`;},
+    desc:'⚔️単体 Pw2.0 会心時追加Pw+1.0',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️単体 Pw${(2.0*m).toFixed(1)} 会心時+Pw${(1.0*m).toFixed(1)}`;},
   },
 
   'ar_weak_spot': {
@@ -4752,8 +4754,8 @@ const CARDS = {
       { type:'mdef_down', val:-15, turns:3 },
     ]},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'対象PRES-20%・MRES-15%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`PRES-${Math.round(20*m)}%・MRES-${Math.round(15*m)}%(3T)`;},
+    desc:'対象物理耐性-20%・特殊耐性-15%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`物理耐性-${Math.round(20*m)}%・特殊耐性-${Math.round(15*m)}%(3T)`;},
   },
 
   'ar_smoke_arrow': {
@@ -4790,8 +4792,8 @@ const CARDS = {
     type:'attack', rarity:3, cd:8, target:'single',
     effect:{ type:'damage', power:3.5, damageType:'phys', forceCrit:true, backRowBonus:1.0 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw3.5 強制会心。後衛時Pw+1.0',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴単体 Pw${(3.5*m).toFixed(1)} 強制会心・後衛時+${(1.0*m).toFixed(1)}`;},
+    desc:'⚔️単体 Pw3.5 強制会心。後衛時Pw+1.0',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️単体 Pw${(3.5*m).toFixed(1)} 強制会心・後衛時+${(1.0*m).toFixed(1)}`;},
   },
 
   'ar_soul_pierce': {
@@ -4799,8 +4801,8 @@ const CARDS = {
     type:'attack', rarity:3, cd:8, target:'all',
     effect:{ type:'damage', power:1.2, damageType:'spec', stunBonus:0.8 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🤍全体 Pw1.2。スタン中の敵にPw+0.8追加',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🤍全体 Pw${(1.2*m).toFixed(1)} スタン中+Pw${(0.8*m).toFixed(1)}`;},
+    desc:'✨全体 Pw1.2。スタン中の敵にPw+0.8追加',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`✨全体 Pw${(1.2*m).toFixed(1)} スタン中+Pw${(0.8*m).toFixed(1)}`;},
   },
 
   'ar_black_arrow': {
@@ -4808,8 +4810,8 @@ const CARDS = {
     type:'attack', rarity:3, cd:7, target:'single',
     effect:{ type:'damage', power:2.5, damageType:'phys', debuff:{ type:'burn', val:12, turns:3 } },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'💜単体 Pw2.5(HP+MP) + 燃焼付与(3T・ATK12%/T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`💜単体 Pw${(2.5*m).toFixed(1)} + 燃焼(3T・ATK${Math.round(12*m)}%/T)`;},
+    desc:'⚔️単体 Pw2.5(HP+MP) + 燃焼付与(3T・ATK12%/T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️単体 Pw${(2.5*m).toFixed(1)} + 燃焼(3T・ATK${Math.round(12*m)}%/T)`;},
   },
 
   'ar_annihilation': {
@@ -4817,8 +4819,8 @@ const CARDS = {
     type:'attack', rarity:3, cd:10, target:'single',
     effect:{ type:'blue_hp_mp', hpRatio:0.15, mpRatio:0.15 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔵単体 最大HP・MPそれぞれ15%のBLUEダメージ',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔵単体 最大HP・MPの${Math.round(15*m)}%ダメージ`;},
+    desc:'✨単体 最大HP・MPそれぞれ15%のBLUEダメージ',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`✨単体 最大HP・MPの${Math.round(15*m)}%ダメージ`;},
   },
 
   'ar_deluge_arrow': {
@@ -4826,8 +4828,8 @@ const CARDS = {
     type:'attack', rarity:3, cd:10, target:'all',
     effect:{ type:'blue_hp_mp', hpRatio:0.08, mpRatio:0.08 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔵全体 最大HP・MPそれぞれ8%のBLUEダメージ',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔵全体 最大HP・MPの${Math.round(8*m)}%ダメージ`;},
+    desc:'✨全体 最大HP・MPそれぞれ8%のBLUEダメージ',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`✨全体 最大HP・MPの${Math.round(8*m)}%ダメージ`;},
   },
 
   'ar_marking': {
@@ -4864,8 +4866,8 @@ const CARDS = {
     type:'equip', rarity:3,
     effect:{ type:'normalAttackMod', powerBonus:0.3, onCritDebuff:{ type:'pdef_down', val:-5, turns:2 }, nightPenaltyReduce:0.5 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'通常攻撃Pw+0.3。会心時PRES-5%(2T)。夜戦命中ペナルティ50%軽減',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`Pw+${(0.3*m).toFixed(2)}。会心時PRES-${Math.round(5*m)}%(2T)。夜戦命中ペナルティ${Math.round(50*m)}%軽減`;},
+    desc:'通常攻撃Pw+0.3。会心時物理耐性-5%(2T)。夜戦命中ペナルティ50%軽減',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`Pw+${(0.3*m).toFixed(2)}。会心時物理耐性-${Math.round(5*m)}%(2T)。夜戦命中ペナルティ${Math.round(50*m)}%軽減`;},
   },
 
   // ===== プリースト ★1カード =====
@@ -4886,8 +4888,8 @@ const CARDS = {
       debuff:{ type:'atk_down', val:-15, turns:2 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw1.0 + 対象ATK-15%(2T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴単体 Pw${(1.0*m).toFixed(1)} + ATK-${Math.round(15*m)}%(2T)`;},
+    desc:'⚔️単体 Pw1.0 + 対象ATK-15%(2T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️単体 Pw${(1.0*m).toFixed(1)} + ATK-${Math.round(15*m)}%(2T)`;},
   },
 
   'pr_opening_blessing': {
@@ -4895,8 +4897,8 @@ const CARDS = {
     type:'opening', rarity:1, target:'all_ally',
     effect:{ type:'heal_and_mres', healRatio:0.8, mresVal:10, mresTurns:3 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'開幕：全員HP回復(ATKの80%) + 全員WHITE耐性+10%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：全員HP回復(ATK×${(0.8*m).toFixed(1)}) + WHITE耐性+${Math.round(10*m)}%(3T)`;},
+    desc:'開幕：全員HP回復(ATKの80%) + 全員特殊耐性+10%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：全員HP回復(ATK×${(0.8*m).toFixed(1)}) + 特殊耐性+${Math.round(10*m)}%(3T)`;},
   },
 
   'pr_equip_prayer_staff': {
@@ -4924,8 +4926,8 @@ const CARDS = {
     type:'support', rarity:2, cd:5, target:'single_ally',
     effect:{ type:'heal_mp_and_mres', mpHealRatio:2.0, mresVal:15, mresTurns:3 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'味方単体 MP回復(ATKの200%) + WHITE耐性+15%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`MP回復(ATK×${(2.0*m).toFixed(1)}) + WHITE耐性+${Math.round(15*m)}%(3T)`;},
+    desc:'味方単体 MP回復(ATKの200%) + 特殊耐性+15%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`MP回復(ATK×${(2.0*m).toFixed(1)}) + 特殊耐性+${Math.round(15*m)}%(3T)`;},
   },
 
   'pr_regeneration': {
@@ -4953,8 +4955,8 @@ const CARDS = {
       debuff:{ type:'atk_down', val:-25, turns:2 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🤍単体 Pw1.5 + 対象ATK-25%(2T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🤍単体 Pw${(1.5*m).toFixed(1)} + ATK-${Math.round(25*m)}%(2T)`;},
+    desc:'✨単体 Pw1.5 + 対象ATK-25%(2T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`✨単体 Pw${(1.5*m).toFixed(1)} + ATK-${Math.round(25*m)}%(2T)`;},
   },
 
   'pr_divine_shield': {
@@ -4962,8 +4964,8 @@ const CARDS = {
     type:'support', rarity:2, cd:6, target:'single_ally',
     effect:{ type:'shield_and_bres', shieldVal:2.0, bresVal:15, bresTurns:3 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'味方単体 シールド(ATKの200%) + BLACK耐性+15%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`シールド(ATK×${(2.0*m).toFixed(1)}) + BLACK耐性+${Math.round(15*m)}%(3T)`;},
+    desc:'味方単体 シールド(ATKの200%) + 特殊耐性+15%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`シールド(ATK×${(2.0*m).toFixed(1)}) + 特殊耐性+${Math.round(15*m)}%(3T)`;},
   },
 
   'pr_passive_mercy_aura': {
@@ -5032,8 +5034,8 @@ const CARDS = {
       debuff:{ type:'atk_down', val:-30, turns:2 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔵敵全体 最大HP5%分ダメージ + 全敵ATK-30%(2T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔵敵全体 最大HP${(5*m).toFixed(1)}%ダメージ + ATK-${Math.round(30*m)}%(2T)`;},
+    desc:'✨敵全体 最大HP5%分ダメージ + 全敵ATK-30%(2T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`✨敵全体 最大HP${(5*m).toFixed(1)}%ダメージ + ATK-${Math.round(30*m)}%(2T)`;},
   },
 
   'pr_opening_goddess_grace': {
@@ -5081,8 +5083,8 @@ const CARDS = {
     type:'attack', rarity:1, cd:3, target:'single',
     effect:{ type:'damage', power:1.2, damageType:'phys', nightPwBonus:0.5 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw1.2。夜戦中Pw+0.5追加',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴単体 Pw${(1.2*m).toFixed(1)}。夜戦Pw+${(0.5*m).toFixed(1)}`;},
+    desc:'⚔️単体 Pw1.2。夜戦中Pw+0.5追加',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️単体 Pw${(1.2*m).toFixed(1)}。夜戦Pw+${(0.5*m).toFixed(1)}`;},
   },
 
   'as_smoke_bomb': {
@@ -5120,8 +5122,8 @@ const CARDS = {
     type:'attack', rarity:2, cd:5, target:'single',
     effect:{ type:'damage', power:2.0, damageType:'phys', ccForceCrit:true, ccPwBonus:0.8 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw2.0。CC中の敵に強制会心+Pw+0.8',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴単体 Pw${(2.0*m).toFixed(1)}。CC中→強制会心+Pw+${(0.8*m).toFixed(1)}`;},
+    desc:'⚔️単体 Pw2.0。CC中の敵に強制会心+Pw+0.8',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️単体 Pw${(2.0*m).toFixed(1)}。CC中→強制会心+Pw+${(0.8*m).toFixed(1)}`;},
   },
 
   'as_poison_blade': {
@@ -5130,8 +5132,8 @@ const CARDS = {
     effect:{ type:'damage', power:1.6, damageType:'phys',
       debuff:{ type:'lethal_poison', val:15, turns:3 }, nightPwBonus:0.5 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'💜単体 Pw1.6+猛毒(3T・ATK15%/T)。夜戦中Pw+0.5',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`💜Pw${(1.6*m).toFixed(1)}+猛毒(3T・ATK${Math.round(15*m)}%/T)。夜戦Pw+${(0.5*m).toFixed(1)}`;},
+    desc:'⚔️単体 Pw1.6+猛毒(3T・ATK15%/T)。夜戦中Pw+0.5',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️Pw${(1.6*m).toFixed(1)}+猛毒(3T・ATK${Math.round(15*m)}%/T)。夜戦Pw+${(0.5*m).toFixed(1)}`;},
   },
 
   'as_triple_slash': {
@@ -5139,8 +5141,8 @@ const CARDS = {
     type:'attack', rarity:2, cd:6, target:'single', hits:3,
     effect:{ type:'damage', power:0.9, damageType:'phys', nightPwBonus:0.3 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体×3回 Pw0.9(各会心判定)。夜戦中各Pw+0.3',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴×3回 Pw${(0.9*m).toFixed(1)}×3。夜戦各+Pw${(0.3*m).toFixed(1)}`;},
+    desc:'⚔️単体×3回 Pw0.9(各会心判定)。夜戦中各Pw+0.3',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️×3回 Pw${(0.9*m).toFixed(1)}×3。夜戦各+Pw${(0.3*m).toFixed(1)}`;},
   },
 
   'as_vital_strike': {
@@ -5148,8 +5150,8 @@ const CARDS = {
     type:'attack', rarity:2, cd:7, target:'single',
     effect:{ type:'damage', power:2.2, damageType:'phys', criDamBonus:30, nightForceCrit:true },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw2.2+CRIDAM+30%。夜戦中強制会心',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴Pw${(2.2*m).toFixed(1)}+CRIDAM+${Math.round(30*m)}%。夜戦強制会心`;},
+    desc:'⚔️単体 Pw2.2+CRIDAM+30%。夜戦中強制会心',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️Pw${(2.2*m).toFixed(1)}+CRIDAM+${Math.round(30*m)}%。夜戦強制会心`;},
   },
 
   'as_feint': {
@@ -5174,8 +5176,8 @@ const CARDS = {
       extraDebuff2:{ type:'mdef_down', val:-12, turns:2 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🤍MPにPw1.5+【束縛】(2T)・PRES-15%・WHITE耐性-12%(2T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🤍Pw${(1.5*m).toFixed(1)}+束縛(2T)・PRES-${Math.round(15*m)}%・WHITE-${Math.round(12*m)}%(2T)`;},
+    desc:'✨特殊Pw1.5+【束縛】(2T)・物理耐性-15%・特殊耐性-12%(2T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`✨特殊Pw${(1.5*m).toFixed(1)}+束縛(2T)・物理耐性-${Math.round(15*m)}%・特殊耐性-${Math.round(12*m)}%(2T)`;},
   },
 
   'as_passive_night_instinct': {
@@ -5183,8 +5185,8 @@ const CARDS = {
     type:'passive', rarity:2,
     effect:{ trigger:'night_battle', action:{ type:'night_passive_buff', criUp:20, damageBonusPer:15, bresUp:10 }},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'夜戦中CRI+20%・与ダメ+15%・BLACK耐性+10%(常時発動)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`夜戦中CRI+${Math.round(20*m)}%・与ダメ+${Math.round(15*m)}%・BLACK耐性+${Math.round(10*m)}%`;},
+    desc:'夜戦中CRI+20%・与ダメ+15%・特殊耐性+10%(常時発動)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`夜戦中CRI+${Math.round(20*m)}%・与ダメ+${Math.round(15*m)}%・特殊耐性+${Math.round(10*m)}%`;},
   },
 
   'as_passive_shadow_step': {
@@ -5203,8 +5205,8 @@ const CARDS = {
     type:'attack', rarity:3, cd:8, target:'single',
     effect:{ type:'damage', power:3.5, damageType:'phys', forceCrit:true, nightPwBonus:2.0 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体 Pw3.5 強制会心。夜戦中Pw+2.0(計Pw5.5)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴Pw${(3.5*m).toFixed(1)} 強制会心。夜戦Pw+${(2.0*m).toFixed(1)}(計${(5.5*m).toFixed(1)})`;},
+    desc:'⚔️単体 Pw3.5 強制会心。夜戦中Pw+2.0(計Pw5.5)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️Pw${(3.5*m).toFixed(1)} 強制会心。夜戦Pw+${(2.0*m).toFixed(1)}(計${(5.5*m).toFixed(1)})`;},
   },
 
   'as_shadow_clone': {
@@ -5212,8 +5214,8 @@ const CARDS = {
     type:'attack', rarity:3, cd:7, target:'single', hits:2,
     effect:{ type:'damage', power:2.0, damageType:'phys', nightPwBonus:0.8 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴単体×2回 Pw2.0(各会心判定・同一ターゲット)。夜戦中各Pw+0.8',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴×2回 Pw${(2.0*m).toFixed(1)}×2。夜戦各Pw+${(0.8*m).toFixed(1)}`;},
+    desc:'⚔️単体×2回 Pw2.0(各会心判定・同一ターゲット)。夜戦中各Pw+0.8',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️×2回 Pw${(2.0*m).toFixed(1)}×2。夜戦各Pw+${(0.8*m).toFixed(1)}`;},
   },
 
   'as_death_mark': {
@@ -5223,8 +5225,8 @@ const CARDS = {
       debuff:{ type:'death_mark', val:5, turns:5, criDamBonus:40, mresDown:-15, bresDown:-10 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴Pw1.5+【死の刻印】(5T)。刻印中:会心ダメ+40%・WHITE耐性-15%・BLACK耐性-10%',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴Pw${(1.5*m).toFixed(1)}+死の刻印(5T)。会心ダメ+${Math.round(40*m)}%・WHITE-${Math.round(15*m)}%・BLACK-${Math.round(10*m)}%`;},
+    desc:'⚔️Pw1.5+【死の刻印】(5T)。刻印中:会心ダメ+40%・特殊耐性-15%・特殊耐性-10%',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️Pw${(1.5*m).toFixed(1)}+死の刻印(5T)。会心ダメ+${Math.round(40*m)}%・WHITE-${Math.round(15*m)}%・BLACK-${Math.round(10*m)}%`;},
   },
 
   'as_night_dance': {
@@ -5232,8 +5234,8 @@ const CARDS = {
     type:'attack', rarity:3, cd:9, target:'random', hits:4,
     effect:{ type:'damage', power:1.3, damageType:'phys', nightPwBonus:0.5, nightBlackAdd:{ power:0.5 } },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'🔴ランダム×4回 Pw1.3×4。夜戦中各Pw+0.5+💜BLACK Pw0.5追加(各ヒット)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`🔴ランダム×4 Pw${(1.3*m).toFixed(1)}×4。夜戦各+Pw${(0.5*m).toFixed(1)}+💜Pw${(0.5*m).toFixed(1)}`;},
+    desc:'⚔️ランダム×4回 Pw1.3×4。夜戦中各Pw+0.5+⚔️Pw0.5追加(各ヒット)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️ランダム×4 Pw${(1.3*m).toFixed(1)}×4。夜戦各+Pw${(0.5*m).toFixed(1)}+⚔️Pw${(0.5*m).toFixed(1)}`;},
   },
 
   'as_instant_kill': {
@@ -5243,8 +5245,8 @@ const CARDS = {
       instantKill:{ condition:'hp25', dayRate:30, nightRate:50 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'💜Pw4.5 夜戦強制会心。HP25%以下で即死判定(昼30%・夜50%)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`💜Pw${(4.5*m).toFixed(1)} 即死:昼${Math.round(30*m)}%・夜${Math.min(100,Math.round(50*m))}%`;},
+    desc:'⚔️Pw4.5 夜戦強制会心。HP25%以下で即死判定(昼30%・夜50%)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️Pw${(4.5*m).toFixed(1)} 即死:昼${Math.round(30*m)}%・夜${Math.min(100,Math.round(50*m))}%`;},
   },
 
   'as_opening_dark_ambush': {
@@ -5254,8 +5256,8 @@ const CARDS = {
       surpriseBlackPw:2.0, surpriseDebuff:{ type:'lethal_poison', val:15, turns:5 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'開幕：奇襲成功時🔴Pw4.5+💜Pw2.0+猛毒(5T)。通常時🔴Pw1.5のみ',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`奇襲🔴Pw${(4.5*m).toFixed(1)}+💜Pw${(2.0*m).toFixed(1)}+猛毒(5T)｜通常🔴Pw${(1.5*m).toFixed(1)}`;},
+    desc:'開幕：奇襲成功時⚔️Pw4.5+⚔️Pw2.0+猛毒(5T)。通常時⚔️Pw1.5のみ',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`奇襲⚔️Pw${(4.5*m).toFixed(1)}+⚔️Pw${(2.0*m).toFixed(1)}+猛毒(5T)｜通常⚔️Pw${(1.5*m).toFixed(1)}`;},
   },
 
   'as_opening_night_order': {
@@ -5269,8 +5271,8 @@ const CARDS = {
       { type:'stealth_up', val:30, turns:99 },
     ]},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'夜戦移行時に自動再発動：ATK+40%・CRI+25%・SPD+20・WHITE耐性+15%・隠密+30%(夜戦中永続)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`夜戦：ATK+${Math.round(40*m)}%・CRI+${Math.round(25*m)}%・SPD+${Math.round(20*m)}・WHITE耐性+${Math.round(15*m)}%`;},
+    desc:'夜戦移行時に自動再発動：ATK+40%・CRI+25%・SPD+20・特殊耐性+15%・隠密+30%(夜戦中永続)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`夜戦：ATK+${Math.round(40*m)}%・CRI+${Math.round(25*m)}%・SPD+${Math.round(20*m)}・特殊耐性+${Math.round(15*m)}%`;},
   },
 
   'as_equip_shadow_blade': {
@@ -5280,7 +5282,7 @@ const CARDS = {
       nightBlackAdd:{ power:0.6 }, nightOnHitDebuff:{ type:'mdef_down', val:-5, turns:2, maxStack:3 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'通常攻撃Pw+0.4・CRI+12%。夜戦中BLACK Pw0.6追加+命中時WHITE耐性-5%(2T・最大3スタック)',
+    desc:'通常攻撃Pw+0.4・CRI+12%。夜戦中BLACK Pw0.6追加+命中時特殊耐性-5%(2T・最大3スタック)',
     descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`Pw+${(0.4*m).toFixed(2)}・CRI+${Math.round(12*m)}%。夜戦BLACK+Pw${(0.6*m).toFixed(1)}・WHITE-${Math.round(5*m)}%(スタック3)`;},
   },
 
@@ -6813,7 +6815,7 @@ const BEGINNER_MISSIONS = [
   {
     id:'bg_16', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第6章：夜戦を体験する',
     text:'メインステージ Area2-S5（アイアンホーンの放牧地）をクリア',
-    desc:'PRES35%の超硬い敵。BLACKダメージや割合ダメージが有効。',
+    desc:'物理耐性35%の超硬い敵。特殊ダメージが有効。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×250`,
     rewardIcon:'crystal', rewardAmt:250, rewardType:'starCrystal',
     cur:()=> gState.progress?.babel?.clearedStages?.['a2s5'] ? 1 : 0, req:1,
@@ -7848,7 +7850,7 @@ const NEWS_DATA = [
 <ul>
   <li>タレントはガチャ召喚時ではなく、<b>ユニットがLv.40に到達した時点</b>で解放されます</li>
   <li>アカウントで初めてLv.40ユニットが誕生した際、タレントの使い方を説明するチュートリアルが開始されます</li>
-  <li>タレントプールから「RED耐性アップ」「WHITE耐性アップ」を削除し、より汎用性の高い効果に絞りました</li>
+  <li>タレントプールから「物理耐性アップ」「特殊耐性アップ」を削除し、より汎用性の高い効果に絞りました</li>
 </ul>
 
 <h4>🌊 アビスダイブ解放表示を修正</h4>
@@ -7967,8 +7969,8 @@ const NEWS_DATA = [
 <ul>
   <li>カードタイプを4種類に統一：攻撃スキル／支援スキル／開幕スキル／パッシブ</li>
   <li>「装備（equip）」タイプを廃止</li>
-  <li><b>ウォークライ</b>：全体バフ → 自身ATK+30%・RED耐性+15%・WHITE耐性+15%に変更</li>
-  <li><b>弱点狙い</b>（アーチャー）：RED耐性・WHITE耐性デバフに効果説明を更新</li>
+  <li><b>ウォークライ</b>：全体バフ → 自身ATK+30%・物理耐性+15%・特殊耐性+15%に変更</li>
+  <li><b>弱点狙い</b>（アーチャー）：物理耐性・特殊耐性デバフに効果説明を更新</li>
   <li><b>鷹の目 → ホークアイ</b>：開幕スキルからパッシブに変更（CRI+15%常時付与）</li>
   <li>新カード <b>嵐の矢雨</b>（アーチャー・開幕）：開幕にランダムな敵へ7回攻撃</li>
 </ul>
@@ -8055,8 +8057,8 @@ const NEWS_DATA = [
 
 <h4>🛡️ 耐性名を属性カラーに統一</h4>
 <ul>
-  <li>PRES → RED耐性、MRES → WHITE耐性 に統一</li>
-  <li>BLACK耐性・BLUE耐性をステータス画面に追加表示</li>
+  <li>PRES → 物理耐性、MRES → 特殊耐性 に統一</li>
+  <li>特殊耐性・特殊耐性をステータス画面に追加表示</li>
 </ul>
 
 <h4>⚔️ 敵ターゲット管理を改善</h4>
@@ -8064,7 +8066,7 @@ const NEWS_DATA = [
 
 <h4>✨ バフ・デバフ表示を整理</h4>
 <ul>
-  <li>WHITE耐性上昇とMRES上昇を同一バフに統一</li>
+  <li>特殊耐性上昇とMRES上昇を同一バフに統一</li>
   <li>同じバフが重複した場合は「×2」などでまとめて表示</li>
 </ul>`,
   },
@@ -8220,18 +8222,16 @@ const NEWS_DATA = [
   {
     id: 'news_004',
     type: 'info',
-    title: '📖 遊び方ガイド更新：状態異常・属性攻撃について',
+    title: '📖 遊び方ガイド更新：ダメージ属性と状態異常について',
     date: '2026-04-10',
-    summary: '属性攻撃（RED/WHITE/BLACK/BLUE）の効果と状態異常の一覧をヘルプに追加しました。',
-    body: `<h4>属性攻撃の仕様</h4>
+    summary: 'ダメージシステムを物理・特殊の2属性に更新しました。',
+    body: `<h4>ダメージ属性の仕様</h4>
 <ul>
-  <li>🔴 <b>RED</b>: 物理ダメージ。対象のHPを削ります</li>
-  <li>🤍 <b>WHITE</b>: 精神ダメージ。対象のMPを削ります。MP0でスタッガー発生</li>
-  <li>🖤 <b>BLACK</b>: 魔法ダメージ。HPとMPの両方を削ります</li>
-  <li>🔵 <b>BLUE</b>: 割合ダメージ。最大HPに対して一定割合のダメージ</li>
+  <li>⚔️ <b>物理（phys）</b>: 物理ダメージ。物理耐性（PDEF）で軽減。会心あり。</li>
+  <li>✨ <b>特殊（spec）</b>: 魔法・術系ダメージ。特殊耐性（MDEF）で軽減。MPを削りスタッガーを狙えます。</li>
 </ul>
 <h4>スタッガーシステム</h4>
-<p>MPが0になるとスタッガー状態になり、次の行動をスキップします。解除時にMP30%が回復。HPが高い敵にも WHITE攻撃が有効な理由です。</p>`,
+<p>MPが0になるとスタッガー状態になり、次の行動をスキップします。解除時にMP30%が回復。</p>`,
   },
 ];
 
@@ -9499,8 +9499,8 @@ function calcStats(unit) {
   let hp     = Math.floor(base.hp  * scale);
   // 固定値（装備・パッシブ・星図盤で強化）
   let spd    = base.spd;
-  let pdef   = base.pdef || 0;
-  let mdef   = base.mdef || 0;
+  let pdef   = base.pdef || base.pres || 0;
+  let mdef   = base.mdef || base.mres || 0;
   let cri    = base.cri;
   let cridam = base.cridam;
   // パッシブ加算（すべてフラットまたは%）
@@ -11131,8 +11131,13 @@ function fireOpeningSkills(allies, enemies) {
           if (effInner?.type === 'multi_debuff_all') {
             const mult = (scoutOutcome==='success' && opening.surpriseMult) ? opening.surpriseMult : 1.0;
             (effInner.debuffs||[]).forEach(db => applyDebuffDirect(e, { ...db, val: Math.round((db.val||0)*mult) }));
+          } else if (effInner?.type === 'all_pdef_mdef_down_all') {
+            const isSurprise = (scoutOutcome === 'success');
+            const val = isSurprise ? (effInner.surpriseVal || effInner.val || -15) : (effInner.val || -15);
+            applyDebuffDirect(e, { type:'pdef_down', val, turns:effInner.turns||3 });
+            applyDebuffDirect(e, { type:'mdef_down', val, turns:effInner.turns||3 });
           }
-          spawnFloatNum(e.uid, '呪い', 'float-debuff');
+          spawnFloatNum(e.uid, '弱体', 'float-debuff');
         });
       } else {
         applyBuff(ally, opening, ally);
@@ -11852,7 +11857,7 @@ function doAttack(attacker, targets, skill) {
         }
       }
     }
-    // パッシブ: 弱点狙い（攻撃した敵のRED耐性-5%、最大5スタック）
+    // パッシブ: 弱点狙い（攻撃した敵の物理耐性-5%、最大5スタック）
     if (!attacker.isEnemy && totalDmg > 0) {
       const weakPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='pdef_down_on_attack' || p.effect?.type==='pres_down_on_attack');
       if (weakPass) {
@@ -11862,7 +11867,7 @@ function doAttack(attacker, targets, skill) {
           target._weakSpotStacks++;
           target.debuffs = target.debuffs||[];
           target.debuffs.push({ type:'pdef_down', val:-(weakPass.effect.val||5), turns:9999 });
-          setTimeout(() => spawnFloatNum(target.uid, `🔴耐-${weakPass.effect.val||5}%`, 'float-debuff'), 200);
+          setTimeout(() => spawnFloatNum(target.uid, `⚔️耐-${weakPass.effect.val||5}%`, 'float-debuff'), 200);
         }
       }
     }
@@ -12038,7 +12043,6 @@ function performUlt(c, enemies, allies) {
       if (resBuff) {
         buffList.push({ type:'pdef_up', val:resBuff, turns:ult.tauntTurns });
         buffList.push({ type:'mdef_up', val:resBuff, turns:ult.tauntTurns });
-        buffList.push({ type:'mdef_up', val:resBuff, turns:ult.tauntTurns });
       } else if (ult.selfAtkUp) {
         buffList.push({ type:'atk_up', val:ult.selfAtkUp, turns:ult.tauntTurns });
       }
@@ -12047,6 +12051,21 @@ function performUlt(c, enemies, allies) {
       spawnFloatNum(c.uid, '挑発！', 'float-buff');
       const bonusDesc = resBuff ? `全耐性+${resBuff}%` : (ult.selfAtkUp ? `ATK+${ult.selfAtkUp}%` : '');
       addLog(`${c.name}: 完全挑発（${ult.tauntTurns}T）+ ${bonusDesc}`, 'trigger');
+    }
+    // sentinelウルト: pdefUp/mdefUp/selfInvincible
+    if (ult.pdefUp || ult.mdefUp) {
+      const turns = ult.resTurns || 3;
+      liveAllies.forEach(a => {
+        if (ult.pdefUp) a.buffs.push({ type:'pdef_up', val:ult.pdefUp, turns, icon:'⚔️物防↑', cssClass:'pdef-up' });
+        if (ult.mdefUp) a.buffs.push({ type:'mdef_up', val:ult.mdefUp, turns, icon:'✨特防↑', cssClass:'mdef-up' });
+        spawnFloatNum(a.uid, '物防/特防↑', 'float-buff');
+      });
+      addLog(`${c.name}: 全体 PDEF+${ult.pdefUp||0}/MDEF+${ult.mdefUp||0}(${turns}T)`, 'trigger');
+    }
+    if (ult.selfInvincible) {
+      c.buffs.push({ type:'cc_immune', val:1, turns:ult.selfInvincible, icon:'💪無敵', cssClass:'hp-up' });
+      spawnFloatNum(c.uid, '無敵！', 'float-buff');
+      addLog(`${c.name}: 無敵${ult.selfInvincible}T`, 'trigger');
     }
     return;
   }
@@ -12071,7 +12090,7 @@ function performUlt(c, enemies, allies) {
         spawnBall(c.uid, td.uid, 'ult');
         setTimeout(() => {
           flashCard(td.uid, 'hit');
-          spawnFloatNum(td.uid, `🔵${d}`, 'float-dmg');
+          spawnFloatNum(td.uid, `✨${d}`, 'float-dmg');
         }, 200);
       }, delay);
       delay += 150;
@@ -12083,7 +12102,7 @@ function performUlt(c, enemies, allies) {
         }, delay + 200);
       }
     }
-    addLog(`${c.name} → ランダム敵に🔵BLUE ×${hits}連射`, 'damage');
+    addLog(`${c.name} → ランダム敵に✨特殊 ×${hits}連射`, 'damage');
     return;
   }
 
@@ -12117,7 +12136,7 @@ function performUlt(c, enemies, allies) {
     if (ult.finalDispel) {
       setTimeout(() => {
         allies.filter(a=>!a.dead).forEach(al => {
-          al.buffs = (al.buffs||[]).filter(b => !(b.val < 0 || ['atk_down','mres_down','pres_down','bres_down','spd_down','flinch','paralysis'].includes(b.type)));
+          al.buffs = (al.buffs||[]).filter(b => !(b.val < 0 || ['atk_down','pdef_down','mdef_down','spd_down','flinch','paralysis'].includes(b.type)));
         });
         spawnFloatNum(c.uid, '✨浄化完了', 'float-buff');
         addLog(`${c.name}: ヒーリングレイン — 全味方デバフ解除`, 'trigger');
@@ -12154,6 +12173,7 @@ function performUlt(c, enemies, allies) {
     }
     if (ult.debuff) { applyDebuff(t, ult.debuff, c); setTimeout(()=>spawnFloatNum(t.uid,'弱体','float-debuff'),350); }
     if (ult.extraDebuff) { applyDebuffDirect(t, ult.extraDebuff); }
+    if (ult.extraDebuff2) { applyDebuffDirect(t, ult.extraDebuff2); }
     if (ult.drain) {
       const h = Math.floor(dmg * ult.drain / 100);
       c.hp = Math.min(c.maxHp, c.hp + h);
@@ -12161,8 +12181,8 @@ function performUlt(c, enemies, allies) {
       setTimeout(() => spawnFloatNum(c.uid, '+'+h, 'float-heal'), 350);
     }
   });
-  // パラディン系ULT: 全体回復＋全体バフ
-  if (ult.allyHeal || ult.allyBuff) {
+  // ULT: 全体回復＋全体バフ（allyHeal / allyBuff / allyBuffs）
+  if (ult.allyHeal || ult.allyBuff || ult.allyBuffs) {
     const liveAllies = [...(battleState?.allies||[])].filter(a=>!a.dead);
     const healBonus = getBattleHealBonus(c);
     liveAllies.forEach(a => {
@@ -12172,17 +12192,22 @@ function performUlt(c, enemies, allies) {
         battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + h;
         spawnFloatNum(a.uid, `💚+${h}`, 'float-heal');
       }
-      if (ult.allyBuff) {
-        const b = ult.allyBuff;
+      // allyBuffs: 配列で複数バフ付与
+      const buffList = ult.allyBuffs || (ult.allyBuff ? [ult.allyBuff] : []);
+      buffList.forEach(b => {
         if (b.type === 'all_res_up') {
-          ['pres_up','mres_up','bres_up'].forEach(rt =>
+          ['pdef_up','mdef_up'].forEach(rt =>
             a.buffs.push({ type:rt, val:b.val, turns:b.turns, icon:'🛡耐性↑', cssClass:'hp-up' })
           );
-          spawnFloatNum(a.uid, '耐性↑', 'float-buff');
+        } else {
+          const ico = b.type==='pdef_up'?'⚔️物防↑':b.type==='mdef_up'?'✨特防↑':'⬆';
+          a.buffs.push({ type:b.type, val:b.val, turns:b.turns, icon:ico, cssClass:'hp-up' });
         }
-      }
+        spawnFloatNum(a.uid, '耐性↑', 'float-buff');
+      });
     });
-    addLog(`${c.name} 全体回復＋全耐性+${ult.allyBuff?.val||0}%(${ult.allyBuff?.turns||3}T)`, 'trigger');
+    const buffDesc2 = ult.allyBuffs ? `PDEF/MDEF+${ult.allyBuffs[0]?.val||0}%(${ult.allyBuffs[0]?.turns||3}T)` : `全耐性+${ult.allyBuff?.val||0}%(${ult.allyBuff?.turns||3}T)`;
+    addLog(`${c.name} 全体回復＋${buffDesc2}`, 'trigger');
   }
 }
 
@@ -12284,8 +12309,8 @@ function applyBuff(c, skill, sourceUnit) {
 
   // ===== プリースト: 全デバフ解除+ATKバフ =====
   if (eff.type === 'dispel_and_atk_buff') {
-    const removed = (c.buffs||[]).filter(b => b.val < 0 || ['atk_down','mres_down','pres_down','bres_down','spd_down','flinch','paralysis'].includes(b.type)).length;
-    c.buffs = (c.buffs||[]).filter(b => !(b.val < 0 || ['atk_down','mres_down','pres_down','bres_down','spd_down','flinch','paralysis'].includes(b.type)));
+    const removed = (c.buffs||[]).filter(b => b.val < 0 || ['atk_down','pdef_down','mdef_down','spd_down','flinch','paralysis'].includes(b.type)).length;
+    c.buffs = (c.buffs||[]).filter(b => !(b.val < 0 || ['atk_down','pdef_down','mdef_down','spd_down','flinch','paralysis'].includes(b.type)));
     c.buffs.push({ type:'atk_up', val:eff.atkVal||20, turns:eff.atkTurns||2, icon:'⬆ATK', cssClass:'atk-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
     spawnFloatNum(c.uid, '✨浄化', 'float-buff');
@@ -12341,10 +12366,10 @@ function applyBuff(c, skill, sourceUnit) {
     const finalHeal = Math.floor(healAmt * healBonus);
     c.hp = Math.min(c.maxHp, c.hp + finalHeal);
     battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
-    c.buffs.push({ type:'mdef_up', val:eff.mresVal||10, turns:eff.mresTurns||3, icon:'🤍WHITE耐性↑', cssClass:'mres-up' });
+    c.buffs.push({ type:'mdef_up', val:eff.mresVal||10, turns:eff.mresTurns||3, icon:'✨特殊耐性↑', cssClass:'mres-up' });
     flashCard(c.uid, 'buff');
     spawnFloatNum(c.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
-    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(finalHeal)} / WHITE耐性+${eff.mresVal||10}%(${eff.mresTurns||3}T)`, 'trigger');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(finalHeal)} / 特殊耐性+${eff.mresVal||10}%(${eff.mresTurns||3}T)`, 'trigger');
     Audio.buff(); return;
   }
 
@@ -12369,11 +12394,11 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'shield_and_res') {
     const shieldAmt = Math.floor(c.maxHp * (eff.shieldRatio||0.20));
     applyShield(c, shieldAmt);
-    const resIcon = eff.resType==='wres'?'🤍WHITE耐性↑':'💜BLACK耐性↑';
-    c.buffs.push({ type:`${eff.resType}_up`, val:eff.resVal||15, turns:eff.turns||3, icon:resIcon, cssClass:'mres-up' });
+    const resIcon = '✨特殊耐性↑';
+    c.buffs.push({ type:'mdef_up', val:eff.resVal||15, turns:eff.turns||3, icon:resIcon, cssClass:'mres-up' });
     flashCard(c.uid, 'buff');
     spawnFloatNum(c.uid, `🛡️+${fmt(shieldAmt)}`, 'float-buff');
-    addLog(`${c.name} 🛡シールド+${fmt(shieldAmt)} / WHITE耐性+${eff.resVal}%(${eff.turns}T)`, 'trigger');
+    addLog(`${c.name} 🛡シールド+${fmt(shieldAmt)} / 特殊耐性+${eff.resVal}%(${eff.turns}T)`, 'trigger');
     Audio.buff(); return;
   }
 
@@ -12490,39 +12515,76 @@ function applyBuff(c, skill, sourceUnit) {
     return;
   }
 
-  // シールド+WHITE耐性同時付与（守護の誓い等）
+  // シールド+特殊耐性同時付与（守護の誓い等）
   if (eff.type === 'shield_and_mres') {
     const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||0.3));
     applyShield(c, shieldAmt);
-    c.buffs.push({ type:'mdef_up', val:eff.mresVal||8, turns:eff.mresTurns||3, icon:'🤍WHITE耐性↑', cssClass:'mres-up' });
+    c.buffs.push({ type:'mdef_up', val:eff.mresVal||8, turns:eff.mresTurns||3, icon:'✨特殊耐性↑', cssClass:'mres-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
-    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド+${fmt(shieldAmt)} / WHITE耐性+${eff.mresVal}%(${eff.mresTurns}T)`, 'trigger');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド+${fmt(shieldAmt)} / 特殊耐性+${eff.mresVal}%(${eff.mresTurns}T)`, 'trigger');
     Audio.buff(); return;
   }
 
-  // シールド+BLACK耐性同時付与（聖盾の加護等）
+  // シールド+特殊耐性同時付与（聖盾の加護等）
   if (eff.type === 'shield_and_bres') {
     const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||1.5));
     applyShield(c, shieldAmt);
-    c.buffs.push({ type:'mdef_up', val:eff.bresVal||10, turns:eff.bresTurns||3, icon:'💜BRES↑', cssClass:'hp-up' });
+    c.buffs.push({ type:'mdef_up', val:eff.bresVal||10, turns:eff.bresTurns||3, icon:'✨特殊耐性↑', cssClass:'hp-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
-    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド+${fmt(shieldAmt)} / BLACK耐性+${eff.bresVal}%(${eff.bresTurns}T)`, 'trigger');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド+${fmt(shieldAmt)} / 特殊耐性+${eff.bresVal}%(${eff.bresTurns}T)`, 'trigger');
     Audio.buff(); return;
   }
 
-  // シールド+PRES+BLACK耐性同時付与（先陣の盾等）
+  // シールド+PRES+特殊耐性同時付与（先陣の盾等）
   if (eff.type === 'shield_pres_bres') {
     const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||0.8));
     applyShield(c, shieldAmt);
     // PRESは自身（sourceUnit）にのみ付与
     if (c.uid === (sourceUnit||c).uid && eff.presVal) {
-      c.buffs.push({ type:'pdef_up', val:eff.presVal, turns:eff.presTurns||3, icon:'🛡PRES↑', cssClass:'hp-up' });
+      c.buffs.push({ type:'pdef_up', val:eff.presVal, turns:eff.presTurns||3, icon:'⚔️物理耐性↑', cssClass:'hp-up' });
     }
     if (eff.bresVal) {
-      c.buffs.push({ type:'mdef_up', val:eff.bresVal, turns:eff.bresTurns||3, icon:'💜BRES↑', cssClass:'hp-up' });
+      c.buffs.push({ type:'mdef_up', val:eff.bresVal, turns:eff.bresTurns||3, icon:'✨特殊耐性↑', cssClass:'hp-up' });
     }
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
-    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡+${fmt(shieldAmt)} BLACK耐性+${eff.bresVal}%(${eff.bresTurns}T)`, 'trigger');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡+${fmt(shieldAmt)} 特殊耐性+${eff.bresVal}%(${eff.bresTurns}T)`, 'trigger');
+    Audio.buff(); return;
+  }
+
+  // パラディン開幕: shield_and_mdef（シールド+MDEF、shieldRatioはmaxHp比率）
+  if (eff.type === 'shield_and_mdef') {
+    const shieldAmt = Math.floor(c.maxHp * (eff.shieldRatio||0.20));
+    applyShield(c, shieldAmt);
+    c.buffs.push({ type:'mdef_up', val:eff.mdefVal||15, turns:eff.turns||3, icon:'✨特防↑', cssClass:'mdef-up' });
+    flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
+    spawnFloatNum(c.uid, `🛡️+${fmt(shieldAmt)}`, 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド+${fmt(shieldAmt)} / 特防+${eff.mdefVal||15}%(${eff.turns||3}T)`, 'trigger');
+    Audio.buff(); return;
+  }
+
+  // キャスター開幕: pw_boost（次スキルPw+X%）
+  if (eff.type === 'pw_boost') {
+    c._nextSkillPwBoost = (c._nextSkillPwBoost||0) + (eff.val||50);
+    flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
+    spawnFloatNum(c.uid, `次スキルPw+${eff.val||50}%`, 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 次スキルPw+${eff.val||50}%`, 'trigger');
+    Audio.buff(); return;
+  }
+
+  // アルケミスト: heal_and_pdef_mdef_all（回復+PDEF/MDEF）
+  if (eff.type === 'heal_and_pdef_mdef_all') {
+    const atk = sourceUnit?.atk || c.atk;
+    const healAmt = Math.floor(atk * (eff.healRatio||1.2));
+    const healBonus = getBattleHealBonus(sourceUnit);
+    const finalHeal = Math.floor(healAmt * healBonus);
+    c.hp = Math.min(c.maxHp, c.hp + finalHeal);
+    battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
+    const turns = eff.resTurns || 2;
+    if (eff.pdefVal) c.buffs.push({ type:'pdef_up', val:eff.pdefVal, turns, icon:'⚔️物防↑', cssClass:'pdef-up' });
+    if (eff.mdefVal) c.buffs.push({ type:'mdef_up', val:eff.mdefVal, turns, icon:'✨特防↑', cssClass:'mdef-up' });
+    flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
+    spawnFloatNum(c.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(finalHeal)} / PDEF+${eff.pdefVal||15}/MDEF+${eff.mdefVal||15}%(${turns}T)`, 'trigger');
     Audio.buff(); return;
   }
 
@@ -12606,7 +12668,7 @@ function applyBuff(c, skill, sourceUnit) {
     spawnFloatNum(c.uid, `被ダメ-${eff.val}%`, 'float-buff');
   }
   if (eff.type==='rampart') {
-    c.buffs.push({ type:'pdef_up', val:eff.val, turns:eff.turns, icon:'🛡PRES', cssClass:'hp-up' });
+    c.buffs.push({ type:'pdef_up', val:eff.val, turns:eff.turns, icon:'⚔️物理耐性↑', cssClass:'hp-up' });
     const heal = Math.floor(c.maxHp*0.3);
     c.hp = Math.min(c.maxHp, c.hp+heal);
     spawnFloatNum(c.uid, '+'+fmt(heal), 'float-heal');
@@ -12772,11 +12834,11 @@ function tryApplyDebuff(target, debuff, attacker) {
 function applyDebuffDirect(target, debuff) {
   // 複合デバフ型を展開
   if (debuff.type === 'all_res_down') {
-    ['pres_down','mres_down','bres_down'].forEach(t => applyDebuffDirect(target, { ...debuff, type:t }));
+    ['pdef_down','mdef_down'].forEach(t => applyDebuffDirect(target, { ...debuff, type:t }));
     return;
   }
   if (debuff.type === 'grand_debuff') {
-    ['pres_down','mres_down','bres_down','atk_down','spd_down'].forEach(t => applyDebuffDirect(target, { ...debuff, type:t }));
+    ['pdef_down','mdef_down','atk_down','spd_down'].forEach(t => applyDebuffDirect(target, { ...debuff, type:t }));
     return;
   }
   // CC免疫チェック（スタン・しびれ・ひるみは無効化）
@@ -12788,16 +12850,18 @@ function applyDebuffDirect(target, debuff) {
   // 同種デバフは上書き（スタックしない）
   target.debuffs = (target.debuffs||[]).filter(d => d.type !== debuff.type);
   const iconMap = {
-    pres_down:'🛡️↓', mres_down:'✨↓', stun:'💫', poison:'☠️',
+    pdef_down:'⚔️↓', mdef_down:'✨↓', stun:'💫', poison:'☠️',
     bleed:'🩸', burn:'🔥', reduce:'🔽',
-    paralysis:'⚡', flinch:'💧', bres_down:'💜↓', lres_down:'🔵↓',
+    paralysis:'⚡', flinch:'💧',
     atk_down:'⚔️↓', spd_down:'🐢', hit_down:'🌫️', silence:'🔇', mark:'🎯',
+    pres_down:'⚔️↓', mres_down:'✨↓', bres_down:'✨↓', lres_down:'✨↓',
   };
   const labelMap = {
-    pres_down:'物理耐性↓', mres_down:'魔法耐性↓', bres_down:'黒耐性↓',
+    pdef_down:'物理耐性↓', mdef_down:'特殊耐性↓',
     stun:'💫スタン', poison:'☠毒', bleed:'🩸裂傷', burn:'🔥燃焼',
     reduce:'弱体化', paralysis:'⚡しびれ', flinch:'💧ひるみ', atk_down:'⚔️ATK↓',
     spd_down:'🐢SPD↓', hit_down:'🌫️命中↓', silence:'🔇沈黙', mark:'🎯マーク',
+    pres_down:'物理耐性↓', mres_down:'特殊耐性↓', bres_down:'特殊耐性↓',
   };
   target.debuffs.push({
     type:  debuff.type,
@@ -13785,7 +13849,7 @@ function playOneOpeningSkill(action, callback) {
 
     const isSurprise = (battleState._scoutOutcome === 'success');
     const power = ((isSurprise && eff.powerOnSurprise) ? eff.powerOnSurprise : (eff.power || 1.0)) * lvMult * bonusMult;
-    const dmgType = eff.damageType || 'red';
+    const dmgType = eff.damageType || 'phys';
     const isSingle = (card.target !== 'all' && card.target !== 'all_enemy');
     const targets = isSingle ? [enemies[Math.floor(Math.random()*enemies.length)]] : [...enemies];
 
@@ -13898,10 +13962,10 @@ function playOneOpeningSkill(action, callback) {
     const mresTurns = eff.mresTurns || 3;
     buffTargets.forEach(tgt => {
       applyShield(tgt, shAmt);
-      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:mresVal, turns:mresTurns, icon:'🤍WHITE耐性↑', cssClass:'mres-up' });
+      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:mresVal, turns:mresTurns, icon:'✨特殊耐性↑', cssClass:'mres-up' });
     });
     effectLines.push(`シールド+${shAmt}`);
-    effectLines.push(buffDesc('mres_up', mresVal, mresTurns));
+    effectLines.push(buffDesc('mdef_up', mresVal, mresTurns));
   }
 
   // ── shield_pres_bres ──
@@ -13913,13 +13977,13 @@ function playOneOpeningSkill(action, callback) {
       applyShield(tgt, shAmt);
     });
     // PRES/BRES は自身のみ
-    (c.buffs=c.buffs||[]).push({ type:'pdef_up', val:presVal, turns:eff.presTurns||3, icon:'⬆RED耐性', cssClass:'pres_up' });
+    (c.buffs=c.buffs||[]).push({ type:'pdef_up', val:presVal, turns:eff.presTurns||3, icon:'⚔️物理耐性↑', cssClass:'pres_up' });
     buffTargets.forEach(tgt => {
-      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:bresVal, turns:eff.bresTurns||3, icon:'⬆BLACK耐性', cssClass:'bres_up' });
+      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:bresVal, turns:eff.bresTurns||3, icon:'✨特殊耐性↑', cssClass:'bres_up' });
     });
     effectLines.push(`シールド+${shAmt}`);
-    effectLines.push(buffDesc('pres_up', presVal, eff.presTurns||3));
-    effectLines.push(buffDesc('bres_up', bresVal, eff.bresTurns||3));
+    effectLines.push(buffDesc('pdef_up', presVal, eff.presTurns||3));
+    effectLines.push(buffDesc('mdef_up', bresVal, eff.bresTurns||3));
   }
 
   // ── 旧 stat:'atk' 形式 ──
@@ -13943,11 +14007,11 @@ function playOneOpeningSkill(action, callback) {
     allyTargets.forEach(tgt => {
       tgt.hp = Math.min(tgt.maxHp, tgt.hp + finalHeal);
       battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + finalHeal;
-      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:mresVal, turns:eff.mresTurns||3, icon:'🤍WHITE耐性↑', cssClass:'mres-up' });
+      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:mresVal, turns:eff.mresTurns||3, icon:'✨特殊耐性↑', cssClass:'mres-up' });
       spawnFloatNum(tgt.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
     });
     effectLines.push(`💚HP+${fmt(finalHeal)}`);
-    effectLines.push(buffDesc('mres_up', mresVal, eff.mresTurns||3));
+    effectLines.push(buffDesc('mdef_up', mresVal, eff.mresTurns||3));
   }
 
   // ── プリースト開幕: opening_goddess（女神の加護）──
@@ -14871,7 +14935,7 @@ const TUT_VISUALS = {
       ${[
         {cls:'アーチャー',icon:'🏹',name:'フレアショット',col:'var(--orange)',tag:'攻撃系',detail:'奇襲Pw3.0\n通常Pw1.5'},
         {cls:'ウォリアー',icon:'⚔️',name:'バトルレディ',col:'var(--gold)',tag:'バフ系',detail:'ATK+20%\nULT+15%'},
-        {cls:'ヴァンガード',icon:'🛡️',name:'先陣の盾',col:'var(--accent)',tag:'防御系',detail:'全員シールド\nBLACK耐性↑'},
+        {cls:'ヴァンガード',icon:'🛡️',name:'先陣の盾',col:'var(--accent)',tag:'防御系',detail:'全員シールド\n特殊耐性↑'},
       ].map(t=>`<div style="flex:1;background:var(--panel);border:1px solid ${t.col};border-radius:10px;padding:10px 8px;text-align:center">
         <div style="font-size:8px;color:${t.col};margin-bottom:4px">${t.tag}</div>
         <div style="font-size:24px;margin-bottom:4px">${t.icon}</div>
@@ -14943,12 +15007,10 @@ const TUT_VISUALS = {
   </div>`,
 
   damage_types: ()=>`<div style="width:100%;max-width:300px">
-    <div style="font-size:10px;color:var(--text3);margin-bottom:10px">4種類のダメージと対応耐性</div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:10px">2種類のダメージと対応耐性</div>
     ${[
-      {icon:'🔴',name:'RED',desc:'物理',target:'HP 削り',res:'PRES耐性',b:'var(--orange)',w:'78%',who:'ウォリアー主力'},
-      {icon:'🤍',name:'WHITE',desc:'魔法/精神',target:'MP 削り',res:'MRES耐性',b:'#88aaff',w:'65%',who:'MP→スタッガー！'},
-      {icon:'💜',name:'BLACK',desc:'崩壊',target:'HP+MP 同時',res:'BRES耐性',b:'var(--purple)',w:'88%',who:'ウォリアー特技'},
-      {icon:'🔵',name:'BLUE',desc:'割合',target:'現在HP%',res:'LRES耐性',b:'#44aaff',w:'55%',who:'固い敵に有効'},
+      {icon:'⚔️',name:'物理',desc:'phys',target:'HP 削り',res:'物理耐性(PDEF)',b:'var(--orange)',w:'78%',who:'ウォリアー・アーチャー主力'},
+      {icon:'✨',name:'特殊',desc:'spec',target:'HP 削り',res:'特殊耐性(MDEF)',b:'#88aaff',w:'65%',who:'ウィザード・クレリック主力'},
     ].map(d=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div style="font-size:18px;width:22px;text-align:center;flex-shrink:0">${d.icon}</div>
       <div style="flex:1">
@@ -14968,7 +15030,7 @@ const TUT_VISUALS = {
     <div style="font-size:10px;color:var(--text3);margin-bottom:10px">スタッガーの仕組み</div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <div style="flex:1;text-align:center;padding:10px 8px;background:rgba(136,170,255,0.1);border:1px solid #88aaff;border-radius:10px">
-        <div style="font-size:10px;color:#88aaff;margin-bottom:6px">🤍 WHITE でMP削る</div>
+        <div style="font-size:10px;color:#88aaff;margin-bottom:6px">✨ MPを削る</div>
         <div style="background:var(--border);border-radius:4px;height:8px;overflow:hidden;margin:0 8px">
           <div style="width:8%;height:100%;background:#88aaff;border-radius:4px"></div>
         </div>
@@ -14981,27 +15043,27 @@ const TUT_VISUALS = {
         <div style="font-size:9px;color:var(--text3);margin-top:4px;line-height:1.4">次の行動スキップ<br>→ MP 30% で復活</div>
       </div>
     </div>
-    <div style="font-size:10px;color:var(--text3);text-align:center;padding:7px;background:rgba(136,170,255,0.06);border-radius:8px">💡 ボス戦で🤍WHITE集中攻撃 → スタッガー取り → 総攻撃が強力！</div>
+    <div style="font-size:10px;color:var(--text3);text-align:center;padding:7px;background:rgba(136,170,255,0.06);border-radius:8px">💡 MPを削り切る → スタッガー取り → 総攻撃が強力！</div>
   </div>`,
 
   shield_demo: ()=>`<div style="width:100%;max-width:300px">
-    <div style="font-size:10px;color:var(--text3);margin-bottom:10px">🔵 BLUE ダメージの強さ（割合ダメ）</div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:10px">🛡️ シールドの仕組み</div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
-      <div style="flex:1;background:var(--panel);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border)">
-        <div style="font-size:9px;color:var(--text3);margin-bottom:6px">防御力 MAX の敵に</div>
-        <div style="font-size:22px">🔴</div>
-        <div style="font-size:24px;color:var(--orange);font-weight:700;margin:4px 0">1</div>
-        <div style="font-size:9px;color:var(--text3)">ほぼ効かない…</div>
+      <div style="flex:1;background:var(--panel);border-radius:10px;padding:10px;text-align:center;border:2px solid var(--accent2)">
+        <div style="font-size:9px;color:var(--text3);margin-bottom:6px">シールドあり</div>
+        <div style="font-size:22px">🛡️</div>
+        <div style="font-size:12px;color:var(--accent2);font-weight:700;margin:4px 0">ダメージ吸収</div>
+        <div style="font-size:9px;color:var(--text3)">HPは減らない！</div>
       </div>
-      <div style="flex:1;background:var(--panel);border-radius:10px;padding:10px;text-align:center;border:2px solid #44aaff">
-        <div style="font-size:9px;color:var(--text3);margin-bottom:6px">同じ敵に</div>
-        <div style="font-size:22px">🔵</div>
-        <div style="font-size:24px;color:#44aaff;font-weight:700;margin:4px 0">15%</div>
-        <div style="font-size:9px;color:#44aaff">最大HPの割合!</div>
+      <div style="flex:1;background:var(--panel);border-radius:10px;padding:10px;text-align:center;border:2px solid var(--orange)">
+        <div style="font-size:9px;color:var(--text3);margin-bottom:6px">シールド破壊</div>
+        <div style="font-size:22px">💥</div>
+        <div style="font-size:12px;color:var(--orange);font-weight:700;margin:4px 0">BREAK！</div>
+        <div style="font-size:9px;color:var(--text3)">特殊効果発生</div>
       </div>
     </div>
-    <div style="padding:8px;background:rgba(68,170,255,0.08);border-radius:8px;font-size:10px;color:#44aaff;text-align:center">
-      💡 LRES耐性の上限は90%。どんな敵にも通る！
+    <div style="padding:8px;background:rgba(100,200,100,0.08);border-radius:8px;font-size:10px;color:var(--green);text-align:center">
+      💡 タンクのシールドで仲間を守ろう！
     </div>
   </div>`,
 };
@@ -15033,7 +15095,7 @@ const TUT_STEPS = {
     { icon:'⚔️', title:'夜戦の強化効果', visual:null,
       text:'夜戦では全体ダメージが +25% 上昇！\n\n近接クラス（ウォリアー・ヴァンガード）はさらに +10% の追加ボーナスがあります。\n\nHP が残り少ない強敵も夜戦に持ち込めば逆転できることも。パーティ状態を見極めて判断しましょう。' },
     { icon:'🏹', title:'遠距離クラスの弱点と対策', visual:null,
-      text:'アーチャーなど遠距離クラスは夜戦で命中率が低下します。\n\nただし 🔵 BLUE（割合）ダメージは命中判定に影響されないため、アニヒレーションなどは夜戦でも安定して機能します。\n\n夜戦ではウォリアー・ヴァンガードが主力になることが多いです。' },
+      text:'アーチャーなど遠距離クラスは夜戦で命中率が低下します。\n\nただし最大HP割合ダメージは命中判定に影響されないため、夜戦でも安定して機能します。\n\n夜戦ではウォリアー・ヴァンガードが主力になることが多いです。' },
     { icon:'⏱️', title:'夜戦のタイムリミット', visual:null,
       text:'夜戦にも 60 秒のタイムリミットがあります。\n\n倒しきれなければ強制撤退となり、報酬は得られません。\n\nギリギリの場合は撤退してキャラを強化してから再挑戦する判断も重要です。撤退はゲームオーバーではありません！', isLast:true },
   ],
@@ -15048,14 +15110,12 @@ const TUT_STEPS = {
       text:'同じカードを集めると Lv が上がり、効果量が増加します。\n\nLv5 で最大 2 倍の効力に！\n\nカード召喚で同じカードが出た場合は所持枚数が増えます。強化したいカードを意識してガチャを回しましょう。', isLast:true },
   ],
   damage: [
-    { icon:'💥', title:'4種類のダメージ', visual:'damage_types',
-      text:'ダメージには 4 種類あり、それぞれ異なる耐性・特性を持ちます。\n\n敵の弱点を突くダメージを選ぶことで、大幅に有利に戦えます。\n\n耐性はどの種類も最大 90% まで。完全無効化はできません。' },
-    { icon:'🔴🤍', title:'RED と WHITE の使い分け', visual:null,
-      text:'🔴 RED（物理）：ウォリアーの主力。PRES 耐性の低い敵に有効。会心（クリティカル）が発生します。\n\n🤍 WHITE（魔法/精神）：主に MP を削ります。MP が 0 になると「スタッガー」が発生し敵が 1 ターン動けなくなります。ボス戦で特に有効！' },
+    { icon:'⚔️✨', title:'2種類のダメージ', visual:'damage_types',
+      text:'ダメージには⚔️物理と✨特殊の 2 種類があります。\n\n⚔️ 物理ダメージ：ウォリアーなど近接攻撃クラスの主力。物理耐性（PDEF）で軽減。会心（クリティカル）が発生します。\n\n✨ 特殊ダメージ：ウィザードなど魔法系クラスの主力。特殊耐性（MDEF）で軽減。\n\n耐性は最大 90% まで。完全無効化はできません。' },
     { icon:'💫', title:'スタッガーを狙う', visual:'stagger',
-      text:'WHITE ダメージで敵の MP を削り切るとスタッガーが発生します。\n\n・スタッガー中：次の行動をスキップ\n・その後 MP 30% で復活\n\nアーチャーの WHITE 矢でスタッガーを取り、その間に強力なスキルを叩き込む戦術が強力です。' },
-    { icon:'🔵', title:'BLUE ダメージで固い敵を崩す', visual:'shield_demo',
-      text:'🔵 BLUE（割合）は現在の HP・MP に対する割合ダメージです。\n\nどんなに防御の高い敵にも一定のダメージが通ります！\n\nアーチャーのアニヒレーションは最大 HP の 15% をダメージとして与えます。HP の多いボス戦の切り札になります。', isLast:true },
+      text:'敵の MP を削り切るとスタッガーが発生します。\n\n・スタッガー中：次の行動をスキップ\n・その後 MP 30% で復活\n\nサポート系のスキルでMPを削り、スタッガー中に強力な物理・特殊スキルを叩き込む戦術が有効です。' },
+    { icon:'🛡️', title:'シールドで生存力アップ', visual:'shield_demo',
+      text:'シールドはダメージを先に吸収するバリアです。\n\nどの種類のダメージでも先にシールドが吸収します。\n\nシールドを割ると「シールドブレイク」が発生し、追加効果も！\n\nタンク系キャラのシールドスキルを活用しましょう。', isLast:true },
   ],
 };
 
@@ -15134,15 +15194,12 @@ Lv5で効果が最大（最大2倍）
   },
   {
     id:'sys_damage', icon:'💥', title:'ダメージ種類と耐性',
-    content:`■ 4種類のダメージ
-🔴 RED（物理）：PRES耐性で軽減。会心あり。HP削り。
-🤍 WHITE（魔法）：MRES耐性で軽減。MP削り→スタッガー。
-💜 BLACK（崩壊）：BRES耐性で軽減。HP+MP同時削り。
-🔵 BLUE（割合）：LRES耐性で軽減（上限90%）。現在値の%削り。
+    content:`■ 2種類のダメージ
+⚔️ 物理（phys）：PDEF耐性で軽減。会心あり。近接・打撃系。
+✨ 特殊（spec）：MDEF耐性で軽減。魔法・術系。
 
-■ スタッガー（WHITE特効）
+■ スタッガー
 MPが0になると発生→次の行動をスキップ→MP30%で復活。
-ボス戦でWHITE攻撃を集中させると有効。
 
 ■ シールド
 シールドはダメージ種類を問わず先に吸収します。
@@ -16101,7 +16158,7 @@ function renderTacticsStats() {
   const isLeader = (preset?.formation?.slots||[])[0] === uid;
 
   // イマジンバフ・リーダーボーナス込みの実戦値を計算
-  let { atk, hp, spd, pres, mres, cri, cridam } = stats;
+  let { atk, hp, spd, pdef, mdef, cri, cridam } = stats;
   const baseMp = Math.floor((cls.baseStats?.mp||1600) * (1 + (prog.level-1)*9/99));
   let mp = baseMp;
   const partyUnits = (preset.formation?.slots||[]).filter(Boolean).map(id=>gState.ownedUnits.find(x=>x.uid===id)).filter(Boolean);
@@ -16155,8 +16212,8 @@ function renderTacticsStats() {
       ${row('💙','MP',   fmt(mp))}
       ${row('⚔️','ATK',  fmt(atk))}
       ${row('💨','SPD',  spd)}
-      ${row('🛡️','RED耐性',  pres+'%')}
-      ${row('🤍','WHITE耐性',mres+'%')}
+      ${row('⚔️','物理耐性',  pdef+'%')}
+      ${row('✨','特殊耐性',mdef+'%')}
       ${row('🎯','会心率', cri+'%')}
       ${row('💥','会心ダメ', cridam+'%')}
     </div>
@@ -17105,7 +17162,7 @@ const ARTIFACT_POOL = [
         stats:[{key:'hpPct',min:8,max:15},{key:'pres',min:3,max:8},{key:'mres',min:3,max:8},{key:'bres',min:3,max:8}] },
       { type:'B', req:'タンク',     desc:'タンク 被ダメ-8~15%・ヘイト+100~300',
         stats:[{key:'dmgReduce',min:8,max:15}] },
-      { type:'D', req:'celestia',  desc:'セレスティア シールド量+15~25%・WHITE耐性+8~15',
+      { type:'D', req:'celestia',  desc:'セレスティア シールド量+15~25%・特殊耐性+8~15',
         stats:[{key:'mres',min:8,max:15}] },
     ]},
 
@@ -17128,7 +17185,7 @@ const ARTIFACT_POOL = [
         stats:[{key:'atkPct',min:8,max:15},{key:'cri',min:3,max:8}] },
       { type:'B', req:'レンジ',    desc:'レンジ 後衛配置時ATK追加+10~20%・スキルPw+8~15%',
         stats:[{key:'atkPct',min:10,max:20},{key:'skillPw',min:8,max:15}] },
-      { type:'E', req:'貫',        desc:'貫タグ RED耐性無視+10~20%・対象PRES-5~10%',
+      { type:'E', req:'貫',        desc:'貫タグ 物理耐性無視+10~20%・対象PRES-5~10%',
         stats:[{key:'atkPct',min:5,max:10}] },
     ]},
 
@@ -17161,9 +17218,9 @@ const ARTIFACT_POOL = [
     conditions:[
       { type:'A', req:null,          desc:'全キャラ デバフ付与率+10~20%・状態異常時間+1T',
         stats:[{key:'atkPct',min:5,max:10}] },
-      { type:'B', req:'コントロール', desc:'コントロール 呪い系スキルPw+10~18%・BLACK耐性-5~10%付与',
+      { type:'B', req:'コントロール', desc:'コントロール 呪い系スキルPw+10~18%・特殊耐性-5~10%付与',
         stats:[{key:'skillPw',min:10,max:18},{key:'bres',min:3,max:8}] },
-      { type:'E', req:'呪',           desc:'呪タグ 敵のWHITE耐性スタック（最大3・命中時）',
+      { type:'E', req:'呪',           desc:'呪タグ 敵の特殊耐性スタック（最大3・命中時）',
         stats:[{key:'mres',min:5,max:10}] },
     ]},
 
@@ -17249,7 +17306,7 @@ const ACCESSORY_SETS = [
     label2:'ATK+12% / CRI+6%',              bonus2:[{t:'atkPct',v:12},{t:'cri',v:6}],
     label4:'さらにスキルPw+10%',             bonus4:[{t:'skillPw',v:10}] },
   { id:'argo',       name:'アルゴ',         icon:'⚓',
-    label2:'RED耐性+10 / WHITE耐性+10',      bonus2:[{t:'pres',v:10},{t:'mres',v:10}],
+    label2:'物理耐性+10 / 特殊耐性+10',      bonus2:[{t:'pres',v:10},{t:'mres',v:10}],
     label4:'さらに被ダメ-10%',               bonus4:[{t:'dmgReduce',v:10}] },
   { id:'perseus',    name:'ペルセウス',      icon:'🌟',
     label2:'SPD+18',                         bonus2:[{t:'spd',v:18}],
@@ -17267,8 +17324,8 @@ const ACCESSORY_SETS = [
     label2:'回復効果+15%',                   bonus2:[{t:'healUp',v:15}],
     label4:'さらに回復効果+15% / HP+8%',      bonus4:[{t:'healUp',v:15},{t:'hpPct',v:8}] },
   { id:'athena',     name:'アテナ',          icon:'🦉',
-    label2:'WHITE耐性+12 / BLACK耐性+12',    bonus2:[{t:'mres',v:12},{t:'bres',v:12}],
-    label4:'さらにBLUE耐性+10 / HP+10%',     bonus4:[{t:'lres',v:10},{t:'hpPct',v:10}] },
+    label2:'特殊耐性+24',                    bonus2:[{t:'mres',v:12},{t:'mres',v:12}],
+    label4:'さらに特殊耐性+10 / HP+10%',     bonus4:[{t:'mres',v:10},{t:'hpPct',v:10}] },
   { id:'ares',       name:'アレス',          icon:'⚔️',
     label2:'ATK+8% / CRI+8%',               bonus2:[{t:'atkPct',v:8},{t:'cri',v:8}],
     label4:'さらにATK+10% / CRIダメ+15%',    bonus4:[{t:'atkPct',v:10},{t:'cridam',v:15}] },
@@ -17276,17 +17333,17 @@ const ACCESSORY_SETS = [
     label2:'SPD+15',                         bonus2:[{t:'spd',v:15}],
     label4:'さらにCRI+8% / ATK+8%',          bonus4:[{t:'cri',v:8},{t:'atkPct',v:8}] },
   { id:'poseidon',   name:'ポセイドン',      icon:'🌊',
-    label2:'BLUE耐性+18 / HP+12%',           bonus2:[{t:'lres',v:18},{t:'hpPct',v:12}],
+    label2:'特殊耐性+18 / HP+12%',           bonus2:[{t:'mres',v:18},{t:'hpPct',v:12}],
     label4:'さらにHP+10% / ATK+10%',         bonus4:[{t:'hpPct',v:10},{t:'atkPct',v:10}] },
   { id:'hephaestus', name:'ヘファイストス',  icon:'🔥',
-    label2:'RED耐性+10 / ATK+8%',            bonus2:[{t:'pres',v:10},{t:'atkPct',v:8}],
+    label2:'物理耐性+10 / ATK+8%',            bonus2:[{t:'pres',v:10},{t:'atkPct',v:8}],
     label4:'さらにCRI+8% / CRIダメ+15%',     bonus4:[{t:'cri',v:8},{t:'cridam',v:15}] },
 ];
 // 部位定義: 各スロットに対応する部位と部位専用メインStat候補
 const ACC_PARTS = [
   { id:'pierce',    name:'ピアス',       slot:'A', mainPool:['cri','cridam','spd'] },
   { id:'necklace',  name:'ネックレス',   slot:'B', mainPool:['atk_pct','hp_pct'] },
-  { id:'brooch',    name:'ブローチ',     slot:'C', mainPool:['pres','mres','bres','lres'] },
+  { id:'brooch',    name:'ブローチ',     slot:'C', mainPool:['pres','mres'] },
   { id:'bracelet',  name:'ブレスレット', slot:'D', mainPool:['atk_pct','atk'] },
   { id:'ring',      name:'リング',       slot:'E', mainPool:['cri','skillPw','drain'] },
   { id:'anklet',    name:'アンクレット', slot:'F', mainPool:['spd','hp_pct','dmgReduce'] },
@@ -17300,10 +17357,8 @@ const ACC_MAIN_POOL = [
   { id:'spd',       label:'SPD',       min:[15,20,26,32], max:[22,30,40,50] },
   { id:'cri',       label:'CRI率',     min:[6,8,11,13],   max:[9,12,16,20] },
   { id:'cridam',    label:'CRIダメ%',  min:[12,16,21,26], max:[18,24,30,38] },
-  { id:'pres',      label:'RED耐性',   min:[8,12,16,20],  max:[14,18,24,30] },
-  { id:'mres',      label:'WHITE耐性', min:[8,12,16,20],  max:[14,18,24,30] },
-  { id:'bres',      label:'BLACK耐性', min:[8,12,16,20],  max:[14,18,24,30] },
-  { id:'lres',      label:'BLUE耐性',  min:[8,12,16,20],  max:[14,18,24,30] },
+  { id:'pres',      label:'物理耐性',   min:[8,12,16,20],  max:[14,18,24,30] },
+  { id:'mres',      label:'特殊耐性', min:[8,12,16,20],  max:[14,18,24,30] },
   { id:'skillPw',   label:'スキルPw%', min:[6,8,10,13],   max:[9,12,16,20] },
   { id:'drain',     label:'吸血%',     min:[4,6,8,10],    max:[8,11,15,20] },
   { id:'dmgReduce', label:'被ダメ軽減%',min:[4,5,7,9],    max:[7,10,13,17] },
@@ -17316,10 +17371,8 @@ const ACC_SUB_POOL = [
   { id:'spd',      label:'SPD',       min:[5,8,11,14], max:[12,18,23,28] },
   { id:'cri',      label:'CRI率',     min:[2,3,4,5],   max:[5,7,9,11] },
   { id:'cridam',   label:'CRIダメ%',  min:[4,6,8,10],  max:[9,13,17,22] },
-  { id:'pres',     label:'RED耐性',   min:[2,3,4,5],   max:[6,8,10,13] },
-  { id:'mres',     label:'WHITE耐性', min:[2,3,4,5],   max:[6,8,10,13] },
-  { id:'bres',     label:'BLACK耐性', min:[2,3,4,5],   max:[6,8,10,13] },
-  { id:'lres',     label:'BLUE耐性',  min:[2,3,4,5],   max:[6,8,10,13] },
+  { id:'pres',     label:'物理耐性',   min:[2,3,4,5],   max:[6,8,10,13] },
+  { id:'mres',     label:'特殊耐性', min:[2,3,4,5],   max:[6,8,10,13] },
   { id:'skillPw',  label:'スキルPw%', min:[2,3,4,5],   max:[5,7,9,11] },
   { id:'drain',    label:'吸血%',     min:[2,2,3,4],   max:[4,5,7,9] },
   { id:'dmgReduce',label:'被ダメ軽減%',min:[2,2,3,3],  max:[4,5,6,8] },
@@ -17477,7 +17530,7 @@ function _buildAfDetailHTML(uid) {
   ).join('');
   const condTypeLabel = { A:'全キャラ', B:'ロール', C:'クラス', D:'種族', E:'攻撃タイプ', F:'戦況', G:'編成' };
   const condColors    = { A:'var(--accent2)', B:'var(--orange)', C:'var(--gold)', D:'var(--green)', E:'var(--purple)', F:'var(--text3)', G:'var(--text3)' };
-  const statKeyLbl    = { atkPct:'ATK%', hpPct:'HP%', spd:'SPD', cri:'CRI%', cridam:'CRIDAM%', pres:'RED耐性', mres:'WHITE耐性', bres:'BLACK耐性', lres:'BLUE耐性', skillPw:'スキルPw', dmgReduce:'被ダメ減%' };
+  const statKeyLbl    = { atkPct:'ATK%', hpPct:'HP%', spd:'SPD', cri:'CRI%', cridam:'CRIDAM%', pres:'物理耐性', pdef:'物理耐性', mres:'特殊耐性', mdef:'特殊耐性', bres:'特殊耐性', lres:'特殊耐性', skillPw:'スキルPw', dmgReduce:'被ダメ減%' };
   const conditionsHTML = (def.conditions||[]).map(cond => {
     const cc = condColors[cond.type] || 'var(--text2)';
     const inactive = (cond.type === 'F' || cond.type === 'G');
@@ -17996,18 +18049,18 @@ const STARMAP_DATA = [
     { id:'w5', name:'覇王の力',  effect:'ATK+20%', cost:50, type:'atk', val:20 },
   ]},
   { id:'magic_const', name:'魔導座', color:'var(--purple)', nodes:[
-    { id:'m1', name:'MRES強化I', effect:'MRES+8',  cost:10, type:'mres', val:8 },
-    { id:'m2', name:'MRES強化II',effect:'MRES+15', cost:20, type:'mres', val:15 },
+    { id:'m1', name:'特殊耐性強化I', effect:'特殊耐性+8',  cost:10, type:'mres', val:8 },
+    { id:'m2', name:'特殊耐性強化II',effect:'特殊耐性+15', cost:20, type:'mres', val:15 },
     { id:'m3', name:'会心ダメ+',  effect:'CRIDAM+15%',cost:15,type:'cridam',val:15},
     { id:'m4', name:'魔力覚醒',  effect:'ATK+10%', cost:30, type:'atk', val:10 },
-    { id:'m5', name:'大魔導解放',effect:'MRES+25', cost:50, type:'mres', val:25 },
+    { id:'m5', name:'大魔導解放',effect:'特殊耐性+25', cost:50, type:'mres', val:25 },
   ]},
   { id:'guard_const', name:'守護座', color:'var(--accent)', nodes:[
     { id:'g1', name:'HP増強I',   effect:'HP+8%',   cost:10, type:'hp', val:8 },
     { id:'g2', name:'HP増強II',  effect:'HP+15%',  cost:20, type:'hp', val:15 },
-    { id:'g3', name:'PRES強化',  effect:'PRES+10', cost:15, type:'pres', val:10 },
+    { id:'g3', name:'物理耐性強化',  effect:'物理耐性+10', cost:15, type:'pres', val:10 },
     { id:'g4', name:'鉄壁解放',  effect:'HP+20%',  cost:30, type:'hp', val:20 },
-    { id:'g5', name:'守護神降臨',effect:'PRES+20', cost:50, type:'pres', val:20 },
+    { id:'g5', name:'守護神降臨',effect:'物理耐性+20', cost:50, type:'pres', val:20 },
   ]},
   { id:'swift_const', name:'迅速座', color:'var(--green)', nodes:[
     { id:'s1', name:'SPD増強I',  effect:'SPD+15',  cost:10, type:'spd', val:15 },
@@ -18214,10 +18267,8 @@ function openMonsterDetail(idx) {
         <div>ATK <span style="color:var(--orange);font-weight:700">${fmt(m.atk)}</span></div>
         <div>SPD <span style="color:var(--accent2)">${m.spd||0}</span></div>
         <div>CRI <span style="color:var(--gold)">${m.cri||0}%</span></div>
-        <div>RED耐性 <span style="color:var(--text)">${m.pres||0}</span></div>
-        <div>WHITE耐性 <span style="color:var(--text)">${m.mres||0}</span></div>
-        <div>BLACK耐性 <span style="color:var(--text)">${m.bres||0}</span></div>
-        <div>BLUE耐性 <span style="color:var(--text)">${m.lres||0}</span></div>
+        <div>物理耐性 <span style="color:var(--text)">${m.pdef||m.pres||0}</span></div>
+        <div>特殊耐性 <span style="color:var(--text)">${m.mdef||m.mres||0}</span></div>
       </div>
     </div>
     ${skills ? `<div style="background:var(--bg3);border:1px solid var(--border);padding:12px;border-radius:4px">
@@ -18525,7 +18576,7 @@ function getArtifactStats(unit) {
 function artifactCondLabel(cond, level) {
   const typeLabel = { A:'全キャラ', B:'ロール', C:'クラス', D:'種族', E:'攻撃タイプ', F:'戦況', G:'編成' };
   const statKeyLabel = { atkPct:'ATK%', hpPct:'HP%', spd:'SPD', cri:'CRI%', cridam:'CRIDAM%',
-    pres:'RED耐性', mres:'WHITE耐性', bres:'BLACK耐性', lres:'BLUE耐性',
+    pres:'物理耐性', pdef:'物理耐性', mres:'特殊耐性', mdef:'特殊耐性', bres:'特殊耐性', lres:'特殊耐性',
     skillPw:'スキルPw%', dmgReduce:'被ダメ減%' };
   const reqDisplay = cond.req ? (SPECIES_LABELS[cond.req] || cond.req) : '—';
   const lv = level || 0;
@@ -19535,7 +19586,7 @@ const RUNE_DATA = [
 const RUNE_SET_BONUS = {
   assault:{ label:'猛攻3点セット: ATK+20%', atk:20 },
   guard:  { label:'守護3点セット: HP+25%',  hp:25 },
-  magic:  { label:'魔導3点セット: MRES+30', mres:30 },
+  magic:  { label:'魔導3点セット: 特殊耐性+30', mres:30 },
   swift:  { label:'迅速3点セット: SPD+40',  spd:40 },
 };
 
@@ -19750,7 +19801,7 @@ function rerollCelestialSubs(idx) {
   const cost = 2000 * cel.rarity;
   if (gState.player.gold < cost) { alert('ゴールドが不足しています'); return; }
   gState.player.gold -= cost;
-  const subs = ['ATK+3%','ATK+5%','HP+3%','HP+5%','SPD+8','SPD+15','PRES+5','PRES+8','CRI+3%','CRI+5%','CRIDAM+10%','CRIDAM+15%','被ダメ-3%','被ダメ-5%'];
+  const subs = ['ATK+3%','ATK+5%','HP+3%','HP+5%','SPD+8','SPD+15','物理耐性+5','物理耐性+8','CRI+3%','CRI+5%','CRIDAM+10%','CRIDAM+15%','被ダメ-3%','被ダメ-5%'];
   shuffle(subs);
   cel.subs = subs.slice(0, cel.rarity);
   saveState();
