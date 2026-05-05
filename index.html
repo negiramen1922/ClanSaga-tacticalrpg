@@ -9169,9 +9169,15 @@ function openUnitDetail(uid) {
   const _kyoRoleKey = {'アタッカー':'Warrior','タンク':'Vanguard','レンジ':'Ranger','サポート':'Support','スカウト':'Scout','トリックスター':'Trickster'}[cls.role] || 'Warrior';
   const _kyoBag = (gState.player.kyoten||{})[_kyoRoleKey.toLowerCase()] || {t1:0,t2:0,t3:0};
   const _KSCOST = [
-    {t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1},  // Lv1→4
-    {t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1},  // Lv4→7
-    {t1:0,t2:2,t3:1},{t1:0,t2:0,t3:2},{t1:0,t2:0,t3:3},  // Lv7→10
+    {t1: 3,t2: 0,t3:0},  // Lv1→2
+    {t1: 5,t2: 0,t3:0},  // Lv2→3
+    {t1: 7,t2: 0,t3:0},  // Lv3→4
+    {t1:10,t2: 1,t3:0},  // Lv4→5
+    {t1:12,t2: 3,t3:0},  // Lv5→6
+    {t1:15,t2: 5,t3:0},  // Lv6→7
+    {t1:15,t2: 7,t3:0},  // Lv7→8
+    {t1:15,t2: 7,t3:1},  // Lv8→9
+    {t1:15,t2:10,t3:3},  // Lv9→10
   ];
   const activeSkillsHTML = (cls.activeSkills||[]).map(sk => {
     const bColor = _skillBorderColor[sk.type] || 'var(--border)';
@@ -9185,7 +9191,7 @@ function openUnitDetail(uid) {
     const canSkUp = skCost && _kyoBag.t1>=(skCost.t1||0) && _kyoBag.t2>=(skCost.t2||0) && _kyoBag.t3>=(skCost.t3||0);
     const skIconKey = `kyoten${_kyoRoleKey}T${skLv <= 3 ? skLv : 3}`;
     const skCostStr = skCost ? [skCost.t1?`T1×${skCost.t1}`:'',skCost.t2?`T2×${skCost.t2}`:'',skCost.t3?`T3×${skCost.t3}`:''].filter(Boolean).join('+') : '';
-    const skHaveStr = skCost ? (skCost.t3 ? `${_kyoBag.t3}` : skCost.t2 ? `${_kyoBag.t2}` : `${_kyoBag.t1}`) : '';
+    const skHaveStr = skCost ? [skCost.t1?`${_kyoBag.t1}`:'',skCost.t2?`${_kyoBag.t2}`:'',skCost.t3?`${_kyoBag.t3}`:''].filter(Boolean).join('/') : '';
     const skUpBtn = atSkMax
       ? `<span style="font-size:9px;color:var(--green);font-weight:700">MAX</span>`
       : `<button onclick="skillUpChar('${uid}','${sk.id}')" style="font-size:10px;padding:2px 7px;display:inline-flex;align-items:center;gap:3px;background:${canSkUp?'rgba(200,160,40,0.2)':'rgba(60,60,60,0.2)'};color:${canSkUp?'var(--gold)':'var(--text3)'};border:1px solid ${canSkUp?'rgba(200,160,40,0.4)':'var(--border)'};border-radius:4px;cursor:${canSkUp?'pointer':'default'}" ${canSkUp?'':'disabled'}>${itemIconHTML(skIconKey,'11px')} ${skCostStr}<span style="font-size:8px;opacity:0.7">(${skHaveStr})</span> →Lv.${skLv+1}</button>`;
@@ -9394,9 +9400,15 @@ function skillUpChar(uid, skillId) {
   const skLv = prog.skillLevels[skillId] || 1;
   if (skLv >= 10) return;
   const KSCOST = [
-    {t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1},
-    {t1:3,t2:0,t3:0},{t1:0,t2:2,t3:0},{t1:0,t2:0,t3:1},
-    {t1:0,t2:2,t3:1},{t1:0,t2:0,t3:2},{t1:0,t2:0,t3:3},
+    {t1: 3,t2: 0,t3:0},
+    {t1: 5,t2: 0,t3:0},
+    {t1: 7,t2: 0,t3:0},
+    {t1:10,t2: 1,t3:0},
+    {t1:12,t2: 3,t3:0},
+    {t1:15,t2: 5,t3:0},
+    {t1:15,t2: 7,t3:0},
+    {t1:15,t2: 7,t3:1},
+    {t1:15,t2:10,t3:3},
   ];
   const cost = KSCOST[skLv - 1];
   const kyoKey = {'アタッカー':'warrior','タンク':'vanguard','レンジ':'ranger','サポート':'support','スカウト':'scout','トリックスター':'trickster'}[cls.role] || 'warrior';
@@ -17925,7 +17937,7 @@ function _buildAfDetailHTML(uid) {
       <div style="font-size:11px;color:${cc};font-weight:700">${statsVals}</div>
     </div>`;
   }).join('');
-  const skCostStr = !atSkMax && skCost ? (skCost.t1?`ルーンT1×${skCost.t1}`:skCost.t2?`T2×${skCost.t2}`:`T3×${skCost.t3}`) : '';
+  const skCostStr = !atSkMax && skCost ? [skCost.t1?`T1×${skCost.t1}`:'',skCost.t2?`T2×${skCost.t2}`:'',skCost.t3?`T3×${skCost.t3}`:''].filter(Boolean).join('+') : '';
   const baseRefund = { N:2000, SR:5000, SSR:10000 }[def.rarity] || 2000;
   const goldRefund = baseRefund + Math.floor(lv / 5) * 100;
   return `<div class="unit-detail-panel" style="overflow-y:auto;max-height:90vh;">
@@ -18291,7 +18303,7 @@ function renderArtifactEnhance(el) {
     const canSkillUp = !atSkillMax && skCost &&
       (rune.t1 >= (skCost.t1||0) && rune.t2 >= (skCost.t2||0) && rune.t3 >= (skCost.t3||0));
     const skLabel = atSkillMax ? '' :
-      `ルーンT${skCost?.t1?'1':skCost?.t2?'2':'3'}×${skCost?.t1||skCost?.t2||skCost?.t3}`;
+      [skCost?.t1?`T1×${skCost.t1}`:'',skCost?.t2?`T2×${skCost.t2}`:'',skCost?.t3?`T3×${skCost.t3}`:''].filter(Boolean).join('+');
 
     row.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -18885,16 +18897,16 @@ const AF_RANKUP_COST = [
 ];
 // AFスキルレベルアップ素材（神刻ルーン）Lv0→10
 const AF_SKILL_COST = [
-  { t1:3, t2:0, t3:0 },  // 0→1
-  { t1:0, t2:2, t3:0 },  // 1→2
-  { t1:0, t2:0, t3:1 },  // 2→3
-  { t1:3, t2:0, t3:0 },  // 3→4
-  { t1:0, t2:2, t3:0 },  // 4→5
-  { t1:0, t2:0, t3:1 },  // 5→6
-  { t1:0, t2:2, t3:1 },  // 6→7
-  { t1:0, t2:0, t3:2 },  // 7→8
-  { t1:0, t2:0, t3:2 },  // 8→9
-  { t1:0, t2:0, t3:3 },  // 9→10
+  { t1: 3, t2: 0, t3:0 },  // 0→1
+  { t1: 5, t2: 0, t3:0 },  // 1→2
+  { t1: 7, t2: 0, t3:0 },  // 2→3
+  { t1:10, t2: 1, t3:0 },  // 3→4
+  { t1:12, t2: 3, t3:0 },  // 4→5
+  { t1:15, t2: 5, t3:0 },  // 5→6
+  { t1:15, t2: 7, t3:0 },  // 6→7
+  { t1:15, t2: 7, t3:1 },  // 7→8
+  { t1:15, t2:10, t3:3 },  // 8→9
+  { t1:20, t2:12, t3:5 },  // 9→10
 ];
 
 // 条件が満たされているか判定
