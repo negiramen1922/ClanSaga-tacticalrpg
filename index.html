@@ -13332,6 +13332,18 @@ function endBattle(victory) {
           _stone.t1 += n;
           drops.push({ name:`${itemIconHTML('atomT1','14px')} アトム秘石T1 ×${n}` });
         }
+        // アトム秘石T2: 20%（エリア3以降）
+        if (_area >= 3 && Math.random() < 0.20) {
+          const n = Math.floor(Math.random() * Math.max(1, _area - 2)) + 1;
+          _stone.t2 = (_stone.t2||0) + n;
+          drops.push({ name:`${itemIconHTML('atomT2','14px')} アトム秘石T2 ×${n}` });
+        }
+        // アトム秘石T3: 10%（エリア5以降）
+        if (_area >= 5 && Math.random() < 0.10) {
+          const n = 1;
+          _stone.t3 = (_stone.t3||0) + n;
+          drops.push({ name:`${itemIconHTML('atomT3','14px')} アトム秘石T3 ×${n}` });
+        }
         // アトミックコアT1: 10%（エリア2以降）
         if (_area >= 2 && Math.random() < 0.10) {
           const n = Math.floor(Math.random() * Math.max(1, _area - 1)) + 1;
@@ -17992,7 +18004,7 @@ function _buildAfDetailHTML(uid) {
   const dupCount  = (p.afDuplicates || {})[def.id] || 0;
   const equippedBy = gState.ownedUnits.find(u => u.equippedArtifact === uid);
   const enhCost   = afEnhanceCost(lv);
-  const canEnhance = !atLvMax && atomStone.t1 >= (enhCost.t1||0);
+  const canEnhance = !atLvMax && atomStone.t1 >= (enhCost.t1||0) && (atomStone.t2||0) >= (enhCost.t2||0) && (atomStone.t3||0) >= (enhCost.t3||0);
   const rkCost    = !atRankMax ? AF_RANKUP_COST[rank] : null;
   const canRankUp = !atRankMax && atLvMax && rkCost && atomCore.t1 >= (rkCost.t1||0);
   const skCost    = !atSkMax ? AF_SKILL_COST[skillLv - 1] : null;
@@ -18068,11 +18080,11 @@ function _buildAfDetailHTML(uid) {
     <div class="udp-section">
       <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center">
         <span>ENHANCE</span>
-        <span style="font-size:10px;color:var(--text2);font-weight:normal">秘石T1:${atomStone.t1||0}　コアT1:${atomCore.t1||0}</span>
+        <span style="font-size:10px;color:var(--text2);font-weight:normal">T1:${atomStone.t1||0} T2:${atomStone.t2||0} T3:${atomStone.t3||0}　コアT1:${atomCore.t1||0}</span>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-blue btn-sm" ${canEnhance?'':'disabled'} onclick="afDetailEnhance('${uid}')">
-          +1 強化 ${atLvMax?'(上限達成)':'(秘石T1×'+(enhCost.t1||0)+')'}
+          +1 強化 ${atLvMax?'(上限達成)':'('+[enhCost.t1?`T1×${enhCost.t1}`:'',enhCost.t2?`T2×${enhCost.t2}`:'',enhCost.t3?`T3×${enhCost.t3}`:''].filter(Boolean).join('+')+')'}
         </button>
         ${!atRankMax
           ? `<button class="btn btn-sm" style="background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid var(--gold);" ${canRankUp?'':'disabled'} onclick="afDetailRankUp('${uid}')">Rank${rank+1}へ (コアT1×${rkCost?.t1||0})</button>`
@@ -18132,9 +18144,13 @@ function afDetailEnhance(uid) {
   const lv = inst.level||0, rank = inst.rank||0;
   if (lv >= AF_RANK_MAX[rank]) return;
   const cost = afEnhanceCost(lv);
-  const stone = gState.player.atomStone||{t1:0};
+  const stone = gState.player.atomStone||{t1:0,t2:0,t3:0};
   if (stone.t1 < (cost.t1||0)) { showBonusToast('アトム秘石T1が不足しています'); return; }
+  if ((stone.t2||0) < (cost.t2||0)) { showBonusToast('アトム秘石T2が不足しています'); return; }
+  if ((stone.t3||0) < (cost.t3||0)) { showBonusToast('アトム秘石T3が不足しています'); return; }
   stone.t1 -= cost.t1||0;
+  stone.t2 = (stone.t2||0) - (cost.t2||0);
+  stone.t3 = (stone.t3||0) - (cost.t3||0);
   gState.player.atomStone = stone;
   inst.level = lv + 1;
   saveState();
@@ -18347,7 +18363,7 @@ function renderArtifactEnhance(el) {
   const matDiv = document.createElement('div');
   matDiv.style.cssText = 'padding:10px 12px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);';
   const rune = p.runeStone || { t1:0, t2:0, t3:0 };
-  matDiv.innerHTML = `<div><b>${itemIconHTML('atomT1','13px')} アトム秘石T1:</b> ${atomStone.t1||0}&nbsp;&nbsp;<b>${itemIconHTML('atomCore','13px')} アトミックコアT1:</b> ${atomCore.t1||0}&nbsp;&nbsp;<b>${itemIconHTML('runeT1','13px')} 神刻ルーン</b> T1:${rune.t1} / T2:${rune.t2} / T3:${rune.t3}</div>`;
+  matDiv.innerHTML = `<div style="font-size:11px;line-height:1.8"><b>${itemIconHTML('atomT1','13px')} 秘石:</b> T1:${atomStone.t1||0} / T2:${atomStone.t2||0} / T3:${atomStone.t3||0}&nbsp;&nbsp;<b>${itemIconHTML('atomCore','13px')} コアT1:</b> ${atomCore.t1||0}&nbsp;&nbsp;<b>${itemIconHTML('runeT1','13px')} ルーン:</b> T1:${rune.t1} / T2:${rune.t2} / T3:${rune.t3}</div>`;
   el.appendChild(matDiv);
 
   if (!owned.length) {
@@ -18369,12 +18385,12 @@ function renderArtifactEnhance(el) {
     const rarityColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' }[def.rarity];
 
     const cost = afEnhanceCost(lv);
-    const hasStone = !atMax && atomStone.t1 >= (cost.t1||0);
+    const hasStone = !atMax && atomStone.t1 >= (cost.t1||0) && (atomStone.t2||0) >= (cost.t2||0) && (atomStone.t3||0) >= (cost.t3||0);
 
     const row = document.createElement('div');
     row.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;';
 
-    const costLabel = atMax ? 'Lv上限達成' : `秘石T1×${cost.t1||0}`;
+    const costLabel = atMax ? 'Lv上限達成' : [cost.t1?`T1×${cost.t1}`:'',cost.t2?`T2×${cost.t2}`:'',cost.t3?`T3×${cost.t3}`:''].filter(Boolean).join('+');
 
     // ランクアップ可否
     const rkCost = AF_RANKUP_COST[rank];
@@ -18765,7 +18781,9 @@ const SHOP_ITEMS = [
   { id:'mithril_s',    icon:'⛏️', name:'ミスリル×5',        desc:'鍛冶屋で使用',         price:800, currency:'crystal', gives:'mithril', amount:5 },
   { id:'starpoint_s',  icon:'⭐', name:'スターポイント×10', desc:'星図盤でノード解放',   price:600, currency:'crystal', gives:'starMapPoints', amount:10 },
   { id:'sweep_x5',     icon:'🎫', name:'周回チケット×5',    desc:'バベルステージを即時周回',price:200,currency:'crystal',gives:'sweepTicket',amount:5 },
-  { id:'atom_stone_t1', icon:'atomT1',   name:'アトム秘石T1×10',  desc:'AF強化素材',              price:300, currency:'crystal', gives:'atomStone_t1', amount:10 },
+  { id:'atom_stone_t1', icon:'atomT1',   name:'アトム秘石T1×10',  desc:'AF強化素材（Lv60未満）',    price:300,  currency:'crystal', gives:'atomStone_t1', amount:10 },
+  { id:'atom_stone_t2', icon:'atomT2',   name:'アトム秘石T2×3',   desc:'AF強化素材（Lv60〜79）',    price:500,  currency:'crystal', gives:'atomStone_t2', amount:3  },
+  { id:'atom_stone_t3', icon:'atomT3',   name:'アトム秘石T3×1',   desc:'AF強化素材（Lv80以上）',    price:800,  currency:'crystal', gives:'atomStone_t3', amount:1  },
   { id:'atom_core_t1',  icon:'atomCore', name:'アトミックコアT1×3', desc:'AFランクアップ素材',   price:600, currency:'crystal', gives:'atomCore_t1',  amount:3  },
   { id:'rune_t1',        icon:'runeT1', name:'神刻ルーンT1×3',    desc:'AFスキルLv1解放素材',           price:400,  currency:'crystal', gives:'runeStone_t1', amount:3 },
   { id:'rune_t2',        icon:'runeT2', name:'神刻ルーンT2×2',    desc:'AFスキルLv2解放素材',           price:800,  currency:'crystal', gives:'runeStone_t2', amount:2 },
@@ -18970,10 +18988,11 @@ const AF_RANK_MAX = [30, 60, 80, 100];
 
 // 強化素材消費テーブル（T1のみ使用）
 function afEnhanceCost(level) {
-  if (level < 30) return { t1:1 };
-  if (level < 60) return { t1:3 };
-  if (level < 80) return { t1:8 };
-  return                 { t1:15 };
+  if (level <  30) return { t1:1,  t2:0, t3:0 };
+  if (level <  60) return { t1:3,  t2:0, t3:0 };
+  if (level <  80) return { t1:3,  t2:1, t3:0 };
+  if (level < 100) return { t1:5,  t2:3, t3:0 };
+  return                  { t1:5,  t2:3, t3:1 };
 }
 // ランクアップ素材（atomCore T1のみ使用）
 const AF_RANKUP_COST = [
