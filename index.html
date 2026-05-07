@@ -5821,7 +5821,7 @@ const BABEL_AREAS = [
          {name:'アイアンホーン', icon:'🦬', hp:16000, mp:6000, atk:740, pres:35, mres:15, bres:5, lres:0, spd:62, cri:4,
           enemySkills:[{name:'鉄角突撃', type:'phys', target:'single', power:2.0, cd:6},{name:'踏み荒らし', type:'phys', target:'all', power:0.8, cd:8},{name:'体当たり', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
-      { id:'a2s10', name:'覇者の試練', waves:3, enemies:[
+      { id:'a2s10', name:'覇者の試練', waves:2, enemies:[
         [{name:'ゴブリン', icon:'👺', hp:4000, atk:400, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'集団突撃', type:'phys', target:'single', power:1.5, cd:6},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリン', icon:'👺', hp:4000, atk:400, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
@@ -5832,14 +5832,6 @@ const BABEL_AREAS = [
           enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンアーチャー', icon:'🏹', hp:2800, atk:320, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
           enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]}],
-        [{name:'ホブゴブリン', icon:'👹', hp:14000, atk:720, pres:12, mres:5, bres:0, lres:0, spd:78, cri:9,
-          enemySkills:[{name:'群れへの鼓舞', type:'buff', target:'all_ally', power:0, cd:8, effect:{type:'atk_up',val:20,turns:2}},{name:'激怒の一撃', type:'phys', target:'single', power:2.2, cd:6},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'ホブゴブリン', icon:'👹', hp:14000, atk:720, pres:12, mres:5, bres:0, lres:0, spd:78, cri:9,
-          enemySkills:[{name:'群れへの鼓舞', type:'buff', target:'all_ally', power:0, cd:8, effect:{type:'atk_up',val:20,turns:2}},{name:'激怒の一撃', type:'phys', target:'single', power:2.2, cd:6},{name:'豪腕殴打', type:'phys', target:'single', power:1.6, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'ゴブリンライダー', icon:'🐺', hp:5000, atk:480, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
-          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'flinch', val:1, turns:1}},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'ゴブリンライダー', icon:'🐺', hp:5000, atk:480, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
-          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'flinch', val:1, turns:1}},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]}],
         [{name:'ゴブリンチャンピオン', icon:'👑', atk:920, pres:20, mres:10, bres:8, lres:5, spd:85, cri:14,
           passive:{type:'ally_count_atk', bonusPerAlly:12, maxBonus:48},
           phases:[
@@ -5856,13 +5848,25 @@ const BABEL_AREAS = [
               summons:[{count:3, name:'ゴブリン', icon:'👺', hp:3000, atk:380, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
                 enemySkills:[{name:'集団突撃', type:'phys', target:'single', power:1.5, cd:5},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]}],
               skills:[
-                {name:'岩投げ・強',       type:'phys', target:'random3', power:2.0, cd:6, onlyOnce:true},
-                {name:'パワースマッシュ・強', type:'phys', target:'single', power:3.0, cd:4},
-                {name:'覇王の大号令・強', type:'phys', target:'all',     power:2.2, cd:6,
+                {name:'岩投げ・強',           type:'phys', target:'random3', power:2.0, cd:6, onlyOnce:true},
+                {name:'パワースマッシュ・強', type:'phys', target:'single',  power:3.0, cd:4},
+                {name:'覇王の大号令・強',     type:'phys', target:'all',     power:2.2, cd:6,
                   debuff:{type:'atk_down', val:-20, turns:2},
                   allyBuff:{type:'multi_buff', buffs:[{type:'atk_up',val:25,turns:2},{type:'spd_up',val:15,turns:2}]}},
-                {name:'覇王の連打',       type:'phys', target:'random3', power:2.2, cd:5},
-                {name:'豪腕殴打',         type:'phys', target:'single',  power:1.4, cd:0}]}
+                {name:'覇王の連打',           type:'phys', target:'random3', power:2.2, cd:5},
+                {name:'豪腕殴打',             type:'phys', target:'single',  power:1.4, cd:0}]},
+            {hp:48000,
+              transitionSkill:{name:'不死の覇気', type:'buff', target:'self',
+                effect:{type:'multi_buff', buffs:[{type:'atk_up',val:50,turns:999},{type:'spd_up',val:35,turns:999},{type:'pdef_up',val:25,turns:999},{type:'mdef_up',val:20,turns:999}]}},
+              summons:[{count:2, name:'ホブゴブリン', icon:'👹', hp:10000, atk:650, pres:10, mres:5, bres:0, lres:0, spd:72, cri:8,
+                enemySkills:[{name:'激怒の一撃', type:'phys', target:'single', power:2.2, cd:5},{name:'豪腕殴打', type:'phys', target:'single', power:1.6, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]}],
+              skills:[
+                {name:'覇王の乱打',     type:'phys', target:'random3', power:2.8, cd:4, debuff:{type:'bleed', val:12, turns:3}},
+                {name:'覇王無双',       type:'phys', target:'all',     power:3.0, cd:8,
+                  debuff:{type:'atk_down', val:-25, turns:3},
+                  allyBuff:{type:'multi_buff', buffs:[{type:'atk_up',val:30,turns:2},{type:'spd_up',val:20,turns:2}]}},
+                {name:'パワースマッシュ・極', type:'phys', target:'single', power:4.0, cd:5},
+                {name:'豪腕殴打',       type:'phys', target:'single',  power:1.8, cd:0}]}
           ]},
          {name:'ホブゴブリン', icon:'👹', hp:14000, atk:720, pres:12, mres:5, bres:0, lres:0, spd:78, cri:9,
           enemySkills:[{name:'群れへの鼓舞', type:'buff', target:'all_ally', power:0, cd:8, effect:{type:'atk_up',val:20,turns:2}},{name:'激怒の一撃', type:'phys', target:'single', power:2.2, cd:6},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
