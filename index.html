@@ -2321,7 +2321,7 @@ img.item-icon {
           <button onclick="closeHamburger();openAccountModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;">🔗 アカウント設定</button>
           <a href="https://docs.google.com/forms/d/e/1FAIpQLSdOyYrYSKMvdOJrdJtxhwG80aQ6Pd9z4nzYycyGylSt9IbqBQ/viewform?usp=header" target="_blank" rel="noopener" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;">📩 お問い合わせ</a>
         </div>
-        <span id="hm-version">ver. 1.11 · Clan Saga</span>
+        <span id="hm-version">ver. 1.12 · Clan Saga</span>
         <div style="margin-top:6px;font-size:9px;color:var(--text3);line-height:1.6;text-align:center;">
           BGM: <a href="https://youtu.be/DJPoUKKSDwY?si=1aaLg3tfrO6UzABe" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">古の世界地図</a>
           ／ <a href="https://youtu.be/EOlXXpqlS5k?si=YKRfyB3hGQsdY9Fj" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">Prairie4</a>
@@ -5517,7 +5517,7 @@ const PASSIVE_POOL = [
   { id:'drain',   name:'吸血',        stats:['DRAIN'],  levels:[{val:8,desc:'吸血8%'},{val:14,desc:'吸血14%'},{val:20,desc:'吸血20%'}] },
 ];
 
-const GAME_VERSION = '1.11';
+const GAME_VERSION = '1.12';
 
 const BABEL_AREAS = [
   {
@@ -9295,6 +9295,31 @@ function claimAchievement(id) {
 
 // お知らせデータ
 const NEWS_DATA = [
+  {
+    id: 'news_016',
+    type: 'update',
+    title: '⚙️ バージョン1.12アップデート内容',
+    date: '2026-05-07',
+    summary: '新エリア「荒野」（12ステージ）と「火山」（10ステージ）を追加しました。新モンスター15種・中ボス1体・ボス2体が登場します。',
+    body: `<h4>🏜️ 新エリア「荒野」を追加（推奨Lv40〜）</h4>
+<p>砂漠地帯を舞台にした12ステージの新エリアが登場します。</p>
+<ul>
+  <li><b>新モンスター7種</b>：砂スライム・デザートスコーピオン・デザートウルフ・ヴァルチャー・サンドバジリスク・サンドワーム・ロックゴーレム</li>
+  <li><b>エリアボス</b>：地竜 グラベルワーム（HP160万）— HP60%以下でフェーズ移行し、全体攻撃を解禁</li>
+  <li>ステージ7「地中の脅威」：奇襲ステージ（先制攻撃あり）</li>
+  <li>ステージ8「荒野の試練」：4wave構成の高難度ステージ</li>
+</ul>
+
+<h4>🌋 新エリア「火山」を追加（推奨Lv50〜）</h4>
+<p>灼熱の火山を舞台にした10ステージの新エリアが登場します。</p>
+<ul>
+  <li><b>新モンスター8種</b>：イグニス・エンバリス・マグマスライム・サラマンダー・ヘルハウンド・ヴォルタイル・マグナウム・オブシディアン</li>
+  <li><b>中ボス</b>：炎の上位精霊 イフリート（ステージ9に登場）</li>
+  <li><b>エリアボス</b>：スケルトンドラゴン（HP280万）— 覚醒スキルと瀕死時の大技を持つ強敵</li>
+  <li>ステージ6「溶岩の深淵」：奇襲ステージ（先制攻撃あり）</li>
+  <li>エンバリスは全体burn（燃焼）デバフをばらまく厄介な敵として登場</li>
+</ul>`,
+  },
   {
     id: 'news_015',
     type: 'update',
