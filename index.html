@@ -1503,6 +1503,23 @@ img.item-icon {
   transition: width 0.25s;
   z-index: 2;
 }
+/* ===== BOSS PHASE INDICATOR ===== */
+.boss-phase-dots {
+  display: flex; gap: 5px; align-items: center; justify-content: center;
+  margin: 2px 0 1px;
+}
+.phase-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid rgba(201,168,76,0.25);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.phase-dot.active {
+  background: var(--gold); border-color: var(--gold);
+  box-shadow: 0 0 6px rgba(201,168,76,0.8);
+}
+.phase-dot.cleared {
+  background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.2);
+}
 .float-shield      { color:#88aaff !important; font-weight:700; }
 .tag-paralysis     { background:rgba(255,220,60,0.2);   color:#ffe040; }
 .tag-flinch        { background:rgba(140,200,255,0.2);  color:#90c8ff; }
@@ -5606,14 +5623,21 @@ const BABEL_AREAS = [
           enemySkills:[{name:'突進', type:'phys', target:'single', power:1.8, cd:5},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
       { id:'a1s10', name:'傷だらけの猪王', waves:1, enemies:[
-        [{name:'スカーボア', icon:'🐗', hp:32000, mp:12000, atk:540, pres:22, mres:8, bres:10, lres:0, spd:60, cri:5,
-          enemySkills:[
-            {name:'傷だらけの咆哮', type:'buff',  target:'self',   power:0,   cd:-1, onlyOnce:true, effect:{type:'atk_up',val:15,turns:999}},
-            {name:'怒り突進',       type:'phys',   target:'all',    power:1.3, cd:7,  hpTrigger:0.75},
-            {name:'血の激昂',       type:'buff',  target:'self',   power:0,   cd:9,  hpTrigger:0.50, effect:{type:'atk_up',val:20,turns:3}},
-            {name:'魔力の傷跡',     type:'phys', target:'single', power:2.0, cd:6},
-            {name:'体当たり突進',   type:'phys',   target:'single', power:1.6, cd:5},
-            {name:'タックル',       type:'phys',   target:'single', power:1.0, cd:0}]},
+        [{name:'スカーボア', icon:'🐗', atk:540, pres:22, mres:8, bres:10, lres:0, spd:60, cri:5,
+          phases:[
+            {hp:20000, skills:[
+              {name:'傷だらけの咆哮', type:'buff',  target:'self',   power:0,   cd:-1, onlyOnce:true, effect:{type:'atk_up',val:15,turns:999}},
+              {name:'怒り突進',       type:'phys',  target:'all',    power:1.3, cd:7},
+              {name:'魔力の傷跡',     type:'phys',  target:'single', power:2.0, cd:6},
+              {name:'体当たり突進',   type:'phys',  target:'single', power:1.6, cd:5},
+              {name:'タックル',       type:'phys',  target:'single', power:1.0, cd:0}]},
+            {hp:18000, skills:[
+              {name:'血の激昂',     type:'buff',  target:'self',   power:0,   cd:8, effect:{type:'atk_up',val:25,turns:3}},
+              {name:'怒り狂った突進', type:'phys', target:'all',    power:1.8, cd:5},
+              {name:'魔力の傷跡・強', type:'phys', target:'single', power:2.6, cd:5},
+              {name:'死にもの狂い',   type:'phys', target:'single', power:2.2, cd:4},
+              {name:'タックル',       type:'phys', target:'single', power:1.2, cd:0}]}
+          ]},
          {name:'ワイルドボア', icon:'🐗', hp:2200, mp:400, atk:200, pres:15, mres:0, bres:5, lres:0, spd:65, cri:5,
           enemySkills:[{name:'突進', type:'phys', target:'single', power:1.8, cd:5},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ワイルドボア', icon:'🐗', hp:2200, mp:400, atk:200, pres:15, mres:0, bres:5, lres:0, spd:65, cri:5,
@@ -5788,15 +5812,22 @@ const BABEL_AREAS = [
           enemySkills:[{name:'鉄角突撃', type:'phys', target:'single', power:2.0, cd:6},{name:'踏み荒らし', type:'phys', target:'all', power:0.8, cd:8},{name:'体当たり', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
       { id:'a2s10', name:'覇者の試練', waves:1, enemies:[
-        [{name:'ゴブリンチャンピオン', icon:'👑', hp:95000, mp:40000, atk:920, pres:20, mres:10, bres:8, lres:5, spd:85, cri:14,
-          enemySkills:[
-            {name:'覇者の宣言',          type:'buff',  target:'all_ally', power:0,   cd:-1, onlyOnce:true, effect:{type:'atk_up',val:20,turns:999}},
-            {name:'王者の連撃',          type:'phys',   target:'single',   power:1.4, cd:7,  hpTrigger:0.75, hits:2},
-            {name:'覇気解放',            type:'buff',  target:'self',     power:0,   cd:9,  hpTrigger:0.50, effect:{type:'atk_up',val:30,turns:3}},
-            {name:'魂を砕く咆哮',        type:'spec', target:'all',      power:0.8, cd:10, hpTrigger:0.40},
-            {name:'白刃の閃光',          type:'spec', target:'single',   power:2.2, cd:6},
-            {name:'チャンピオンスマッシュ', type:'phys', target:'single',  power:2.4, cd:5},
-            {name:'豪腕殴打',            type:'phys',   target:'single',   power:1.1, cd:0}]},
+        [{name:'ゴブリンチャンピオン', icon:'👑', atk:920, pres:20, mres:10, bres:8, lres:5, spd:85, cri:14,
+          phases:[
+            {hp:52000, skills:[
+              {name:'覇者の宣言',    type:'buff', target:'all_ally', power:0,   cd:-1, onlyOnce:true, effect:{type:'atk_up',val:20,turns:999}},
+              {name:'王者の連撃',    type:'phys', target:'single',   power:1.4, cd:7,  hits:2},
+              {name:'白刃の閃光',    type:'spec', target:'single',   power:2.2, cd:6},
+              {name:'チャンピオンスマッシュ', type:'phys', target:'single', power:2.4, cd:5},
+              {name:'豪腕殴打',      type:'phys', target:'single',   power:1.1, cd:0}]},
+            {hp:55000, skills:[
+              {name:'覇気全解放',    type:'buff', target:'self',     power:0,   cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:40,turns:999},{type:'spd_up',val:20,turns:999}]}},
+              {name:'覇王の連撃',    type:'phys', target:'single',   power:1.8, cd:5,  hits:3},
+              {name:'魂を砕く咆哮',  type:'spec', target:'all',      power:1.2, cd:7},
+              {name:'白刃の閃光・極', type:'spec', target:'single',  power:3.0, cd:5},
+              {name:'覇王の一撃',    type:'phys', target:'single',   power:2.8, cd:4},
+              {name:'豪腕殴打',      type:'phys', target:'single',   power:1.3, cd:0}]}
+          ]},
          {name:'ホブゴブリン', icon:'👹', hp:12000, mp:5000, atk:680, pres:12, mres:5, bres:0, lres:0, spd:78, cri:9,
           enemySkills:[
             {name:'群れへの鼓舞', type:'buff', target:'all_ally', power:0, cd:8, effect:{type:'atk_up',val:18,turns:2}},
@@ -5952,14 +5983,22 @@ const BABEL_AREAS = [
           enemySkills:[{name:'毒針連撃', type:'phys', target:'single', power:1.5, cd:5, debuff:{type:'poison', val:10, turns:3}},{name:'群れ急襲', type:'phys', target:'all', power:0.8, cd:7},{name:'刺撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'キラービー', icon:'🐝', hp:3200, mp:1000, atk:450, pres:0, mres:5, bres:0, lres:0, spd:112, cri:12,
           enemySkills:[{name:'毒針連撃', type:'phys', target:'single', power:1.5, cd:5, debuff:{type:'poison', val:10, turns:3}},{name:'刺撃', type:'phys', target:'single', power:1.0, cd:0}]}],
-        [{name:'レッサーベヒモス', icon:'🦕', hp:160000, mp:60000, atk:1200, pres:28, mres:15, bres:20, lres:5, spd:58, cri:6,
-          enemySkills:[
-            {name:'地竜の覚醒', type:'buff',  target:'self',   power:0,   cd:-1, onlyOnce:true, effect:{type:'atk_up',val:18,turns:999}},
-            {name:'大地砕き',   type:'phys',   target:'all',    power:1.8, cd:6,  debuff:{type:'flinch', val:1, turns:1}},
-            {name:'踏み潰し',   type:'phys',   target:'single', power:2.8, cd:4},
-            {name:'毒液噴射',   type:'phys', target:'all',    power:1.2, cd:8,  debuff:{type:'poison', val:10, turns:3}},
-            {name:'竜の咆哮',   type:'spec', target:'all',    power:1.0, cd:9,  hpTrigger:0.5, debuff:{type:'mdef_down', val:-12, turns:2}},
-            {name:'噛みつき',   type:'phys',   target:'single', power:1.4, cd:0}]}]
+        [{name:'レッサーベヒモス', icon:'🦕', atk:1200, pres:28, mres:15, bres:20, lres:5, spd:58, cri:6,
+          phases:[
+            {hp:88000, skills:[
+              {name:'地竜の覚醒', type:'buff', target:'self',   power:0,   cd:-1, onlyOnce:true, effect:{type:'atk_up',val:18,turns:999}},
+              {name:'大地砕き',   type:'phys', target:'all',    power:1.8, cd:6,  debuff:{type:'flinch', val:1, turns:1}},
+              {name:'踏み潰し',   type:'phys', target:'single', power:2.8, cd:4},
+              {name:'毒液噴射',   type:'phys', target:'all',    power:1.2, cd:8,  debuff:{type:'poison', val:10, turns:3}},
+              {name:'噛みつき',   type:'phys', target:'single', power:1.4, cd:0}]},
+            {hp:90000, skills:[
+              {name:'地竜の咆哮', type:'spec', target:'all',    power:1.6, cd:-1, onlyOnce:true, debuff:{type:'mdef_down', val:-18, turns:3}},
+              {name:'大地砕き・強', type:'phys', target:'all',  power:2.4, cd:5,  debuff:{type:'flinch', val:1, turns:1}},
+              {name:'踏み潰し・極', type:'phys', target:'single',power:3.6, cd:3},
+              {name:'毒液大噴射',  type:'phys', target:'all',   power:1.6, cd:6,  debuff:{type:'strong_poison', val:14, turns:3}},
+              {name:'竜の怒声',    type:'spec', target:'all',   power:1.4, cd:8,  debuff:{type:'atk_down', val:-18, turns:2}},
+              {name:'噛みつき',    type:'phys', target:'single',power:1.8, cd:0}]}
+          ]}]
       ]},
     ]
   },
@@ -6029,15 +6068,23 @@ const BABEL_AREAS = [
           enemySkills:[{name:'妖精の癒し', type:'buff', target:'all_ally', power:0, cd:5, effect:{type:'heal_and_shield', healRatio:1.5, shieldRatio:0}},{name:'魔力奪取', type:'phys', target:'single', power:1.2, cd:8, debuff:{type:'mdef_down', val:-12, turns:2}},{name:'妖精の一撃', type:'spec', target:'single', power:1.0, cd:0}]},
          {name:'スリープフラワー', icon:'🌸', hp:8000, mp:6000, atk:520, pres:10, mres:15, bres:0, lres:0, spd:58, cri:5,
           enemySkills:[{name:'眠り花粉', type:'spec', target:'single', power:1.0, cd:5, debuff:{type:'sleep', val:1, turns:2}},{name:'甘い香り', type:'spec', target:'all', power:0.6, cd:8, debuff:{type:'paralysis', val:1, turns:1}},{name:'花弁散布', type:'phys', target:'single', power:1.0, cd:0}]}],
-        [{name:'テオナナカトル', icon:'🍄', hp:220000, mp:80000, atk:1100, pres:22, mres:20, bres:10, lres:5, spd:55, cri:5,
-          enemySkills:[
-            {name:'神聖なる胞子', type:'buff',  target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff', buffs:[{type:'atk_up',val:18,turns:999},{type:'pdef_up',val:10,turns:999}]}},
-            {name:'死の胞子雲', type:'phys',  target:'all',    power:1.5, cd:6,  debuff:{type:'strong_poison', val:14, turns:3}},
-            {name:'眠りの霧',   type:'spec',  target:'all',    power:1.0, cd:8,  debuff:{type:'sleep', val:1, turns:2}},
-            {name:'幻覚菌糸',   type:'spec',  target:'single', power:2.0, cd:5,  debuff:{type:'mdef_down', val:-15, turns:2}},
-            {name:'菌糸爆発',   type:'phys',  target:'all',    power:2.2, cd:10, hpTrigger:0.5},
-            {name:'大地の菌糸', type:'phys',    target:'all',    power:1.2, cd:7},
-            {name:'菌糸叩き',   type:'phys',    target:'single', power:1.0, cd:0}]}]
+        [{name:'テオナナカトル', icon:'🍄', atk:1100, pres:22, mres:20, bres:10, lres:5, spd:55, cri:5,
+          phases:[
+            {hp:115000, skills:[
+              {name:'神聖なる胞子', type:'buff', target:'self',   power:0,   cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:18,turns:999},{type:'pdef_up',val:10,turns:999}]}},
+              {name:'死の胞子雲',   type:'phys', target:'all',    power:1.5, cd:6,  debuff:{type:'strong_poison', val:14, turns:3}},
+              {name:'眠りの霧',     type:'spec', target:'all',    power:1.0, cd:8,  debuff:{type:'sleep', val:1, turns:2}},
+              {name:'幻覚菌糸',     type:'spec', target:'single', power:2.0, cd:5,  debuff:{type:'mdef_down', val:-15, turns:2}},
+              {name:'大地の菌糸',   type:'phys', target:'all',    power:1.2, cd:7},
+              {name:'菌糸叩き',     type:'phys', target:'single', power:1.0, cd:0}]},
+            {hp:120000, skills:[
+              {name:'菌糸大爆発',   type:'phys', target:'all',    power:2.8, cd:-1, onlyOnce:true},
+              {name:'死の胞子嵐',   type:'phys', target:'all',    power:2.0, cd:5,  debuff:{type:'strong_poison', val:18, turns:3}},
+              {name:'深淵の眠り',   type:'spec', target:'all',    power:1.4, cd:7,  debuff:{type:'sleep', val:1, turns:3}},
+              {name:'幻覚菌糸・極', type:'spec', target:'single', power:3.0, cd:4,  debuff:{type:'mdef_down', val:-22, turns:2}},
+              {name:'連鎖菌糸爆発', type:'phys', target:'all',    power:1.8, cd:8,  hits:2},
+              {name:'菌糸叩き',     type:'phys', target:'single', power:1.4, cd:0}]}
+          ]}]
       ]},
     ]
   },
@@ -6420,15 +6467,29 @@ const BABEL_AREAS = [
             {name:'毒牙の一撃',type:'phys',target:'single',power:2.2,cd:5,debuff:{type:'poison',val:10,turns:3}},
             {name:'影潜り奇襲',type:'phys',target:'single',power:2.5,cd:7,forceCrit:true},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]}],
-        [{name:'グリフォン・ロード',icon:'🦁',hp:650000,mp:200000,atk:2800,pres:15,mres:20,bres:15,lres:10,spd:110,cri:20,
-          enemySkills:[
-            {name:'峡谷の王の咆哮',type:'spec',target:'all',power:2.0,cd:-1,onlyOnce:true,debuff:{type:'atk_down',val:-20,turns:3}},
-            {name:'神風斬',type:'phys',target:'single',power:4.0,cd:5,forceCrit:true},
-            {name:'翼風圧',type:'phys',target:'all',power:2.0,cd:6},
-            {name:'裂爪撃',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'bleed',val:15,turns:3}},
-            {name:'峡谷の覇気解放',type:'buff',target:'self',power:0,cd:10,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'atk_up',val:40,turns:999},{type:'pdef_up',val:20,turns:999}]}},
-            {name:'雷鳴の急降下',type:'phys',target:'single',power:6.0,cd:8,hpTrigger:0.3,forceCrit:true},
-            {name:'爪撃',type:'phys',target:'single',power:1.5,cd:0}]}]
+        [{name:'グリフォン・ロード',icon:'🦁',atk:2800,pres:15,mres:20,bres:15,lres:10,spd:110,cri:20,
+          phases:[
+            {hp:200000, skills:[
+              {name:'峡谷の王の咆哮', type:'spec', target:'all',    power:2.0, cd:-1, onlyOnce:true, debuff:{type:'atk_down',val:-20,turns:3}},
+              {name:'神風斬',         type:'phys', target:'single', power:4.0, cd:5,  forceCrit:true},
+              {name:'翼風圧',         type:'phys', target:'all',    power:2.0, cd:6},
+              {name:'裂爪撃',         type:'phys', target:'all',    power:1.5, cd:7,  debuff:{type:'bleed',val:15,turns:3}},
+              {name:'爪撃',           type:'phys', target:'single', power:1.5, cd:0}]},
+            {hp:220000, skills:[
+              {name:'覇気解放', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:40,turns:999},{type:'pdef_up',val:20,turns:999}]}},
+              {name:'神風斬・双',     type:'phys', target:'single', power:4.5, cd:4,  forceCrit:true, hits:2},
+              {name:'嵐の翼風圧',     type:'phys', target:'all',    power:2.6, cd:5},
+              {name:'裂爪乱舞',       type:'phys', target:'all',    power:2.0, cd:6,  debuff:{type:'bleed',val:20,turns:3}},
+              {name:'峡谷の覇王咆哮', type:'spec', target:'all',    power:1.8, cd:8,  debuff:{type:'atk_down',val:-25,turns:2}},
+              {name:'爪撃',           type:'phys', target:'single', power:1.8, cd:0}]},
+            {hp:260000, skills:[
+              {name:'雷鳴覚醒', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:30,turns:999},{type:'spd_up',val:30,turns:999}]}},
+              {name:'雷鳴の急降下',   type:'phys', target:'single', power:7.0, cd:5,  forceCrit:true},
+              {name:'神風斬・極',     type:'phys', target:'single', power:6.0, cd:4,  forceCrit:true},
+              {name:'天空の裂風',     type:'phys', target:'all',    power:3.0, cd:5},
+              {name:'雷裂爪',         type:'phys', target:'all',    power:2.4, cd:6,  debuff:{type:'bleed',val:25,turns:3}},
+              {name:'爪撃',           type:'phys', target:'single', power:2.0, cd:0}]}
+          ]}]
       ]},
     ]
   },
@@ -7425,15 +7486,28 @@ const BABEL_AREAS = [
             {name:'石化眼光',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'stun',val:1,turns:1}},
             {name:'砂嵐奇襲',type:'phys',target:'single',power:2.5,cd:7,forceCrit:true},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]}],
-        [{name:'グラベルワーム',icon:'🐉',hp:1600000,mp:600000,atk:2800,pres:25,mres:15,bres:20,lres:5,spd:55,cri:8,
-          enemySkills:[
-            {name:'砂嵐',type:'spec',target:'all',power:0.8,cd:5,debuff:{type:'atk_down',val:-15,turns:2}},
-            {name:'地中突撃',type:'phys',target:'single',power:4.0,cd:5},
-            {name:'地上浮上',type:'buff',target:'self',power:0,cd:-1,onlyOnce:true,hpTrigger:0.6,effect:{type:'atk_up',val:30,turns:999}},
-            {name:'全体薙ぎ払い',type:'phys',target:'all',power:2.0,cd:6,hpTrigger:0.6},
-            {name:'地響き',type:'phys',target:'all',power:1.5,cd:8,debuff:{type:'flinch',val:1,turns:1}},
-            {name:'噛み砕き',type:'phys',target:'single',power:5.0,cd:8,hpTrigger:0.3},
-            {name:'体当たり',type:'phys',target:'single',power:1.5,cd:0}]}]
+        [{name:'グラベルワーム',icon:'🐉',atk:2800,pres:25,mres:15,bres:20,lres:5,spd:55,cri:8,
+          phases:[
+            {hp:500000, skills:[
+              {name:'砂嵐',     type:'spec', target:'all',    power:0.8, cd:5,  debuff:{type:'atk_down',val:-15,turns:2}},
+              {name:'地中突撃', type:'phys', target:'single', power:4.0, cd:5},
+              {name:'地響き',   type:'phys', target:'all',    power:1.5, cd:8,  debuff:{type:'flinch',val:1,turns:1}},
+              {name:'体当たり', type:'phys', target:'single', power:1.5, cd:0}]},
+            {hp:550000, skills:[
+              {name:'地上浮上の咆哮', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:30,turns:999},{type:'spd_up',val:15,turns:999}]}},
+              {name:'全体薙ぎ払い', type:'phys', target:'all',    power:2.4, cd:5},
+              {name:'砂嵐・強',     type:'spec', target:'all',    power:1.2, cd:4,  debuff:{type:'atk_down',val:-20,turns:2}},
+              {name:'地中突撃・強', type:'phys', target:'single', power:5.0, cd:4},
+              {name:'地響き・強',   type:'phys', target:'all',    power:2.0, cd:7,  debuff:{type:'flinch',val:1,turns:1}},
+              {name:'体当たり',     type:'phys', target:'single', power:1.8, cd:0}]},
+            {hp:600000, skills:[
+              {name:'地竜の怒り', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:40,turns:999},{type:'pdef_up',val:30,turns:999}]}},
+              {name:'噛み砕き',     type:'phys', target:'single', power:6.0, cd:5},
+              {name:'全体薙ぎ払い・極', type:'phys', target:'all', power:3.2, cd:4},
+              {name:'大砂嵐',       type:'spec', target:'all',    power:1.8, cd:5,  debuff:{type:'atk_down',val:-25,turns:3}},
+              {name:'地中突撃・極', type:'phys', target:'single', power:6.5, cd:4},
+              {name:'体当たり',     type:'phys', target:'single', power:2.0, cd:0}]}
+          ]}]
       ]}
     ]
   },
@@ -8004,14 +8078,27 @@ const BABEL_AREAS = [
             {name:'火粉散布',type:'spec',target:'all',power:0.5,cd:3,debuff:{type:'burn',val:5,turns:2}},
             {name:'群れ飛翔',type:'spec',target:'all',power:0,cd:6,debuff:{type:'mdef_down',val:-15,turns:2}},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]}],
-        [{name:'スケルトンドラゴン',icon:'💀',hp:2800000,mp:1000000,atk:3400,pres:15,mres:25,bres:50,lres:10,spd:80,cri:16,
-          enemySkills:[
-            {name:'焦熱の覚醒',type:'buff',target:'self',power:0,cd:-1,onlyOnce:true,effect:{type:'multi_buff',buffs:[{type:'atk_up',val:20,turns:999},{type:'spd_up',val:20,turns:999}]}},
-            {name:'緋焔ブレス',type:'spec',target:'all',power:2.0,cd:5,debuff:{type:'burn',val:12,turns:3}},
-            {name:'骨竜の咆哮',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'atk_down',val:-15,turns:2}},
-            {name:'溶岩浴び',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'heal_and_shield',healRatio:1.5,shieldRatio:0}},
-            {name:'最期の業火',type:'spec',target:'all',power:4.0,cd:5,hpTrigger:0.3},
-            {name:'骨爪撃',type:'phys',target:'single',power:2.0,cd:0}]}]
+        [{name:'スケルトンドラゴン',icon:'💀',atk:3400,pres:15,mres:25,bres:50,lres:10,spd:80,cri:16,
+          phases:[
+            {hp:900000, skills:[
+              {name:'焦熱の覚醒', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:20,turns:999},{type:'spd_up',val:20,turns:999}]}},
+              {name:'緋焔ブレス', type:'spec', target:'all',    power:2.0, cd:5,  debuff:{type:'burn',val:12,turns:3}},
+              {name:'骨竜の咆哮', type:'phys', target:'all',    power:1.5, cd:7,  debuff:{type:'atk_down',val:-15,turns:2}},
+              {name:'骨爪撃',     type:'phys', target:'single', power:2.0, cd:0}]},
+            {hp:950000, skills:[
+              {name:'不死の溶岩浴び', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:25,turns:999},{type:'pdef_up',val:25,turns:999}]}},
+              {name:'業火ブレス・強', type:'spec', target:'all',    power:2.8, cd:4,  debuff:{type:'burn',val:18,turns:3}},
+              {name:'骨竜の絶叫',     type:'phys', target:'all',    power:2.0, cd:6,  debuff:{type:'atk_down',val:-20,turns:2}},
+              {name:'溶岩飛礫',       type:'spec', target:'single', power:3.5, cd:5,  debuff:{type:'burn',val:15,turns:3}},
+              {name:'骨爪連撃',       type:'phys', target:'single', power:2.5, cd:0}]},
+            {hp:1000000, skills:[
+              {name:'死竜の業', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:40,turns:999},{type:'spd_up',val:30,turns:999}]}},
+              {name:'最期の業火',     type:'spec', target:'all',    power:5.0, cd:4},
+              {name:'竜炎乱射',       type:'spec', target:'all',    power:3.5, cd:5,  hits:2, debuff:{type:'burn',val:20,turns:3}},
+              {name:'骨竜の断末魔',   type:'phys', target:'all',    power:2.8, cd:6,  debuff:{type:'atk_down',val:-25,turns:2}},
+              {name:'死爪の極撃',     type:'phys', target:'single', power:5.0, cd:3,  forceCrit:true},
+              {name:'骨爪撃',         type:'phys', target:'single', power:2.8, cd:0}]}
+          ]}]
       ]}
     ]
   },
@@ -12526,6 +12613,12 @@ function renderBattle() {
         } else if (shFill) { shFill.style.width = '0%'; }
         const hpText = q('.hp-text');
         if (hpText) hpText.innerHTML = `${fmt(Math.max(0,u.hp))} / ${fmt(u.maxHp)}${u.shield>0?` <span style="color:#88aaff">🛡${fmt(u.shield)}</span>`:''}`;
+        if (u.phases && typeof u.phaseIdx === 'number') {
+          const phaseDots = q('.boss-phase-dots');
+          if (phaseDots) phaseDots.querySelectorAll('.phase-dot').forEach((dot, i) => {
+            dot.className = 'phase-dot' + (i < u.phaseIdx ? ' cleared' : i === u.phaseIdx ? ' active' : '');
+          });
+        }
         existing.classList.toggle('dead', !!u.dead);
         existing.classList.toggle('staggered', !!u.staggered);
         const buffHtml = buildBuffHtml(u.buffs, u.debuffs);
@@ -12587,6 +12680,7 @@ function combatantCardHTML(c) {
         ${shieldPct > 0 ? `<div class="shield-fill" style="width:${Math.min(100,shieldPct)}%"></div>` : ''}
       </div>
       <div class="hp-text">${fmt(Math.max(0,c.hp))} / ${fmt(c.maxHp)}${c.shield>0?` <span style="color:#88aaff">🛡${fmt(c.shield)}</span>`:''}</div>
+      ${c.isEnemy && c.phases && c.phases.length > 1 ? `<div class="boss-phase-dots">${c.phases.map((_,i)=>`<div class="phase-dot${i<(c.phaseIdx||0)?' cleared':i===(c.phaseIdx||0)?' active':''}"></div>`).join('')}</div>` : ''}
       <div class="atb-bar"><div class="atb-fill" style="width:${atbPct}%"></div></div>
       ${ultSection}
       ${buffHtml ? `<div class="status-icons">${buffHtml}</div>` : ''}
@@ -12968,11 +13062,14 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
   } else {
     const defaultSkill = { id:'normalAtk', name:'通常攻撃', type:'phys', target:'single', power:1.0, cd:0 };
     const rawSkills = enemyData.enemySkills || [defaultSkill];
+    const phase0 = enemyData.phases?.[0];
+    const effectiveHp = phase0 ? phase0.hp : enemyData.hp;
+    const effectiveSkills = (phase0?.skills) ? phase0.skills : rawSkills;
     return {
       uid: 'e_' + Math.random().toString(36).slice(2),
       name: enemyData.name, icon: enemyData.icon,
       species: enemyData.species || ENEMY_SPECIES_MAP[enemyData.name] || null,
-      maxHp: enemyData.hp, hp: enemyData.hp,
+      maxHp: effectiveHp, hp: effectiveHp,
       atk: enemyData.atk,
       pdef: enemyData.pdef || enemyData.pres || 0,
       mdef: enemyData.mdef || enemyData.mres || 0,
@@ -12980,11 +13077,13 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       hit: enemyData.hit||0, immune: enemyData.immune||0,
       atb: 0, isEnemy: true, dead: false,
       staggered: false, staggerUsed: false,
-      skills: rawSkills,
+      skills: effectiveSkills,
       skillCDs: {},
       usedOnce: {},
       ultimate: null, ultGauge: 0,
       buffs: [], debuffs: [],
+      phases: enemyData.phases || null,
+      phaseIdx: enemyData.phases ? 0 : undefined,
     };
   }
 }
@@ -13178,6 +13277,14 @@ function tickBattle() {
     tickShields(all);
     // プリースト: 聖なる怒りパッシブチェック
     checkPriestPassives(bs);
+  }
+
+  // Boss phase transition check (before win/lose)
+  for (const e of bs.enemies) {
+    if (e.dead && e.phases && typeof e.phaseIdx === 'number' && e.phaseIdx + 1 < e.phases.length) {
+      triggerBossPhaseTransition(e, bs);
+      return;
+    }
   }
 
   // Check win/lose
@@ -15372,6 +15479,118 @@ function showWaveTransition(nextWave, totalWaves, callback) {
         if (callback) callback();
       }, 400);
     }, 1800);
+  });
+}
+
+function triggerBossPhaseTransition(boss, bs) {
+  pauseBattle();
+  const nextIdx = boss.phaseIdx + 1;
+  const nextPhase = boss.phases[nextIdx];
+
+  boss.dead = false;
+  boss.hp = nextPhase.hp;
+  boss.maxHp = nextPhase.hp;
+  boss.phaseIdx = nextIdx;
+  boss.atb = 0;
+  boss.staggered = false;
+  boss.staggerUsed = false;
+  boss.buffs = [];
+  boss.debuffs = [];
+  if (nextPhase.skills) {
+    boss.skills = nextPhase.skills;
+    boss.skillCDs = {};
+    boss.usedOnce = {};
+  }
+
+  showBossPhaseTransition(boss.name, boss.icon, nextIdx + 1, boss.phases.length, () => {
+    addLog(`${boss.icon} <b>${boss.name}</b> ─ <span class="tag tag-trigger">PHASE ${nextIdx + 1}</span> 突入！`, 'trigger');
+    if (battleState) battleState.allies.forEach(a => { a.atb = 0; });
+    renderBattle();
+    resumeBattle();
+  });
+}
+
+function showBossPhaseTransition(bossName, bossIcon, phaseNum, totalPhases, callback) {
+  const old = document.getElementById('boss-phase-overlay');
+  if (old) old.remove();
+
+  const phaseColors = ['#ff4444', '#cc44ff', '#4488ff', '#ff8800'];
+  const color = phaseColors[(phaseNum - 1) % phaseColors.length];
+
+  const ov = document.createElement('div');
+  ov.id = 'boss-phase-overlay';
+  ov.style.cssText = `
+    position:fixed; inset:0; z-index:3500;
+    background:rgba(5,6,8,0.97);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:10px;
+  `;
+
+  const dotHtml = Array.from({length: totalPhases}, (_, i) =>
+    `<div style="width:10px;height:10px;border-radius:50%;
+      background:${i < phaseNum ? color : 'rgba(255,255,255,0.12)'};
+      ${i === phaseNum - 1 ? `box-shadow:0 0 14px ${color};` : ''}
+      transition:background 0.3s;"></div>`
+  ).join('');
+
+  ov.innerHTML = `
+    <div id="bpo-icon" style="
+      font-size:52px; opacity:0; transform:scale(0.4);
+      transition:opacity 0.35s, transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      filter:drop-shadow(0 0 24px ${color});
+    ">${bossIcon}</div>
+    <div id="bpo-name" style="
+      font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:700;
+      color:rgba(255,255,255,0.45); letter-spacing:6px; text-transform:uppercase;
+      opacity:0; transition:opacity 0.3s;
+    ">${bossName}</div>
+    <div id="bpo-phase" style="
+      font-family:'Cinzel',serif; font-size:50px; font-weight:900;
+      color:${color}; letter-spacing:8px;
+      text-shadow:0 0 40px ${color}, 0 0 80px ${color}44;
+      opacity:0; transform:scale(0.5) translateY(24px);
+      transition:opacity 0.4s, transform 0.45s cubic-bezier(0.34,1.56,0.64,1);
+    ">PHASE ${phaseNum}</div>
+    <div id="bpo-dots" style="
+      display:flex; gap:10px; margin-top:10px;
+      opacity:0; transition:opacity 0.3s;
+    ">${dotHtml}</div>
+    <div id="bpo-label" style="
+      font-family:'Noto Sans JP',sans-serif; font-size:11px;
+      color:rgba(255,255,255,0.35); margin-top:6px; letter-spacing:4px;
+      opacity:0; transition:opacity 0.3s;
+    ">── 覚醒 ──</div>
+  `;
+
+  document.body.appendChild(ov);
+
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      const icon = document.getElementById('bpo-icon');
+      if (icon) { icon.style.opacity = '1'; icon.style.transform = 'scale(1)'; }
+    }, 80);
+    setTimeout(() => {
+      const name = document.getElementById('bpo-name');
+      if (name) name.style.opacity = '1';
+    }, 260);
+    setTimeout(() => {
+      const phase = document.getElementById('bpo-phase');
+      if (phase) { phase.style.opacity = '1'; phase.style.transform = 'scale(1) translateY(0)'; }
+    }, 420);
+    setTimeout(() => {
+      const dots = document.getElementById('bpo-dots');
+      if (dots) dots.style.opacity = '1';
+      const label = document.getElementById('bpo-label');
+      if (label) label.style.opacity = '1';
+    }, 720);
+    setTimeout(() => {
+      ov.style.transition = 'opacity 0.5s';
+      ov.style.opacity = '0';
+      setTimeout(() => {
+        ov.remove();
+        if (callback) callback();
+      }, 500);
+    }, 2500);
   });
 }
 
