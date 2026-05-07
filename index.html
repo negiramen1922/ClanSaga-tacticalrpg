@@ -871,13 +871,21 @@ img.item-icon {
 .status-icon .si-count { font-size: 9px; opacity: 0.8; margin-left: 1px; }
 .status-icon.atk-up { border-color: var(--orange); color: var(--orange); }
 .status-icon.hp-up { border-color: var(--green); color: var(--green); }
+/* 物理バフ: オレンジ系 */
 .status-icon.pdef-up  { border-color: #ff8866; color: #ff8866; }
-.status-icon.mdef-up  { border-color: #88bbff; color: #88bbff; }
 .status-icon.pres-up  { border-color: #ff8866; color: #ff8866; }
+.status-icon.bres-up  { border-color: #ff8866; color: #ff8866; }
+.status-icon.bres_up  { border-color: #ff8866; color: #ff8866; }
+/* 特殊バフ: 青系 */
+.status-icon.mdef-up  { border-color: #88bbff; color: #88bbff; }
 .status-icon.mres-up  { border-color: #88bbff; color: #88bbff; }
-.status-icon.pres-down { border-color: var(--red); color: var(--red); }
-.status-icon.pdef-down { border-color: var(--red); color: var(--red); }
-.status-icon.mdef-down { border-color: #5577dd; color: #5577dd; }
+/* 物理デバフ: 暗めオレンジ（バフと同系・デバフ感あり）*/
+.status-icon.pres-down { border-color: #cc5533; color: #cc5533; }
+.status-icon.pdef-down { border-color: #cc5533; color: #cc5533; }
+.status-icon.bres-down { border-color: #cc5533; color: #cc5533; }
+/* 特殊デバフ: 暗め青紫（バフと同系・デバフ感あり）*/
+.status-icon.mdef-down { border-color: #6655cc; color: #6655cc; }
+.status-icon.mres-down { border-color: #6655cc; color: #6655cc; }
 .status-icon.debuff { border-color: var(--red); color: var(--red); }
 
 /* ===== SPECIES BADGES ===== */
@@ -3947,7 +3955,7 @@ const CLASS_DATA = {
     passiveSkills: [
       { id:'pd_pas_heal', name:'奇跡の器', effect:'回復スキル使用時、対象にATKの30%の追加HP回復',
         effect:{ type:'heal_bonus', val:30 } },
-      { id:'pd_pas_bres', name:'聖域の守護', effect:'味方全体特殊耐性+8%（常時）',
+      { id:'pd_pas_bres', name:'聖域の守護', effect:'味方全体物理耐性+8%（常時）',
         effect:{ type:'team_bres', val:8 } },
     ],
     ultimates: [
@@ -3987,7 +3995,7 @@ const CLASS_DATA = {
     passiveSkills: [
       { id:'sh_pas_debuff', name:'呪いの連鎖', effect:'デバフ中の敵への与ダメ+15%（常時）',
         effect:{ type:'dmg_vs_debuffed', val:15 } },
-      { id:'sh_pas_res', name:'精霊の加護', effect:'味方全体特殊耐性+8%・状態異常耐性+15%（常時）',
+      { id:'sh_pas_res', name:'精霊の加護', effect:'味方全体物理耐性+8%・状態異常耐性+15%（常時）',
         effect:{ type:'team_res_passive', bres:8, statusRes:15 } },
     ],
     ultimates: [
@@ -4575,8 +4583,8 @@ const CARDS = {
       atkPer:5, bresPer:3, maxStacks:5,
     }},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'会心命中のたびATK+5%・特殊耐性+3%スタック(最大5)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`会心のたびATK+${Math.round(5*m)}%・特殊耐性+${Math.round(3*m)}%スタック(最大5)`;},
+    desc:'会心命中のたびATK+5%・物理耐性+3%スタック(最大5)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`会心のたびATK+${Math.round(5*m)}%・物理耐性+${Math.round(3*m)}%スタック(最大5)`;},
   },
 
   // ===== ヴァンガード ★1カード =====
@@ -4672,8 +4680,8 @@ const CARDS = {
     type:'support', rarity:2, cd:6, target:'single',
     effect:{ type:'shield_and_bres', shieldVal:1.5, bresVal:10, bresTurns:3 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'味方単体 シールド(ATK×1.5) + 特殊耐性+10%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`シールド(ATK×${(1.5*m).toFixed(1)}) + 特殊耐性+${Math.round(10*m)}%(3T)`;},
+    desc:'味方単体 シールド(ATK×1.5) + 物理耐性+10%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`シールド(ATK×${(1.5*m).toFixed(1)}) + 物理耐性+${Math.round(10*m)}%(3T)`;},
   },
 
   'vg_unyielding_will': {
@@ -4775,8 +4783,8 @@ const CARDS = {
     type:'opening', rarity:3, target:'all_ally',
     effect:{ type:'shield_pres_bres', shieldVal:0.8, presVal:20, presTurns:3, bresVal:8, bresTurns:3 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'開幕：全員シールド(ATK×0.8) + 自身PRES+20%(3T) + 全員特殊耐性+8%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：全員シールド(ATK×${(0.8*m).toFixed(1)}) + PRES+${Math.round(20*m)}%(3T) + 特殊耐性+${Math.round(8*m)}%(3T)`;},
+    desc:'開幕：全員シールド(ATK×0.8) + 自身物理耐性+20%(3T) + 全員物理耐性+8%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`開幕：全員シールド(ATK×${(0.8*m).toFixed(1)}) + 物理耐性+${Math.round(20*m)}%(3T) + 物理耐性+${Math.round(8*m)}%(3T)`;},
   },
 
   'vg_sanctuary_torch': {
@@ -5104,8 +5112,8 @@ const CARDS = {
     type:'support', rarity:2, cd:6, target:'single_ally',
     effect:{ type:'shield_and_bres', shieldVal:2.0, bresVal:15, bresTurns:3 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'味方単体 シールド(ATKの200%) + 特殊耐性+15%(3T)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`シールド(ATK×${(2.0*m).toFixed(1)}) + 特殊耐性+${Math.round(15*m)}%(3T)`;},
+    desc:'味方単体 シールド(ATKの200%) + 物理耐性+15%(3T)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`シールド(ATK×${(2.0*m).toFixed(1)}) + 物理耐性+${Math.round(15*m)}%(3T)`;},
   },
 
   'pr_passive_mercy_aura': {
@@ -5325,8 +5333,8 @@ const CARDS = {
     type:'passive', rarity:2,
     effect:{ trigger:'night_battle', action:{ type:'night_passive_buff', criUp:20, damageBonusPer:15, bresUp:10 }},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'夜戦中CRI+20%・与ダメ+15%・特殊耐性+10%(常時発動)',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`夜戦中CRI+${Math.round(20*m)}%・与ダメ+${Math.round(15*m)}%・特殊耐性+${Math.round(10*m)}%`;},
+    desc:'夜戦中CRI+20%・与ダメ+15%・物理耐性+10%(常時発動)',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`夜戦中CRI+${Math.round(20*m)}%・与ダメ+${Math.round(15*m)}%・物理耐性+${Math.round(10*m)}%`;},
   },
 
   'as_passive_shadow_step': {
@@ -5365,8 +5373,8 @@ const CARDS = {
       debuff:{ type:'death_mark', val:5, turns:5, criDamBonus:40, mresDown:-15, bresDown:-10 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
-    desc:'⚔️Pw1.5+【死の刻印】(5T)。刻印中:会心ダメ+40%・特殊耐性-15%・特殊耐性-10%',
-    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️Pw${(1.5*m).toFixed(1)}+死の刻印(5T)。会心ダメ+${Math.round(40*m)}%・特殊-${Math.round(15*m)}%・特殊-${Math.round(10*m)}%`;},
+    desc:'⚔️Pw1.5+【死の刻印】(5T)。刻印中:会心ダメ+40%・特殊耐性-15%・物理耐性-10%',
+    descLv:(lv)=>{const m=[1.0,1.2,1.4,1.7,2.0][lv-1];return`⚔️Pw${(1.5*m).toFixed(1)}+死の刻印(5T)。会心ダメ+${Math.round(40*m)}%・特殊耐性-${Math.round(15*m)}%・物理耐性-${Math.round(10*m)}%`;},
   },
 
   'as_night_dance': {
@@ -9840,8 +9848,8 @@ function calcStats(unit) {
   spd    += af.spd || 0;
   cri    += af.cri || 0;
   cridam += af.cridam || 0;
-  pdef   += (af.pres || af.pdef || 0);
-  mdef   += (af.mres || af.mdef || 0) + (af.bres || 0) + (af.lres || 0);
+  pdef   += (af.pres || af.pdef || 0) + (af.bres || 0);
+  mdef   += (af.mres || af.mdef || 0) + (af.lres || 0);
   // アクセサリー加算
   const ac = getAccessoryStats(unit);
   if (ac.atkPct) atk = Math.floor(atk * (1 + ac.atkPct / 100));
@@ -9851,8 +9859,8 @@ function calcStats(unit) {
   spd    += ac.spd || 0;
   cri    += ac.cri || 0;
   cridam += ac.cridam || 0;
-  pdef   += (ac.pres || ac.pdef || 0);
-  mdef   += (ac.mres || ac.mdef || 0) + (ac.bres || 0) + (ac.lres || 0);
+  pdef   += (ac.pres || ac.pdef || 0) + (ac.bres || 0);
+  mdef   += (ac.mres || ac.mdef || 0) + (ac.lres || 0);
   // キャラ凸ボーナス: +5% ATK・HP per conste level
   const _conste = prog.conste || 0;
   if (_conste > 0) {
@@ -12711,9 +12719,10 @@ function performUlt(c, enemies, allies) {
       if (ult.allyBuff) {
         const b = ult.allyBuff;
         if (b.type === 'all_res_up') {
-          ['pres_up','mres_up','bres_up'].forEach(rt =>
-            a.buffs.push({ type:rt, val:b.val, turns:b.turns, icon:'🛡耐性↑', cssClass:'hp-up' })
-          );
+          ['pres_up','mres_up','bres_up'].forEach(rt => {
+            const isPhys = rt==='pres_up'||rt==='bres_up';
+            a.buffs.push({ type:rt, val:b.val, turns:b.turns, icon:isPhys?'⬆物理耐性':'⬆特殊耐性', cssClass:isPhys?'pdef-up':'mdef-up' });
+          });
           spawnFloatNum(a.uid, '耐性↑', 'float-buff');
         }
       }
@@ -12749,7 +12758,7 @@ function applyBuff(c, skill, sourceUnit) {
   const eff = skill.effect;
   const iconMap = {
     atk_up:'⬆ATK', hp_up:'⬆HP',
-    pdef_up:'⚔️物理耐性↑', mdef_up:'✨特殊耐性↑',
+    pdef_up:'⬆物理耐性', mdef_up:'⬆特殊耐性',
     taunt:'👊挑発', cover:'🤝庇う', counter:'↩反撃', fortress:'🏰要塞', eagle_eye:'🦅鷹眼',
     rampart:'⛩城壁', aegis:'✨盾', atk_buff:'⬆ATK',
     shield:'🛡盾', damage_reduce:'🔽被ダメ↓', cc_immune:'💪CC無効',
@@ -12811,7 +12820,7 @@ function applyBuff(c, skill, sourceUnit) {
 
   // ===== プリースト: 特殊耐性バフ =====
   if (eff.type === 'heal_mp_and_mres') {
-    c.buffs.push({ type:'mdef_up', val:eff.mresVal||15, turns:eff.mresTurns||3, icon:'✨特殊耐性↑', cssClass:'mdef-up' });
+    c.buffs.push({ type:'mdef_up', val:eff.mresVal||15, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
     spawnFloatNum(c.uid, `✨特殊耐性+${eff.mresVal||15}%`, 'float-buff');
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 特殊耐性+${eff.mresVal||15}%(${eff.mresTurns||3}T)`, 'trigger');
@@ -12877,7 +12886,7 @@ function applyBuff(c, skill, sourceUnit) {
     const finalHeal = Math.floor(healAmt * healBonus);
     c.hp = Math.min(c.maxHp, c.hp + finalHeal);
     battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
-    c.buffs.push({ type:'mdef_up', val:eff.mresVal||10, turns:eff.mresTurns||3, icon:'🤍特殊耐性↑', cssClass:'mres-up' });
+    c.buffs.push({ type:'mdef_up', val:eff.mresVal||10, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
     flashCard(c.uid, 'buff');
     spawnFloatNum(c.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(finalHeal)} / 特殊耐性+${eff.mresVal||10}%(${eff.mresTurns||3}T)`, 'trigger');
@@ -12905,11 +12914,11 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'shield_and_res') {
     const shieldAmt = Math.floor(c.maxHp * (eff.shieldRatio||0.20));
     applyShield(c, shieldAmt);
-    const resIcon = eff.resType==='wres'?'🤍特殊耐性↑':'💜特殊耐性↑';
-    c.buffs.push({ type:`${eff.resType}_up`, val:eff.resVal||15, turns:eff.turns||3, icon:resIcon, cssClass:'mres-up' });
+    const resIcon = eff.resType==='wres'?'⬆特殊耐性':'⬆物理耐性';
+    c.buffs.push({ type:`${eff.resType}_up`, val:eff.resVal||15, turns:eff.turns||3, icon:resIcon, cssClass:'mdef-up' });
     flashCard(c.uid, 'buff');
     spawnFloatNum(c.uid, `🛡️+${fmt(shieldAmt)}`, 'float-buff');
-    addLog(`${c.name} 🛡シールド+${fmt(shieldAmt)} / 特殊耐性+${eff.resVal}%(${eff.turns}T)`, 'trigger');
+    addLog(`${c.name} 🛡シールド+${fmt(shieldAmt)} / ${eff.resType==='wres'?'特殊':'物理'}耐性+${eff.resVal}%(${eff.turns}T)`, 'trigger');
     Audio.buff(); return;
   }
 
@@ -13017,7 +13026,7 @@ function applyBuff(c, skill, sourceUnit) {
     const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||0.8));
     applyShield(c, shieldAmt);
     if (c.uid === (sourceUnit||c).uid) {
-      c.buffs.push({ type:'pdef_up', val:eff.presVal||20, turns:eff.presTurns||3, icon:'🛡物理耐性', cssClass:'hp-up' });
+      c.buffs.push({ type:'pdef_up', val:eff.presVal||20, turns:eff.presTurns||3, icon:'⬆物理耐性', cssClass:'pdef-up' });
     }
     flashCard(c.uid, 'buff');
     spawnSkillNamePop(c.uid, skill.name, 'buff');
@@ -13030,7 +13039,7 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'shield_and_mres') {
     const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||0.3));
     applyShield(c, shieldAmt);
-    c.buffs.push({ type:'mdef_up', val:eff.mresVal||8, turns:eff.mresTurns||3, icon:'🤍特殊耐性↑', cssClass:'mres-up' });
+    c.buffs.push({ type:'mdef_up', val:eff.mresVal||8, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド+${fmt(shieldAmt)} / 特殊耐性+${eff.mresVal}%(${eff.mresTurns}T)`, 'trigger');
     Audio.buff(); return;
@@ -13040,9 +13049,9 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'shield_and_bres') {
     const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||1.5));
     applyShield(c, shieldAmt);
-    c.buffs.push({ type:'mdef_up', val:eff.bresVal||10, turns:eff.bresTurns||3, icon:'💜特殊耐性↑', cssClass:'hp-up' });
+    c.buffs.push({ type:'pdef_up', val:eff.bresVal||10, turns:eff.bresTurns||3, icon:'⬆物理耐性', cssClass:'pdef-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
-    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド+${fmt(shieldAmt)} / 特殊耐性+${eff.bresVal}%(${eff.bresTurns}T)`, 'trigger');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド+${fmt(shieldAmt)} / 物理耐性+${eff.bresVal}%(${eff.bresTurns}T)`, 'trigger');
     Audio.buff(); return;
   }
 
@@ -13052,13 +13061,13 @@ function applyBuff(c, skill, sourceUnit) {
     applyShield(c, shieldAmt);
     // PRESは自身（sourceUnit）にのみ付与
     if (c.uid === (sourceUnit||c).uid && eff.presVal) {
-      c.buffs.push({ type:'pdef_up', val:eff.presVal, turns:eff.presTurns||3, icon:'🛡物理耐性↑', cssClass:'hp-up' });
+      c.buffs.push({ type:'pdef_up', val:eff.presVal, turns:eff.presTurns||3, icon:'⬆物理耐性', cssClass:'pdef-up' });
     }
     if (eff.bresVal) {
-      c.buffs.push({ type:'mdef_up', val:eff.bresVal, turns:eff.bresTurns||3, icon:'💜特殊耐性↑', cssClass:'hp-up' });
+      c.buffs.push({ type:'pdef_up', val:eff.bresVal, turns:eff.bresTurns||3, icon:'⬆物理耐性', cssClass:'pdef-up' });
     }
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
-    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡+${fmt(shieldAmt)} 特殊耐性+${eff.bresVal}%(${eff.bresTurns}T)`, 'trigger');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡+${fmt(shieldAmt)} 物理耐性+${eff.bresVal}%(${eff.bresTurns}T)`, 'trigger');
     Audio.buff(); return;
   }
 
@@ -13094,9 +13103,11 @@ function applyBuff(c, skill, sourceUnit) {
   }
 
   // 後方互換: 古い型名フォールバック
-  if (!iconMap['pres_up']) iconMap['pres_up'] = '⚔️物理耐性↑';
+  if (!iconMap['pres_up']) iconMap['pres_up'] = '⬆物理耐性';
   if (!cssMap['pres_up'])  cssMap['pres_up']  = 'pdef-up';
-  if (!iconMap['mres_up']) iconMap['mres_up'] = '✨特殊耐性↑';
+  if (!iconMap['bres_up']) iconMap['bres_up'] = '⬆物理耐性';
+  if (!cssMap['bres_up'])  cssMap['bres_up']  = 'pdef-up';
+  if (!iconMap['mres_up']) iconMap['mres_up'] = '⬆特殊耐性';
   if (!cssMap['mres_up'])  cssMap['mres_up']  = 'mdef-up';
   if (eff.type === 'cc_immune') {
     c.buffs.push({ type:'cc_immune', val:1, turns:eff.turns||2, icon:'💪', cssClass:'hp-up' });
@@ -13142,7 +13153,7 @@ function applyBuff(c, skill, sourceUnit) {
     spawnFloatNum(c.uid, `被ダメ-${eff.val}%`, 'float-buff');
   }
   if (eff.type==='rampart') {
-    c.buffs.push({ type:'pdef_up', val:eff.val, turns:eff.turns, icon:'🛡物理耐性', cssClass:'hp-up' });
+    c.buffs.push({ type:'pdef_up', val:eff.val, turns:eff.turns, icon:'⬆物理耐性', cssClass:'pdef-up' });
     const heal = Math.floor(c.maxHp*0.3);
     c.hp = Math.min(c.maxHp, c.hp+heal);
     spawnFloatNum(c.uid, '+'+fmt(heal), 'float-heal');
@@ -13330,13 +13341,13 @@ function applyDebuffDirect(target, debuff) {
   // 同種デバフは上書き（スタックしない）
   target.debuffs = (target.debuffs||[]).filter(d => d.type !== debuff.type);
   const iconMap = {
-    pres_down:'🛡️↓', mres_down:'✨↓', stun:'💫', poison:'☠️',
+    pres_down:'⬇物理耐性', mres_down:'⬇特殊耐性', stun:'💫', poison:'☠️',
     bleed:'🩸', burn:'🔥', reduce:'🔽',
-    paralysis:'⚡', flinch:'💧', bres_down:'💜↓', lres_down:'🔵↓',
+    paralysis:'⚡', flinch:'💧', bres_down:'⬇物理耐性', lres_down:'⬇特殊耐性',
     atk_down:'⚔️↓', spd_down:'🐢', hit_down:'🌫️', silence:'🔇', mark:'🎯',
   };
   const labelMap = {
-    pres_down:'物理耐性↓', mres_down:'魔法耐性↓', bres_down:'特殊耐性↓',
+    pres_down:'物理耐性↓', mres_down:'特殊耐性↓', bres_down:'物理耐性↓',
     stun:'💫スタン', poison:'☠毒', bleed:'🩸裂傷', burn:'🔥燃焼',
     reduce:'弱体化', paralysis:'⚡しびれ', flinch:'💧ひるみ', atk_down:'⚔️ATK↓',
     spd_down:'🐢SPD↓', hit_down:'🌫️命中↓', silence:'🔇沈黙', mark:'🎯マーク',
@@ -14315,7 +14326,7 @@ function playOneOpeningSkill(action, callback) {
 
   // バフ名の日本語マップ
   const buffNameMap = {
-    atk_up:'ATK', mdef_up:'特殊耐性', pdef_up:'物理耐性',
+    atk_up:'ATK', mdef_up:'特殊耐性', pdef_up:'物理耐性', bres_up:'物理耐性',
     cri_up:'会心率', spd_up:'SPD',
     damage_reduce:'被ダメ軽減', hate_up:'ヘイト',
   };
@@ -14456,7 +14467,7 @@ function playOneOpeningSkill(action, callback) {
     const mresTurns = eff.mresTurns || 3;
     buffTargets.forEach(tgt => {
       applyShield(tgt, shAmt);
-      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:mresVal, turns:mresTurns, icon:'🤍特殊耐性↑', cssClass:'mres-up' });
+      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:mresVal, turns:mresTurns, icon:'⬆特殊耐性', cssClass:'mdef-up' });
     });
     effectLines.push(`シールド+${shAmt}`);
     effectLines.push(buffDesc('mres_up', mresVal, mresTurns));
@@ -14471,9 +14482,9 @@ function playOneOpeningSkill(action, callback) {
       applyShield(tgt, shAmt);
     });
     // PRES/BRES は自身のみ
-    (c.buffs=c.buffs||[]).push({ type:'pdef_up', val:presVal, turns:eff.presTurns||3, icon:'⬆物理耐性', cssClass:'pres_up' });
+    (c.buffs=c.buffs||[]).push({ type:'pdef_up', val:presVal, turns:eff.presTurns||3, icon:'⬆物理耐性', cssClass:'pdef-up' });
     buffTargets.forEach(tgt => {
-      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:bresVal, turns:eff.bresTurns||3, icon:'⬆特殊耐性', cssClass:'bres_up' });
+      (tgt.buffs=tgt.buffs||[]).push({ type:'pdef_up', val:bresVal, turns:eff.bresTurns||3, icon:'⬆物理耐性', cssClass:'pdef-up' });
     });
     effectLines.push(`シールド+${shAmt}`);
     effectLines.push(buffDesc('pres_up', presVal, eff.presTurns||3));
@@ -14501,7 +14512,7 @@ function playOneOpeningSkill(action, callback) {
     allyTargets.forEach(tgt => {
       tgt.hp = Math.min(tgt.maxHp, tgt.hp + finalHeal);
       battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + finalHeal;
-      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:mresVal, turns:eff.mresTurns||3, icon:'🤍特殊耐性↑', cssClass:'mres-up' });
+      (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:mresVal, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
       spawnFloatNum(tgt.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
     });
     effectLines.push(`💚HP+${fmt(finalHeal)}`);
@@ -18313,7 +18324,7 @@ const ACCESSORY_SETS = [
     label2:'回復効果+15%',                   bonus2:[{t:'healUp',v:15}],
     label4:'さらに回復効果+15% / HP+8%',      bonus4:[{t:'healUp',v:15},{t:'hpPct',v:8}] },
   { id:'athena',     name:'アテナ',          icon:'🦉',
-    label2:'特殊耐性+12 / 特殊耐性+12',    bonus2:[{t:'mres',v:12},{t:'bres',v:12}],
+    label2:'特殊耐性+12 / 物理耐性+12',    bonus2:[{t:'mres',v:12},{t:'bres',v:12}],
     label4:'さらに特殊耐性+10 / HP+10%',     bonus4:[{t:'lres',v:10},{t:'hpPct',v:10}] },
   { id:'ares',       name:'アレス',          icon:'⚔️',
     label2:'ATK+8% / CRI+8%',               bonus2:[{t:'atkPct',v:8},{t:'cri',v:8}],
@@ -18348,7 +18359,7 @@ const ACC_MAIN_POOL = [
   { id:'cridam',    label:'CRIダメ%',  min:[12,16,21,26], max:[18,24,30,38] },
   { id:'pres',      label:'物理耐性',   min:[8,12,16,20],  max:[14,18,24,30] },
   { id:'mres',      label:'特殊耐性', min:[8,12,16,20],  max:[14,18,24,30] },
-  { id:'bres',      label:'特殊耐性', min:[8,12,16,20],  max:[14,18,24,30] },
+  { id:'bres',      label:'物理耐性', min:[8,12,16,20],  max:[14,18,24,30] },
   { id:'lres',      label:'特殊耐性',  min:[8,12,16,20],  max:[14,18,24,30] },
   { id:'skillPw',   label:'スキルPw%', min:[6,8,10,13],   max:[9,12,16,20] },
   { id:'drain',     label:'吸血%',     min:[4,6,8,10],    max:[8,11,15,20] },
@@ -18364,7 +18375,7 @@ const ACC_SUB_POOL = [
   { id:'cridam',   label:'CRIダメ%',  min:[4,6,8,10],  max:[9,13,17,22] },
   { id:'pres',     label:'物理耐性',   min:[2,3,4,5],   max:[6,8,10,13] },
   { id:'mres',     label:'特殊耐性', min:[2,3,4,5],   max:[6,8,10,13] },
-  { id:'bres',     label:'特殊耐性', min:[2,3,4,5],   max:[6,8,10,13] },
+  { id:'bres',     label:'物理耐性', min:[2,3,4,5],   max:[6,8,10,13] },
   { id:'lres',     label:'特殊耐性',  min:[2,3,4,5],   max:[6,8,10,13] },
   { id:'skillPw',  label:'スキルPw%', min:[2,3,4,5],   max:[5,7,9,11] },
   { id:'drain',    label:'吸血%',     min:[2,2,3,4],   max:[4,5,7,9] },
@@ -18523,7 +18534,7 @@ function _buildAfDetailHTML(uid) {
   ).join('');
   const condTypeLabel = { A:'全キャラ', B:'ロール', C:'クラス', D:'種族', E:'攻撃タイプ', F:'戦況', G:'編成' };
   const condColors    = { A:'var(--accent2)', B:'var(--orange)', C:'var(--gold)', D:'var(--green)', E:'var(--purple)', F:'var(--text3)', G:'var(--text3)' };
-  const statKeyLbl    = { atkPct:'ATK%', hpPct:'HP%', spd:'SPD', cri:'CRI%', cridam:'CRIDAM%', pres:'物理耐性', mres:'特殊耐性', bres:'特殊耐性', lres:'特殊耐性', skillPw:'スキルPw', dmgReduce:'被ダメ減%' };
+  const statKeyLbl    = { atkPct:'ATK%', hpPct:'HP%', spd:'SPD', cri:'CRI%', cridam:'CRIDAM%', pres:'物理耐性', mres:'特殊耐性', bres:'物理耐性', lres:'特殊耐性', skillPw:'スキルPw', dmgReduce:'被ダメ減%' };
   const conditionsHTML = (def.conditions||[]).map(cond => {
     const cc = condColors[cond.type] || 'var(--text2)';
     const inactive = (cond.type === 'F' || cond.type === 'G');
@@ -19264,8 +19275,8 @@ function openMonsterDetail(idx) {
         <div>ATK <span style="color:var(--orange);font-weight:700">${fmt(m.atk)}</span></div>
         <div>SPD <span style="color:var(--accent2)">${m.spd||0}</span></div>
         <div>CRI <span style="color:var(--gold)">${m.cri||0}%</span></div>
-        <div>物理耐性 <span style="color:var(--text)">${m.pres||0}</span></div>
-        <div>特殊耐性 <span style="color:var(--text)">${(m.mres||0)+(m.bres||0)+(m.lres||0)}</span></div>
+        <div>物理耐性 <span style="color:var(--text)">${(m.pres||0)+(m.bres||0)}</span></div>
+        <div>特殊耐性 <span style="color:var(--text)">${(m.mres||0)+(m.lres||0)}</span></div>
       </div>
     </div>
     ${skills ? `<div style="background:var(--bg3);border:1px solid var(--border);padding:12px;border-radius:4px">
@@ -19583,7 +19594,7 @@ function getArtifactStats(unit) {
 function artifactCondLabel(cond, level) {
   const typeLabel = { A:'全キャラ', B:'ロール', C:'クラス', D:'種族', E:'攻撃タイプ', F:'戦況', G:'編成' };
   const statKeyLabel = { atkPct:'ATK%', hpPct:'HP%', spd:'SPD', cri:'CRI%', cridam:'CRIDAM%',
-    pres:'物理耐性', mres:'特殊耐性', bres:'特殊耐性', lres:'特殊耐性',
+    pres:'物理耐性', mres:'特殊耐性', bres:'物理耐性', lres:'特殊耐性',
     skillPw:'スキルPw%', dmgReduce:'被ダメ減%' };
   const reqDisplay = cond.req ? (SPECIES_LABELS[cond.req] || cond.req) : '—';
   const lv = level || 0;
