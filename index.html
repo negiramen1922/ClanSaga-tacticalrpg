@@ -5624,19 +5624,29 @@ const BABEL_AREAS = [
       ]},
       { id:'a1s10', name:'傷だらけの猪王', waves:1, enemies:[
         [{name:'スカーボア', icon:'🐗', atk:540, pres:22, mres:8, bres:10, lres:0, spd:60, cri:5,
+          passive:{type:'hp_loss_atk', maxBonus:35},
           phases:[
             {hp:20000, skills:[
-              {name:'傷だらけの咆哮', type:'buff',  target:'self',   power:0,   cd:-1, onlyOnce:true, effect:{type:'atk_up',val:15,turns:999}},
-              {name:'怒り突進',       type:'phys',  target:'all',    power:1.3, cd:7},
-              {name:'魔力の傷跡',     type:'phys',  target:'single', power:2.0, cd:6},
-              {name:'体当たり突進',   type:'phys',  target:'single', power:1.6, cd:5},
-              {name:'タックル',       type:'phys',  target:'single', power:1.0, cd:0}]},
-            {hp:18000, skills:[
-              {name:'血の激昂',     type:'buff',  target:'self',   power:0,   cd:8, effect:{type:'atk_up',val:25,turns:3}},
-              {name:'怒り狂った突進', type:'phys', target:'all',    power:1.8, cd:5},
-              {name:'魔力の傷跡・強', type:'phys', target:'single', power:2.6, cd:5},
-              {name:'死にもの狂い',   type:'phys', target:'single', power:2.2, cd:4},
-              {name:'タックル',       type:'phys', target:'single', power:1.2, cd:0}]}
+              {name:'ワイルドハウル', type:'summon', target:'self', cd:-1, onlyOnce:true,
+                effect:{type:'multi_buff', buffs:[{type:'atk_up',val:20,turns:3},{type:'pdef_up',val:20,turns:3}]},
+                summons:[{name:'ワイルドボア', icon:'🐗', hp:3200, atk:280, pres:15, mres:0, bres:5, lres:0, spd:65, cri:5,
+                  enemySkills:[{name:'突進', type:'phys', target:'single', power:1.8, cd:5},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]}],
+                summonCount:3},
+              {name:'ストライク',   type:'phys', target:'single',   power:1.8, cd:5, debuff:{type:'stun', val:1, turns:1, rate:60}},
+              {name:'狂乱突撃',     type:'phys', target:'lowest_hp',power:2.5, cd:6, debuff:{type:'bleed', val:10, turns:2}},
+              {name:'体当たり突進', type:'phys', target:'single',   power:1.4, cd:4},
+              {name:'タックル',     type:'phys', target:'single',   power:1.0, cd:0}]},
+            {hp:18000,
+              transitionSkill:{name:'血の激昂咆哮', type:'buff', target:'self',
+                effect:{type:'multi_buff', buffs:[{type:'atk_up',val:35,turns:999},{type:'spd_up',val:20,turns:999}]}},
+              summons:[{count:2, name:'ワイルドボア', icon:'🐗', hp:4000, atk:350, pres:15, mres:0, bres:5, lres:0, spd:68, cri:6,
+                enemySkills:[{name:'怒り突進', type:'phys', target:'single', power:2.0, cd:5},{name:'牙撃', type:'phys', target:'single', power:1.2, cd:0}]}],
+              skills:[
+                {name:'血の激昂連撃', type:'phys', target:'single',   power:2.2, cd:4, hits:2},
+                {name:'ストライク・強', type:'phys', target:'single', power:2.4, cd:4, debuff:{type:'stun', val:1, turns:1, rate:70}},
+                {name:'狂乱突撃・強', type:'phys', target:'lowest_hp',power:3.2, cd:5, debuff:{type:'bleed', val:15, turns:2}},
+                {name:'死にもの狂い', type:'phys', target:'all',      power:1.6, cd:6},
+                {name:'タックル',     type:'phys', target:'single',   power:1.4, cd:0}]}
           ]},
          {name:'ワイルドボア', icon:'🐗', hp:2200, mp:400, atk:200, pres:15, mres:0, bres:5, lres:0, spd:65, cri:5,
           enemySkills:[{name:'突進', type:'phys', target:'single', power:1.8, cd:5},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]},
@@ -13084,6 +13094,8 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       buffs: [], debuffs: [],
       phases: enemyData.phases || null,
       phaseIdx: enemyData.phases ? 0 : undefined,
+      passive: enemyData.passive || null,
+      _baseAtk: enemyData.atk,
     };
   }
 }
@@ -13278,6 +13290,15 @@ function tickBattle() {
     // プリースト: 聖なる怒りパッシブチェック
     checkPriestPassives(bs);
   }
+
+  // Real-time ATK scaling passive (HP减るほどATK上昇)
+  bs.enemies.forEach(e => {
+    if (!e.dead && e.passive?.type === 'hp_loss_atk' && e._baseAtk) {
+      const hpRatio = Math.max(0, e.hp / e.maxHp);
+      const bonus = Math.floor(e.passive.maxBonus * (1 - hpRatio));
+      e.atk = Math.floor(e._baseAtk * (1 + bonus / 100));
+    }
+  });
 
   // Boss phase transition check (before win/lose)
   for (const e of bs.enemies) {
@@ -13560,6 +13581,24 @@ function combatantAct(c, bs) {
         flashCard(c.uid, 'buff');
         addLog(`${c.name}: ${sk.name} <span class="tag tag-trigger">BUFF</span>`, 'trigger');
         return;
+      } else if (sk.type === 'summon') {
+        if (sk.onlyOnce) c.usedOnce[skId] = true;
+        if (sk.cd > 0)   c.skillCDs[skId] = sk.cd;
+        if (sk.effect) applyBuff(c, sk, c);
+        if (sk.summons && battleState) {
+          const count = sk.summonCount || sk.summons.length;
+          const template = sk.summons[0];
+          for (let i = 0; i < count; i++) {
+            const newEnemy = makeCombatant(null, true, template);
+            newEnemy.isBackRow = false;
+            battleState.enemies.push(newEnemy);
+          }
+          addLog(`${c.icon||''} <b>${c.name}</b>: <span class="tag tag-skill">${sk.name}</span> <span class="tag tag-buff">召喚 ×${count}</span>`, 'trigger');
+          setTimeout(() => { battleState.enemies.forEach(e => spawnFloatNum(e.uid, '', '')); renderBattle(); }, 300);
+        }
+        spawnSkillNamePop(c.uid, sk.name, 'buff');
+        flashCard(c.uid, 'buff');
+        return;
       } else if (sk.target === 'self') {
         if (sk.onlyOnce) c.usedOnce[skId] = true;
         if (sk.cd > 0)   c.skillCDs[skId] = sk.cd;
@@ -13569,7 +13608,7 @@ function combatantAct(c, bs) {
         // 通常攻撃・全体攻撃
         if (sk.onlyOnce) c.usedOnce[skId] = true;
         if (sk.cd >= 0)  c.skillCDs[skId] = sk.cd;
-        const tDesc = sk.target === 'all' ? '味方全体' : (enemies.find(e=>!e.dead)?.name||'対象');
+        const tDesc = sk.target === 'all' ? '味方全体' : sk.target === 'lowest_hp' ? '最低HP敵' : (enemies.find(e=>!e.dead)?.name||'対象');
         addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${tDesc}`, 'damage');
         if (sk.hits && sk.hits > 1) {
           for (let h = 0; h < sk.hits; h++) doAttack(c, enemies, sk);
@@ -13755,8 +13794,15 @@ function flashCard(uid, type) {
 }
 
 function doAttack(attacker, targets, skill) {
-  const isSingle = skill.target==='single' || skill.target==='self';
-  const targetList = isSingle ? [targets[Math.floor(Math.random()*targets.length)]] : [...targets];
+  let targetList;
+  if (skill.target === 'lowest_hp') {
+    const alive = targets.filter(t=>!t.dead);
+    const lowest = alive.length ? alive.reduce((a,b)=>(a.hp/a.maxHp)<=(b.hp/b.maxHp)?a:b) : null;
+    targetList = lowest ? [lowest] : [...targets];
+  } else {
+    const isSingle = skill.target==='single' || skill.target==='self';
+    targetList = isSingle ? [targets[Math.floor(Math.random()*targets.length)]] : [...targets];
+  }
 
   const firstTarget = targetList.find(t=>!t.dead);
   const ballType = skill.type==='buff' ? 'buff' : (skill.type||'phys');
@@ -15500,6 +15546,25 @@ function triggerBossPhaseTransition(boss, bs) {
     boss.skills = nextPhase.skills;
     boss.skillCDs = {};
     boss.usedOnce = {};
+  }
+
+  // フェーズ専用召喚
+  if (nextPhase.summons && nextPhase.summons.length) {
+    nextPhase.summons.forEach(summonData => {
+      const {count = 1, ...enemyData} = summonData;
+      for (let i = 0; i < count; i++) {
+        const newEnemy = makeCombatant(null, true, enemyData);
+        newEnemy.isBackRow = false;
+        bs.enemies.push(newEnemy);
+      }
+    });
+  }
+
+  // フェーズ移行スキル（バフ等を即時発動）
+  if (nextPhase.transitionSkill) {
+    const tsk = nextPhase.transitionSkill;
+    applyBuff(boss, tsk, boss);
+    addLog(`${boss.icon} <b>${boss.name}</b>: <span class="tag tag-skill">${tsk.name}</span> <span class="tag tag-trigger">フェーズスキル</span>`, 'trigger');
   }
 
   showBossPhaseTransition(boss.name, boss.icon, nextIdx + 1, boss.phases.length, () => {
