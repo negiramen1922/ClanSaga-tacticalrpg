@@ -13970,11 +13970,18 @@ function retryBattle() {
 }
 
 function nextStage() {
-  document.getElementById('battle-result').classList.remove('active');
   const area = BABEL_AREAS.find(a=>a.id===battleContext.areaId);
   const idx = area.stages.findIndex(s=>s.id===battleContext.stageId);
   if (idx < area.stages.length-1) {
+    const BATTLE_COST = 10;
+    if (calcStamina() < BATTLE_COST) {
+      showBonusToast(`スタミナが不足しています（必要: ⚡${BATTLE_COST}）`);
+      return;
+    }
+    document.getElementById('battle-result').classList.remove('active');
     startBabelBattle(battleContext.areaId, area.stages[idx+1].id);
+  } else {
+    document.getElementById('battle-result').classList.remove('active');
   }
 }
 
