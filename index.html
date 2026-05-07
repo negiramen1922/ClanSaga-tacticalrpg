@@ -3686,6 +3686,11 @@ const CLASS_ICONS = {
   'sentinel':  'assets/images/class-sentinel.png',
   'alchemist': 'assets/images/class-alchemist.png',
   'shooter':   'assets/images/class-shooter.png',
+  'shaman':    'assets/images/class-shaman.png',
+  'lancer':    'assets/images/class-lancer.png',
+  'minstrel':  'assets/images/class-minstrel.png',
+  'caster':    'assets/images/class-caster.png',
+  'professor': 'assets/images/class-professor.png',
 };
 
 const CLASS_DATA = {
@@ -9429,7 +9434,6 @@ function openUnitDetail(uid) {
     <div class="udp-header">
       <div class="udp-icon" style="position:relative">
         ${classIconHTML(u.classId,"52px")}
-        <div style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px">${roleIconHTML(u.classId,'20px')}</div>
       </div>
       <div class="udp-title">
         <div class="name" style="display:flex;align-items:center;gap:6px">
@@ -9676,7 +9680,7 @@ function calcPower(stats) {
     stats.atk * 5 +
     stats.hp / 100 +
     stats.spd * 10 +
-    (stats.pres + stats.mres) * 20 +
+    (stats.pdef + stats.mdef) * 20 +
     stats.cri * 30 +
     (stats.cridam - 150) * 5
   );
@@ -13965,11 +13969,18 @@ function retryBattle() {
 }
 
 function nextStage() {
-  document.getElementById('battle-result').classList.remove('active');
   const area = BABEL_AREAS.find(a=>a.id===battleContext.areaId);
   const idx = area.stages.findIndex(s=>s.id===battleContext.stageId);
   if (idx < area.stages.length-1) {
+    const BATTLE_COST = 10;
+    if (calcStamina() < BATTLE_COST) {
+      showBonusToast(`スタミナが不足しています（必要: ⚡${BATTLE_COST}）`);
+      return;
+    }
+    document.getElementById('battle-result').classList.remove('active');
     startBabelBattle(battleContext.areaId, area.stages[idx+1].id);
+  } else {
+    document.getElementById('battle-result').classList.remove('active');
   }
 }
 
