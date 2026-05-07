@@ -35,9 +35,9 @@ Claude CodeはNotionのMCPツールを使ってタスク・仕様・ゲームデ
 | DB名 | URL |
 |------|-----|
 | ダンジョン管理 | https://www.notion.so/32568b72a0b780649233f5e1de8b3739 |
-| モンスターDB | https://www.notion.so/dbd9026af4004ebab02896dd03a0fd6c |
-| ボスモンスターDB | https://www.notion.so/b741ef747fb649609af1265cf3093a9f |
-| スキルツリー（役職） | https://www.notion.so/3213fea79fef49e2bd997aeddd22d633 |
+| モンスターステータスDB（ボスデータ含む） | https://www.notion.so/8a51c1ad15ab4a8e914f028aaf5464e8 |
+| モンスタースキルDB | https://www.notion.so/db75c9a14c404c80b62b569b80c8ef64 |
+| スキルバランスDB | https://www.notion.so/e1360610aba34edab8e1cb0ec4ddfda5 |
 
 ## 開発ワークフロー
 
