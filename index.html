@@ -9434,7 +9434,6 @@ function openUnitDetail(uid) {
     <div class="udp-header">
       <div class="udp-icon" style="position:relative">
         ${classIconHTML(u.classId,"52px")}
-        <div style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px">${roleIconHTML(u.classId,'20px')}</div>
       </div>
       <div class="udp-title">
         <div class="name" style="display:flex;align-items:center;gap:6px">
@@ -9681,7 +9680,7 @@ function calcPower(stats) {
     stats.atk * 5 +
     stats.hp / 100 +
     stats.spd * 10 +
-    (stats.pres + stats.mres) * 20 +
+    (stats.pdef + stats.mdef) * 20 +
     stats.cri * 30 +
     (stats.cridam - 150) * 5
   );
