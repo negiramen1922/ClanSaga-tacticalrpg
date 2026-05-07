@@ -2321,7 +2321,7 @@ img.item-icon {
           <button onclick="closeHamburger();openAccountModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;">🔗 アカウント設定</button>
           <a href="https://docs.google.com/forms/d/e/1FAIpQLSdOyYrYSKMvdOJrdJtxhwG80aQ6Pd9z4nzYycyGylSt9IbqBQ/viewform?usp=header" target="_blank" rel="noopener" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;">📩 お問い合わせ</a>
         </div>
-        <span id="hm-version">ver. 1.10 · Clan Saga</span>
+        <span id="hm-version">ver. 1.11 · Clan Saga</span>
         <div style="margin-top:6px;font-size:9px;color:var(--text3);line-height:1.6;text-align:center;">
           BGM: <a href="https://youtu.be/DJPoUKKSDwY?si=1aaLg3tfrO6UzABe" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">古の世界地図</a>
           ／ <a href="https://youtu.be/EOlXXpqlS5k?si=YKRfyB3hGQsdY9Fj" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">Prairie4</a>
@@ -5512,7 +5512,7 @@ const PASSIVE_POOL = [
   { id:'drain',   name:'吸血',        stats:['DRAIN'],  levels:[{val:8,desc:'吸血8%'},{val:14,desc:'吸血14%'},{val:20,desc:'吸血20%'}] },
 ];
 
-const GAME_VERSION = '1.10';
+const GAME_VERSION = '1.11';
 
 const BABEL_AREAS = [
   {
@@ -7993,6 +7993,50 @@ function claimAchievement(id) {
 
 // お知らせデータ
 const NEWS_DATA = [
+  {
+    id: 'news_015',
+    type: 'update',
+    title: '⚙️ バージョン1.11アップデート内容',
+    date: '2026-05-07',
+    summary: '耐性表記をカラー名から物理/特殊に統一・旧BLACK耐性を物理耐性に変更・バフ/デバフアイコンの配色統一・クラスアイコン画像5種追加を実施しました。',
+    body: `<h4>🛡️ 耐性表記をカラー名から物理/特殊に統一</h4>
+<p>ダメージ種類の旧カラー名（RED・WHITE・BLACK・BLUE）をすべて廃止し、シンプルな2区分に整理しました。</p>
+<ul>
+  <li>RED耐性 → <b>物理耐性</b></li>
+  <li>WHITE耐性 → <b>特殊耐性</b></li>
+  <li>BLACK耐性 → <b>物理耐性</b>（物理ダメージ軽減に統合）</li>
+  <li>BLUE耐性 → <b>特殊耐性</b>（特殊ダメージ軽減に統合）</li>
+</ul>
+<p>ステータス画面・スキル説明文・バフ/デバフアイコンなどゲーム全体で表記を統一しました。</p>
+
+<h4>⚔️ 旧BLACK耐性（bres）を物理耐性に再分類</h4>
+<p>これまで特殊耐性に加算されていた BLACK耐性（bres）を、物理耐性（pdef）に変更しました。</p>
+<ul>
+  <li>ダメージ計算：bres が特殊防御ではなく物理防御に加算されるよう変更</li>
+  <li>関連スキルの説明文も「物理耐性」に更新（聖盾の加護・ディバインシールド・先陣の盾・暗殺者の本能 等）</li>
+  <li>モンスターステータスの表示：物理耐性 ＝ pres＋bres、特殊耐性 ＝ mres＋lres として合算表示</li>
+</ul>
+
+<h4>🎨 バフ/デバフアイコンの配色を統一</h4>
+<p>バトル中に表示されるバフ・デバフアイコンの色をダメージログと統一しました。</p>
+<ul>
+  <li>物理系バフ（物理耐性↑）：<b>オレンジ</b></li>
+  <li>特殊系バフ（特殊耐性↑）：<b>青</b></li>
+  <li>物理系デバフ（物理耐性↓）：<b>暗めのオレンジ</b>（バフと同系・デバフとわかる色）</li>
+  <li>特殊系デバフ（特殊耐性↓）：<b>暗め青紫</b>（バフと同系・デバフとわかる色）</li>
+  <li>絵文字（🤍💜✨）をアイコンから除去し、⬆/⬇ のシンプルな表記に統一</li>
+</ul>
+
+<h4>🖼️ クラスアイコン画像を5種追加</h4>
+<p>以下のクラスに専用のアイコン画像を設定しました。</p>
+<ul>
+  <li>🔱 ランサー</li>
+  <li>🎵 ミンストレル</li>
+  <li>🌀 キャスター</li>
+  <li>🔮 シャーマン</li>
+  <li>📚 プロフェッサー</li>
+</ul>`,
+  },
   {
     id: 'news_014',
     type: 'update',
