@@ -9000,6 +9000,20 @@ function normalizeState() {
   if (gState.progress.abyss.currentRun && gState.progress.abyss.currentRun.layerId === undefined) {
     gState.progress.abyss.currentRun = null;
   }
+  // 既存クリア済み層への星晶石遡及配布（初回ロード時のみ）
+  if (!gState.progress.abyssRetroReward) {
+    const _retro = gState.progress.abyss.clearedLayers || [];
+    let _retroTotal = 0;
+    _retro.forEach(lid => {
+      const _key = `abyssMilestone${lid}`;
+      if (!gState.progress[_key]) {
+        gState.progress[_key] = true;
+        _retroTotal += (lid % 5 === 0) ? 200 : 50;
+      }
+    });
+    if (_retroTotal > 0) gState.player.starCrystal = (gState.player.starCrystal || 0) + _retroTotal;
+    gState.progress.abyssRetroReward = true;
+  }
 
   // presets正規化（最大15スロット）
   while (gState.presets.length < 15) {
@@ -12401,26 +12415,13 @@ function _executeAbyssSweep(layerId, n) {
     gState.accessories.push(acc);
     gained.push(acc);
   }
-  // ゴールド・EXPポット（クリア報酬の約40%）
-  const goldPerRun  = Math.floor((ABYSS_CLEAR_GOLD[layerId]  || 0) * 0.4);
-  const etherPerRun = Math.floor((ABYSS_CLEAR_ETHER[layerId] || 0) * 0.4);
-  const totalGold   = goldPerRun  * n;
-  const totalEther  = etherPerRun * n;
-  gState.player.gold  = (gState.player.gold  || 0) + totalGold;
-  gState.player.ether = (gState.player.ether || 0) + totalEther;
   saveState(); updateTopBar();
   const cost     = abyssSweepCost(layerId) * n;
   const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
   const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
-  const lines = [
-    `⚡-${cost}　×${n} 周回完了！`,
-    `<span style="color:${rarColor};font-weight:700">${rarLabel} アクセサリー ×${n}</span>`,
-    totalGold  > 0 ? `ゴールド +${fmt(totalGold)}` : null,
-    totalEther > 0 ? `EXPポット +${totalEther}` : null,
-  ].filter(Boolean).join('<br>');
   const t = document.createElement('div');
   t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--purple);color:var(--text);padding:10px 16px;border-radius:4px;z-index:9999;font-size:12px;text-align:center;pointer-events:none;';
-  t.innerHTML = lines;
+  t.innerHTML = `⚡-${cost}　×${n} 周回完了！<br><span style="color:${rarColor};font-weight:700">${rarLabel} アクセサリー ×${n}</span>`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3500);
   renderAbyssContent();
@@ -22850,35 +22851,28 @@ function showAbyssBuffChoice(choices, layerId, stage) {
   document.body.appendChild(overlay);
 }
 
-const ABYSS_CLEAR_GOLD  = [0, 200, 300, 400, 600, 800, 1000, 1200, 1500, 1800, 2200, 2500, 3000, 3500, 4000, 5000];
-const ABYSS_CLEAR_ETHER = [0,  15,  20,  30,  40,  60,   80,  100,  130,  160,  200,  230,  270,  320,  380,  500];
-const ABYSS_MILESTONE_CRYSTAL = { 5: 50, 10: 100, 15: 200 };
+// 層クリア時の星晶石報酬: 5の倍数層は200、それ以外は50（初回のみ）
+function abyssLayerCrystalReward(layerId) {
+  return layerId % 5 === 0 ? 200 : 50;
+}
 
 function giveAbyssLayerReward(layerId) {
   const layer = ABYSS_LAYERS.find(l => l.id === layerId);
   if (!layer) return;
   if (!gState.accessories) gState.accessories = [];
 
-  const acc      = generateAccessory(layer.accRarity);
+  const acc = generateAccessory(layer.accRarity);
   gState.accessories.push(acc);
 
-  const gold  = ABYSS_CLEAR_GOLD[layerId]  || 0;
-  const ether = ABYSS_CLEAR_ETHER[layerId] || 0;
-  gState.player.gold  = (gState.player.gold  || 0) + gold;
-  gState.player.ether = (gState.player.ether || 0) + ether;
-
-  // マイルストーン報酬（初回クリアのみ）
-  let milestoneHtml = '';
-  const crystalReward = ABYSS_MILESTONE_CRYSTAL[layerId];
-  const milestoneKey  = `abyssMilestone${layerId}`;
-  if (crystalReward && !gState.progress[milestoneKey]) {
+  // 星晶石（初回クリアのみ）
+  const milestoneKey    = `abyssMilestone${layerId}`;
+  const crystalReward   = abyssLayerCrystalReward(layerId);
+  const isMilestone     = layerId % 5 === 0;
+  let crystalGiven      = false;
+  if (!gState.progress[milestoneKey]) {
     gState.progress[milestoneKey] = true;
     gState.player.starCrystal = (gState.player.starCrystal || 0) + crystalReward;
-    milestoneHtml = `
-      <div style="text-align:center;border:1px solid var(--gold);padding:12px 20px;background:rgba(249,211,66,0.08);">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">🎉 マイルストーン達成！</div>
-        <div style="font-size:16px;font-weight:700;color:var(--gold)">星晶石 +${crystalReward}</div>
-      </div>`;
+    crystalGiven = true;
   }
 
   saveState(); updateTopBar();
@@ -22886,27 +22880,23 @@ function giveAbyssLayerReward(layerId) {
   const set      = ACCESSORY_SETS.find(s => s.id === acc.setId);
   const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
   const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
-  const popup    = document.createElement('div');
+  const crystalHtml = crystalGiven ? `
+    <div style="text-align:center;border:1px solid ${isMilestone ? 'var(--gold)' : 'var(--border)'};padding:12px 20px;background:${isMilestone ? 'rgba(249,211,66,0.08)' : 'rgba(0,0,0,0.4)'};">
+      ${isMilestone ? '<div style="font-size:11px;color:var(--gold);margin-bottom:4px">🏆 鬼門クリア！</div>' : '<div style="font-size:11px;color:var(--text3);margin-bottom:4px">初回クリア報酬</div>'}
+      <div style="font-size:18px;font-weight:700;color:var(--gold)">星晶石 +${crystalReward}</div>
+    </div>` : '';
+
+  const popup = document.createElement('div');
   popup.style.cssText = 'position:fixed;inset:0;z-index:6000;background:rgba(5,6,8,0.97);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px;';
   popup.innerHTML = `
     <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:22px;letter-spacing:3px">LAYER CLEAR!</div>
     <div style="font-size:14px;color:var(--text2)">${layer.icon} ${layer.name} 制覇！</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:320px;">
-      <div style="text-align:center;border:1px solid var(--border);padding:10px;background:rgba(0,0,0,0.4);">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">ゴールド</div>
-        <div style="font-size:16px;font-weight:700;color:var(--gold)">+${fmt(gold)}</div>
-      </div>
-      <div style="text-align:center;border:1px solid var(--border);padding:10px;background:rgba(0,0,0,0.4);">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">EXPポット</div>
-        <div style="font-size:16px;font-weight:700;color:#7dc8f7">+${ether}</div>
-      </div>
-    </div>
+    ${crystalHtml}
     <div style="text-align:center;border:1px solid ${rarColor};padding:16px 24px;background:rgba(0,0,0,0.4);">
       <div style="font-size:11px;color:var(--text3);margin-bottom:4px">アクセサリー獲得</div>
       <div style="font-size:18px;font-weight:700;color:${rarColor}">${rarLabel} ${set?.name || 'アクセサリー'}</div>
       <div style="font-size:13px;color:var(--text2);margin-top:4px">${acc.mainStat.label}+${acc.mainStat.val}</div>
     </div>
-    ${milestoneHtml}
     <button class="btn btn-gold" onclick="this.closest('div[style*=fixed]').remove()" style="min-width:120px">続ける</button>`;
   document.body.appendChild(popup);
 }
