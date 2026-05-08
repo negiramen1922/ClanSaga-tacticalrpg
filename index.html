@@ -5998,40 +5998,46 @@ const BABEL_AREAS = [
          {name:'モスボア', icon:'🐗', hp:8000, mp:2800, atk:460, pres:15, mres:8, bres:5, lres:0, spd:60, cri:5,
           enemySkills:[{name:'自己修復', type:'buff', target:'self', power:0, cd:8, effect:{type:'heal_and_shield', healRatio:1.5, shieldRatio:0}},{name:'突進', type:'phys', target:'single', power:1.8, cd:5},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
-      { id:'a2bs10', name:'レッサーベヒモスの縄張り', waves:3, enemies:[
-        [{name:'フォレストラプター', icon:'🦖', hp:7000, mp:2200, atk:580, pres:5, mres:0, bres:0, lres:0, spd:108, cri:16,
+      { id:'a2bs10', name:'レッサーベヒモスの縄張り', waves:2, enemies:[
+        [{name:'フォレストラプター', icon:'🦖', hp:7500, mp:2200, atk:600, pres:5, mres:0, bres:0, lres:0, spd:110, cri:16,
           enemySkills:[{name:'高速突撃', type:'phys', target:'single', power:2.2, cd:5},{name:'爪裂き', type:'phys', target:'single', power:1.8, cd:4, debuff:{type:'bleed', val:8, turns:3}},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'フォレストラプター', icon:'🦖', hp:7000, mp:2200, atk:580, pres:5, mres:0, bres:0, lres:0, spd:108, cri:16,
+         {name:'フォレストラプター', icon:'🦖', hp:7500, mp:2200, atk:600, pres:5, mres:0, bres:0, lres:0, spd:110, cri:16,
           enemySkills:[{name:'高速突撃', type:'phys', target:'single', power:2.2, cd:5},{name:'爪裂き', type:'phys', target:'single', power:1.8, cd:4, debuff:{type:'bleed', val:8, turns:3}},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'オーク', icon:'🧌', hp:11000, mp:3000, atk:600, pres:20, mres:8, bres:5, lres:0, spd:62, cri:6,
-          enemySkills:[{name:'豪腕叩き', type:'phys', target:'single', power:2.2, cd:5},{name:'地響き踏み', type:'phys', target:'all', power:0.9, cd:8},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'トレント', icon:'🌳', hp:24000, mp:6000, atk:520, pres:30, mres:20, bres:10, lres:0, spd:38, cri:3,
-          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'paralysis', val:1, turns:1}},{name:'大地の怒り', type:'phys', target:'all', power:1.2, cd:10, debuff:{type:'mdef_down', val:-10, turns:2}},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]}],
-        [{name:'オーク', icon:'🧌', hp:12000, mp:3500, atk:650, pres:20, mres:8, bres:5, lres:0, spd:62, cri:6,
-          enemySkills:[{name:'豪腕叩き', type:'phys', target:'single', power:2.2, cd:5},{name:'地響き踏み', type:'phys', target:'all', power:0.9, cd:8},{name:'黒鉄の怒声', type:'phys', target:'all', power:1.3, cd:9, debuff:{type:'atk_down', val:-15, turns:2}},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'モスボア', icon:'🐗', hp:8500, mp:3000, atk:500, pres:15, mres:8, bres:5, lres:0, spd:60, cri:5,
-          enemySkills:[{name:'自己修復', type:'buff', target:'self', power:0, cd:8, effect:{type:'heal_and_shield', healRatio:1.5, shieldRatio:0}},{name:'突進', type:'phys', target:'single', power:1.8, cd:5},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'モスボア', icon:'🐗', hp:8500, mp:3000, atk:500, pres:15, mres:8, bres:5, lres:0, spd:60, cri:5,
-          enemySkills:[{name:'自己修復', type:'buff', target:'self', power:0, cd:8, effect:{type:'heal_and_shield', healRatio:1.5, shieldRatio:0}},{name:'突進', type:'phys', target:'single', power:1.8, cd:5},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'キラービー', icon:'🐝', hp:3200, mp:1000, atk:450, pres:0, mres:5, bres:0, lres:0, spd:112, cri:12,
-          enemySkills:[{name:'毒針連撃', type:'phys', target:'single', power:1.5, cd:5, debuff:{type:'poison', val:10, turns:3}},{name:'群れ急襲', type:'phys', target:'all', power:0.8, cd:7},{name:'刺撃', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'キラービー', icon:'🐝', hp:3200, mp:1000, atk:450, pres:0, mres:5, bres:0, lres:0, spd:112, cri:12,
-          enemySkills:[{name:'毒針連撃', type:'phys', target:'single', power:1.5, cd:5, debuff:{type:'poison', val:10, turns:3}},{name:'刺撃', type:'phys', target:'single', power:1.0, cd:0}]}],
+         {name:'フォレストラプター', icon:'🦖', hp:7500, mp:2200, atk:600, pres:5, mres:0, bres:0, lres:0, spd:110, cri:16,
+          enemySkills:[{name:'高速突撃', type:'phys', target:'single', power:2.2, cd:5},{name:'爪裂き', type:'phys', target:'single', power:1.8, cd:4, debuff:{type:'bleed', val:8, turns:3}},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]}],
         [{name:'レッサーベヒモス', icon:'🦕', atk:1200, pres:28, mres:15, bres:20, lres:5, spd:58, cri:6,
+          passive:{type:'hp_loss_pdef', maxBonus:50},
           phases:[
             {hp:88000, skills:[
-              {name:'地竜の覚醒', type:'buff', target:'self',   power:0,   cd:-1, onlyOnce:true, effect:{type:'atk_up',val:18,turns:999}},
-              {name:'大地砕き',   type:'phys', target:'all',    power:1.8, cd:6,  debuff:{type:'flinch', val:1, turns:1}},
-              {name:'踏み潰し',   type:'phys', target:'single', power:2.8, cd:4},
-              {name:'毒液噴射',   type:'phys', target:'all',    power:1.2, cd:8,  debuff:{type:'poison', val:10, turns:3}},
-              {name:'噛みつき',   type:'phys', target:'single', power:1.4, cd:0}]},
-            {hp:90000, skills:[
-              {name:'地竜の咆哮', type:'spec', target:'all',    power:1.6, cd:-1, onlyOnce:true, debuff:{type:'mdef_down', val:-18, turns:3}},
-              {name:'大地砕き・強', type:'phys', target:'all',  power:2.4, cd:5,  debuff:{type:'flinch', val:1, turns:1}},
-              {name:'踏み潰し・極', type:'phys', target:'single',power:3.6, cd:3},
-              {name:'毒液大噴射',  type:'phys', target:'all',   power:1.6, cd:6,  debuff:{type:'strong_poison', val:14, turns:3}},
-              {name:'竜の怒声',    type:'spec', target:'all',   power:1.4, cd:8,  debuff:{type:'atk_down', val:-18, turns:2}},
-              {name:'噛みつき',    type:'phys', target:'single',power:1.8, cd:0}]}
+              {name:'大咆哮',   type:'spec', target:'highest_atk3', power:0,   cd:-1, onlyOnce:true,
+                effect:{type:'multi_debuff', debuffs:[{type:'atk_down',val:-20,turns:2},{type:'spd_down',val:-20,turns:2}]}},
+              {name:'大地砕き', type:'phys', target:'all',    power:1.6, cd:6,  debuff:{type:'flinch',val:1,turns:1}},
+              {name:'踏み潰し', type:'phys', target:'single', power:3.0, cd:4},
+              {name:'鱗の砦',   type:'buff', target:'self',   power:0,   cd:8,
+                effect:{type:'multi_buff', buffs:[{type:'pdef_up',val:30,turns:3},{type:'mdef_up',val:20,turns:3}]}},
+              {name:'噛みつき', type:'phys', target:'single', power:1.4, cd:0}]},
+            {hp:92000,
+              transitionSkill:{name:'激昂', type:'buff', target:'self',
+                effect:{type:'multi_buff', buffs:[{type:'atk_up',val:25,turns:999},{type:'spd_up',val:15,turns:999}]}},
+              skills:[
+                {name:'大地砕き・強', type:'phys', target:'all',    power:2.2, cd:5,  debuff:{type:'flinch',val:1,turns:1}},
+                {name:'踏み潰し・強', type:'phys', target:'lowest_hp', power:3.8, cd:3},
+                {name:'毒液噴射',     type:'phys', target:'all',    power:1.4, cd:7,  debuff:{type:'poison',val:12,turns:3}},
+                {name:'鋼鱗の要塞',   type:'buff', target:'self',   power:0,   cd:6,
+                  effect:{type:'multi_buff', buffs:[{type:'pdef_up',val:40,turns:3},{type:'mdef_up',val:25,turns:3}]}},
+                {name:'噛みつき',     type:'phys', target:'single', power:1.8, cd:0}]},
+            {hp:78000,
+              transitionSkill:{name:'覚醒の大咆哮', type:'phys', target:'all', power:2.4,
+                debuff:{type:'mdef_down',val:-18,turns:3}},
+              summons:[{count:2, name:'モスボア', icon:'🐗', hp:9000, atk:550, pres:15, mres:8, bres:5, lres:0, spd:58, cri:5,
+                enemySkills:[{name:'自己修復', type:'buff', target:'self', power:0, cd:8, effect:{type:'heal_and_shield',healRatio:1.5,shieldRatio:0}},{name:'突進', type:'phys', target:'single', power:1.8, cd:5},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]}],
+              skills:[
+                {name:'覚醒の踏み砕き', type:'phys', target:'all',      power:2.8, cd:4, debuff:{type:'flinch',val:1,turns:1}},
+                {name:'死の踏み潰し',   type:'phys', target:'lowest_hp', power:5.0, cd:4, debuff:{type:'bleed',val:15,turns:2}},
+                {name:'毒液大噴射',     type:'phys', target:'all',      power:2.0, cd:6, debuff:{type:'strong_poison',val:16,turns:3}},
+                {name:'鋼鱗の要塞・極', type:'buff', target:'self',     power:0,   cd:5,
+                  effect:{type:'multi_buff', buffs:[{type:'pdef_up',val:50,turns:3},{type:'mdef_up',val:30,turns:3}]}},
+                {name:'噛みつき',       type:'phys', target:'single',   power:2.2, cd:0}]}
           ]}]
       ]},
     ]
@@ -13120,6 +13126,7 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       phaseIdx: enemyData.phases ? 0 : undefined,
       passive: enemyData.passive || null,
       _baseAtk: enemyData.atk,
+      _basePres: enemyData.pres || 0,
     };
   }
 }
@@ -13326,6 +13333,10 @@ function tickBattle() {
       const allyCount = bs.enemies.filter(x => !x.dead && x !== e).length;
       const bonus = Math.min(e.passive.maxBonus || 40, allyCount * (e.passive.bonusPerAlly || 10));
       e.atk = Math.floor(e._baseAtk * (1 + bonus / 100));
+    } else if (e.passive?.type === 'hp_loss_pdef') {
+      const hpRatio = Math.max(0, e.hp / e.maxHp);
+      const bonus = Math.floor(e.passive.maxBonus * (1 - hpRatio));
+      e.pres = Math.min(85, (e._basePres || 0) + bonus);
     }
   });
 
@@ -13637,7 +13648,7 @@ function combatantAct(c, bs) {
         // 通常攻撃・全体攻撃
         if (sk.onlyOnce) c.usedOnce[skId] = true;
         if (sk.cd >= 0)  c.skillCDs[skId] = sk.cd;
-        const tDesc = sk.target === 'all' ? '全体' : sk.target === 'lowest_hp' ? '最低HP' : sk.target === 'random3' ? 'ランダム3体' : (enemies.find(e=>!e.dead)?.name||'対象');
+        const tDesc = sk.target === 'all' ? '全体' : sk.target === 'lowest_hp' ? '最低HP' : sk.target === 'random3' ? 'ランダム3体' : sk.target === 'highest_atk3' ? 'ATK上位3体' : (enemies.find(e=>!e.dead)?.name||'対象');
         addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${tDesc}`, 'damage');
         if (sk.target === 'random3') {
           doAttack(c, enemies, sk);
@@ -13839,6 +13850,10 @@ function doAttack(attacker, targets, skill) {
     const alive = targets.filter(t=>!t.dead);
     const lowest = alive.length ? alive.reduce((a,b)=>(a.hp/a.maxHp)<=(b.hp/b.maxHp)?a:b) : null;
     targetList = lowest ? [lowest] : [...targets];
+  } else if (skill.target === 'highest_atk3') {
+    const alive = targets.filter(t=>!t.dead);
+    const sorted = [...alive].sort((a,b)=>(b.atk||0)-(a.atk||0));
+    targetList = sorted.slice(0, Math.min(3, sorted.length));
   } else if (skill.target === 'random3') {
     const alive = targets.filter(t=>!t.dead);
     if (!alive.length) { targetList = [...targets]; }
@@ -15606,10 +15621,15 @@ function triggerBossPhaseTransition(boss, bs) {
     });
   }
 
-  // フェーズ移行スキル（バフ等を即時発動）
+  // フェーズ移行スキル（バフまたは攻撃を即時発動）
   if (nextPhase.transitionSkill) {
     const tsk = nextPhase.transitionSkill;
-    applyBuff(boss, tsk, boss);
+    if (tsk.power && tsk.power > 0 && bs.allies) {
+      const liveAllies = bs.allies.filter(a => !a.dead);
+      if (liveAllies.length) doAttack(boss, liveAllies, {...tsk, target:'all'});
+    } else {
+      applyBuff(boss, tsk, boss);
+    }
     addLog(`${boss.icon} <b>${boss.name}</b>: <span class="tag tag-skill">${tsk.name}</span> <span class="tag tag-trigger">フェーズスキル</span>`, 'trigger');
   }
 
