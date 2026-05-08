@@ -6560,81 +6560,65 @@ const BABEL_AREAS = [
             {name:'クリスタルビーム',type:'spec',target:'single',power:0.12,cd:6},
             {name:'甲羅突き',type:'phys',target:'single',power:1.1,cd:0}]}]
       ]},
-      { id:'a3s10', name:'峡谷の王者たち', waves:3, surpriseForced:true, enemies:[
-        [{name:'ロックバード',icon:'🦅',hp:13000,mp:7000,atk:760,pres:12,mres:8,bres:10,lres:5,spd:88,cri:10,
+      { id:'a3s10', name:'峡谷の王者たち', waves:2, surpriseForced:true, enemies:[
+        [{name:'ハイランドハーピー',icon:'🦅',hp:12000,atk:820,pres:5,mres:10,bres:8,lres:5,spd:108,cri:14,
           enemySkills:[
-            {name:'岩石投下',type:'phys',target:'all',power:1.5,cd:6,debuff:{type:'flinch',val:1,turns:1}},
-            {name:'風切り嘴',type:'phys',target:'single',power:1.8,cd:4},
-            {name:'旋風切り',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-8,turns:2}},
-            {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'ロックバード',icon:'🦅',hp:13000,mp:7000,atk:760,pres:12,mres:8,bres:10,lres:5,spd:88,cri:10,
+            {name:'魅惑の旋律', type:'spec', target:'single', power:1.8, cd:5, debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'嵐の爪撃',   type:'phys', target:'single', power:2.0, cd:6},
+            {name:'旋風切り',   type:'phys', target:'all',    power:1.0, cd:8, debuff:{type:'atk_down',val:-8,turns:2}},
+            {name:'爪撃',       type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ハイランドハーピー',icon:'🦅',hp:12000,atk:820,pres:5,mres:10,bres:8,lres:5,spd:108,cri:14,
           enemySkills:[
-            {name:'岩石投下',type:'phys',target:'all',power:1.5,cd:6,debuff:{type:'flinch',val:1,turns:1}},
-            {name:'風切り嘴',type:'phys',target:'single',power:1.8,cd:4},
-            {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'ハイランドハーピー',icon:'🦅',hp:11000,mp:7500,atk:800,pres:5,mres:10,bres:8,lres:5,spd:105,cri:14,
+            {name:'魅惑の旋律', type:'spec', target:'single', power:1.8, cd:5, debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'嵐の爪撃',   type:'phys', target:'single', power:2.0, cd:6},
+            {name:'爪撃',       type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'スカイラプター',icon:'🦖',hp:11000,atk:900,pres:5,mres:5,bres:8,lres:5,spd:128,cri:18,
           enemySkills:[
-            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'嵐の爪撃',type:'phys',target:'single',power:2.0,cd:6},
-            {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'スカイラプター',icon:'🦖',hp:10500,mp:6500,atk:880,pres:5,mres:5,bres:8,lres:5,spd:125,cri:18,
+            {name:'超高速突撃', type:'phys', target:'single', power:2.5, cd:5},
+            {name:'空中連撃',   type:'phys', target:'all',    power:1.0, cd:6},
+            {name:'嘴撃',       type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'スカイラプター',icon:'🦖',hp:11000,atk:900,pres:5,mres:5,bres:8,lres:5,spd:128,cri:18,
           enemySkills:[
-            {name:'超高速突撃',type:'phys',target:'single',power:2.5,cd:5},
-            {name:'空中連撃',type:'phys',target:'all',power:1.0,cd:6},
-            {name:'嘴撃',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'スカイラプター',icon:'🦖',hp:10500,mp:6500,atk:880,pres:5,mres:5,bres:8,lres:5,spd:125,cri:18,
-          enemySkills:[
-            {name:'超高速突撃',type:'phys',target:'single',power:2.5,cd:5},
-            {name:'嘴撃',type:'phys',target:'single',power:1.0,cd:0}]}],
-        [{name:'レッサーワイバーン',icon:'🐉',hp:18000,mp:9000,atk:1000,pres:12,mres:15,bres:12,lres:8,spd:95,cri:14,
-          enemySkills:[
-            {name:'竜炎ブレス',type:'phys',target:'all',power:1.5,cd:7},
-            {name:'竜の爪',type:'phys',target:'single',power:2.5,cd:5},
-            {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'レッサーワイバーン',icon:'🐉',hp:18000,mp:9000,atk:1000,pres:12,mres:15,bres:12,lres:8,spd:95,cri:14,
-          enemySkills:[
-            {name:'竜炎ブレス',type:'phys',target:'all',power:1.5,cd:7},
-            {name:'竜の爪',type:'phys',target:'single',power:2.5,cd:5},
-            {name:'魔炎放射',type:'phys',target:'single',power:2.0,cd:6,debuff:{type:'mdef_down',val:-10,turns:2}},
-            {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'ロックイーター',icon:'🦕',hp:22000,mp:10000,atk:980,pres:20,mres:10,bres:15,lres:8,spd:72,cri:10,
-          enemySkills:[
-            {name:'大地砕き',type:'phys',target:'single',power:2.5,cd:5},
-            {name:'地響き',type:'phys',target:'all',power:1.2,cd:9,debuff:{type:'flinch',val:1,turns:1}},
-            {name:'突進',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'クリフストーカー',icon:'🦎',hp:15000,mp:9000,atk:920,pres:10,mres:15,bres:12,lres:8,spd:100,cri:16,
-          enemySkills:[
-            {name:'毒牙の一撃',type:'phys',target:'single',power:2.2,cd:5,debuff:{type:'poison',val:10,turns:3}},
-            {name:'影潜り奇襲',type:'phys',target:'single',power:2.5,cd:7,forceCrit:true},
-            {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'クリフストーカー',icon:'🦎',hp:15000,mp:9000,atk:920,pres:10,mres:15,bres:12,lres:8,spd:100,cri:16,
-          enemySkills:[
-            {name:'毒牙の一撃',type:'phys',target:'single',power:2.2,cd:5,debuff:{type:'poison',val:10,turns:3}},
-            {name:'影潜り奇襲',type:'phys',target:'single',power:2.5,cd:7,forceCrit:true},
-            {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]}],
+            {name:'超高速突撃', type:'phys', target:'single', power:2.5, cd:5},
+            {name:'嘴撃',       type:'phys', target:'single', power:1.0, cd:0}]}],
         [{name:'グリフォン・ロード',icon:'🦁',atk:2800,pres:15,mres:20,bres:15,lres:10,spd:110,cri:20,
+          passive: {type:'hp_loss_spd', maxBonus:60},
+          passive2:{type:'cri_chain', bonusPerCrit:8, maxStacks:5},
           phases:[
             {hp:200000, skills:[
-              {name:'峡谷の王の咆哮', type:'spec', target:'all',    power:2.0, cd:-1, onlyOnce:true, debuff:{type:'atk_down',val:-20,turns:3}},
-              {name:'神風斬',         type:'phys', target:'single', power:4.0, cd:5,  forceCrit:true},
-              {name:'翼風圧',         type:'phys', target:'all',    power:2.0, cd:6},
-              {name:'裂爪撃',         type:'phys', target:'all',    power:1.5, cd:7,  debuff:{type:'bleed',val:15,turns:3}},
-              {name:'爪撃',           type:'phys', target:'single', power:1.5, cd:0}]},
-            {hp:220000, skills:[
-              {name:'覇気解放', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:40,turns:999},{type:'pdef_up',val:20,turns:999}]}},
-              {name:'神風斬・双',     type:'phys', target:'single', power:4.5, cd:4,  forceCrit:true, hits:2},
-              {name:'嵐の翼風圧',     type:'phys', target:'all',    power:2.6, cd:5},
-              {name:'裂爪乱舞',       type:'phys', target:'all',    power:2.0, cd:6,  debuff:{type:'bleed',val:20,turns:3}},
-              {name:'峡谷の覇王咆哮', type:'spec', target:'all',    power:1.8, cd:8,  debuff:{type:'atk_down',val:-25,turns:2}},
-              {name:'爪撃',           type:'phys', target:'single', power:1.8, cd:0}]},
-            {hp:260000, skills:[
-              {name:'雷鳴覚醒', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:30,turns:999},{type:'spd_up',val:30,turns:999}]}},
-              {name:'雷鳴の急降下',   type:'phys', target:'single', power:7.0, cd:5,  forceCrit:true},
-              {name:'神風斬・極',     type:'phys', target:'single', power:6.0, cd:4,  forceCrit:true},
-              {name:'天空の裂風',     type:'phys', target:'all',    power:3.0, cd:5},
-              {name:'雷裂爪',         type:'phys', target:'all',    power:2.4, cd:6,  debuff:{type:'bleed',val:25,turns:3}},
-              {name:'爪撃',           type:'phys', target:'single', power:2.0, cd:0}]}
-          ]}]
+              {name:'峡谷の王の咆哮', type:'spec', target:'all',      power:2.0, cd:-1, onlyOnce:true, debuff:{type:'atk_down',val:-20,turns:3}},
+              {name:'神風斬',         type:'phys', target:'single',   power:4.0, cd:5,  forceCrit:true},
+              {name:'翼風圧',         type:'phys', target:'all',      power:2.0, cd:6},
+              {name:'裂爪撃',         type:'phys', target:'all',      power:1.5, cd:7,  debuff:{type:'bleed',val:15,turns:3}},
+              {name:'急降下爪',       type:'phys', target:'lowest_hp',power:3.5, cd:4,  debuff:{type:'bleed',val:10,turns:2}},
+              {name:'爪撃',           type:'phys', target:'single',   power:1.5, cd:0}]},
+            {hp:220000,
+              transitionSkill:{name:'覇気の突風', type:'phys', target:'all', power:2.2, debuff:{type:'flinch',val:1,turns:1}},
+              summons:[{count:2, name:'ハイランドハーピー', icon:'🦅', hp:12000, atk:820, pres:5, mres:10, bres:8, lres:5, spd:108, cri:14,
+                enemySkills:[{name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'paralysis',val:1,turns:1}},{name:'嵐の爪撃',type:'phys',target:'single',power:2.0,cd:6},{name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]}],
+              skills:[
+                {name:'神風斬・双',     type:'phys', target:'single',   power:4.5, cd:4, forceCrit:true, hits:2},
+                {name:'嵐の翼風圧',     type:'phys', target:'all',      power:2.6, cd:5},
+                {name:'裂爪乱舞',       type:'phys', target:'all',      power:2.0, cd:6, debuff:{type:'bleed',val:20,turns:3}},
+                {name:'急降下爪・強',   type:'phys', target:'lowest_hp',power:5.0, cd:4, forceCrit:true, debuff:{type:'bleed',val:15,turns:2}},
+                {name:'峡谷の覇王咆哮', type:'spec', target:'all',      power:1.8, cd:8, debuff:{type:'atk_down',val:-25,turns:2}},
+                {name:'爪撃',           type:'phys', target:'single',   power:1.8, cd:0}]},
+            {hp:260000,
+              transitionSkill:{name:'天空の雷閃', type:'phys', target:'all', power:2.8, debuff:{type:'atk_down',val:-25,turns:999}},
+              summons:[{count:1, name:'レッサーワイバーン', icon:'🐉', hp:20000, atk:1050, pres:12, mres:15, bres:12, lres:8, spd:95, cri:14,
+                enemySkills:[{name:'竜炎ブレス',type:'phys',target:'all',power:1.5,cd:7},{name:'竜の爪',type:'phys',target:'single',power:2.5,cd:5},{name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]}],
+              skills:[
+                {name:'雷鳴の急降下', type:'phys', target:'lowest_hp', power:7.0, cd:5, forceCrit:true},
+                {name:'神風斬・極',   type:'phys', target:'single',    power:6.0, cd:4, forceCrit:true},
+                {name:'天空の裂風',   type:'phys', target:'all',       power:3.0, cd:5},
+                {name:'雷裂爪',       type:'phys', target:'all',       power:2.4, cd:6, debuff:{type:'bleed',val:25,turns:3}},
+                {name:'爪撃',         type:'phys', target:'single',    power:2.0, cd:0}]}
+          ]},
+         {name:'ロックバード',icon:'🦅',hp:14000,atk:780,pres:12,mres:8,bres:10,lres:5,spd:90,cri:10,
+          enemySkills:[
+            {name:'岩石投下', type:'phys', target:'all',    power:1.5, cd:6, debuff:{type:'flinch',val:1,turns:1}},
+            {name:'風切り嘴', type:'phys', target:'single', power:1.8, cd:4},
+            {name:'爪撃',     type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
     ]
   },
@@ -13230,8 +13214,10 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       phases: enemyData.phases || null,
       phaseIdx: enemyData.phases ? 0 : undefined,
       passive: enemyData.passive || null,
+      passive2: enemyData.passive2 || null,
       _baseAtk: enemyData.atk,
       _basePres: enemyData.pres || 0,
+      _baseSpd: enemyData.spd || 0,
     };
   }
 }
@@ -13442,7 +13428,12 @@ function tickBattle() {
       const hpRatio = Math.max(0, e.hp / e.maxHp);
       const bonus = Math.floor(e.passive.maxBonus * (1 - hpRatio));
       e.pres = Math.min(85, (e._basePres || 0) + bonus);
+    } else if (e.passive?.type === 'hp_loss_spd') {
+      const hpRatio = Math.max(0, e.hp / e.maxHp);
+      const bonus = Math.floor(e.passive.maxBonus * (1 - hpRatio));
+      e.spd = (e._baseSpd || 0) + bonus;
     }
+    // passive2: cri_chain はクリット時に doAttack 内で処理
   });
 
   // Boss phase transition check (before win/lose)
@@ -14030,6 +14021,13 @@ function doAttack(attacker, targets, skill) {
       const cridam = attacker.cridam + (skill.bonusCridam || 0);
       if (hpDmg) hpDmg = Math.floor(hpDmg * cridam / 100);
       battleStats.crits++;
+      // パッシブ2: クリット連鎖（cri_chain）
+      if (attacker.passive2?.type === 'cri_chain') {
+        const cc = attacker.passive2;
+        attacker._criChainStacks = Math.min(cc.maxStacks || 5, (attacker._criChainStacks || 0) + 1);
+        attacker.atk = Math.floor(attacker._baseAtk * (1 + attacker._criChainStacks * (cc.bonusPerCrit || 8) / 100));
+        addLog(`${attacker.name} <span class="tag tag-buff">クリット連鎖 ×${attacker._criChainStacks}</span> ATK+${attacker._criChainStacks * (cc.bonusPerCrit||8)}%`, 'trigger');
+      }
     }
     hpDmg = Math.max(hpDmg > 0 ? 1 : 0, hpDmg);
 
@@ -15724,6 +15722,8 @@ function triggerBossPhaseTransition(boss, bs) {
   boss.staggerUsed = false;
   boss.buffs = [];
   boss.debuffs = [];
+  boss._criChainStacks = 0;
+  if (boss._baseAtk) boss.atk = boss._baseAtk;
   if (nextPhase.skills) {
     boss.skills = nextPhase.skills;
     boss.skillCDs = {};
