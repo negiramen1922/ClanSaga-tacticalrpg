@@ -6883,29 +6883,35 @@ const BABEL_AREAS = [
           enemySkills:[{name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},{name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'paralysis',val:1,turns:1}},{name:'死の鎧纏い',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:999},{type:'atk_up',val:15,turns:999}]}},{name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},{name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ミミックチェスト',icon:'📦',hp:18000,mp:9000,atk:950,pres:15,mres:15,bres:10,lres:8,spd:75,cri:15,
           enemySkills:[{name:'奇襲の牙',type:'phys',target:'single',power:3.0,cd:-1,onlyOnce:true,debuff:{type:'mdef_down',val:-20,turns:3}},{name:'毒液噴射',type:'phys',target:'all',power:1.2,cd:7,debuff:{type:'strong_poison',val:12,turns:3}},{name:'迷彩の罠',type:'spec',target:'single',power:1.5,cd:5,debuff:{type:'paralysis',val:1,turns:1}},{name:'噛みつき',type:'phys',target:'single',power:1.8,cd:5},{name:'引っ掻き',type:'phys',target:'single',power:1.0,cd:0}]}],
-        [{name:'ゲートガーディアン・頭部',icon:'💀',hp:400000,mp:150000,atk:2200,pres:20,mres:25,bres:20,lres:10,spd:75,cri:12,
+        [{name:'ゲートガーディアン・頭部',icon:'💀',hp:400000,atk:2200,pres:20,mres:25,bres:20,lres:10,spd:75,cri:12,
+          isProtected:'guardian',
+          guardianFinalSkills:[
+            {name:'禁断の眼光・覚醒', type:'spec', target:'all',      power:3.5, cd:5,  debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'裁きの光・解放',   type:'spec', target:'all',      power:5.0, cd:-1, onlyOnce:true},
+            {name:'時の支配',         type:'spec', target:'all',      power:2.0, cd:7,  debuff:{type:'sleep',val:1,turns:2}},
+            {name:'古の怒り',         type:'phys', target:'all',      power:4.0, cd:6},
+            {name:'魔力波動・極',     type:'phys', target:'lowest_hp',power:6.0, cd:4},
+            {name:'頭突き・極',       type:'phys', target:'single',   power:3.0, cd:0}],
           enemySkills:[
-            {name:'古の封印起動',type:'buff',target:'all_ally',power:0,cd:-1,onlyOnce:true,effect:{type:'multi_buff',buffs:[{type:'atk_up',val:25,turns:999},{type:'mdef_up',val:15,turns:999}]}},
-            {name:'禁断の眼光',type:'spec',target:'all',power:2.5,cd:6,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'死の呪詛',type:'phys',target:'all',power:2.0,cd:7,debuff:{type:'mdef_down',val:-15,turns:3}},
-            {name:'魔力波動',type:'phys',target:'single',power:4.0,cd:5},
-            {name:'裁きの光',type:'spec',target:'all',power:3.0,cd:9,hpTrigger:0.5},
-            {name:'古の守護',type:'buff',target:'all_ally',power:0,cd:10,hpTrigger:0.4,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'atk_up',val:20,turns:3}]}},
-            {name:'頭突き',type:'phys',target:'single',power:2.0,cd:0}]},
-         {name:'ゲートガーディアン・右腕',icon:'🦾',hp:200000,mp:80000,atk:1800,pres:30,mres:10,bres:35,lres:5,spd:68,cri:15,
+            {name:'古の封印起動', type:'buff', target:'all_ally', power:0,   cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:25,turns:999},{type:'mdef_up',val:15,turns:999}]}},
+            {name:'禁断の眼光',   type:'spec', target:'all',      power:2.5, cd:6,  debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'死の呪詛',     type:'phys', target:'all',      power:2.0, cd:7,  debuff:{type:'mdef_down',val:-15,turns:3}},
+            {name:'魔力波動',     type:'phys', target:'single',   power:4.0, cd:5},
+            {name:'頭突き',       type:'phys', target:'single',   power:2.0, cd:0}]},
+         {name:'ゲートガーディアン・右腕',icon:'🦾',hp:200000,atk:1800,pres:30,mres:10,bres:35,lres:5,spd:68,cri:15,
+          isGuardian:true, guardianId:'right',
           enemySkills:[
-            {name:'鉄槌の一撃',type:'phys',target:'single',power:4.5,cd:5,debuff:{type:'pdef_down',val:-20,turns:2}},
-            {name:'払い薙ぎ',type:'phys',target:'all',power:2.0,cd:6,debuff:{type:'flinch',val:1,turns:1}},
-            {name:'鎧の突貫',type:'phys',target:'single',power:3.0,cd:4},
-            {name:'防衛本能',type:'buff',target:'all_ally',power:0,cd:8,hpTrigger:0.5,effect:{type:'pdef_up',val:20,turns:3}},
-            {name:'鉄拳',type:'phys',target:'single',power:1.5,cd:0}]},
-         {name:'ゲートガーディアン・左腕',icon:'🫲',hp:200000,mp:100000,atk:1600,pres:15,mres:30,bres:15,lres:15,spd:72,cri:10,
+            {name:'鉄槌の一撃', type:'phys', target:'single', power:4.5, cd:5, debuff:{type:'pdef_down',val:-20,turns:2}},
+            {name:'払い薙ぎ',   type:'phys', target:'all',    power:2.0, cd:6, debuff:{type:'flinch',val:1,turns:1}},
+            {name:'鎧の突貫',   type:'phys', target:'single', power:3.0, cd:4},
+            {name:'鉄拳',       type:'phys', target:'single', power:1.5, cd:0}]},
+         {name:'ゲートガーディアン・左腕',icon:'🫲',hp:200000,atk:1600,pres:15,mres:30,bres:15,lres:15,spd:72,cri:10,
+          isGuardian:true, guardianId:'left',
           enemySkills:[
-            {name:'魔力解放',type:'phys',target:'all',power:2.5,cd:5,debuff:{type:'mdef_down',val:-15,turns:2}},
-            {name:'呪縛の鎖',type:'spec',target:'single',power:2.0,cd:6,debuff:{type:'paralysis',val:1,turns:2}},
-            {name:'暗黒の雷撃',type:'phys',target:'all',power:1.8,cd:7},
-            {name:'修復の魔法陣',type:'buff',target:'all_ally',power:0,cd:9,hpTrigger:0.4,effect:{type:'heal_and_shield',healRatio:2.0,shieldRatio:0}},
-            {name:'魔力拳',type:'phys',target:'single',power:1.5,cd:0}]}]
+            {name:'魔力解放',   type:'phys', target:'all',    power:2.5, cd:5, debuff:{type:'mdef_down',val:-15,turns:2}},
+            {name:'呪縛の鎖',   type:'spec', target:'single', power:2.0, cd:6, debuff:{type:'paralysis',val:1,turns:2}},
+            {name:'暗黒の雷撃', type:'phys', target:'all',    power:1.8, cd:7},
+            {name:'魔力拳',     type:'phys', target:'single', power:1.5, cd:0}]}]
       ]},
     ]
   },
@@ -13444,6 +13450,15 @@ function tickBattle() {
     }
   }
 
+  // ゲートガーディアン: 部位破壊イベント
+  for (const arm of bs.enemies) {
+    if (arm.dead && arm.isGuardian && !arm._deathProcessed) {
+      arm._deathProcessed = true;
+      handleGuardianArmDeath(arm, bs);
+      return;
+    }
+  }
+
   // Check win/lose
   const alliesAlive = bs.allies.filter(c=>!c.dead);
   const enemiesAlive = bs.enemies.filter(c=>!c.dead);
@@ -13965,6 +13980,20 @@ function doAttack(attacker, targets, skill) {
   } else {
     const isSingle = skill.target==='single' || skill.target==='self';
     targetList = isSingle ? [targets[Math.floor(Math.random()*targets.length)]] : [...targets];
+  }
+
+  // ガーディアン保護: 腕が生きている間は頭部への攻撃を腕に転送
+  if (!attacker.isEnemy && battleState) {
+    targetList = targetList.map(t => {
+      if (!t.dead && t.isProtected === 'guardian') {
+        const guardian = battleState.enemies.find(e => !e.dead && e.isGuardian);
+        if (guardian) {
+          addLog(`⚔️ <b>${guardian.name}</b> が <b>${t.name}</b> をかばった！`, 'trigger');
+          return guardian;
+        }
+      }
+      return t;
+    });
   }
 
   const firstTarget = targetList.find(t=>!t.dead);
@@ -15705,6 +15734,63 @@ function showWaveTransition(nextWave, totalWaves, callback) {
         if (callback) callback();
       }, 400);
     }, 1800);
+  });
+}
+
+function handleGuardianArmDeath(arm, bs) {
+  const head = bs.enemies.find(e => e.isProtected === 'guardian' && !e.dead);
+  if (!head) return;
+
+  const otherArm = bs.enemies.find(e => e.isGuardian && e !== arm);
+  const otherArmAlive = otherArm && !otherArm.dead;
+
+  if (!bs._firstArmKilled) bs._firstArmKilled = arm.guardianId;
+
+  if (arm.guardianId === 'right' && otherArmAlive) {
+    // 右腕が先に破壊 → 左腕が頭部と自身を回復
+    pauseBattle();
+    const headHeal = Math.floor(head.maxHp * 0.25);
+    const armHeal  = Math.floor(otherArm.maxHp * 0.30);
+    head.hp     = Math.min(head.maxHp,     head.hp + headHeal);
+    otherArm.hp = Math.min(otherArm.maxHp, otherArm.hp + armHeal);
+    addLog(`💀 <b>右腕破壊！</b> 左腕が緊急修復魔法陣発動！ 頭部+${headHeal}HP / 左腕+${armHeal}HP 回復`, 'trigger');
+    setTimeout(() => {
+      spawnFloatNum(head.uid, '💚+'+headHeal, 'float-heal');
+      spawnFloatNum(otherArm.uid, '💚+'+armHeal, 'float-heal');
+      renderBattle();
+      resumeBattle();
+    }, 1200);
+    return;
+  } else if (arm.guardianId === 'left' && otherArmAlive) {
+    // 左腕が先に破壊 → 右腕が左腕の破片を吸収して強化
+    const atkBonus = Math.floor(otherArm.atk * 0.35);
+    otherArm.atk   += atkBonus;
+    otherArm._baseAtk = otherArm.atk;
+    otherArm.pres = Math.min(85, (otherArm.pres || 0) + 20);
+    otherArm._basePres = otherArm.pres;
+    addLog(`💀 <b>左腕破壊！</b> 右腕が破片を吸収して覚醒！ ATK+35% / PDEF+20`, 'trigger');
+    setTimeout(() => { spawnFloatNum(otherArm.uid, '⬆覚醒', 'float-buff'); renderBattle(); }, 500);
+  }
+
+  // 両腕が倒されたかチェック
+  const allArmsDead = bs.enemies.filter(e => e.isGuardian).every(e => e.dead);
+  if (allArmsDead) triggerGateGuardianPhase3(head, bs);
+}
+
+function triggerGateGuardianPhase3(head, bs) {
+  pauseBattle();
+  head.isProtected = null;
+  head.atb = 0;
+  head.buffs = [];
+  head.debuffs = [];
+  if (head.guardianFinalSkills) {
+    head.skills = head.guardianFinalSkills;
+    head.skillCDs = {};
+    head.usedOnce = {};
+  }
+  addLog(`💀 <b>両腕破壊！ゲートガーディアンが真の力を解放！</b>`, 'trigger');
+  showBossPhaseTransition(head.name, head.icon, 3, 3, () => {
+    resumeBattle();
   });
 }
 
