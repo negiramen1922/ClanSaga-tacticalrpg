@@ -12964,15 +12964,6 @@ function renderBattle() {
         }
         existing.classList.toggle('dead', !!u.dead);
         existing.classList.toggle('staggered', !!u.staggered);
-        if (u.isEnemy) {
-          const liveEnemies = bs.enemies.filter(e=>!e.dead&&!e._underground);
-          const maxHate = Math.max(...liveEnemies.map(e=>e.hate||0), 1);
-          const hatePct = Math.min(100, Math.floor((u.hate||0) / maxHate * 100));
-          const hateFill = q('.hate-fill');
-          if (hateFill) hateFill.style.width = hatePct + '%';
-          const hateVal = q('.hate-val');
-          if (hateVal) hateVal.textContent = fmt(u.hate || 0);
-        }
         const buffHtml = buildBuffHtml(u.buffs, u.debuffs);
         const statusIcons = q('.status-icons');
         if (statusIcons) statusIcons.innerHTML = buffHtml;
@@ -13038,7 +13029,6 @@ function combatantCardHTML(c) {
       <div class="hp-text">${fmt(Math.max(0,c.hp))} / ${fmt(c.maxHp)}${c.shield>0?` <span style="color:#88aaff">🛡${fmt(c.shield)}</span>`:''}</div>
       ${c.isEnemy && c.phases && c.phases.length > 1 ? `<div class="boss-phase-dots">${c.phases.map((_,i)=>`<div class="phase-dot${i<(c.phaseIdx||0)?' cleared':i===(c.phaseIdx||0)?' active':''}"></div>`).join('')}</div>` : ''}
       <div class="atb-bar"><div class="atb-fill" style="width:${atbPct}%"></div></div>
-      ${c.isEnemy ? `<div class="hate-bar-wrap"><div class="hate-fill" style="width:0%"></div></div><div class="hate-label"><span>⚠</span><span class="hate-val">-</span></div>` : ''}
       ${ultSection}
       ${buffHtml ? `<div class="status-icons">${buffHtml}</div>` : ''}
     </div>`;
@@ -15410,14 +15400,15 @@ function openBattleLogModal() {
   blmCatFilter = 'all';
   blmCharFilter = null;
 
-  // キャラフィルターボタン生成
+  // キャラフィルターボタン生成（data-char 属性で名前を渡す）
   const cf = document.getElementById('blm-char-filters');
-  const allBtn = `<button class="blm-char-btn active" onclick="setBLMCharFilter(null,this)">👥 ALL</button>`;
+  const esc = s => s.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  const allBtn = `<button class="blm-char-btn active" data-char="" onclick="setBLMCharFilterBtn(this)">👥 ALL</button>`;
   const allyBtns = lastBattleParticipants.filter(p=>!p.isEnemy).map(p=>
-    `<button class="blm-char-btn" onclick="setBLMCharFilter(${JSON.stringify(p.name)},this)">${p.icon} ${p.name}</button>`
+    `<button class="blm-char-btn" data-char="${esc(p.name)}" onclick="setBLMCharFilterBtn(this)">${p.icon} ${p.name}</button>`
   ).join('');
   const enemyBtns = lastBattleParticipants.filter(p=>p.isEnemy).map(p=>
-    `<button class="blm-char-btn enemy" onclick="setBLMCharFilter(${JSON.stringify(p.name)},this)">${p.icon} ${p.name}</button>`
+    `<button class="blm-char-btn enemy" data-char="${esc(p.name)}" onclick="setBLMCharFilterBtn(this)">${p.icon} ${p.name}</button>`
   ).join('');
   const sep = allyBtns && enemyBtns ? `<div style="width:1px;height:20px;background:var(--border);flex-shrink:0;margin:0 2px"></div>` : '';
   cf.innerHTML = allBtn + allyBtns + sep + enemyBtns;
@@ -15438,6 +15429,11 @@ function setBLMCatFilter(cat, btn) {
   document.querySelectorAll('#blm-cat-filters .log-filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderBLMLog();
+}
+
+function setBLMCharFilterBtn(btn) {
+  const name = btn.dataset.char || null;
+  setBLMCharFilter(name, btn);
 }
 
 function setBLMCharFilter(name, btn) {
