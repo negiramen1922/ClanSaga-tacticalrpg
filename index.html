@@ -12600,18 +12600,22 @@ function _executeAbyssSweep(layerId, n) {
   const layer = ABYSS_LAYERS.find(l => l.id === layerId);
   if (!gState.accessories) gState.accessories = [];
   const gained = [];
+  const rarCount = [0,0,0,0,0]; // index 1-4
   for (let i = 0; i < n; i++) {
-    const acc = generateAccessory(layer.accRarity);
+    const accRarity = rollAbyssAccRarity(layerId);
+    const acc = generateAccessory(accRarity);
     gState.accessories.push(acc);
     gained.push(acc);
+    rarCount[accRarity] = (rarCount[accRarity] || 0) + 1;
   }
   saveState(); updateTopBar();
-  const cost     = abyssSweepCost(layerId) * n;
-  const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
-  const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
+  const cost = abyssSweepCost(layerId) * n;
+  const rarSummary = [4,3,2,1].filter(r => rarCount[r] > 0)
+    .map(r => `<span style="color:${ABYSS_RARITY_COLOR[r]};font-weight:700">${ABYSS_RARITY_LABEL[r]}×${rarCount[r]}</span>`)
+    .join('　');
   const t = document.createElement('div');
   t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--purple);color:var(--text);padding:10px 16px;border-radius:4px;z-index:9999;font-size:12px;text-align:center;pointer-events:none;';
-  t.innerHTML = `⚡-${cost}　×${n} 周回完了！<br><span style="color:${rarColor};font-weight:700">${rarLabel} アクセサリー ×${n}</span>`;
+  t.innerHTML = `⚡-${cost}　×${n} 周回完了！<br>${rarSummary}`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3500);
   renderAbyssContent();
@@ -23074,13 +23078,22 @@ function showAbyssBuffChoice(choices, layerId, stage) {
   document.body.appendChild(overlay);
 }
 
-// 層クリア時の星晶石報酬（初回のみ）: 鬼門層は層数に応じてスケール、それ以外は50
+// 層クリア時の星晶石報酬（初回のみ）: 5の倍数層=200、それ以外=50
 function abyssLayerCrystalReward(layerId) {
-  if (layerId % 5 !== 0) return 50;
-  if (layerId <= 20) return 200;
-  if (layerId <= 30) return 500;
-  if (layerId <= 35) return 700;
-  return 1000; // 40層
+  return layerId % 5 === 0 ? 200 : 50;
+}
+
+// レア度確率テーブル（層IDで重み付け）
+function rollAbyssAccRarity(layerId) {
+  const r = Math.random() * 100;
+  if (layerId <= 5)  return r < 60 ? 1 : r < 90 ? 2 : 3;
+  if (layerId <= 10) return r < 20 ? 1 : r < 70 ? 2 : 3;
+  if (layerId <= 15) return r <  5 ? 1 : r < 35 ? 2 : 3;
+  if (layerId <= 20) return r < 10 ? 2 : r < 85 ? 3 : 4;
+  if (layerId <= 25) return r <  5 ? 2 : r < 83 ? 3 : 4;
+  if (layerId <= 30) return r < 80 ? 3 : 4;
+  if (layerId <= 35) return r < 80 ? 3 : 4;
+  return r < 70 ? 3 : 4; // 36-40層: SSR 30%
 }
 
 function giveAbyssLayerReward(layerId) {
@@ -23088,7 +23101,8 @@ function giveAbyssLayerReward(layerId) {
   if (!layer) return;
   if (!gState.accessories) gState.accessories = [];
 
-  const acc = generateAccessory(layer.accRarity);
+  const accRarity = rollAbyssAccRarity(layerId);
+  const acc = generateAccessory(accRarity);
   gState.accessories.push(acc);
 
   // 星晶石（初回クリアのみ）
@@ -23105,8 +23119,8 @@ function giveAbyssLayerReward(layerId) {
   saveState(); updateTopBar();
 
   const set      = ACCESSORY_SETS.find(s => s.id === acc.setId);
-  const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
-  const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
+  const rarColor = ABYSS_RARITY_COLOR[accRarity] || '#aaa';
+  const rarLabel = ABYSS_RARITY_LABEL[accRarity] || 'N';
   const crystalHtml = crystalGiven ? `
     <div style="text-align:center;border:1px solid ${isMilestone ? 'var(--gold)' : 'var(--border)'};padding:12px 20px;background:${isMilestone ? 'rgba(249,211,66,0.08)' : 'rgba(0,0,0,0.4)'};">
       ${isMilestone ? '<div style="font-size:11px;color:var(--gold);margin-bottom:4px">🏆 鬼門クリア！</div>' : '<div style="font-size:11px;color:var(--text3);margin-bottom:4px">初回クリア報酬</div>'}
