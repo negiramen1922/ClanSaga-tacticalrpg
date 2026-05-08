@@ -8895,7 +8895,7 @@ function defaultState(clanName) {
       babel:{ clearedStages:{} },
       colosseum:{ rank:1, dailyChallenges:0, lastChallengeDate:'' },
       shrine:{ clearedToday:{} },
-      dailyDungeon:{ clearedToday:{}, dailyRuns:0, lastRunDate:'' },
+      dailyDungeon:{ clearedStages:{}, clearedToday:{}, dailyRuns:0, lastRunDate:'' },
     },
     tickets:{ sweep:0, timeSkip:0 },
     settings: { battleMode: { ultAuto: true, skillAuto: true } },
@@ -9070,7 +9070,7 @@ function normalizeState() {
   if (!gState.progress.abyss)      gState.progress.abyss      = { currentRun:null, bestLayer:0, clearedLayers:[], dailyRuns:0, lastRunDate:'' };
   if (!gState.progress.colosseum)  gState.progress.colosseum  = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
   if (!gState.progress.shrine)        gState.progress.shrine        = { clearedToday:{} };
-  if (!gState.progress.dailyDungeon)  gState.progress.dailyDungeon  = { clearedToday:{}, dailyRuns:0, lastRunDate:'' };
+  if (!gState.progress.dailyDungeon)  gState.progress.dailyDungeon  = { clearedStages:{}, clearedToday:{}, dailyRuns:0, lastRunDate:'' };
   if (!gState.progress.babel.clearedStages) gState.progress.babel.clearedStages = {};
 
   // tickets / missions
@@ -10758,7 +10758,7 @@ function launchApp() {
   if (gState.progress.abyss.currentRun && gState.progress.abyss.currentRun.layerId === undefined) gState.progress.abyss.currentRun = null;
   if (!gState.progress.colosseum)     gState.progress.colosseum     = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
   if (!gState.progress.shrine)        gState.progress.shrine        = { clearedToday:{} };
-  if (!gState.progress.dailyDungeon)  gState.progress.dailyDungeon  = { clearedToday:{}, dailyRuns:0, lastRunDate:'' };
+  if (!gState.progress.dailyDungeon)  gState.progress.dailyDungeon  = { clearedStages:{}, clearedToday:{}, dailyRuns:0, lastRunDate:'' };
 
   // ユニット補正
   gState.ownedUnits.forEach(u => {
@@ -13659,9 +13659,19 @@ function getDailyDungeonMaxRuns() {
 }
 
 function startDailyDungeonBattle(stageId) {
-  const stage = DAILY_DUNGEON_STAGES.find(s=>s.id===stageId);
-  if (!gState.progress.dailyDungeon) gState.progress.dailyDungeon = { clearedToday:{}, dailyRuns:0, lastRunDate:'' };
+  const stageIdx = DAILY_DUNGEON_STAGES.findIndex(s=>s.id===stageId);
+  const stage = DAILY_DUNGEON_STAGES[stageIdx];
+  if (!gState.progress.dailyDungeon) gState.progress.dailyDungeon = { clearedStages:{}, clearedToday:{}, dailyRuns:0, lastRunDate:'' };
   const dd = gState.progress.dailyDungeon;
+  if (!dd.clearedStages) dd.clearedStages = {};
+  // 前レベルのクリアチェック（Lv1は常に解放）
+  if (stageIdx > 0) {
+    const prevId = DAILY_DUNGEON_STAGES[stageIdx - 1].id;
+    if (!dd.clearedStages[prevId]) {
+      showBonusToast('前のレベルをクリアしてから挑戦してください');
+      return;
+    }
+  }
   const today = new Date().toDateString();
   if (dd.lastRunDate !== today) { dd.dailyRuns = 0; dd.lastRunDate = today; }
   const maxRuns = getDailyDungeonMaxRuns();
@@ -16219,11 +16229,13 @@ function endBattle(victory) {
     }
     if (battleContext.type==='dailyDungeon') {
       const _ddStage = DAILY_DUNGEON_STAGES.find(s=>s.id===battleContext.stageId);
-      if (!gState.progress.dailyDungeon) gState.progress.dailyDungeon = { clearedToday:{}, dailyRuns:0, lastRunDate:'' };
+      if (!gState.progress.dailyDungeon) gState.progress.dailyDungeon = { clearedStages:{}, clearedToday:{}, dailyRuns:0, lastRunDate:'' };
       const _dd = gState.progress.dailyDungeon;
       const _today = new Date().toDateString();
       if (_dd.lastRunDate !== _today) { _dd.dailyRuns = 0; _dd.lastRunDate = _today; }
       _dd.dailyRuns++;
+      if (!_dd.clearedStages) _dd.clearedStages = {};
+      _dd.clearedStages[battleContext.stageId] = true;
       _dd.clearedToday[battleContext.stageId] =
         (_dd.clearedToday[battleContext.stageId]||0) + 1;
       const _ddRoles = getDailyDungeonGroups();
@@ -23755,26 +23767,36 @@ function renderSortieTab() {
       + `&emsp;残り <span style="color:${_ddRemain>0?'var(--gold)':'var(--red)'};font-weight:700">${_ddRemain}/${_ddMax}</span>回`;
     ddWrap.appendChild(_infoBanner);
     DAILY_DUNGEON_STAGES.forEach((stage, _idx) => {
-      const _cleared = _ddState.clearedToday?.[stage.id] || 0;
+      const _ddCleared  = _ddState.clearedStages || {};
+      const _unlocked   = _idx === 0 || _ddCleared[DAILY_DUNGEON_STAGES[_idx - 1].id];
+      const _cleared    = _ddState.clearedToday?.[stage.id] || 0;
       const _row = document.createElement('div');
       _row.className = 'area-item';
+      if (!_unlocked) _row.style.opacity = '0.45';
       const _dropParts = [];
       if (stage.drops.t1 > 0) _dropParts.push(`響典T1×${stage.drops.t1}`);
       if (stage.drops.t2 > 0) _dropParts.push(`響典T2×${stage.drops.t2}`);
       if (stage.drops.t3 > 0) _dropParts.push(`響典T3×${stage.drops.t3}`);
       if (stage.drops.eiyuutan > 0) _dropParts.push(`英雄譚(${Math.round(stage.drops.eiyuutan*100)}%)`);
       _row.innerHTML = `
-        <div style="font-size:18px;flex-shrink:0">📚</div>
+        <div style="font-size:18px;flex-shrink:0">${_unlocked ? '📚' : '🔒'}</div>
         <div style="flex:1;min-width:0">
           <div class="area-name">Lv.${_idx+1} &nbsp;推奨Lv${stage.recLv} &nbsp;WAVE${stage.waves}</div>
-          <div class="area-atk" style="color:var(--text-dim)">${_dropParts.join(' + ')}</div>
+          <div class="area-atk" style="color:var(--text-dim)">${_unlocked ? _dropParts.join(' + ') : '前のレベルをクリアで解放'}</div>
           ${_cleared ? `<div style="font-size:10px;color:#aaa">本日${_cleared}回クリア済</div>` : ''}
         </div>`;
       const _btn = document.createElement('button');
       _btn.className = 'btn btn-gold btn-sm';
       _btn.style.marginLeft = 'auto';
-      _btn.textContent = _ddRemain > 0 ? '出撃' : '上限';
-      if (_ddRemain <= 0) _btn.disabled = true;
+      if (!_unlocked) {
+        _btn.textContent = '未解放';
+        _btn.disabled = true;
+      } else if (_ddRemain <= 0) {
+        _btn.textContent = '上限';
+        _btn.disabled = true;
+      } else {
+        _btn.textContent = '出撃';
+      }
       _btn.addEventListener('click', () => startDailyDungeonBattle(stage.id));
       _row.appendChild(_btn);
       ddWrap.appendChild(_row);
