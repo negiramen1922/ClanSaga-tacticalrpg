@@ -564,8 +564,7 @@ img.item-icon {
 .combatant-card.is-acting { border-color: var(--gold); box-shadow: 0 0 8px rgba(201,168,76,0.3); }
 .combatant-card.dead { opacity: 0.3; filter: grayscale(1); }
 
-/* 前衛・後衛の視覚的奥行き */
-/* 味方：前衛は左端、後衛は右へ引っ込む */
+/* 前衛・後衛の視覚的奥行き（味方のみ） */
 #ally-zone .card-front-row {
   border-left: 3px solid var(--orange);
 }
@@ -575,18 +574,6 @@ img.item-icon {
   border-left: 3px solid var(--accent2);
   opacity: 0.92;
 }
-/* 敵：前衛は右端、後衛は左へ引っ込む */
-#enemy-zone .card-front-row {
-  border-right: 3px solid var(--orange);
-  border-left: 1px solid var(--border);
-}
-#enemy-zone .card-back-row {
-  margin-right: 18px;
-  width: calc(100% - 18px);
-  border-right: 3px solid var(--accent2);
-  border-left: 1px solid var(--border);
-  opacity: 0.92;
-}
 .combatant-card .cc-name { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 3px; display: flex; align-items: center; gap: 3px; }
 .combatant-card .cc-name .cc-icon { font-size: 14px; line-height:1; display:flex;align-items:center; }
 .combatant-card .cc-name .cc-name-text { flex: 1; }
@@ -594,6 +581,11 @@ img.item-icon {
 .pos-badge { font-family: 'Rajdhani', sans-serif; font-size: 8px; font-weight: 700; padding: 1px 3px; border-radius: 2px; flex-shrink: 0; }
 .pos-front { background: rgba(224,122,58,0.2); color: var(--orange); border: 1px solid rgba(224,122,58,0.4); }
 .pos-back  { background: rgba(74,127,255,0.2);  color: var(--accent2); border: 1px solid rgba(74,127,255,0.4); }
+/* 敵ヘイトバー */
+.hate-bar-wrap { height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; margin-top: 3px; }
+.hate-fill { height: 100%; background: linear-gradient(90deg, #c0392b, #e05a00); border-radius: 2px; transition: width 0.3s ease; }
+.hate-label { display: flex; align-items: center; gap: 2px; margin-top: 1px; }
+.hate-val  { font-family: 'Rajdhani', sans-serif; font-size: 8px; color: rgba(255,110,80,0.85); font-weight: 700; }
 
 /* 右側バトルログ */
 .battle-log-wrap {
@@ -713,6 +705,22 @@ img.item-icon {
 
 /* FLOATING NUMBERS — カード上に浮かぶ数字 */
 .battle-arena { position: relative; }
+/* 敵全滅フラッシュ演出 */
+#defeat-flash-overlay {
+  position: absolute; inset: 0; z-index: 60;
+  pointer-events: none; border-radius: 4px;
+  opacity: 0;
+}
+@keyframes defeatFlashAnim {
+  0%   { opacity: 0;   background: rgba(255,255,220,0); }
+  12%  { opacity: 1;   background: rgba(255,255,220,0.5); }
+  35%  { opacity: 0.7; background: rgba(255,255,255,0.15); }
+  65%  { opacity: 0.9; background: rgba(8,8,12,0.65); }
+  100% { opacity: 0;   background: rgba(8,8,12,0); }
+}
+#defeat-flash-overlay.active {
+  animation: defeatFlashAnim 0.75s ease-out forwards;
+}
 .float-num {
   position: absolute; pointer-events: none; z-index: 200;
   font-family: 'Rajdhani', sans-serif; font-weight: 700;
@@ -973,6 +981,39 @@ img.item-icon {
 
 .result-btns { display: flex; gap: 8px; }
 .result-btns button { flex: 1; padding: 12px; }
+
+/* ===== BATTLE LOG MODAL ===== */
+#battle-log-modal {
+  position: fixed; inset: 0; z-index: 700;
+  background: rgba(5,6,8,0.97);
+  display: none; flex-direction: column; overflow: hidden;
+}
+#battle-log-modal.open { display: flex; }
+.blm-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  background: var(--bg3); flex-shrink: 0;
+}
+.blm-header span { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: 1px; }
+#blm-char-filters {
+  display: flex; gap: 6px; padding: 8px 12px;
+  overflow-x: auto; scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; background: var(--bg2);
+}
+#blm-char-filters::-webkit-scrollbar { display: none; }
+.blm-char-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 9px; font-size: 11px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--bg3);
+  color: var(--text2); cursor: pointer; white-space: nowrap;
+  border-radius: 3px; flex-shrink: 0;
+}
+.blm-char-btn.active        { border-color: var(--accent); background: rgba(74,127,255,0.15); color: var(--text); }
+.blm-char-btn.enemy.active  { border-color: var(--red);    background: rgba(224,85,85,0.15);  color: var(--text); }
+#blm-cat-filters { display: flex; gap: 4px; padding: 6px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#blm-log { flex: 1; overflow-y: auto; padding: 8px 12px; display: flex; flex-direction: column; gap: 1px; }
+.blm-empty { text-align: center; color: var(--text3); font-size: 12px; padding: 32px; }
 
 /* ===== GACHA ===== */
 .gacha-section { margin-bottom: 16px; }
@@ -1629,6 +1670,40 @@ img.item-icon {
 /* 旧 night-timer-bar は非表示 */
 .night-timer-bar { display: none !important; }
 .night-timer-fill { display: none !important; }
+/* ===== ATB タイムライン ===== */
+#atb-timeline {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 10px;
+  background: rgba(0,0,0,0.38);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  overflow-x: auto; overflow-y: visible;
+  scrollbar-width: none; flex-shrink: 0;
+}
+#atb-timeline::-webkit-scrollbar { display: none; }
+#atb-tl-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+  color: var(--gold); letter-spacing: 0.5px; flex-shrink: 0;
+  opacity: 0.75; margin-right: 2px;
+}
+.atb-tl-icon {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; border: 1.5px solid transparent;
+  flex-shrink: 0; transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.atb-tl-ally  { background: rgba(74,127,255,0.12); border-color: rgba(74,127,255,0.5); }
+.atb-tl-enemy { background: rgba(220,70,70,0.12);  border-color: rgba(220,70,70,0.5); }
+.atb-tl-next  {
+  width: 34px !important; height: 34px !important; font-size: 17px !important;
+  border-color: var(--gold) !important;
+  background: rgba(201,168,76,0.2) !important;
+  box-shadow: 0 0 10px rgba(201,168,76,0.55);
+}
+.atb-tl-divider {
+  width: 1px; height: 18px; background: rgba(255,255,255,0.1);
+  flex-shrink: 0; margin: 0 1px;
+}
 /* ===== NIGHT PHASE ===== */
 #scout-overlay {
   position: fixed; inset: 0; z-index: 2000;
@@ -2013,10 +2088,8 @@ img.item-icon {
   }
 
   /* 前衛・後衛の視覚的インデントをリセット（縦では不要） */
-  #ally-zone .card-back-row,
-  #enemy-zone .card-back-row {
+  #ally-zone .card-back-row {
     margin-left: 0 !important;
-    margin-right: 0 !important;
     width: calc(50% - 4px) !important;
   }
 
@@ -2643,6 +2716,8 @@ img.item-icon {
   <div class="night-timer-bar" id="night-timer-bar" style="display:none">
     <div class="night-timer-fill" id="night-timer-fill" style="width:100%"></div>
   </div>
+  <!-- ATBタイムライン: 次の行動順を表示 -->
+  <div id="atb-timeline"><span id="atb-tl-label">▶ NEXT</span></div>
   <!-- 横画面: アリーナ(左) + ログ(右) -->
   <div id="battle-body">
     <div style="flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;height:100%;">
@@ -2650,6 +2725,7 @@ img.item-icon {
         <div class="combatant-zone" id="ally-zone"><h4>ALLY</h4></div>
         <div class="battle-center"><div class="vs-text">VS</div></div>
         <div class="combatant-zone" id="enemy-zone"><h4>ENEMY</h4></div>
+        <div id="defeat-flash-overlay"></div>
       </div>
       <div class="battle-controls">
         <div class="speed-btns">
@@ -2744,6 +2820,9 @@ img.item-icon {
         <div class="tab-title">ドロップ</div>
         <div class="drop-items" id="result-drops"></div>
       </div>
+      <div style="margin-bottom:10px">
+        <button class="btn btn-outline" style="width:100%;font-size:12px;padding:9px" onclick="openBattleLogModal()">📋 戦闘ログを確認する</button>
+      </div>
       <div class="result-btns" id="result-btns">
         <button class="btn btn-outline" onclick="exitBattleToList()">一覧へ</button>
         <button class="btn btn-gold" onclick="retryBattle()">もう一度</button>
@@ -2751,6 +2830,21 @@ img.item-icon {
       </div>
     </div>
   </div>
+</div>
+
+<!-- BATTLE LOG MODAL (リザルト後ログ確認) -->
+<div id="battle-log-modal">
+  <div class="blm-header">
+    <span>📋 BATTLE LOG</span>
+    <button class="close-btn" onclick="closeBattleLogModal()">✕</button>
+  </div>
+  <div id="blm-char-filters"></div>
+  <div id="blm-cat-filters">
+    <button class="log-filter-btn active" onclick="setBLMCatFilter('all',this)">ALL</button>
+    <button class="log-filter-btn" onclick="setBLMCatFilter('trigger',this)">TRG</button>
+    <button class="log-filter-btn" onclick="setBLMCatFilter('damage',this)">DMG</button>
+  </div>
+  <div id="blm-log"></div>
 </div>
 
 <!-- UNIT DETAIL MODAL -->
@@ -12700,6 +12794,10 @@ let battleRunning = false;
 let logFilter = 'all';
 let battleContext = null; // {type:'babel'|'shrine', areaId, stageId}
 let battleStats = { totalDmg:0, crits:0, unitDmg:{}, unitHeal:{}, unitTaken:{} };
+let battleLogHistory = [];          // 戦闘ログ全履歴 [{html, category, text}]
+let lastBattleParticipants = [];    // ログフィルター用参加キャラ [{name, icon, isEnemy}]
+let blmCatFilter = 'all';
+let blmCharFilter = null;
 
 function initBattle(waveEnemies, stageName) {
   const units = getFormationUnits();
@@ -12715,11 +12813,7 @@ function initBattle(waveEnemies, stageName) {
     allies: units.map(u => makeCombatant(u, false, null, null, 'member', imagineBuffs)),
     waveIdx: 0,
     waveEnemies,
-    enemies: waveEnemies[0].map((e, i, arr) => {
-      const c = makeCombatant(null, true, e);
-      c.isBackRow = arr.length >= 3 && i >= Math.ceil(arr.length / 2);
-      return c;
-    }),
+    enemies: waveEnemies[0].map(e => makeCombatant(null, true, e)),
     startTime: Date.now(),
     elapsed: 0,
     running: false,
@@ -12752,10 +12846,35 @@ function initBattle(waveEnemies, stageName) {
   document.getElementById('battle-start-btn').textContent = 'BATTLE START';
   document.getElementById('battle-start-btn').disabled = false;
   document.getElementById('battle-log').innerHTML = '';
+  battleLogHistory = [];
+  lastBattleParticipants = [];
   setSpeedBtn(1);
   hideSkillManualPanel();
   updateBattleModeUI();
   renderBattle();
+}
+
+function renderATBTimeline() {
+  const bar = document.getElementById('atb-timeline');
+  if (!bar || !battleState) return;
+  const bs = battleState;
+  const all = [
+    ...bs.allies.filter(c => !c.dead),
+    ...bs.enemies.filter(c => !c.dead && !c._underground)
+  ].sort((a, b) => {
+    const ta = (100 - a.atb) / Math.max(1, a.spd);
+    const tb = (100 - b.atb) / Math.max(1, b.spd);
+    return ta - tb;
+  });
+  const icons = all.map((c, i) => {
+    const cls = c.isEnemy ? 'atb-tl-enemy' : 'atb-tl-ally';
+    const nextCls = i === 0 ? ' atb-tl-next' : '';
+    const label = `${c.name}${i === 0 ? ' ─ 次に行動' : ''}`;
+    return `<div class="atb-tl-icon ${cls}${nextCls}" title="${label}">${c.icon}</div>`;
+  });
+  // 3番目と4番目の間に区切り線（"すぐ行動" / "後で行動" の境界）
+  if (icons.length > 3) icons.splice(3, 0, `<div class="atb-tl-divider"></div>`);
+  bar.innerHTML = `<span id="atb-tl-label">▶ NEXT</span>` + icons.join('');
 }
 
 function renderBattle() {
@@ -12817,6 +12936,15 @@ function renderBattle() {
         }
         existing.classList.toggle('dead', !!u.dead);
         existing.classList.toggle('staggered', !!u.staggered);
+        if (u.isEnemy) {
+          const liveEnemies = bs.enemies.filter(e=>!e.dead&&!e._underground);
+          const maxHate = Math.max(...liveEnemies.map(e=>e.hate||0), 1);
+          const hatePct = Math.min(100, Math.floor((u.hate||0) / maxHate * 100));
+          const hateFill = q('.hate-fill');
+          if (hateFill) hateFill.style.width = hatePct + '%';
+          const hateVal = q('.hate-val');
+          if (hateVal) hateVal.textContent = fmt(u.hate || 0);
+        }
         const buffHtml = buildBuffHtml(u.buffs, u.debuffs);
         const statusIcons = q('.status-icons');
         if (statusIcons) statusIcons.innerHTML = buffHtml;
@@ -12826,6 +12954,7 @@ function renderBattle() {
 
   renderZone('ally-zone', bs.allies);
   renderZone('enemy-zone', bs.enemies.filter(e => !e._underground));
+  renderATBTimeline();
   updateTimer();
 }
 
@@ -12859,7 +12988,7 @@ function combatantCardHTML(c) {
   const leaderBadge = (!c.isEnemy && c.isLeader) ? `<span class="leader-combatant-badge">👑</span>` : '';
   const atkInfo = `<span class="cc-atk">⚔${fmt(c.atk)}</span>`;
   const staggerClass = c.staggered ? ' staggered' : '';
-  const rowClass = (c.isEnemy && c.isBackRow) ? ' card-back-row' : ' card-front-row';
+  const rowClass = c.isEnemy ? '' : (c.isBackRow ? ' card-back-row' : ' card-front-row');
   const clickAttr = !c.isEnemy ? `onclick="handleAllyCardClick('${c.uid}')"` : '';
   return `
     <div class="combatant-card${staggerClass}${rowClass} ${c.dead?'dead':''}${c.isLeader?' leader-slot':''}${ultReadyManual?' ult-tap-ready':''}" id="cc-${c.uid}" ${clickAttr}>
@@ -12878,6 +13007,7 @@ function combatantCardHTML(c) {
       <div class="hp-text">${fmt(Math.max(0,c.hp))} / ${fmt(c.maxHp)}${c.shield>0?` <span style="color:#88aaff">🛡${fmt(c.shield)}</span>`:''}</div>
       ${c.isEnemy && c.phases && c.phases.length > 1 ? `<div class="boss-phase-dots">${c.phases.map((_,i)=>`<div class="phase-dot${i<(c.phaseIdx||0)?' cleared':i===(c.phaseIdx||0)?' active':''}"></div>`).join('')}</div>` : ''}
       <div class="atb-bar"><div class="atb-fill" style="width:${atbPct}%"></div></div>
+      ${c.isEnemy ? `<div class="hate-bar-wrap"><div class="hate-fill" style="width:0%"></div></div><div class="hate-label"><span>⚠</span><span class="hate-val">-</span></div>` : ''}
       ${ultSection}
       ${buffHtml ? `<div class="status-icons">${buffHtml}</div>` : ''}
     </div>`;
@@ -13282,6 +13412,7 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       phaseIdx: enemyData.phases ? 0 : undefined,
       passive: enemyData.passive || null,
       passive2: enemyData.passive2 || null,
+      hate: enemyData.hate || 100,
       _baseAtk: enemyData.atk,
       _basePres: enemyData.pres || 0,
       _baseSpd: enemyData.spd || 0,
@@ -13539,62 +13670,61 @@ function tickBattle() {
   const enemiesAlive = bs.enemies.filter(c=>!c.dead);
 
   if (!enemiesAlive.length) {
-    if (bs.waveIdx+1 < bs.waveEnemies.length) {
-      pauseBattle();
-      const nextIdx = bs.waveIdx + 1;
-      const nextEnemyData = bs.waveEnemies[nextIdx];
-      showWaveTransition(nextIdx + 1, bs.waveEnemies.length, () => {
-        // WAVEリセット（昼戦に戻す）
-        bs.waveIdx = nextIdx;
-        bs.elapsed = 0;
-        bs.nightPhaseOffered = false;
-        bs.isNight = false;
-        bs.nightElapsed = 0;
-        document.getElementById('battle-screen').classList.remove('is-night');
-        const nightBar = document.getElementById('night-timer-bar');
-        if (nightBar) nightBar.style.display = 'none';
-        const nightModal = document.getElementById('night-choice-modal');
-        if (nightModal) nightModal.style.display = 'none';
-        const phaseWrapW = document.getElementById('phase-timer-wrap');
-        if (phaseWrapW) phaseWrapW.className = 'day-mode active';
-        // 新しい敵を生成（HP/MP引き継ぎなし）
-        bs.enemies = nextEnemyData.map((e) => {
-          return makeCombatant(null, true, e);
-        });
-        // 味方のATBをリセット（ULT/HP/MPは引き継ぎ）
-        bs.allies.forEach(a => { a.atb = 0; });
-        updateTimer();
-        renderBattle();
-        document.getElementById('battle-wave-info').textContent =
-          `WAVE ${bs.waveIdx+1}/${bs.waveEnemies.length}`;
-        addLog(`WAVE ${bs.waveIdx+1} 開始！`, 'trigger');
-        // 索敵フェーズを挟む
-        startScoutPhase((scoutResult) => {
-          // WAVEスカウト結果をbattleStateに保存
-          if (battleState && scoutResult) battleState._scoutOutcome = scoutResult.outcome;
-          // スカウトバッジ更新
-          if (scoutResult) {
-            const badge = document.getElementById('battle-scout-badge');
-            if (badge) {
-              const labelMap = { success:'⚡ 奇襲', failure:'👁️ 先制', normal:'🗡️ 通常' };
-              badge.textContent = labelMap[scoutResult.outcome] || '🗡️ 通常';
-              badge.className = scoutResult.outcome;
-              badge.style.display = '';
+    // グレーアウト → フラッシュ → 遷移
+    showDefeatClearEffect(() => {
+      if (bs.waveIdx+1 < bs.waveEnemies.length) {
+        const nextIdx = bs.waveIdx + 1;
+        const nextEnemyData = bs.waveEnemies[nextIdx];
+        showWaveTransition(nextIdx + 1, bs.waveEnemies.length, () => {
+          // WAVEリセット（昼戦に戻す）
+          bs.waveIdx = nextIdx;
+          bs.elapsed = 0;
+          bs.nightPhaseOffered = false;
+          bs.isNight = false;
+          bs.nightElapsed = 0;
+          document.getElementById('battle-screen').classList.remove('is-night');
+          const nightBar = document.getElementById('night-timer-bar');
+          if (nightBar) nightBar.style.display = 'none';
+          const nightModal = document.getElementById('night-choice-modal');
+          if (nightModal) nightModal.style.display = 'none';
+          const phaseWrapW = document.getElementById('phase-timer-wrap');
+          if (phaseWrapW) phaseWrapW.className = 'day-mode active';
+          // 新しい敵を生成（HP/MP引き継ぎなし）
+          bs.enemies = nextEnemyData.map((e) => {
+            return makeCombatant(null, true, e);
+          });
+          // 味方のATBをリセット（ULT/HP/MPは引き継ぎ）
+          bs.allies.forEach(a => { a.atb = 0; });
+          updateTimer();
+          renderBattle();
+          document.getElementById('battle-wave-info').textContent =
+            `WAVE ${bs.waveIdx+1}/${bs.waveEnemies.length}`;
+          addLog(`WAVE ${bs.waveIdx+1} 開始！`, 'trigger');
+          // 索敵フェーズを挟む
+          startScoutPhase((scoutResult) => {
+            if (battleState && scoutResult) battleState._scoutOutcome = scoutResult.outcome;
+            if (scoutResult) {
+              const badge = document.getElementById('battle-scout-badge');
+              if (badge) {
+                const labelMap = { success:'⚡ 奇襲', failure:'👁️ 先制', normal:'🗡️ 通常' };
+                badge.textContent = labelMap[scoutResult.outcome] || '🗡️ 通常';
+                badge.className = scoutResult.outcome;
+                badge.style.display = '';
+              }
             }
-          }
-          // WAVE開幕スキル発動 + パッシブスタックリセット
-          if (battleState) {
-            battleState.allies.forEach(a => {
-              if (a._passiveFightingSpirit) a._passiveFightingSpirit.stacks = 0;
-            });
-            fireOpeningSkills(battleState.allies, battleState.enemies);
-          }
-          resumeBattle();
+            if (battleState) {
+              battleState.allies.forEach(a => {
+                if (a._passiveFightingSpirit) a._passiveFightingSpirit.stacks = 0;
+              });
+              fireOpeningSkills(battleState.allies, battleState.enemies);
+            }
+            resumeBattle();
+          });
         });
-      });
-    } else {
-      endBattle(true);
-    }
+      } else {
+        endBattle(true);
+      }
+    });
     return;
   }
   if (!alliesAlive.length) {
@@ -13828,7 +13958,6 @@ function combatantAct(c, bs) {
           const template = sk.summons[0];
           for (let i = 0; i < count; i++) {
             const newEnemy = makeCombatant(null, true, template);
-            newEnemy.isBackRow = false;
             battleState.enemies.push(newEnemy);
           }
           addLog(`${c.icon||''} <b>${c.name}</b>: <span class="tag tag-skill">${sk.name}</span> <span class="tag tag-buff">召喚 ×${count}</span>`, 'trigger');
@@ -14066,7 +14195,17 @@ function doAttack(attacker, targets, skill) {
     }
   } else {
     const isSingle = skill.target==='single' || skill.target==='self';
-    targetList = isSingle ? [targets[Math.floor(Math.random()*targets.length)]] : [...targets];
+    if (isSingle && !attacker.isEnemy) {
+      // プレイヤー攻撃: ヘイト最高の敵を優先ターゲット（同値はランダム）
+      const alive = targets.filter(t=>!t.dead);
+      if (alive.length) {
+        const maxHate = Math.max(...alive.map(t => t.hate||0));
+        const tops = alive.filter(t => (t.hate||0) === maxHate);
+        targetList = [tops[Math.floor(Math.random() * tops.length)]];
+      } else { targetList = [...targets]; }
+    } else {
+      targetList = isSingle ? [targets[Math.floor(Math.random()*targets.length)]] : [...targets];
+    }
   }
 
   // ガーディアン保護: 腕が生きている間は頭部への攻撃を腕に転送
@@ -14190,6 +14329,10 @@ function doAttack(attacker, targets, skill) {
     if (!attacker.isEnemy && totalDmg > 0) trackDamageDealt(totalDmg);
     gainUltGauge(attacker, 8);
     updateHate(attacker, calcHateGain('damage', totalDmg));
+    // 敵が攻撃するほど自身のヘイトが上昇（プレイヤーの優先ターゲットになる）
+    if (attacker.isEnemy && totalDmg > 0) {
+      attacker.hate = (attacker.hate || 100) + Math.floor(totalDmg * 0.03) + 15;
+    }
 
     // パッシブ: 戦士の闘志（攻撃命中でATKスタック）
     if (!attacker.isEnemy && attacker._passiveFightingSpirit && totalDmg > 0) {
@@ -15193,6 +15336,11 @@ function applyDebuff(target, debuff, attacker) {
 let logFullscreenFilter = 'all';
 
 function addLog(msg, category) {
+  // ログ履歴に保存（テキスト抽出してキャラフィルター用）
+  const _tmp = document.createElement('div');
+  _tmp.innerHTML = msg;
+  battleLogHistory.push({ html: msg, category, text: _tmp.textContent });
+
   const makeEntry = () => {
     const div = document.createElement('div');
     div.className = 'log-entry';
@@ -15224,6 +15372,65 @@ function setLogFilter(filter, btn) {
     const cat = e.getAttribute('data-cat');
     e.style.display = (filter==='all'||cat===filter||cat==='all')?'':'none';
   });
+}
+
+// ===== BATTLE LOG MODAL =====
+function openBattleLogModal() {
+  blmCatFilter = 'all';
+  blmCharFilter = null;
+
+  // キャラフィルターボタン生成
+  const cf = document.getElementById('blm-char-filters');
+  const allBtn = `<button class="blm-char-btn active" onclick="setBLMCharFilter(null,this)">👥 ALL</button>`;
+  const allyBtns = lastBattleParticipants.filter(p=>!p.isEnemy).map(p=>
+    `<button class="blm-char-btn" onclick="setBLMCharFilter(${JSON.stringify(p.name)},this)">${p.icon} ${p.name}</button>`
+  ).join('');
+  const enemyBtns = lastBattleParticipants.filter(p=>p.isEnemy).map(p=>
+    `<button class="blm-char-btn enemy" onclick="setBLMCharFilter(${JSON.stringify(p.name)},this)">${p.icon} ${p.name}</button>`
+  ).join('');
+  const sep = allyBtns && enemyBtns ? `<div style="width:1px;height:20px;background:var(--border);flex-shrink:0;margin:0 2px"></div>` : '';
+  cf.innerHTML = allBtn + allyBtns + sep + enemyBtns;
+
+  // カテゴリフィルターをリセット
+  document.querySelectorAll('#blm-cat-filters .log-filter-btn').forEach((b,i)=>b.classList.toggle('active', i===0));
+
+  renderBLMLog();
+  document.getElementById('battle-log-modal').classList.add('open');
+}
+
+function closeBattleLogModal() {
+  document.getElementById('battle-log-modal').classList.remove('open');
+}
+
+function setBLMCatFilter(cat, btn) {
+  blmCatFilter = cat;
+  document.querySelectorAll('#blm-cat-filters .log-filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBLMLog();
+}
+
+function setBLMCharFilter(name, btn) {
+  blmCharFilter = name;
+  document.querySelectorAll('.blm-char-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBLMLog();
+}
+
+function renderBLMLog() {
+  const container = document.getElementById('blm-log');
+  const entries = battleLogHistory.filter(e => {
+    const catOk = blmCatFilter === 'all' || e.category === blmCatFilter || e.category === 'all';
+    const charOk = !blmCharFilter || e.text.includes(blmCharFilter);
+    return catOk && charOk;
+  });
+  if (!entries.length) {
+    container.innerHTML = `<div class="blm-empty">該当するログがありません</div>`;
+    return;
+  }
+  // 新しい順（配列末尾が最新）に上から表示
+  container.innerHTML = [...entries].reverse().map(e =>
+    `<div class="log-entry">${e.html}</div>`
+  ).join('');
 }
 
 function openLogFullscreen() {
@@ -15273,6 +15480,19 @@ function endBattle(victory) {
   battleRunning = false;
   hideSkillManualPanel();
   if (battleState) battleState.waitingSkillUid = null;
+
+  // ログフィルター用: 全参加キャラを保存
+  if (battleState) {
+    const seen = new Set();
+    lastBattleParticipants = [];
+    (battleState.allies || []).forEach(c => {
+      const n = c.name || c.classId;
+      if (!seen.has(n)) { seen.add(n); lastBattleParticipants.push({name: n, icon: c.icon || '👤', isEnemy: false}); }
+    });
+    (battleState.waveEnemies || []).flat().forEach(e => {
+      if (!seen.has(e.name)) { seen.add(e.name); lastBattleParticipants.push({name: e.name, icon: e.icon || '👹', isEnemy: true}); }
+    });
+  }
   const _imgBtn = document.getElementById('imagine-active-btn');
   if (_imgBtn) _imgBtn.style.display = 'none';
   const _pauseOv = document.getElementById('pause-menu-overlay');
@@ -15758,6 +15978,21 @@ function nextStage() {
 //  WAVE / NIGHT / SCOUT PHASE
 // ============================================================
 
+function showDefeatClearEffect(callback) {
+  pauseBattle();
+  renderBattle(); // 死亡状態（グレーアウト）を先に描画
+  const ov = document.getElementById('defeat-flash-overlay');
+  if (ov) {
+    ov.classList.remove('active');
+    void ov.offsetWidth; // reflow でアニメーションをリセット
+    ov.classList.add('active');
+  }
+  setTimeout(() => {
+    if (ov) ov.classList.remove('active');
+    callback();
+  }, 700);
+}
+
 function showWaveTransition(nextWave, totalWaves, callback) {
   // 既存オーバーレイ除去
   const old = document.getElementById('wave-transition-overlay');
@@ -15946,7 +16181,6 @@ function triggerBossPhaseTransition(boss, bs) {
       const {count = 1, ...enemyData} = summonData;
       for (let i = 0; i < count; i++) {
         const newEnemy = makeCombatant(null, true, enemyData);
-        newEnemy.isBackRow = false;
         bs.enemies.push(newEnemy);
       }
     });
