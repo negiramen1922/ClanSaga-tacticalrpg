@@ -2651,20 +2651,6 @@ img.item-icon {
       </div>
 
       <div class="content-section">
-        <div class="section-header" onclick="toggleSection(this,'shrine-panel')">
-          <span class="sec-icon">⛩️</span>
-          <div>
-            <div class="sec-title">修練の祠</div>
-            <div class="sec-sub">スキル強化石を収集</div>
-          </div>
-          <span class="sec-arrow">▶</span>
-        </div>
-        <div class="area-list" id="shrine-panel">
-          <div id="shrine-list-wrap"></div>
-        </div>
-      </div>
-
-      <div class="content-section">
         <div class="section-header" onclick="toggleSection(this,'abyss-panel')">
           <span class="sec-icon">🌀</span>
           <div>
@@ -10933,7 +10919,6 @@ function openVipPanel() {
         ⚡ スタミナ上限 ${b.staminaMax}+（Clan Lv-1）×5<br>
         ⛏️ 鉱山貯蓄上限 ${b.mineCapHours}時間<br>
         📋 フォーメーション保存数 ${b.presetSlots}枠<br>
-        ⚔️ アビス挑戦回数 ${3 + b.abyssExtraRuns}回/日<br>
         ${b.shopRefresh?`🛒 ショップ無料リフレッシュ ×${b.shopRefresh}/日<br>`:''}
         ${b.battleSkip?`⏩ バトル演出スキップ（クリア済みステージ）<br>`:''}
       </div>
@@ -13669,6 +13654,11 @@ function startShrineBattle(shrineId) {
 
 function startDailyDungeonBattle(stageId) {
   const stage = DAILY_DUNGEON_STAGES.find(s=>s.id===stageId);
+  const BATTLE_COST = 10;
+  if (!consumeStamina(BATTLE_COST)) {
+    showBonusToast(`スタミナが不足しています（必要: ⚡${BATTLE_COST}）`);
+    return;
+  }
   battleContext = { type:'dailyDungeon', stageId, stageName: stage.name, waves: stage.enemies };
   initBattle(stage.enemies, stage.name);
 }
@@ -23760,28 +23750,6 @@ function renderSortieTab() {
     });
     const _ddSub = document.getElementById('daily-dungeon-sub');
     if (_ddSub) _ddSub.textContent = _dayNum === 0 ? '日曜: 全ロール解放' : `本日: ${_roleNames}`;
-  }
-
-  const shrineWrap = document.getElementById('shrine-list-wrap');
-  if (shrineWrap) {
-    shrineWrap.innerHTML = '';
-    SHRINE_STAGES.forEach(sh => {
-      const row = document.createElement('div');
-      row.className = 'area-item';
-      row.innerHTML = `
-        <span style="font-size:20px">${sh.icon}</span>
-        <div>
-          <div class="area-name">${sh.name}</div>
-          <div class="area-atk">難易度: ${'★'.repeat(sh.diff||1)}</div>
-        </div>`;
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-blue btn-sm';
-      btn.style.marginLeft = 'auto';
-      btn.textContent = '挑戦';
-      btn.addEventListener('click', () => startShrineBattle(sh.id));
-      row.appendChild(btn);
-      shrineWrap.appendChild(row);
-    });
   }
 
   renderAbyssContent();
