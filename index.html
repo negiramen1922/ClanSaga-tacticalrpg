@@ -11937,9 +11937,9 @@ function rerollPassives(uid) {
   if (!u.passives || u.passives.length === 0) { showBonusToast('Lv.40 でタレントが解放されます'); return; }
   const locked = (u.passives||[]).filter(pa=>pa.locked);
   const keysNeeded = locked.length;
-  if (p.starCrystal < REROLL_COST) { alert(`星晶石が不足しています（必要: ${REROLL_COST}）`); return; }
-  if (keysNeeded > 0 && (p.passiveKey||0) < keysNeeded) { alert(`タレントキーが不足しています（必要: ${keysNeeded}個）`); return; }
-  p.starCrystal -= REROLL_COST;
+  if (p.gold < REROLL_COST) { showBonusToast(`ゴールドが不足しています（必要: ${REROLL_COST}）`); return; }
+  if (keysNeeded > 0 && (p.passiveKey||0) < keysNeeded) { showBonusToast(`タレントキーが不足しています（必要: ${keysNeeded}個）`); return; }
+  p.gold -= REROLL_COST;
   if (keysNeeded > 0) p.passiveKey -= keysNeeded;
   u.passives = rollPartialPassives(locked);
   saveState();
