@@ -2338,7 +2338,7 @@ img.item-icon {
           <button onclick="closeHamburger();openAccountModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;">🔗 アカウント設定</button>
           <a href="https://docs.google.com/forms/d/e/1FAIpQLSdOyYrYSKMvdOJrdJtxhwG80aQ6Pd9z4nzYycyGylSt9IbqBQ/viewform?usp=header" target="_blank" rel="noopener" style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;">📩 お問い合わせ</a>
         </div>
-        <span id="hm-version">ver. 1.12 · Clan Saga</span>
+        <span id="hm-version">ver. 1.13 · Clan Saga</span>
         <div style="margin-top:6px;font-size:9px;color:var(--text3);line-height:1.6;text-align:center;">
           BGM: <a href="https://youtu.be/DJPoUKKSDwY?si=1aaLg3tfrO6UzABe" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">古の世界地図</a>
           ／ <a href="https://youtu.be/EOlXXpqlS5k?si=YKRfyB3hGQsdY9Fj" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">Prairie4</a>
@@ -5534,7 +5534,7 @@ const PASSIVE_POOL = [
   { id:'drain',   name:'吸血',        stats:['DRAIN'],  levels:[{val:8,desc:'吸血8%'},{val:14,desc:'吸血14%'},{val:20,desc:'吸血20%'}] },
 ];
 
-const GAME_VERSION = '1.12';
+const GAME_VERSION = '1.13';
 
 const BABEL_AREAS = [
   {
@@ -9523,6 +9523,53 @@ function claimAchievement(id) {
 
 // お知らせデータ
 const NEWS_DATA = [
+  {
+    id: 'news_017',
+    type: 'update',
+    title: '⚙️ バージョン1.13アップデート内容',
+    date: '2026-05-08',
+    summary: 'エリア2〜8の全ボスを全面リデザイン。地中潜行・部位破壊・不死身など固有ギミックを搭載した強敵に生まれ変わりました。',
+    body: `<h4>⚔️ ボスバトル全面リデザイン</h4>
+<p>エリア2〜8のボスに固有のギミックとパッシブを追加し、戦略性を大幅に強化しました。</p>
+
+<h4>🐛 グラベルワーム（荒野）— 地中潜行ギミック</h4>
+<ul>
+  <li>5回行動するたびに<b>地中へ潜行</b>し、スカベンジャー3体が出現する</li>
+  <li>スカベンジャーを全滅させると再出現し、<b>HPを15%回復</b>して戻ってくる</li>
+  <li>DPSが足りないと潜行→回復を繰り返す。アタッカーの育成が攻略の鍵</li>
+</ul>
+
+<h4>💀 ゲートガーディアン（廃墟）— 部位破壊システム</h4>
+<ul>
+  <li>右腕・左腕が生存中は頭部への攻撃を<b>必ず腕が庇う</b></li>
+  <li>右腕を先に破壊すると左腕が緊急ヒール（頭部・左腕を回復）</li>
+  <li>左腕を先に破壊すると右腕が<b>ATK+35%・PDEF+20%</b>で覚醒強化</li>
+  <li>両腕破壊でフェーズ3移行、頭部の強力なスキルが解放される</li>
+</ul>
+
+<h4>💀 スケルトンドラゴン（火山）— 不死身パッシブ</h4>
+<ul>
+  <li>致死ダメージを<b>一度だけHP1で耐える</b>不死身パッシブを所持</li>
+  <li>「倒した！」と思ってからが本番。最後まで気を抜かないこと</li>
+</ul>
+
+<h4>🍄 テオナナカトル — 毒特化ボス</h4>
+<ul>
+  <li>毒状態の味方へのダメージが<b>+30%上昇</b>するパッシブを所持</li>
+  <li>Phase移行ごとにヴェノムウルフ×3を召喚する</li>
+</ul>
+
+<h4>🦅 グリフォン・ロード — 2パッシブ持ち</h4>
+<ul>
+  <li>HP減少でSPDが上昇 ＋ クリット時にATKがスタック増加する2つのパッシブを所持</li>
+</ul>
+
+<h4>🐗 レッサーベヒモス — 壁役要求ボス</h4>
+<ul>
+  <li>HP減少でPDEFが最大50%上昇。タンク・ヒーラーなしでは長期戦が厳しい</li>
+  <li>奇襲時はデバフのターン数が延長されるため、偵察成功が重要</li>
+</ul>`,
+  },
   {
     id: 'news_016',
     type: 'update',
