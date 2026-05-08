@@ -982,6 +982,39 @@ img.item-icon {
 .result-btns { display: flex; gap: 8px; }
 .result-btns button { flex: 1; padding: 12px; }
 
+/* ===== BATTLE LOG MODAL ===== */
+#battle-log-modal {
+  position: fixed; inset: 0; z-index: 700;
+  background: rgba(5,6,8,0.97);
+  display: none; flex-direction: column; overflow: hidden;
+}
+#battle-log-modal.open { display: flex; }
+.blm-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  background: var(--bg3); flex-shrink: 0;
+}
+.blm-header span { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: 1px; }
+#blm-char-filters {
+  display: flex; gap: 6px; padding: 8px 12px;
+  overflow-x: auto; scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; background: var(--bg2);
+}
+#blm-char-filters::-webkit-scrollbar { display: none; }
+.blm-char-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 9px; font-size: 11px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--bg3);
+  color: var(--text2); cursor: pointer; white-space: nowrap;
+  border-radius: 3px; flex-shrink: 0;
+}
+.blm-char-btn.active        { border-color: var(--accent); background: rgba(74,127,255,0.15); color: var(--text); }
+.blm-char-btn.enemy.active  { border-color: var(--red);    background: rgba(224,85,85,0.15);  color: var(--text); }
+#blm-cat-filters { display: flex; gap: 4px; padding: 6px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#blm-log { flex: 1; overflow-y: auto; padding: 8px 12px; display: flex; flex-direction: column; gap: 1px; }
+.blm-empty { text-align: center; color: var(--text3); font-size: 12px; padding: 32px; }
+
 /* ===== GACHA ===== */
 .gacha-section { margin-bottom: 16px; }
 .gacha-banner {
@@ -2787,6 +2820,9 @@ img.item-icon {
         <div class="tab-title">ドロップ</div>
         <div class="drop-items" id="result-drops"></div>
       </div>
+      <div style="margin-bottom:10px">
+        <button class="btn btn-outline" style="width:100%;font-size:12px;padding:9px" onclick="openBattleLogModal()">📋 戦闘ログを確認する</button>
+      </div>
       <div class="result-btns" id="result-btns">
         <button class="btn btn-outline" onclick="exitBattleToList()">一覧へ</button>
         <button class="btn btn-gold" onclick="retryBattle()">もう一度</button>
@@ -2794,6 +2830,21 @@ img.item-icon {
       </div>
     </div>
   </div>
+</div>
+
+<!-- BATTLE LOG MODAL (リザルト後ログ確認) -->
+<div id="battle-log-modal">
+  <div class="blm-header">
+    <span>📋 BATTLE LOG</span>
+    <button class="close-btn" onclick="closeBattleLogModal()">✕</button>
+  </div>
+  <div id="blm-char-filters"></div>
+  <div id="blm-cat-filters">
+    <button class="log-filter-btn active" onclick="setBLMCatFilter('all',this)">ALL</button>
+    <button class="log-filter-btn" onclick="setBLMCatFilter('trigger',this)">TRG</button>
+    <button class="log-filter-btn" onclick="setBLMCatFilter('damage',this)">DMG</button>
+  </div>
+  <div id="blm-log"></div>
 </div>
 
 <!-- UNIT DETAIL MODAL -->
@@ -12743,6 +12794,10 @@ let battleRunning = false;
 let logFilter = 'all';
 let battleContext = null; // {type:'babel'|'shrine', areaId, stageId}
 let battleStats = { totalDmg:0, crits:0, unitDmg:{}, unitHeal:{}, unitTaken:{} };
+let battleLogHistory = [];          // 戦闘ログ全履歴 [{html, category, text}]
+let lastBattleParticipants = [];    // ログフィルター用参加キャラ [{name, icon, isEnemy}]
+let blmCatFilter = 'all';
+let blmCharFilter = null;
 
 function initBattle(waveEnemies, stageName) {
   const units = getFormationUnits();
@@ -12791,6 +12846,8 @@ function initBattle(waveEnemies, stageName) {
   document.getElementById('battle-start-btn').textContent = 'BATTLE START';
   document.getElementById('battle-start-btn').disabled = false;
   document.getElementById('battle-log').innerHTML = '';
+  battleLogHistory = [];
+  lastBattleParticipants = [];
   setSpeedBtn(1);
   hideSkillManualPanel();
   updateBattleModeUI();
@@ -15279,6 +15336,11 @@ function applyDebuff(target, debuff, attacker) {
 let logFullscreenFilter = 'all';
 
 function addLog(msg, category) {
+  // ログ履歴に保存（テキスト抽出してキャラフィルター用）
+  const _tmp = document.createElement('div');
+  _tmp.innerHTML = msg;
+  battleLogHistory.push({ html: msg, category, text: _tmp.textContent });
+
   const makeEntry = () => {
     const div = document.createElement('div');
     div.className = 'log-entry';
@@ -15310,6 +15372,65 @@ function setLogFilter(filter, btn) {
     const cat = e.getAttribute('data-cat');
     e.style.display = (filter==='all'||cat===filter||cat==='all')?'':'none';
   });
+}
+
+// ===== BATTLE LOG MODAL =====
+function openBattleLogModal() {
+  blmCatFilter = 'all';
+  blmCharFilter = null;
+
+  // キャラフィルターボタン生成
+  const cf = document.getElementById('blm-char-filters');
+  const allBtn = `<button class="blm-char-btn active" onclick="setBLMCharFilter(null,this)">👥 ALL</button>`;
+  const allyBtns = lastBattleParticipants.filter(p=>!p.isEnemy).map(p=>
+    `<button class="blm-char-btn" onclick="setBLMCharFilter(${JSON.stringify(p.name)},this)">${p.icon} ${p.name}</button>`
+  ).join('');
+  const enemyBtns = lastBattleParticipants.filter(p=>p.isEnemy).map(p=>
+    `<button class="blm-char-btn enemy" onclick="setBLMCharFilter(${JSON.stringify(p.name)},this)">${p.icon} ${p.name}</button>`
+  ).join('');
+  const sep = allyBtns && enemyBtns ? `<div style="width:1px;height:20px;background:var(--border);flex-shrink:0;margin:0 2px"></div>` : '';
+  cf.innerHTML = allBtn + allyBtns + sep + enemyBtns;
+
+  // カテゴリフィルターをリセット
+  document.querySelectorAll('#blm-cat-filters .log-filter-btn').forEach((b,i)=>b.classList.toggle('active', i===0));
+
+  renderBLMLog();
+  document.getElementById('battle-log-modal').classList.add('open');
+}
+
+function closeBattleLogModal() {
+  document.getElementById('battle-log-modal').classList.remove('open');
+}
+
+function setBLMCatFilter(cat, btn) {
+  blmCatFilter = cat;
+  document.querySelectorAll('#blm-cat-filters .log-filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBLMLog();
+}
+
+function setBLMCharFilter(name, btn) {
+  blmCharFilter = name;
+  document.querySelectorAll('.blm-char-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBLMLog();
+}
+
+function renderBLMLog() {
+  const container = document.getElementById('blm-log');
+  const entries = battleLogHistory.filter(e => {
+    const catOk = blmCatFilter === 'all' || e.category === blmCatFilter || e.category === 'all';
+    const charOk = !blmCharFilter || e.text.includes(blmCharFilter);
+    return catOk && charOk;
+  });
+  if (!entries.length) {
+    container.innerHTML = `<div class="blm-empty">該当するログがありません</div>`;
+    return;
+  }
+  // 新しい順（配列末尾が最新）に上から表示
+  container.innerHTML = [...entries].reverse().map(e =>
+    `<div class="log-entry">${e.html}</div>`
+  ).join('');
 }
 
 function openLogFullscreen() {
@@ -15359,6 +15480,19 @@ function endBattle(victory) {
   battleRunning = false;
   hideSkillManualPanel();
   if (battleState) battleState.waitingSkillUid = null;
+
+  // ログフィルター用: 全参加キャラを保存
+  if (battleState) {
+    const seen = new Set();
+    lastBattleParticipants = [];
+    (battleState.allies || []).forEach(c => {
+      const n = c.name || c.classId;
+      if (!seen.has(n)) { seen.add(n); lastBattleParticipants.push({name: n, icon: c.icon || '👤', isEnemy: false}); }
+    });
+    (battleState.waveEnemies || []).flat().forEach(e => {
+      if (!seen.has(e.name)) { seen.add(e.name); lastBattleParticipants.push({name: e.name, icon: e.icon || '👹', isEnemy: true}); }
+    });
+  }
   const _imgBtn = document.getElementById('imagine-active-btn');
   if (_imgBtn) _imgBtn.style.display = 'none';
   const _pauseOv = document.getElementById('pause-menu-overlay');
