@@ -705,22 +705,8 @@ img.item-icon {
 
 /* FLOATING NUMBERS — カード上に浮かぶ数字 */
 .battle-arena { position: relative; }
-/* 敵全滅フラッシュ演出 */
-#defeat-flash-overlay {
-  position: absolute; inset: 0; z-index: 60;
-  pointer-events: none; border-radius: 4px;
-  opacity: 0;
-}
-@keyframes defeatFlashAnim {
-  0%   { opacity: 0;   background: rgba(255,255,220,0); }
-  12%  { opacity: 1;   background: rgba(255,255,220,0.5); }
-  35%  { opacity: 0.7; background: rgba(255,255,255,0.15); }
-  65%  { opacity: 0.9; background: rgba(8,8,12,0.65); }
-  100% { opacity: 0;   background: rgba(8,8,12,0); }
-}
-#defeat-flash-overlay.active {
-  animation: defeatFlashAnim 0.75s ease-out forwards;
-}
+/* 敵全滅演出: グレーアウト後に少し間を置く（オーバーレイ不使用） */
+#defeat-flash-overlay { display: none; }
 .float-num {
   position: absolute; pointer-events: none; z-index: 200;
   font-family: 'Rajdhani', sans-serif; font-weight: 700;
@@ -5628,7 +5614,7 @@ const PASSIVE_POOL = [
   { id:'drain',   name:'吸血',        stats:['DRAIN'],  levels:[{val:8,desc:'吸血8%'},{val:14,desc:'吸血14%'},{val:20,desc:'吸血20%'}] },
 ];
 
-const GAME_VERSION = '1.13';
+const GAME_VERSION = '1.21';
 
 const BABEL_AREAS = [
   {
@@ -9618,6 +9604,43 @@ function claimAchievement(id) {
 // お知らせデータ
 const NEWS_DATA = [
   {
+    id: 'news_018',
+    type: 'update',
+    title: '⚙️ バージョン1.21アップデート内容',
+    date: '2026-05-08',
+    summary: 'バトルUIを全面改善。行動順バー・ヘイトシステム・戦闘ログ強化など、戦況把握をサポートする新機能を追加しました。',
+    body: `<h4>🎮 バトルUI 全面改善</h4>
+<p>戦闘の状況把握をより直感的にするための新機能を複数追加しました。</p>
+
+<h4>⏱️ ATB行動順バー</h4>
+<ul>
+  <li>戦闘画面の上部に<b>次に行動するキャラの並び順</b>を表示</li>
+  <li>左端が次に行動するキャラ（ゴールドの光輪付き）、右へいくほど後の行動</li>
+  <li>味方は青リング、敵は赤リングで色分け。クラス画像アイコンで一目瞭然</li>
+</ul>
+
+<h4>⚠️ ヘイトシステム導入</h4>
+<ul>
+  <li>前衛・後衛の表示バーを廃止し、<b>ヘイト（攻撃優先度）</b>で管理するシステムに変更</li>
+  <li>敵が攻撃するほどヘイトが蓄積され、プレイヤーの単体攻撃はヘイト最高の敵を自動で狙う</li>
+  <li>各敵カードに赤グラデーションの<b>ヘイトバー</b>を表示</li>
+</ul>
+
+<h4>📋 戦闘ログ強化</h4>
+<ul>
+  <li>リザルト画面から<b>戦闘ログをいつでも確認</b>できるようになりました</li>
+  <li>参加キャラのアイコンボタンで<b>キャラ別にログをフィルター</b>可能</li>
+  <li>例：ウォリアーを選択すると、ウォリアーの攻撃・受けたバフ・デバフなど関連ログのみ表示</li>
+  <li>味方は青・敵は赤で色分け表示</li>
+</ul>
+
+<h4>✨ その他改善</h4>
+<ul>
+  <li>最後の敵を倒した後、グレーアウトを経てからWAVE遷移・勝利画面へ移行するように変更</li>
+  <li>戦闘カードおよび行動順バーのキャラアイコンをクラス画像に統一</li>
+</ul>`,
+  },
+  {
     id: 'news_017',
     type: 'update',
     title: '⚙️ バージョン1.13アップデート内容',
@@ -12870,7 +12893,12 @@ function renderATBTimeline() {
     const cls = c.isEnemy ? 'atb-tl-enemy' : 'atb-tl-ally';
     const nextCls = i === 0 ? ' atb-tl-next' : '';
     const label = `${c.name}${i === 0 ? ' ─ 次に行動' : ''}`;
-    return `<div class="atb-tl-icon ${cls}${nextCls}" title="${label}">${c.icon}</div>`;
+    const inner = c.isEnemy
+      ? c.icon
+      : (CLASS_ICONS[c.classId]
+          ? `<img src="${CLASS_ICONS[c.classId]}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" alt="">`
+          : c.icon);
+    return `<div class="atb-tl-icon ${cls}${nextCls}" title="${label}">${inner}</div>`;
   });
   // 3番目と4番目の間に区切り線（"すぐ行動" / "後で行動" の境界）
   if (icons.length > 3) icons.splice(3, 0, `<div class="atb-tl-divider"></div>`);
@@ -12990,11 +13018,14 @@ function combatantCardHTML(c) {
   const staggerClass = c.staggered ? ' staggered' : '';
   const rowClass = c.isEnemy ? '' : (c.isBackRow ? ' card-back-row' : ' card-front-row');
   const clickAttr = !c.isEnemy ? `onclick="handleAllyCardClick('${c.uid}')"` : '';
+  const iconContent = c.isEnemy
+    ? `<span class="cc-icon">${c.icon}</span>`
+    : `<span class="cc-icon">${classIconHTML(c.classId, '22px', 'border-radius:3px;vertical-align:middle;display:inline-block')}</span>`;
   return `
     <div class="combatant-card${staggerClass}${rowClass} ${c.dead?'dead':''}${c.isLeader?' leader-slot':''}${ultReadyManual?' ult-tap-ready':''}" id="cc-${c.uid}" ${clickAttr}>
       <div class="cc-name">
         ${leaderBadge}
-        <span class="cc-icon">${c.icon}</span>
+        ${iconContent}
         <span class="cc-name-text">${c.name}</span>
         ${atkInfo}
       </div>
@@ -15980,17 +16011,8 @@ function nextStage() {
 
 function showDefeatClearEffect(callback) {
   pauseBattle();
-  renderBattle(); // 死亡状態（グレーアウト）を先に描画
-  const ov = document.getElementById('defeat-flash-overlay');
-  if (ov) {
-    ov.classList.remove('active');
-    void ov.offsetWidth; // reflow でアニメーションをリセット
-    ov.classList.add('active');
-  }
-  setTimeout(() => {
-    if (ov) ov.classList.remove('active');
-    callback();
-  }, 700);
+  renderBattle(); // 死亡状態（グレーアウト）を先に描画してから待機
+  setTimeout(callback, 700);
 }
 
 function showWaveTransition(nextWave, totalWaves, callback) {
