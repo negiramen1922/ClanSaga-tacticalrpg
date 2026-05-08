@@ -7575,73 +7575,82 @@ const BABEL_AREAS = [
             {name:'噛みつき',type:'phys',target:'single',power:1.4,cd:4},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]}]
       ]},
-      { id:'a7s12', name:'地竜の眠る地', waves:3, enemies:[
-        [{name:'デザートウルフ',icon:'🐺',hp:26000,mp:12000,atk:1200,pres:12,mres:8,bres:8,lres:0,spd:98,cri:10,
-          enemySkills:[
-            {name:'群れの咆哮',type:'buff',target:'all_ally',power:0,cd:8,hpTrigger:0.7,effect:{type:'multi_buff',buffs:[{type:'atk_up',val:15,turns:3},{type:'spd_up',val:15,turns:3}]}},
-            {name:'噛みつき',type:'phys',target:'single',power:1.4,cd:4},
-            {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'デザートウルフ',icon:'🐺',hp:26000,mp:12000,atk:1200,pres:12,mres:8,bres:8,lres:0,spd:98,cri:10,
-          enemySkills:[
-            {name:'群れの咆哮',type:'buff',target:'all_ally',power:0,cd:8,hpTrigger:0.7,effect:{type:'multi_buff',buffs:[{type:'atk_up',val:15,turns:3},{type:'spd_up',val:15,turns:3}]}},
-            {name:'噛みつき',type:'phys',target:'single',power:1.4,cd:4},
-            {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'デザートウルフ',icon:'🐺',hp:26000,mp:12000,atk:1200,pres:12,mres:8,bres:8,lres:0,spd:98,cri:10,
-          enemySkills:[
-            {name:'群れの咆哮',type:'buff',target:'all_ally',power:0,cd:8,hpTrigger:0.7,effect:{type:'multi_buff',buffs:[{type:'atk_up',val:15,turns:3},{type:'spd_up',val:15,turns:3}]}},
-            {name:'噛みつき',type:'phys',target:'single',power:1.4,cd:4},
-            {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'ヴァルチャー',icon:'🦅',hp:20000,mp:10000,atk:1350,pres:8,mres:5,bres:8,lres:0,spd:108,cri:16,
+      { id:'a7s12', name:'地竜の眠る地', waves:2, enemies:[
+        // WAVE1: スカベンジャーたちが死肉を漁っている場面
+        [{name:'ヴァルチャー',icon:'🦅',hp:85000,mp:20000,atk:1450,pres:10,mres:5,bres:10,lres:0,spd:110,cri:16,
           enemySkills:[
             {name:'弱者狙い',type:'phys',target:'single',power:2.0,cd:5},
             {name:'急降下',type:'phys',target:'single',power:1.5,cd:4},
             {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'ヴァルチャー',icon:'🦅',hp:20000,mp:10000,atk:1350,pres:8,mres:5,bres:8,lres:0,spd:108,cri:16,
+         {name:'ヴァルチャー',icon:'🦅',hp:85000,mp:20000,atk:1450,pres:10,mres:5,bres:10,lres:0,spd:110,cri:16,
           enemySkills:[
             {name:'弱者狙い',type:'phys',target:'single',power:2.0,cd:5},
             {name:'急降下',type:'phys',target:'single',power:1.5,cd:4},
-            {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]}],
-        [{name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
+            {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
+         {name:'デザートウルフ',icon:'🐺',hp:90000,mp:20000,atk:1350,pres:12,mres:8,bres:8,lres:0,spd:100,cri:12,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'flinch',val:1,turns:1}},
-            {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
-            {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
+            {name:'群れの咆哮',type:'buff',target:'all_ally',power:0,cd:8,hpTrigger:0.7,effect:{type:'multi_buff',buffs:[{type:'atk_up',val:15,turns:3},{type:'spd_up',val:15,turns:3}]}},
+            {name:'噛みつき',type:'phys',target:'single',power:1.4,cd:4},
+            {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
+         {name:'デザートスコーピオン',icon:'🦂',hp:80000,mp:16000,atk:1300,pres:18,mres:12,bres:10,lres:5,spd:85,cri:15,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'flinch',val:1,turns:1}},
-            {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
-            {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'サンドバジリスク',icon:'🦎',hp:28000,mp:14000,atk:1250,pres:18,mres:15,bres:10,lres:5,spd:102,cri:14,
+            {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]}],
+        // WAVE2: 死肉の匂いに引き寄せられたグラベルワーム＋スカベンジャー
+        [{name:'ヴァルチャー',icon:'🦅',hp:85000,mp:20000,atk:1450,pres:10,mres:5,bres:10,lres:0,spd:110,cri:16,
           enemySkills:[
-            {name:'石化眼光',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'stun',val:1,turns:1}},
-            {name:'砂嵐奇襲',type:'phys',target:'single',power:2.5,cd:7,forceCrit:true},
-            {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
-         {name:'サンドバジリスク',icon:'🦎',hp:28000,mp:14000,atk:1250,pres:18,mres:15,bres:10,lres:5,spd:102,cri:14,
+            {name:'弱者狙い',type:'phys',target:'single',power:2.0,cd:5},
+            {name:'急降下',type:'phys',target:'single',power:1.5,cd:4},
+            {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
+         {name:'デザートウルフ',icon:'🐺',hp:90000,mp:20000,atk:1350,pres:12,mres:8,bres:8,lres:0,spd:100,cri:12,
           enemySkills:[
-            {name:'石化眼光',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'stun',val:1,turns:1}},
-            {name:'砂嵐奇襲',type:'phys',target:'single',power:2.5,cd:7,forceCrit:true},
-            {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]}],
-        [{name:'グラベルワーム',icon:'🐉',atk:2800,pres:25,mres:15,bres:20,lres:5,spd:55,cri:8,
+            {name:'群れの咆哮',type:'buff',target:'all_ally',power:0,cd:8,hpTrigger:0.7,effect:{type:'multi_buff',buffs:[{type:'atk_up',val:15,turns:3},{type:'spd_up',val:15,turns:3}]}},
+            {name:'噛みつき',type:'phys',target:'single',power:1.4,cd:4},
+            {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
+         {name:'グラベルワーム',icon:'🐛',atk:2800,pres:25,mres:15,bres:20,lres:5,spd:55,cri:8,
+          isWorm:true,
+          passive:{type:'hp_loss_atk', maxBonus:35},
+          burrowSpawns:[
+            {name:'ヴァルチャー',icon:'🦅',hp:88000,mp:20000,atk:1450,pres:10,mres:5,bres:10,lres:0,spd:110,cri:16,
+              enemySkills:[
+                {name:'弱者狙い',type:'phys',target:'single',power:2.0,cd:5},
+                {name:'急降下',type:'phys',target:'single',power:1.5,cd:4},
+                {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
+            {name:'デザートウルフ',icon:'🐺',hp:92000,mp:20000,atk:1350,pres:12,mres:8,bres:8,lres:0,spd:100,cri:12,
+              enemySkills:[
+                {name:'群れの咆哮',type:'buff',target:'all_ally',power:0,cd:8,hpTrigger:0.7,effect:{type:'multi_buff',buffs:[{type:'atk_up',val:15,turns:3},{type:'spd_up',val:15,turns:3}]}},
+                {name:'噛みつき',type:'phys',target:'single',power:1.4,cd:4},
+                {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
+            {name:'デザートスコーピオン',icon:'🦂',hp:85000,mp:16000,atk:1300,pres:18,mres:12,bres:10,lres:5,spd:85,cri:15,
+              enemySkills:[
+                {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
+                {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+                {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]}
+          ],
           phases:[
-            {hp:500000, skills:[
-              {name:'砂嵐',     type:'spec', target:'all',    power:0.8, cd:5,  debuff:{type:'atk_down',val:-15,turns:2}},
-              {name:'地中突撃', type:'phys', target:'single', power:4.0, cd:5},
-              {name:'地響き',   type:'phys', target:'all',    power:1.5, cd:8,  debuff:{type:'flinch',val:1,turns:1}},
-              {name:'体当たり', type:'phys', target:'single', power:1.5, cd:0}]},
-            {hp:550000, skills:[
-              {name:'地上浮上の咆哮', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:30,turns:999},{type:'spd_up',val:15,turns:999}]}},
-              {name:'全体薙ぎ払い', type:'phys', target:'all',    power:2.4, cd:5},
-              {name:'砂嵐・強',     type:'spec', target:'all',    power:1.2, cd:4,  debuff:{type:'atk_down',val:-20,turns:2}},
-              {name:'地中突撃・強', type:'phys', target:'single', power:5.0, cd:4},
-              {name:'地響き・強',   type:'phys', target:'all',    power:2.0, cd:7,  debuff:{type:'flinch',val:1,turns:1}},
-              {name:'体当たり',     type:'phys', target:'single', power:1.8, cd:0}]},
             {hp:600000, skills:[
-              {name:'地竜の怒り', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:40,turns:999},{type:'pdef_up',val:30,turns:999}]}},
-              {name:'噛み砕き',     type:'phys', target:'single', power:6.0, cd:5},
-              {name:'全体薙ぎ払い・極', type:'phys', target:'all', power:3.2, cd:4},
-              {name:'大砂嵐',       type:'spec', target:'all',    power:1.8, cd:5,  debuff:{type:'atk_down',val:-25,turns:3}},
-              {name:'地中突撃・極', type:'phys', target:'single', power:6.5, cd:4},
-              {name:'体当たり',     type:'phys', target:'single', power:2.0, cd:0}]}
+              {name:'地中突破',   type:'phys', target:'all',    power:1.5, cd:-1, onlyOnce:true},
+              {name:'砂嵐',       type:'spec', target:'all',    power:0.8, cd:5,  debuff:{type:'atk_down',val:-15,turns:2}},
+              {name:'地中突撃',   type:'phys', target:'single', power:4.0, cd:4},
+              {name:'地響き',     type:'phys', target:'all',    power:1.5, cd:7,  debuff:{type:'flinch',val:1,turns:1}},
+              {name:'体当たり',   type:'phys', target:'single', power:1.5, cd:0}]},
+            {hp:700000,
+              transitionSkill:{name:'怒りの咆哮', type:'buff', target:'self', power:0, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:25,turns:999},{type:'spd_up',val:15,turns:999}]}},
+              skills:[
+              {name:'全体薙ぎ払い', type:'phys', target:'all',    power:2.4, cd:4},
+              {name:'砂嵐・強',     type:'spec', target:'all',    power:1.2, cd:4,  debuff:{type:'atk_down',val:-20,turns:2}},
+              {name:'地中突撃・強', type:'phys', target:'single', power:5.5, cd:4},
+              {name:'地震',         type:'phys', target:'all',    power:2.0, cd:6,  debuff:{type:'flinch',val:1,turns:1}},
+              {name:'体当たり',     type:'phys', target:'single', power:1.8, cd:0}]},
+            {hp:800000,
+              transitionSkill:{name:'地竜の怒り', type:'phys', target:'all', power:2.5},
+              skills:[
+              {name:'噛み砕き',       type:'phys', target:'single', power:6.5, cd:4},
+              {name:'全体薙ぎ払い・極', type:'phys', target:'all',  power:3.5, cd:4},
+              {name:'大砂嵐',         type:'spec', target:'all',    power:2.0, cd:5,  debuff:{type:'atk_down',val:-25,turns:3}},
+              {name:'地中突撃・極',   type:'phys', target:'single', power:7.0, cd:4},
+              {name:'体当たり',       type:'phys', target:'single', power:2.0, cd:0}]}
           ]}]
       ]}
     ]
@@ -8214,24 +8223,29 @@ const BABEL_AREAS = [
             {name:'群れ飛翔',type:'spec',target:'all',power:0,cd:6,debuff:{type:'mdef_down',val:-15,turns:2}},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'スケルトンドラゴン',icon:'💀',atk:3400,pres:15,mres:25,bres:50,lres:10,spd:80,cri:16,
+          passive:{type:'undying'},
           phases:[
-            {hp:900000, skills:[
-              {name:'焦熱の覚醒', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:20,turns:999},{type:'spd_up',val:20,turns:999}]}},
-              {name:'緋焔ブレス', type:'spec', target:'all',    power:2.0, cd:5,  debuff:{type:'burn',val:12,turns:3}},
-              {name:'骨竜の咆哮', type:'phys', target:'all',    power:1.5, cd:7,  debuff:{type:'atk_down',val:-15,turns:2}},
-              {name:'骨爪撃',     type:'phys', target:'single', power:2.0, cd:0}]},
             {hp:950000, skills:[
-              {name:'不死の溶岩浴び', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:25,turns:999},{type:'pdef_up',val:25,turns:999}]}},
-              {name:'業火ブレス・強', type:'spec', target:'all',    power:2.8, cd:4,  debuff:{type:'burn',val:18,turns:3}},
-              {name:'骨竜の絶叫',     type:'phys', target:'all',    power:2.0, cd:6,  debuff:{type:'atk_down',val:-20,turns:2}},
-              {name:'溶岩飛礫',       type:'spec', target:'single', power:3.5, cd:5,  debuff:{type:'burn',val:15,turns:3}},
-              {name:'骨爪連撃',       type:'phys', target:'single', power:2.5, cd:0}]},
-            {hp:1000000, skills:[
-              {name:'死竜の業', type:'buff', target:'self', power:0, cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:40,turns:999},{type:'spd_up',val:30,turns:999}]}},
-              {name:'最期の業火',     type:'spec', target:'all',    power:5.0, cd:4},
-              {name:'竜炎乱射',       type:'spec', target:'all',    power:3.5, cd:5,  hits:2, debuff:{type:'burn',val:20,turns:3}},
-              {name:'骨竜の断末魔',   type:'phys', target:'all',    power:2.8, cd:6,  debuff:{type:'atk_down',val:-25,turns:2}},
-              {name:'死爪の極撃',     type:'phys', target:'single', power:5.0, cd:3,  forceCrit:true},
+              {name:'瘴気のブレス',   type:'spec', target:'all',    power:2.2, cd:4,  debuff:{type:'poison',val:1,turns:2}},
+              {name:'骨竜の咆哮',     type:'phys', target:'all',    power:1.8, cd:6,  debuff:{type:'atk_down',val:-15,turns:2}},
+              {name:'死の飛礫',       type:'spec', target:'single', power:3.5, cd:5,  debuff:{type:'burn',val:10,turns:3}},
+              {name:'骨爪撃',         type:'phys', target:'single', power:2.2, cd:0}]},
+            {hp:1050000,
+              transitionSkill:{name:'焦熱の覚醒', type:'buff', target:'self', power:0, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:25,turns:999},{type:'spd_up',val:20,turns:999}]}},
+              skills:[
+              {name:'業火ブレス',     type:'spec', target:'all',    power:2.8, cd:4,  debuff:{type:'burn',val:15,turns:3}},
+              {name:'瘴気の大爆発',   type:'spec', target:'all',    power:2.0, cd:5,  debuff:{type:'poison',val:1,turns:3}},
+              {name:'骨竜の絶叫',     type:'phys', target:'all',    power:2.2, cd:5,  debuff:{type:'atk_down',val:-20,turns:2}},
+              {name:'死爪の極撃',     type:'phys', target:'single', power:4.5, cd:4,  forceCrit:true},
+              {name:'骨爪撃',         type:'phys', target:'single', power:2.5, cd:0}]},
+            {hp:1100000,
+              transitionSkill:{name:'不死竜の覚醒', type:'phys', target:'all', power:3.0},
+              skills:[
+              {name:'灼熱の業火',     type:'spec', target:'all',    power:4.0, cd:4,  debuff:{type:'burn',val:20,turns:3}},
+              {name:'瘴気の嵐',       type:'spec', target:'all',    power:2.5, cd:5,  debuff:{type:'poison',val:1,turns:3}},
+              {name:'竜炎乱射',       type:'spec', target:'all',    power:2.8, cd:5,  hits:2},
+              {name:'死爪連撃',       type:'phys', target:'single', power:5.5, cd:3,  forceCrit:true},
+              {name:'骨竜の断末魔',   type:'phys', target:'all',    power:3.0, cd:5},
               {name:'骨爪撃',         type:'phys', target:'single', power:2.8, cd:0}]}
           ]}]
       ]}
@@ -12764,7 +12778,7 @@ function renderBattle() {
   }
 
   renderZone('ally-zone', bs.allies);
-  renderZone('enemy-zone', bs.enemies);
+  renderZone('enemy-zone', bs.enemies.filter(e => !e._underground));
   updateTimer();
 }
 
@@ -13224,6 +13238,10 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       _baseAtk: enemyData.atk,
       _basePres: enemyData.pres || 0,
       _baseSpd: enemyData.spd || 0,
+      isWorm: enemyData.isWorm || false,
+      burrowSpawns: enemyData.burrowSpawns || null,
+      _wormActCount: 0,
+      _underground: false,
     };
   }
 }
@@ -13459,6 +13477,16 @@ function tickBattle() {
     }
   }
 
+  // グラベルワーム: 地中潜伏中にスカベンジャーが全滅したら再出現
+  const underworldWorm = bs.enemies.find(e => e.isWorm && e._underground && !e.dead);
+  if (underworldWorm) {
+    const scavsAlive = bs.enemies.filter(e => !e.dead && !e.isWorm);
+    if (scavsAlive.length === 0) {
+      triggerWormEmergence(underworldWorm, bs);
+      return;
+    }
+  }
+
   // Check win/lose
   const alliesAlive = bs.allies.filter(c=>!c.dead);
   const enemiesAlive = bs.enemies.filter(c=>!c.dead);
@@ -13532,6 +13560,9 @@ function tickBattle() {
 }
 
 function combatantAct(c, bs) {
+  // グラベルワーム: 地中潜伏中は行動不可
+  if (c._underground) return;
+
   // スタン/しびれ/沈黙チェック
   if ((c.debuffs||[]).some(d=>d.type==='stun')) {
     addLog(`${c.name} はスタン中！`, 'trigger');
@@ -13553,9 +13584,18 @@ function combatantAct(c, bs) {
   }
   const paralyzed = isParalyzed(c);
 
-  let enemies = c.isEnemy ? bs.allies.filter(x=>!x.dead) : bs.enemies.filter(x=>!x.dead);
-  const allies  = c.isEnemy ? bs.enemies.filter(x=>!x.dead) : bs.allies.filter(x=>!x.dead);
+  let enemies = c.isEnemy ? bs.allies.filter(x=>!x.dead) : bs.enemies.filter(x=>!x.dead && !x._underground);
+  const allies  = c.isEnemy ? bs.enemies.filter(x=>!x.dead && !x._underground) : bs.allies.filter(x=>!x.dead);
   if (!enemies.length) return;
+
+  // グラベルワーム: 5回行動で地中潜行
+  if (c.isWorm && !c._underground && battleState) {
+    c._wormActCount = (c._wormActCount || 0) + 1;
+    if (c._wormActCount >= 5) {
+      triggerWormBurrow(c, battleState);
+      return;
+    }
+  }
 
   // フェーズ2: 敵のターゲット選択にヘイトシステムを適用
   if (c.isEnemy) {
@@ -14142,14 +14182,21 @@ function doAttack(attacker, targets, skill) {
     }, hitDelay);
 
     if (target.hp <= 0) {
-      target.hp = 0; target.dead = true;
-      // 実績: モンスター討伐統計
-      if (target.isEnemy) trackMonsterKill(target);
-      setTimeout(() => {
-        spawnFloatNum(target.uid, 'DEFEAT', 'float-defeat');
-        Audio.defeat();
-      }, hitDelay + 50);
-      addLog(`${target.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+      // アンデッドパッシブ: 一度だけHP1で耐える
+      if (target.isEnemy && target.passive?.type === 'undying' && !target._undyingUsed) {
+        target._undyingUsed = true;
+        target.hp = 1;
+        addLog(`💀 <b>${target.name}</b> <span class="tag tag-buff">不死の意志！</span> 致死ダメージを耐えた！`, 'trigger');
+        setTimeout(() => spawnFloatNum(target.uid, '不死身！', 'float-buff'), hitDelay + 50);
+      } else {
+        target.hp = 0; target.dead = true;
+        if (target.isEnemy) trackMonsterKill(target);
+        setTimeout(() => {
+          spawnFloatNum(target.uid, 'DEFEAT', 'float-defeat');
+          Audio.defeat();
+        }, hitDelay + 50);
+        addLog(`${target.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+      }
     } else {
       const dmgTag = dmgType === 'spec' ? 'tag-dmg-spec' : 'tag-dmg-phys';
       const dmgTypeIcon = dmgType === 'spec' ? '✨' : '⚔️';
@@ -15735,6 +15782,36 @@ function showWaveTransition(nextWave, totalWaves, callback) {
       }, 400);
     }, 1800);
   });
+}
+
+function triggerWormBurrow(worm, bs) {
+  pauseBattle();
+  worm._underground = true;
+  worm.atb = 0;
+  addLog(`🌊 <b>${worm.name}</b> が地中へ潜った！死肉の匂いを求めてスカベンジャーが群がる...`, 'trigger');
+  if (worm.burrowSpawns) {
+    const spawns = worm.burrowSpawns.map(s => makeCombatant(null, true, s));
+    bs.enemies.push(...spawns);
+  }
+  setTimeout(() => {
+    renderBattle();
+    resumeBattle();
+  }, 1200);
+}
+
+function triggerWormEmergence(worm, bs) {
+  pauseBattle();
+  const healAmt = Math.floor(worm.maxHp * 0.15);
+  worm.hp = Math.min(worm.maxHp, worm.hp + healAmt);
+  worm._underground = false;
+  worm._wormActCount = 0;
+  worm.atb = 30;
+  addLog(`💥 <b>${worm.name}</b> が地中から再出現！地底で傷を癒し、より凶暴になって戻ってきた！`, 'trigger');
+  setTimeout(() => {
+    spawnFloatNum(worm.uid, `💚+${healAmt.toLocaleString()}`, 'float-heal');
+    renderBattle();
+    resumeBattle();
+  }, 900);
 }
 
 function handleGuardianArmDeath(arm, bs) {
