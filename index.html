@@ -8895,7 +8895,7 @@ function defaultState(clanName) {
       babel:{ clearedStages:{} },
       colosseum:{ rank:1, dailyChallenges:0, lastChallengeDate:'' },
       shrine:{ clearedToday:{} },
-      dailyDungeon:{ clearedToday:{} },
+      dailyDungeon:{ clearedToday:{}, dailyRuns:0, lastRunDate:'' },
     },
     tickets:{ sweep:0, timeSkip:0 },
     settings: { battleMode: { ultAuto: true, skillAuto: true } },
@@ -9070,7 +9070,7 @@ function normalizeState() {
   if (!gState.progress.abyss)      gState.progress.abyss      = { currentRun:null, bestLayer:0, clearedLayers:[], dailyRuns:0, lastRunDate:'' };
   if (!gState.progress.colosseum)  gState.progress.colosseum  = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
   if (!gState.progress.shrine)        gState.progress.shrine        = { clearedToday:{} };
-  if (!gState.progress.dailyDungeon)  gState.progress.dailyDungeon  = { clearedToday:{} };
+  if (!gState.progress.dailyDungeon)  gState.progress.dailyDungeon  = { clearedToday:{}, dailyRuns:0, lastRunDate:'' };
   if (!gState.progress.babel.clearedStages) gState.progress.babel.clearedStages = {};
 
   // tickets / missions
@@ -10758,7 +10758,7 @@ function launchApp() {
   if (gState.progress.abyss.currentRun && gState.progress.abyss.currentRun.layerId === undefined) gState.progress.abyss.currentRun = null;
   if (!gState.progress.colosseum)     gState.progress.colosseum     = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
   if (!gState.progress.shrine)        gState.progress.shrine        = { clearedToday:{} };
-  if (!gState.progress.dailyDungeon)  gState.progress.dailyDungeon  = { clearedToday:{} };
+  if (!gState.progress.dailyDungeon)  gState.progress.dailyDungeon  = { clearedToday:{}, dailyRuns:0, lastRunDate:'' };
 
   // ユニット補正
   gState.ownedUnits.forEach(u => {
@@ -10919,6 +10919,7 @@ function openVipPanel() {
         ⚡ スタミナ上限 ${b.staminaMax}+（Clan Lv-1）×5<br>
         ⛏️ 鉱山貯蓄上限 ${b.mineCapHours}時間<br>
         📋 フォーメーション保存数 ${b.presetSlots}枠<br>
+        📚 デイリーダンジョン挑戦回数 ${3 + (b.ddExtraRuns||0)}回/日<br>
         ${b.shopRefresh?`🛒 ショップ無料リフレッシュ ×${b.shopRefresh}/日<br>`:''}
         ${b.battleSkip?`⏩ バトル演出スキップ（クリア済みステージ）<br>`:''}
       </div>
@@ -13652,11 +13653,20 @@ function startShrineBattle(shrineId) {
   initBattle(sh.enemies, sh.name);
 }
 
+function getDailyDungeonMaxRuns() {
+  const vip = getVip();
+  return 3 + (vip.ddExtraRuns || 0);
+}
+
 function startDailyDungeonBattle(stageId) {
   const stage = DAILY_DUNGEON_STAGES.find(s=>s.id===stageId);
-  const BATTLE_COST = 10;
-  if (!consumeStamina(BATTLE_COST)) {
-    showBonusToast(`スタミナが不足しています（必要: ⚡${BATTLE_COST}）`);
+  if (!gState.progress.dailyDungeon) gState.progress.dailyDungeon = { clearedToday:{}, dailyRuns:0, lastRunDate:'' };
+  const dd = gState.progress.dailyDungeon;
+  const today = new Date().toDateString();
+  if (dd.lastRunDate !== today) { dd.dailyRuns = 0; dd.lastRunDate = today; }
+  const maxRuns = getDailyDungeonMaxRuns();
+  if (dd.dailyRuns >= maxRuns) {
+    showBonusToast(`本日の挑戦回数上限に達しました（${maxRuns}回/日）`);
     return;
   }
   battleContext = { type:'dailyDungeon', stageId, stageName: stage.name, waves: stage.enemies };
@@ -16209,9 +16219,13 @@ function endBattle(victory) {
     }
     if (battleContext.type==='dailyDungeon') {
       const _ddStage = DAILY_DUNGEON_STAGES.find(s=>s.id===battleContext.stageId);
-      if (!gState.progress.dailyDungeon) gState.progress.dailyDungeon = { clearedToday:{} };
-      gState.progress.dailyDungeon.clearedToday[battleContext.stageId] =
-        (gState.progress.dailyDungeon.clearedToday[battleContext.stageId]||0) + 1;
+      if (!gState.progress.dailyDungeon) gState.progress.dailyDungeon = { clearedToday:{}, dailyRuns:0, lastRunDate:'' };
+      const _dd = gState.progress.dailyDungeon;
+      const _today = new Date().toDateString();
+      if (_dd.lastRunDate !== _today) { _dd.dailyRuns = 0; _dd.lastRunDate = _today; }
+      _dd.dailyRuns++;
+      _dd.clearedToday[battleContext.stageId] =
+        (_dd.clearedToday[battleContext.stageId]||0) + 1;
       const _ddRoles = getDailyDungeonGroups();
       const _p = gState.player;
       if (!_p.kyoten)   _p.kyoten   = {};
@@ -16392,13 +16406,20 @@ function exitBattleToList() {
 }
 
 function retryBattle() {
+  if (battleContext.type==='babel') {
+    const BATTLE_COST = 10;
+    if (calcStamina() < BATTLE_COST) {
+      showBonusToast(`スタミナが不足しています（必要: ⚡${BATTLE_COST}）`);
+      return;
+    }
+  }
   document.getElementById('battle-result').classList.remove('active');
   if (battleContext.type==='babel') {
     startBabelBattle(battleContext.areaId, battleContext.stageId);
   } else if (battleContext.type==='abyss') {
     startAbyssLayer(battleContext.layerId);
-  } else {
-    startShrineBattle(battleContext.shrineId);
+  } else if (battleContext.type==='dailyDungeon') {
+    startDailyDungeonBattle(battleContext.stageId);
   }
 }
 
@@ -20150,6 +20171,7 @@ const VIP_BENEFITS = {
     dailyCrystal:      20,
     shopRefresh:        0,
     abyssExtraRuns:     0,
+    ddExtraRuns:        0,
     battleSkip:     false,
   },
   1: {
@@ -20159,6 +20181,7 @@ const VIP_BENEFITS = {
     dailyCrystal:      50,
     shopRefresh:        0,
     abyssExtraRuns:     1,
+    ddExtraRuns:        1,
     battleSkip:     false,
     label: 'VIP ブロンズ',
     color: '#c87941',
@@ -20170,6 +20193,7 @@ const VIP_BENEFITS = {
     dailyCrystal:     100,
     shopRefresh:        1,
     abyssExtraRuns:     2,
+    ddExtraRuns:        2,
     battleSkip:      true,
     label: 'VIP ゴールド',
     color: '#e8c84a',
@@ -23720,12 +23744,18 @@ function renderSortieTab() {
     const _dayNum     = new Date().getDay();
     const _dayNames   = ['日','月','火','水','木','金','土'];
     const _roleNames  = _ddGroups.map(r=>r.name).join(' / ');
+    const _ddState   = gState.progress.dailyDungeon || {};
+    const _ddToday   = new Date().toDateString();
+    const _ddRuns    = (_ddState.lastRunDate === _ddToday) ? (_ddState.dailyRuns || 0) : 0;
+    const _ddMax     = getDailyDungeonMaxRuns();
+    const _ddRemain  = Math.max(0, _ddMax - _ddRuns);
     const _infoBanner = document.createElement('div');
     _infoBanner.style.cssText = 'padding:8px 12px;background:rgba(201,168,76,0.1);border-left:3px solid var(--gold);margin-bottom:8px;font-size:12px;color:var(--text-dim)';
-    _infoBanner.innerHTML = `📅 今日（${_dayNames[_dayNum]}）のドロップロール: <span style="color:var(--gold);font-weight:700">${_roleNames}</span>`;
+    _infoBanner.innerHTML = `📅 今日（${_dayNames[_dayNum]}）のドロップロール: <span style="color:var(--gold);font-weight:700">${_roleNames}</span>`
+      + `&emsp;残り <span style="color:${_ddRemain>0?'var(--gold)':'var(--red)'};font-weight:700">${_ddRemain}/${_ddMax}</span>回`;
     ddWrap.appendChild(_infoBanner);
     DAILY_DUNGEON_STAGES.forEach((stage, _idx) => {
-      const _cleared = gState.progress.dailyDungeon?.clearedToday?.[stage.id] || 0;
+      const _cleared = _ddState.clearedToday?.[stage.id] || 0;
       const _row = document.createElement('div');
       _row.className = 'area-item';
       const _dropParts = [];
@@ -23743,13 +23773,14 @@ function renderSortieTab() {
       const _btn = document.createElement('button');
       _btn.className = 'btn btn-gold btn-sm';
       _btn.style.marginLeft = 'auto';
-      _btn.textContent = '出撃';
+      _btn.textContent = _ddRemain > 0 ? '出撃' : '上限';
+      if (_ddRemain <= 0) _btn.disabled = true;
       _btn.addEventListener('click', () => startDailyDungeonBattle(stage.id));
       _row.appendChild(_btn);
       ddWrap.appendChild(_row);
     });
     const _ddSub = document.getElementById('daily-dungeon-sub');
-    if (_ddSub) _ddSub.textContent = _dayNum === 0 ? '日曜: 全ロール解放' : `本日: ${_roleNames}`;
+    if (_ddSub) _ddSub.textContent = _dayNum === 0 ? `日曜: 全ロール解放 (残${_ddRemain}/${_ddMax}回)` : `本日: ${_roleNames} (残${_ddRemain}/${_ddMax}回)`;
   }
 
   renderAbyssContent();
