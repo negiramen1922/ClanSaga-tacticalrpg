@@ -476,6 +476,45 @@ img.item-icon {
 
 .area-list { display: none; background: var(--bg2); border: 1px solid var(--border); border-top: none; padding: 8px; }
 .area-list.open { display: block; }
+
+/* 郵便ボックス */
+.mailbox-btn-wrap { position: relative; display: inline-flex; }
+.mailbox-unread-dot {
+  position: absolute; top: -5px; right: -5px;
+  background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700;
+  min-width: 17px; height: 17px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; pointer-events: none; line-height: 1;
+}
+.mailbox-overlay {
+  position: fixed; inset: 0; z-index: 8000;
+  background: rgba(5,6,8,0.92);
+  display: flex; flex-direction: column;
+}
+.mailbox-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.mailbox-header h2 { font-family:'Cinzel',serif; font-size:16px; color:var(--gold); flex:1; margin:0; }
+.mailbox-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.mail-card {
+  background: var(--panel); border: 1px solid var(--border);
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+}
+.mail-card.unclaimed { border-color: var(--accent); }
+.mail-card.claimed { opacity: 0.5; }
+.mail-card-header { display: flex; align-items: center; gap: 8px; }
+.mail-card-title { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; }
+.mail-card-date { font-size: 10px; color: var(--text3); }
+.mail-card-desc { font-size: 12px; color: var(--text2); white-space: pre-line; line-height: 1.6; }
+.mail-card-items { display: flex; gap: 8px; flex-wrap: wrap; }
+.mail-item-tag {
+  background: rgba(249,211,66,0.1); border: 1px solid var(--gold);
+  color: var(--gold); font-size: 12px; font-weight: 700;
+  padding: 4px 10px;
+}
+.mailbox-footer { padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg2); }
 .area-item {
   display: flex; align-items: center; gap: 10px; padding: 10px;
   border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.15s;
@@ -2471,6 +2510,10 @@ img.item-icon {
         <div class="quick-btn" onclick="switchTab('artifact')">🔩 AF一覧</div>
         <div class="quick-btn" onclick="switchTab('acc')">💍 アクセサリー</div>
         <div class="quick-btn" onclick="openItemsMenu()">🎒 持ち物</div>
+        <div class="quick-btn mailbox-btn-wrap" onclick="openMailbox()" style="position:relative;">
+          📬 郵便BOX
+          <span id="mailbox-badge" class="mailbox-unread-dot" style="display:none">0</span>
+        </div>
         <div class="quick-btn" onclick="openHelpModal()"><img src="assets/images/nav-help.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> ヘルプ</div>
       </div>
 
@@ -2598,7 +2641,7 @@ img.item-icon {
           <span class="sec-icon">🌀</span>
           <div>
             <div class="sec-title">アビスダイブ</div>
-            <div class="sec-sub" id="abyss-sub">ローグライク — 15層攻略</div>
+            <div class="sec-sub" id="abyss-sub">ローグライク — 40層攻略</div>
           </div>
           <span class="sec-arrow">▶</span>
         </div>
@@ -8762,6 +8805,7 @@ function defaultState(clanName) {
     },
     tickets:{ sweep:0, timeSkip:0 },
     settings: { battleMode: { ultAuto: true, skillAuto: true } },
+    mailbox: [],
     missions:{
       daily:{ loginBonus:0, babelClears:0, mineCollect:0, classUpgrade:0, gachaPulls:0 },
       weekly:{ loginCount:0, babelClears:0, gachaPulls:0, dailyClears:0, cardUpgrade:0 },
@@ -9000,6 +9044,32 @@ function normalizeState() {
   if (gState.progress.abyss.currentRun && gState.progress.abyss.currentRun.layerId === undefined) {
     gState.progress.abyss.currentRun = null;
   }
+  // 既存クリア済み層への星晶石遡及配布（郵便ボックス経由・初回のみ）
+  if (!gState.mailbox) gState.mailbox = [];
+  if (!gState.progress.abyssRetroReward) {
+    const _retro = gState.progress.abyss.clearedLayers || [];
+    let _retroTotal = 0;
+    _retro.forEach(lid => {
+      const _key = `abyssMilestone${lid}`;
+      if (!gState.progress[_key]) {
+        gState.progress[_key] = true;
+        _retroTotal += (lid % 5 === 0) ? 200 : 50;
+      }
+    });
+    if (_retroTotal > 0) {
+      gState.mailbox.push({
+        id: 'abyss_retro_v1',
+        title: 'アビスダイブ 星晶石補填',
+        desc: 'アビスダイブのクリア報酬に星晶石が追加されました。\n既にクリア済みの層分として星晶石を補填配布します。',
+        items: [{ type:'starCrystal', amount:_retroTotal }],
+        claimed: false,
+        date: '2026-05-08',
+      });
+    }
+    gState.progress.abyssRetroReward = true;
+  }
+  // mailboxがない旧セーブへの対応
+  if (!gState.mailbox) gState.mailbox = [];
 
   // presets正規化（最大15スロット）
   while (gState.presets.length < 15) {
@@ -9603,6 +9673,46 @@ function claimAchievement(id) {
 
 // お知らせデータ
 const NEWS_DATA = [
+  {
+    id: 'news_019',
+    type: 'update',
+    title: '⚙️ バージョン1.22アップデート内容',
+    date: '2026-05-08',
+    summary: 'アビスダイブを40層まで拡張。郵便ボックス機能を追加し、既存クリア層分の星晶石を補填配布しました。',
+    body: `<h4>⚔️ アビスダイブ — 40層まで拡張</h4>
+<p>新たに第十六層〜第四十層が解放されました。8つのエリアをめぐる長大なダンジョンに挑戦しましょう。</p>
+<ul>
+  <li>第1〜5層：翠緑の草原（推奨 Lv10〜）</li>
+  <li>第6〜10層：ゴブリン集落（推奨 Lv20〜）</li>
+  <li>第11〜15層：深緑の森林（推奨 Lv30〜）</li>
+  <li>第16〜20層：菌糸の深奥（推奨 Lv40〜）</li>
+  <li>第21〜25層：峡谷（推奨 Lv50〜）</li>
+  <li>第26〜30層：遺跡（推奨 Lv60〜）</li>
+  <li>第31〜35層：荒野（推奨 Lv70〜）</li>
+  <li>第36〜40層：火山（推奨 Lv80〜）</li>
+</ul>
+
+<h4>🌟 アビスダイブ — 報酬改訂</h4>
+<ul>
+  <li>層クリア報酬をアクセサリー＋星晶石のみに変更（ゴールド・EXPポットの配布を廃止）</li>
+  <li><b>鬼門層（5の倍数）</b>クリアで星晶石 <span class="highlight">×200</span> を初回配布</li>
+  <li>それ以外の層は星晶石 <span class="highlight">×50</span> を初回配布</li>
+</ul>
+
+<h4>💍 アクセサリー — 確率ドロップ制に変更</h4>
+<ul>
+  <li>クリア報酬・周回のアクセサリーレアリティが層数に応じた確率で決定されるようになりました</li>
+  <li>SSRは第16層以上から出現し、第31〜35層で約20%・第36〜40層で約30%の確率</li>
+  <li>周回のトーストに実際のドロップ内訳（SSR×1 SR×3 など）を表示</li>
+</ul>
+
+<h4>📬 郵便ボックス — 新機能追加</h4>
+<ul>
+  <li>ホーム画面に<b>郵便ボックス</b>ボタンを追加。システムからのアイテム配布をここで受け取れます</li>
+  <li>未受け取りのメールがある場合、赤いバッジで通知されます</li>
+  <li>今回のアップデートで、アビスダイブを既にクリア済みの層分の星晶石が郵便で補填配布されます</li>
+</ul>`,
+  },
   {
     id: 'news_018',
     type: 'update',
@@ -10282,6 +10392,139 @@ function closeNewsModal() {
   updateNewsBanner();
 }
 
+// ============================================================
+//  郵便ボックス
+// ============================================================
+
+// アイテムタイプ → 表示ラベル
+const MAIL_ITEM_LABELS = {
+  starCrystal: { label:'星晶石', icon:'💎' },
+  gold:         { label:'ゴールド', icon:'🪙' },
+  ether:        { label:'EXPポット', icon:'🧪' },
+  mithril:      { label:'ミスリル', icon:'🔷' },
+  stamina:      { label:'スタミナ', icon:'⚡' },
+};
+
+function getUnclaimedMailCount() {
+  return (gState?.mailbox || []).filter(m => !m.claimed).length;
+}
+
+function updateMailboxBadge() {
+  const badge = document.getElementById('mailbox-badge');
+  if (!badge) return;
+  const n = getUnclaimedMailCount();
+  if (n > 0) {
+    badge.textContent = n > 99 ? '99+' : n;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function openMailbox() {
+  const ov = document.getElementById('mailbox-overlay');
+  if (!ov) return;
+  ov.style.display = 'flex';
+  renderMailboxBody();
+}
+
+function closeMailbox() {
+  const ov = document.getElementById('mailbox-overlay');
+  if (ov) ov.style.display = 'none';
+}
+
+function _mailItemHtml(item) {
+  const def = MAIL_ITEM_LABELS[item.type] || { label: item.type, icon: '📦' };
+  return `<span class="mail-item-tag">${def.icon} ${def.label} ×${fmt(item.amount)}</span>`;
+}
+
+function renderMailboxBody() {
+  const body = document.getElementById('mailbox-body');
+  const allBtn = document.getElementById('mailbox-claim-all-btn');
+  if (!body) return;
+  const mails = gState.mailbox || [];
+
+  if (mails.length === 0) {
+    body.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--text3);font-size:13px;">メールはありません</div>`;
+    if (allBtn) allBtn.disabled = true;
+    return;
+  }
+
+  const hasUnclaimed = mails.some(m => !m.claimed);
+  if (allBtn) allBtn.disabled = !hasUnclaimed;
+
+  // 未受け取りを上に表示
+  const sorted = [...mails].sort((a, b) => (a.claimed ? 1 : 0) - (b.claimed ? 1 : 0));
+
+  body.innerHTML = sorted.map(mail => {
+    const itemsHtml = (mail.items || []).map(_mailItemHtml).join('');
+    return `
+      <div class="mail-card ${mail.claimed ? 'claimed' : 'unclaimed'}">
+        <div class="mail-card-header">
+          <span style="font-size:16px">${mail.claimed ? '✉️' : '📩'}</span>
+          <span class="mail-card-title">${mail.title}</span>
+          <span class="mail-card-date">${mail.date || ''}</span>
+        </div>
+        <div class="mail-card-desc">${mail.desc || ''}</div>
+        <div class="mail-card-items">${itemsHtml}</div>
+        ${!mail.claimed
+          ? `<button class="btn btn-gold btn-sm" style="align-self:flex-end;margin-top:4px" onclick="claimMail('${mail.id}')">受け取る</button>`
+          : `<div style="font-size:11px;color:var(--text3);text-align:right;margin-top:4px">受け取り済み</div>`}
+      </div>`;
+  }).join('');
+}
+
+function _applyMailItems(mail) {
+  (mail.items || []).forEach(item => {
+    const amt = item.amount || 0;
+    if (item.type === 'starCrystal') gState.player.starCrystal = (gState.player.starCrystal || 0) + amt;
+    else if (item.type === 'gold')    gState.player.gold    = (gState.player.gold    || 0) + amt;
+    else if (item.type === 'ether')   gState.player.ether   = (gState.player.ether   || 0) + amt;
+    else if (item.type === 'mithril') gState.player.mithril = (gState.player.mithril || 0) + amt;
+    else if (item.type === 'stamina') {
+      const si = staminaRegenInfo();
+      gState.player.stamina = Math.min(si.max, si.cur + amt);
+      gState.player.staminaLastRegen = Date.now();
+    }
+  });
+}
+
+function claimMail(mailId) {
+  const mail = (gState.mailbox || []).find(m => m.id === mailId);
+  if (!mail || mail.claimed) return;
+  mail.claimed = true;
+  _applyMailItems(mail);
+  saveState(); updateTopBar();
+  renderMailboxBody();
+  // 受け取り完了トースト
+  const itemSummary = (mail.items || []).map(it => {
+    const def = MAIL_ITEM_LABELS[it.type] || { icon:'📦', label:it.type };
+    return `${def.icon}${def.label}×${fmt(it.amount)}`;
+  }).join('　');
+  showBonusToast(`📬 受け取り完了！　${itemSummary}`);
+}
+
+function claimAllMail() {
+  const unclaimed = (gState.mailbox || []).filter(m => !m.claimed);
+  if (!unclaimed.length) return;
+  unclaimed.forEach(mail => {
+    mail.claimed = true;
+    _applyMailItems(mail);
+  });
+  saveState(); updateTopBar();
+  renderMailboxBody();
+  showBonusToast(`📬 ${unclaimed.length}件のメールを受け取りました！`);
+}
+
+// メールを追加するユーティリティ（将来の配布に使用）
+function addSystemMail(id, title, desc, items, date) {
+  if (!gState.mailbox) gState.mailbox = [];
+  if (gState.mailbox.find(m => m.id === id)) return; // 重複防止
+  gState.mailbox.push({ id, title, desc, items, claimed: false, date: date || new Date().toLocaleDateString('ja-JP') });
+  saveState();
+  updateMailboxBadge();
+}
+
 // 一覧表示
 function showNewsList() {
   const listEl = document.getElementById('news-list-view');
@@ -10512,6 +10755,7 @@ function updateTopBar() {
   const stEl = document.getElementById('disp-stamina');
   if (stEl) stEl.textContent = si.cur + '/' + si.max;
   updateHamburgerInfo();
+  updateMailboxBadge();
 }
 
 function grantVipDailyBonus() {
@@ -12396,19 +12640,22 @@ function _executeAbyssSweep(layerId, n) {
   const layer = ABYSS_LAYERS.find(l => l.id === layerId);
   if (!gState.accessories) gState.accessories = [];
   const gained = [];
+  const rarCount = [0,0,0,0,0]; // index 1-4
   for (let i = 0; i < n; i++) {
-    const acc = generateAccessory(layer.accRarity);
+    const accRarity = rollAbyssAccRarity(layerId);
+    const acc = generateAccessory(accRarity);
     gState.accessories.push(acc);
     gained.push(acc);
+    rarCount[accRarity] = (rarCount[accRarity] || 0) + 1;
   }
   saveState(); updateTopBar();
   const cost = abyssSweepCost(layerId) * n;
-  const set      = ACCESSORY_SETS.find(s => s.id === gained[0]?.setId);
-  const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
-  const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
+  const rarSummary = [4,3,2,1].filter(r => rarCount[r] > 0)
+    .map(r => `<span style="color:${ABYSS_RARITY_COLOR[r]};font-weight:700">${ABYSS_RARITY_LABEL[r]}×${rarCount[r]}</span>`)
+    .join('　');
   const t = document.createElement('div');
   t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--purple);color:var(--text);padding:10px 16px;border-radius:4px;z-index:9999;font-size:12px;text-align:center;pointer-events:none;';
-  t.innerHTML = `⚡-${cost} ×${n} 周回完了！<br><span style="color:${rarColor};font-weight:700">${rarLabel} アクセサリー ×${n}</span>`;
+  t.innerHTML = `⚡-${cost}　×${n} 周回完了！<br>${rarSummary}`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3500);
   renderAbyssContent();
@@ -13361,6 +13608,28 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       if (eff.type === 'stealth_cri')   { passiveCri += eff.cri||0; passiveStealth += eff.stealth||0; }
     });
 
+    // アビスランバフをステータスに事前適用
+    let _abyssDrain = 0, _abyssRegen = 0, _abyssReduce = 0, _abyssUltBoost = 0;
+    if (battleContext?.type === 'abyss') {
+      const _abyssRun = gState.progress?.abyss?.currentRun;
+      (_abyssRun?.buffs || []).forEach(bid => {
+        const bDef = ABYSS_FLOOR_BUFFS.find(b => b.id === bid);
+        if (!bDef) return;
+        const { type, val } = bDef.effect;
+        if      (type === 'atk')       atk      = Math.floor(atk  * (1 + val/100));
+        else if (type === 'hp')        hp       = Math.floor(hp   * (1 + val/100));
+        else if (type === 'cri')       passiveCri += val;
+        else if (type === 'cri_dmg')   stats.cridam = (stats.cridam || 150) + val;
+        else if (type === 'spd')       spd      += val;
+        else if (type === 'pdef')      pdef     = Math.floor(pdef * (1 + val/100));
+        else if (type === 'mdef')      mdef     = Math.floor(mdef * (1 + val/100));
+        else if (type === 'drain')     _abyssDrain    += val;
+        else if (type === 'reduce')    _abyssReduce   += val;
+        else if (type === 'regen')     _abyssRegen    += val;
+        else if (type === 'ult_boost') _abyssUltBoost += val;
+      });
+    }
+
     const cls2 = CLASS_DATA[unit.classId];
     const combatant = {
       uid: unit.uid, name: unit.name, icon: cls.icon,
@@ -13405,6 +13674,13 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       }
     });
     applyPassiveCards(combatant, unit);
+
+    // アビスバフのうち、combatant生成後に適用が必要なもの
+    if (_abyssDrain    > 0) combatant._drainBonus    = (_abyssDrain);
+    if (_abyssUltBoost > 0) combatant._ultBoostPct   = (_abyssUltBoost);
+    if (_abyssReduce   > 0) combatant.buffs.push({ type:'damage_reduce', val:_abyssReduce, turns:99999, icon:'🔽被ダメ↓', cssClass:'hp-up', isPassive:true });
+    if (_abyssRegen    > 0) combatant.buffs.push({ type:'regen', val:_abyssRegen, turns:99999, icon:'💚再生', cssClass:'hp-up', isPassive:true });
+
     return combatant;
   } else {
     const defaultSkill = { id:'normalAtk', name:'通常攻撃', type:'phys', target:'single', power:1.0, cd:0 };
@@ -22534,35 +22810,78 @@ function discardAccessory(idx, e) {
 // ============================================================
 
 const ABYSS_FLOOR_BUFFS = [
-  { id:'atk5',     label:'ATK+5%',       icon:'⚔️', effect:{type:'atk', val:5} },
-  { id:'atk10',    label:'ATK+10%',      icon:'⚔️', effect:{type:'atk', val:10} },
-  { id:'hp10',     label:'HP+10%',       icon:'❤️', effect:{type:'hp', val:10} },
-  { id:'hp20',     label:'HP+20%',       icon:'❤️', effect:{type:'hp', val:20} },
-  { id:'cri8',     label:'会心率+8%',    icon:'💥', effect:{type:'cri', val:8} },
-  { id:'spd15',    label:'SPD+15',       icon:'💨', effect:{type:'spd', val:15} },
-  { id:'drain10',  label:'吸血10%',      icon:'🩸', effect:{type:'drain', val:10} },
-  { id:'reduce8',  label:'被ダメ-8%',    icon:'🛡️', effect:{type:'reduce', val:8} },
-  { id:'regen5',   label:'毎T回復5%',    icon:'💚', effect:{type:'regen', val:5} },
-  { id:'ult_boost',label:'ULT威力+20%', icon:'⚡', effect:{type:'ult_boost', val:20} },
+  { id:'atk5',      label:'ATK+5%',       icon:'⚔️', effect:{type:'atk',      val:5} },
+  { id:'atk10',     label:'ATK+10%',      icon:'⚔️', effect:{type:'atk',      val:10} },
+  { id:'atk15',     label:'ATK+15%',      icon:'⚔️', effect:{type:'atk',      val:15} },
+  { id:'hp10',      label:'HP+10%',       icon:'❤️', effect:{type:'hp',       val:10} },
+  { id:'hp20',      label:'HP+20%',       icon:'❤️', effect:{type:'hp',       val:20} },
+  { id:'hp30',      label:'HP+30%',       icon:'❤️', effect:{type:'hp',       val:30} },
+  { id:'cri8',      label:'会心率+8%',    icon:'💥', effect:{type:'cri',      val:8} },
+  { id:'cri_dmg20', label:'会心ダメ+20%', icon:'💥', effect:{type:'cri_dmg',  val:20} },
+  { id:'spd15',     label:'SPD+15',       icon:'💨', effect:{type:'spd',      val:15} },
+  { id:'spd25',     label:'SPD+25',       icon:'💨', effect:{type:'spd',      val:25} },
+  { id:'drain10',   label:'吸血10%',      icon:'🩸', effect:{type:'drain',    val:10} },
+  { id:'reduce8',   label:'被ダメ-8%',    icon:'🛡️', effect:{type:'reduce',   val:8} },
+  { id:'reduce15',  label:'被ダメ-15%',   icon:'🛡️', effect:{type:'reduce',   val:15} },
+  { id:'regen5',    label:'毎T回復5%',    icon:'💚', effect:{type:'regen',    val:5} },
+  { id:'regen8',    label:'毎T回復8%',    icon:'💚', effect:{type:'regen',    val:8} },
+  { id:'ult_boost', label:'ULT威力+20%',  icon:'⚡', effect:{type:'ult_boost',val:20} },
+  { id:'pdef15',    label:'物理防御+15%', icon:'🔩', effect:{type:'pdef',     val:15} },
+  { id:'mdef15',    label:'魔法防御+15%', icon:'🔮', effect:{type:'mdef',     val:15} },
 ];
 
 // 15層定義 (areaId → BABEL_AREAS.id, statMult = 通常敵スケール, bossMult = ボス敵スケール)
+// statMult・bossMult は各エリアのベースATKに乗算。エリアをまたいでも実効難易度が下がらないよう調整済み。
+// accRarity: 1=N 2=R 3=SR 4=SSR (SSRは14層以降のみ)
 const ABYSS_LAYERS = [
-  {id:1,  name:'第一層',   icon:'🌱', areaId:'area1',  statMult:1.5, bossMult:0.5, accRarity:1, rec:'推奨 Lv10〜'},
-  {id:2,  name:'第二層',   icon:'🌿', areaId:'area1',  statMult:2.2, bossMult:0.8, accRarity:1, rec:'推奨 Lv13〜'},
-  {id:3,  name:'第三層',   icon:'🍃', areaId:'area1',  statMult:3.0, bossMult:1.2, accRarity:1, rec:'推奨 Lv16〜'},
-  {id:4,  name:'第四層',   icon:'🌿', areaId:'area1',  statMult:4.0, bossMult:1.5, accRarity:2, rec:'推奨 Lv18〜'},
-  {id:5,  name:'第五層',   icon:'🌿', areaId:'area1',  statMult:5.0, bossMult:2.0, accRarity:2, rec:'推奨 Lv20〜'},
-  {id:6,  name:'第六層',   icon:'👺', areaId:'area2',  statMult:1.0, bossMult:1.0, accRarity:2, rec:'推奨 Lv25〜'},
-  {id:7,  name:'第七層',   icon:'👺', areaId:'area2',  statMult:1.3, bossMult:1.3, accRarity:2, rec:'推奨 Lv30〜'},
-  {id:8,  name:'第八層',   icon:'🌲', areaId:'area2b', statMult:0.8, bossMult:0.7, accRarity:3, rec:'推奨 Lv33〜'},
-  {id:9,  name:'第九層',   icon:'🌲', areaId:'area2b', statMult:1.1, bossMult:1.0, accRarity:3, rec:'推奨 Lv37〜'},
-  {id:10, name:'第十層',   icon:'🍄', areaId:'area2c', statMult:1.0, bossMult:1.0, accRarity:3, rec:'推奨 Lv40〜'},
-  {id:11, name:'第十一層', icon:'🏔️', areaId:'area3',  statMult:0.8, bossMult:0.4, accRarity:3, rec:'推奨 Lv42〜'},
-  {id:12, name:'第十二層', icon:'🏔️', areaId:'area3',  statMult:1.0, bossMult:0.6, accRarity:4, rec:'推奨 Lv44〜'},
-  {id:13, name:'第十三層', icon:'🏔️', areaId:'area3',  statMult:1.2, bossMult:0.8, accRarity:4, rec:'推奨 Lv46〜'},
-  {id:14, name:'第十四層', icon:'🏔️', areaId:'area3',  statMult:1.5, bossMult:1.0, accRarity:4, rec:'推奨 Lv48〜'},
-  {id:15, name:'第十五層', icon:'🏔️', areaId:'area3',  statMult:1.8, bossMult:1.3, accRarity:4, rec:'推奨 Lv50〜'},
+  // 翠緑の草原 (area1) 推奨Lv10〜
+  {id:1,  name:'第一層',    icon:'🌱', areaId:'area1',  statMult:1.5,  bossMult:0.8,  accRarity:1, rec:'推奨 Lv10〜'},
+  {id:2,  name:'第二層',    icon:'🌿', areaId:'area1',  statMult:2.0,  bossMult:1.0,  accRarity:1, rec:'推奨 Lv12〜'},
+  {id:3,  name:'第三層',    icon:'🍃', areaId:'area1',  statMult:2.8,  bossMult:1.4,  accRarity:1, rec:'推奨 Lv14〜'},
+  {id:4,  name:'第四層',    icon:'🌾', areaId:'area1',  statMult:3.6,  bossMult:1.8,  accRarity:1, rec:'推奨 Lv17〜'},
+  {id:5,  name:'第五層',    icon:'⚔️', areaId:'area1',  statMult:4.5,  bossMult:2.3,  accRarity:2, rec:'推奨 Lv20〜', milestone:true},
+  // ゴブリン集落 (area2) 推奨Lv20〜
+  {id:6,  name:'第六層',    icon:'👺', areaId:'area2',  statMult:1.8,  bossMult:1.0,  accRarity:2, rec:'推奨 Lv22〜'},
+  {id:7,  name:'第七層',    icon:'🗡️', areaId:'area2',  statMult:2.2,  bossMult:1.2,  accRarity:2, rec:'推奨 Lv24〜'},
+  {id:8,  name:'第八層',    icon:'🪓', areaId:'area2',  statMult:2.6,  bossMult:1.4,  accRarity:2, rec:'推奨 Lv26〜'},
+  {id:9,  name:'第九層',    icon:'🏹', areaId:'area2',  statMult:3.1,  bossMult:1.7,  accRarity:2, rec:'推奨 Lv28〜'},
+  {id:10, name:'第十層',    icon:'💥', areaId:'area2',  statMult:3.6,  bossMult:2.0,  accRarity:2, rec:'推奨 Lv30〜', milestone:true},
+  // 深緑の森林 (area2b) 推奨Lv30〜
+  {id:11, name:'第十一層',  icon:'🌲', areaId:'area2b', statMult:2.9,  bossMult:1.4,  accRarity:3, rec:'推奨 Lv32〜'},
+  {id:12, name:'第十二層',  icon:'🍀', areaId:'area2b', statMult:3.4,  bossMult:1.6,  accRarity:3, rec:'推奨 Lv34〜'},
+  {id:13, name:'第十三層',  icon:'🦋', areaId:'area2b', statMult:3.9,  bossMult:1.9,  accRarity:3, rec:'推奨 Lv36〜'},
+  {id:14, name:'第十四層',  icon:'🌙', areaId:'area2b', statMult:4.4,  bossMult:2.1,  accRarity:3, rec:'推奨 Lv38〜'},
+  {id:15, name:'第十五層',  icon:'🌳', areaId:'area2b', statMult:5.0,  bossMult:2.5,  accRarity:3, rec:'推奨 Lv40〜', milestone:true},
+  // 菌糸の深奥 (area2c) 推奨Lv40〜
+  {id:16, name:'第十六層',  icon:'🍄', areaId:'area2c', statMult:3.5,  bossMult:1.4,  accRarity:3, rec:'推奨 Lv42〜'},
+  {id:17, name:'第十七層',  icon:'🌑', areaId:'area2c', statMult:4.0,  bossMult:1.6,  accRarity:3, rec:'推奨 Lv44〜'},
+  {id:18, name:'第十八層',  icon:'🕸️', areaId:'area2c', statMult:4.5,  bossMult:1.8,  accRarity:3, rec:'推奨 Lv46〜'},
+  {id:19, name:'第十九層',  icon:'🦠', areaId:'area2c', statMult:5.1,  bossMult:2.1,  accRarity:4, rec:'推奨 Lv48〜'},
+  {id:20, name:'第二十層',  icon:'👾', areaId:'area2c', statMult:5.8,  bossMult:2.4,  accRarity:4, rec:'推奨 Lv50〜', milestone:true},
+  // 峡谷 (area3) 推奨Lv50〜
+  {id:21, name:'第二十一層',icon:'🏔️', areaId:'area3',  statMult:4.3,  bossMult:1.6,  accRarity:4, rec:'推奨 Lv52〜'},
+  {id:22, name:'第二十二層',icon:'⛰️', areaId:'area3',  statMult:4.8,  bossMult:1.8,  accRarity:4, rec:'推奨 Lv54〜'},
+  {id:23, name:'第二十三層',icon:'🌪️', areaId:'area3',  statMult:5.4,  bossMult:2.0,  accRarity:4, rec:'推奨 Lv56〜'},
+  {id:24, name:'第二十四層',icon:'⚡', areaId:'area3',  statMult:6.0,  bossMult:2.3,  accRarity:4, rec:'推奨 Lv58〜'},
+  {id:25, name:'第二十五層',icon:'💀', areaId:'area3',  statMult:6.8,  bossMult:2.6,  accRarity:4, rec:'推奨 Lv60〜', milestone:true},
+  // 遺跡 (area4) 推奨Lv60〜
+  {id:26, name:'第二十六層',icon:'🏛️', areaId:'area4',  statMult:5.5,  bossMult:1.8,  accRarity:4, rec:'推奨 Lv62〜'},
+  {id:27, name:'第二十七層',icon:'🗿', areaId:'area4',  statMult:6.2,  bossMult:2.0,  accRarity:4, rec:'推奨 Lv64〜'},
+  {id:28, name:'第二十八層',icon:'⚙️', areaId:'area4',  statMult:7.0,  bossMult:2.3,  accRarity:4, rec:'推奨 Lv66〜'},
+  {id:29, name:'第二十九層',icon:'🔩', areaId:'area4',  statMult:7.9,  bossMult:2.6,  accRarity:4, rec:'推奨 Lv68〜'},
+  {id:30, name:'第三十層',  icon:'👁️', areaId:'area4',  statMult:8.9,  bossMult:2.9,  accRarity:4, rec:'推奨 Lv70〜', milestone:true},
+  // 荒野 (area7) 推奨Lv70〜
+  {id:31, name:'第三十一層',icon:'🌵', areaId:'area7',  statMult:6.7,  bossMult:2.0,  accRarity:4, rec:'推奨 Lv72〜'},
+  {id:32, name:'第三十二層',icon:'🏜️', areaId:'area7',  statMult:7.5,  bossMult:2.3,  accRarity:4, rec:'推奨 Lv74〜'},
+  {id:33, name:'第三十三層',icon:'🦂', areaId:'area7',  statMult:8.5,  bossMult:2.6,  accRarity:4, rec:'推奨 Lv76〜'},
+  {id:34, name:'第三十四層',icon:'🌩️', areaId:'area7',  statMult:9.6,  bossMult:2.9,  accRarity:4, rec:'推奨 Lv78〜'},
+  {id:35, name:'第三十五層',icon:'☠️', areaId:'area7',  statMult:10.8, bossMult:3.2,  accRarity:4, rec:'推奨 Lv80〜', milestone:true},
+  // 火山 (area8) 推奨Lv80〜
+  {id:36, name:'第三十六層',icon:'🌋', areaId:'area8',  statMult:8.0,  bossMult:2.2,  accRarity:4, rec:'推奨 Lv82〜'},
+  {id:37, name:'第三十七層',icon:'🔥', areaId:'area8',  statMult:9.0,  bossMult:2.5,  accRarity:4, rec:'推奨 Lv84〜'},
+  {id:38, name:'第三十八層',icon:'💎', areaId:'area8',  statMult:10.2, bossMult:2.8,  accRarity:4, rec:'推奨 Lv86〜'},
+  {id:39, name:'第三十九層',icon:'🐉', areaId:'area8',  statMult:11.5, bossMult:3.2,  accRarity:4, rec:'推奨 Lv88〜'},
+  {id:40, name:'第四十層',  icon:'👑', areaId:'area8',  statMult:13.0, bossMult:3.6,  accRarity:4, rec:'推奨 Lv90〜', milestone:true},
 ];
 
 const ABYSS_RARITY_LABEL  = ['','N','R','SR','SSR'];
@@ -22591,7 +22910,7 @@ function getAbyssStageEnemies(layerId, stage) {
 }
 
 function abyssSweepCost(layerId) {
-  return layerId <= 5 ? 10 : layerId <= 10 ? 20 : 30;
+  return layerId <= 5 ? 10 : layerId <= 10 ? 20 : layerId <= 20 ? 30 : layerId <= 30 ? 40 : 50;
 }
 
 function renderAbyssContent() {
@@ -22617,7 +22936,7 @@ function renderAbyssContent() {
   stat.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;';
   stat.innerHTML = `
     <div class="base-res-item"><div class="base-res-val">${bestLayer > 0 ? bestLayer+'層' : '—'}</div><div class="base-res-label">📊 最深到達</div></div>
-    <div class="base-res-item"><div class="base-res-val">${cleared.length}/15</div><div class="base-res-label">✅ クリア層</div></div>`;
+    <div class="base-res-item"><div class="base-res-val">${cleared.length}/40</div><div class="base-res-label">✅ クリア層</div></div>`;
   el.appendChild(stat);
 
   // 進行中の探索バナー
@@ -22742,26 +23061,51 @@ function onAbyssVictory(layerId, stage) {
 }
 
 function showAbyssBuffChoice(choices, layerId, stage) {
-  const layer    = ABYSS_LAYERS.find(l => l.id === layerId);
+  const layer      = ABYSS_LAYERS.find(l => l.id === layerId);
   const isBossNext = stage === 5;
-  const overlay  = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(5,6,8,0.95);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px;';
+  const run        = gState.progress.abyss.currentRun;
+  const acquiredIds = run?.buffs || [];
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(5,6,8,0.95);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px;overflow-y:auto;';
+
+  // 取得済みバフ一覧
+  let acquiredHtml = '';
+  if (acquiredIds.length > 0) {
+    const tags = acquiredIds.map(bid => {
+      const bd = ABYSS_FLOOR_BUFFS.find(b => b.id === bid);
+      return bd ? `<span style="background:rgba(155,107,222,0.15);border:1px solid var(--purple);color:var(--purple);font-size:11px;padding:2px 7px;">${bd.icon}${bd.label}</span>` : '';
+    }).join('');
+    acquiredHtml = `<div style="width:100%;max-width:360px;"><div style="font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:5px">取得済みバフ</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${tags}</div></div>`;
+  }
+
   overlay.innerHTML = `
     <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;letter-spacing:3px">${layer.name} ステージ${stage} クリア！</div>
-    <div style="font-size:13px;color:var(--text2)">バフを1つ選択してください${isBossNext ? ' — 次はボス！' : ''}</div>`;
+    <div style="font-size:13px;color:var(--text2)">バフを1つ選択してください${isBossNext ? ' — <span style="color:var(--gold)">次はボス！</span>' : ''}</div>
+    ${acquiredHtml}`;
+
   const grid = document.createElement('div');
   grid.style.cssText = 'display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px;';
+
   choices.forEach(buff => {
+    const alreadyHas = acquiredIds.includes(buff.id);
     const btn = document.createElement('div');
-    btn.style.cssText = 'background:var(--panel);border:1px solid var(--purple);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.15s;';
-    btn.innerHTML = `<span style="font-size:24px">${buff.icon}</span><div><div style="font-size:14px;font-weight:700;color:var(--text)">${buff.label}</div></div>`;
-    btn.addEventListener('mouseover', () => btn.style.background = 'rgba(155,107,222,0.1)');
-    btn.addEventListener('mouseout',  () => btn.style.background = 'var(--panel)');
+    btn.style.cssText = `background:var(--panel);border:1px solid ${alreadyHas ? 'rgba(155,107,222,0.3)' : 'var(--purple)'};padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.15s;${alreadyHas ? 'opacity:0.7;' : ''}`;
+    btn.innerHTML = `
+      <span style="font-size:24px">${buff.icon}</span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">${buff.label}</div>
+        ${alreadyHas ? '<div style="font-size:10px;color:var(--purple);margin-top:2px">スタック可（重複効果）</div>' : ''}
+      </div>`;
+    btn.addEventListener('mouseover', () => { if (!btn._selecting) btn.style.background = 'rgba(155,107,222,0.1)'; });
+    btn.addEventListener('mouseout',  () => { if (!btn._selecting) btn.style.background = 'var(--panel)'; });
     btn.addEventListener('click', () => {
-      const run = gState.progress.abyss.currentRun;
-      if (run) {
-        run.buffs.push(buff.id);
-        run.stage = stage + 1;
+      btn._selecting = true;
+      btn.style.background = 'rgba(155,107,222,0.25)';
+      const currentRun = gState.progress.abyss.currentRun;
+      if (currentRun) {
+        currentRun.buffs.push(buff.id);
+        currentRun.stage = stage + 1;
         saveState();
       }
       document.body.removeChild(overlay);
@@ -22769,25 +23113,66 @@ function showAbyssBuffChoice(choices, layerId, stage) {
     });
     grid.appendChild(btn);
   });
+
   overlay.appendChild(grid);
   document.body.appendChild(overlay);
+}
+
+// 層クリア時の星晶石報酬（初回のみ）: 5の倍数層=200、それ以外=50
+function abyssLayerCrystalReward(layerId) {
+  return layerId % 5 === 0 ? 200 : 50;
+}
+
+// レア度確率テーブル（層IDで重み付け）
+function rollAbyssAccRarity(layerId) {
+  const r = Math.random() * 100;
+  if (layerId <= 5)  return r < 60 ? 1 : r < 90 ? 2 : 3;
+  if (layerId <= 10) return r < 20 ? 1 : r < 70 ? 2 : 3;
+  if (layerId <= 15) return r <  5 ? 1 : r < 35 ? 2 : 3;
+  if (layerId <= 20) return r < 10 ? 2 : r < 85 ? 3 : 4;
+  if (layerId <= 25) return r <  5 ? 2 : r < 83 ? 3 : 4;
+  if (layerId <= 30) return r < 80 ? 3 : 4;
+  if (layerId <= 35) return r < 80 ? 3 : 4;
+  return r < 70 ? 3 : 4; // 36-40層: SSR 30%
 }
 
 function giveAbyssLayerReward(layerId) {
   const layer = ABYSS_LAYERS.find(l => l.id === layerId);
   if (!layer) return;
   if (!gState.accessories) gState.accessories = [];
-  const acc      = generateAccessory(layer.accRarity);
+
+  const accRarity = rollAbyssAccRarity(layerId);
+  const acc = generateAccessory(accRarity);
   gState.accessories.push(acc);
-  saveState();
+
+  // 星晶石（初回クリアのみ）
+  const milestoneKey    = `abyssMilestone${layerId}`;
+  const crystalReward   = abyssLayerCrystalReward(layerId);
+  const isMilestone     = layerId % 5 === 0;
+  let crystalGiven      = false;
+  if (!gState.progress[milestoneKey]) {
+    gState.progress[milestoneKey] = true;
+    gState.player.starCrystal = (gState.player.starCrystal || 0) + crystalReward;
+    crystalGiven = true;
+  }
+
+  saveState(); updateTopBar();
+
   const set      = ACCESSORY_SETS.find(s => s.id === acc.setId);
-  const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
-  const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
-  const popup    = document.createElement('div');
+  const rarColor = ABYSS_RARITY_COLOR[accRarity] || '#aaa';
+  const rarLabel = ABYSS_RARITY_LABEL[accRarity] || 'N';
+  const crystalHtml = crystalGiven ? `
+    <div style="text-align:center;border:1px solid ${isMilestone ? 'var(--gold)' : 'var(--border)'};padding:12px 20px;background:${isMilestone ? 'rgba(249,211,66,0.08)' : 'rgba(0,0,0,0.4)'};">
+      ${isMilestone ? '<div style="font-size:11px;color:var(--gold);margin-bottom:4px">🏆 鬼門クリア！</div>' : '<div style="font-size:11px;color:var(--text3);margin-bottom:4px">初回クリア報酬</div>'}
+      <div style="font-size:18px;font-weight:700;color:var(--gold)">星晶石 +${crystalReward}</div>
+    </div>` : '';
+
+  const popup = document.createElement('div');
   popup.style.cssText = 'position:fixed;inset:0;z-index:6000;background:rgba(5,6,8,0.97);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px;';
   popup.innerHTML = `
     <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:22px;letter-spacing:3px">LAYER CLEAR!</div>
     <div style="font-size:14px;color:var(--text2)">${layer.icon} ${layer.name} 制覇！</div>
+    ${crystalHtml}
     <div style="text-align:center;border:1px solid ${rarColor};padding:16px 24px;background:rgba(0,0,0,0.4);">
       <div style="font-size:11px;color:var(--text3);margin-bottom:4px">アクセサリー獲得</div>
       <div style="font-size:18px;font-weight:700;color:${rarColor}">${rarLabel} ${set?.name || 'アクセサリー'}</div>
@@ -24475,6 +24860,19 @@ function endPassiveTutorial() {
 <!-- Admin Debug Panel -->
 <div id="debug-overlay" onclick="if(event.target===this)closeDebugPanel()">
   <div id="debug-panel"></div>
+</div>
+
+<!-- 郵便ボックス -->
+<div id="mailbox-overlay" class="mailbox-overlay" style="display:none">
+  <div class="mailbox-header">
+    <h2>📬 郵便ボックス</h2>
+    <button class="btn btn-outline btn-sm" onclick="claimAllMail()" id="mailbox-claim-all-btn">全て受け取る</button>
+    <button class="btn btn-outline btn-sm" onclick="closeMailbox()" style="border-color:var(--text3);color:var(--text3)">✕</button>
+  </div>
+  <div class="mailbox-body" id="mailbox-body"></div>
+  <div class="mailbox-footer">
+    <div style="font-size:11px;color:var(--text3);text-align:center">受け取り済みのメールは自動的にグレー表示されます</div>
+  </div>
 </div>
 
 </body>
