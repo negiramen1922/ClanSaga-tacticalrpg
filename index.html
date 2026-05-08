@@ -705,6 +705,22 @@ img.item-icon {
 
 /* FLOATING NUMBERS — カード上に浮かぶ数字 */
 .battle-arena { position: relative; }
+/* 敵全滅フラッシュ演出 */
+#defeat-flash-overlay {
+  position: absolute; inset: 0; z-index: 60;
+  pointer-events: none; border-radius: 4px;
+  opacity: 0;
+}
+@keyframes defeatFlashAnim {
+  0%   { opacity: 0;   background: rgba(255,255,220,0); }
+  12%  { opacity: 1;   background: rgba(255,255,220,0.5); }
+  35%  { opacity: 0.7; background: rgba(255,255,255,0.15); }
+  65%  { opacity: 0.9; background: rgba(8,8,12,0.65); }
+  100% { opacity: 0;   background: rgba(8,8,12,0); }
+}
+#defeat-flash-overlay.active {
+  animation: defeatFlashAnim 0.75s ease-out forwards;
+}
 .float-num {
   position: absolute; pointer-events: none; z-index: 200;
   font-family: 'Rajdhani', sans-serif; font-weight: 700;
@@ -2676,6 +2692,7 @@ img.item-icon {
         <div class="combatant-zone" id="ally-zone"><h4>ALLY</h4></div>
         <div class="battle-center"><div class="vs-text">VS</div></div>
         <div class="combatant-zone" id="enemy-zone"><h4>ENEMY</h4></div>
+        <div id="defeat-flash-overlay"></div>
       </div>
       <div class="battle-controls">
         <div class="speed-btns">
@@ -13596,62 +13613,61 @@ function tickBattle() {
   const enemiesAlive = bs.enemies.filter(c=>!c.dead);
 
   if (!enemiesAlive.length) {
-    if (bs.waveIdx+1 < bs.waveEnemies.length) {
-      pauseBattle();
-      const nextIdx = bs.waveIdx + 1;
-      const nextEnemyData = bs.waveEnemies[nextIdx];
-      showWaveTransition(nextIdx + 1, bs.waveEnemies.length, () => {
-        // WAVEリセット（昼戦に戻す）
-        bs.waveIdx = nextIdx;
-        bs.elapsed = 0;
-        bs.nightPhaseOffered = false;
-        bs.isNight = false;
-        bs.nightElapsed = 0;
-        document.getElementById('battle-screen').classList.remove('is-night');
-        const nightBar = document.getElementById('night-timer-bar');
-        if (nightBar) nightBar.style.display = 'none';
-        const nightModal = document.getElementById('night-choice-modal');
-        if (nightModal) nightModal.style.display = 'none';
-        const phaseWrapW = document.getElementById('phase-timer-wrap');
-        if (phaseWrapW) phaseWrapW.className = 'day-mode active';
-        // 新しい敵を生成（HP/MP引き継ぎなし）
-        bs.enemies = nextEnemyData.map((e) => {
-          return makeCombatant(null, true, e);
-        });
-        // 味方のATBをリセット（ULT/HP/MPは引き継ぎ）
-        bs.allies.forEach(a => { a.atb = 0; });
-        updateTimer();
-        renderBattle();
-        document.getElementById('battle-wave-info').textContent =
-          `WAVE ${bs.waveIdx+1}/${bs.waveEnemies.length}`;
-        addLog(`WAVE ${bs.waveIdx+1} 開始！`, 'trigger');
-        // 索敵フェーズを挟む
-        startScoutPhase((scoutResult) => {
-          // WAVEスカウト結果をbattleStateに保存
-          if (battleState && scoutResult) battleState._scoutOutcome = scoutResult.outcome;
-          // スカウトバッジ更新
-          if (scoutResult) {
-            const badge = document.getElementById('battle-scout-badge');
-            if (badge) {
-              const labelMap = { success:'⚡ 奇襲', failure:'👁️ 先制', normal:'🗡️ 通常' };
-              badge.textContent = labelMap[scoutResult.outcome] || '🗡️ 通常';
-              badge.className = scoutResult.outcome;
-              badge.style.display = '';
+    // グレーアウト → フラッシュ → 遷移
+    showDefeatClearEffect(() => {
+      if (bs.waveIdx+1 < bs.waveEnemies.length) {
+        const nextIdx = bs.waveIdx + 1;
+        const nextEnemyData = bs.waveEnemies[nextIdx];
+        showWaveTransition(nextIdx + 1, bs.waveEnemies.length, () => {
+          // WAVEリセット（昼戦に戻す）
+          bs.waveIdx = nextIdx;
+          bs.elapsed = 0;
+          bs.nightPhaseOffered = false;
+          bs.isNight = false;
+          bs.nightElapsed = 0;
+          document.getElementById('battle-screen').classList.remove('is-night');
+          const nightBar = document.getElementById('night-timer-bar');
+          if (nightBar) nightBar.style.display = 'none';
+          const nightModal = document.getElementById('night-choice-modal');
+          if (nightModal) nightModal.style.display = 'none';
+          const phaseWrapW = document.getElementById('phase-timer-wrap');
+          if (phaseWrapW) phaseWrapW.className = 'day-mode active';
+          // 新しい敵を生成（HP/MP引き継ぎなし）
+          bs.enemies = nextEnemyData.map((e) => {
+            return makeCombatant(null, true, e);
+          });
+          // 味方のATBをリセット（ULT/HP/MPは引き継ぎ）
+          bs.allies.forEach(a => { a.atb = 0; });
+          updateTimer();
+          renderBattle();
+          document.getElementById('battle-wave-info').textContent =
+            `WAVE ${bs.waveIdx+1}/${bs.waveEnemies.length}`;
+          addLog(`WAVE ${bs.waveIdx+1} 開始！`, 'trigger');
+          // 索敵フェーズを挟む
+          startScoutPhase((scoutResult) => {
+            if (battleState && scoutResult) battleState._scoutOutcome = scoutResult.outcome;
+            if (scoutResult) {
+              const badge = document.getElementById('battle-scout-badge');
+              if (badge) {
+                const labelMap = { success:'⚡ 奇襲', failure:'👁️ 先制', normal:'🗡️ 通常' };
+                badge.textContent = labelMap[scoutResult.outcome] || '🗡️ 通常';
+                badge.className = scoutResult.outcome;
+                badge.style.display = '';
+              }
             }
-          }
-          // WAVE開幕スキル発動 + パッシブスタックリセット
-          if (battleState) {
-            battleState.allies.forEach(a => {
-              if (a._passiveFightingSpirit) a._passiveFightingSpirit.stacks = 0;
-            });
-            fireOpeningSkills(battleState.allies, battleState.enemies);
-          }
-          resumeBattle();
+            if (battleState) {
+              battleState.allies.forEach(a => {
+                if (a._passiveFightingSpirit) a._passiveFightingSpirit.stacks = 0;
+              });
+              fireOpeningSkills(battleState.allies, battleState.enemies);
+            }
+            resumeBattle();
+          });
         });
-      });
-    } else {
-      endBattle(true);
-    }
+      } else {
+        endBattle(true);
+      }
+    });
     return;
   }
   if (!alliesAlive.length) {
@@ -15827,6 +15843,21 @@ function nextStage() {
 // ============================================================
 //  WAVE / NIGHT / SCOUT PHASE
 // ============================================================
+
+function showDefeatClearEffect(callback) {
+  pauseBattle();
+  renderBattle(); // 死亡状態（グレーアウト）を先に描画
+  const ov = document.getElementById('defeat-flash-overlay');
+  if (ov) {
+    ov.classList.remove('active');
+    void ov.offsetWidth; // reflow でアニメーションをリセット
+    ov.classList.add('active');
+  }
+  setTimeout(() => {
+    if (ov) ov.classList.remove('active');
+    callback();
+  }, 700);
+}
 
 function showWaveTransition(nextWave, totalWaves, callback) {
   // 既存オーバーレイ除去
