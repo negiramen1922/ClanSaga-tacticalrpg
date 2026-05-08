@@ -2637,6 +2637,34 @@ img.item-icon {
       </div>
 
       <div class="content-section">
+        <div class="section-header" onclick="toggleSection(this,'daily-dungeon-panel')">
+          <span class="sec-icon">📅</span>
+          <div>
+            <div class="sec-title">デイリーダンジョン</div>
+            <div class="sec-sub" id="daily-dungeon-sub">響典・英雄譚を収集</div>
+          </div>
+          <span class="sec-arrow">▶</span>
+        </div>
+        <div class="area-list" id="daily-dungeon-panel" style="display:none">
+          <div id="daily-dungeon-wrap"></div>
+        </div>
+      </div>
+
+      <div class="content-section">
+        <div class="section-header" onclick="toggleSection(this,'shrine-panel')">
+          <span class="sec-icon">⛩️</span>
+          <div>
+            <div class="sec-title">修練の祠</div>
+            <div class="sec-sub">スキル強化石を収集</div>
+          </div>
+          <span class="sec-arrow">▶</span>
+        </div>
+        <div class="area-list" id="shrine-panel" style="display:none">
+          <div id="shrine-list-wrap"></div>
+        </div>
+      </div>
+
+      <div class="content-section">
         <div class="section-header" onclick="toggleSection(this,'abyss-panel')">
           <span class="sec-icon">🌀</span>
           <div>
@@ -8402,6 +8430,85 @@ const SHRINE_STAGES = [
   ]},
 ];
 
+// ── デイリーダンジョン（響典・英雄譚収集）──
+const DAILY_DUNGEON_STAGES = [
+  { id:'dd_lv1', name:'デイリーダンジョン Lv.1', recLv:10,  waves:1,
+    drops:{ t1:1, t2:0, t3:0, eiyuutan:0 },
+    enemies:[
+      [{name:'試錬ゴーレムI',  icon:'🗿', atk:180,  hp:6000,   pres:5,  mres:0,  spd:20, cri:2},
+       {name:'試錬ゴーレムI',  icon:'🗿', atk:180,  hp:6000,   pres:5,  mres:0,  spd:20, cri:2}]
+    ]
+  },
+  { id:'dd_lv2', name:'デイリーダンジョン Lv.2', recLv:30,  waves:2,
+    drops:{ t1:2, t2:0, t3:0, eiyuutan:0 },
+    enemies:[
+      [{name:'試錬ゴーレムII', icon:'🗿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4},
+       {name:'試錬ゴーレムII', icon:'🗿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4}],
+      [{name:'試錬ゴーレムII', icon:'🗿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4},
+       {name:'試錬ゴーレムII', icon:'🗿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4},
+       {name:'試錬ゴーレムII', icon:'🗿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4}]
+    ]
+  },
+  { id:'dd_lv3', name:'デイリーダンジョン Lv.3', recLv:50,  waves:3,
+    drops:{ t1:1, t2:1, t3:0, eiyuutan:0 },
+    enemies:[
+      [{name:'強化ゴーレムI',  icon:'🗿', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6},
+       {name:'強化ゴーレムI',  icon:'🗿', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6}],
+      [{name:'強化ゴーレムI',  icon:'🗿', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6},
+       {name:'強化ゴーレムI',  icon:'🗿', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6},
+       {name:'強化ゴーレムI',  icon:'🗿', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6}],
+      [{name:'強化ゴーレムII', icon:'🗿', atk:650,  hp:55000,  pres:20, mres:15, spd:35, cri:8}]
+    ]
+  },
+  { id:'dd_lv4', name:'デイリーダンジョン Lv.4', recLv:70,  waves:4,
+    drops:{ t1:2, t2:2, t3:0, eiyuutan:0 },
+    enemies:[
+      [{name:'強化ゴーレムII', icon:'🗿', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8},
+       {name:'強化ゴーレムII', icon:'🗿', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8}],
+      [{name:'強化ゴーレムII', icon:'🗿', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8},
+       {name:'強化ゴーレムII', icon:'🗿', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8},
+       {name:'強化ゴーレムII', icon:'🗿', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8}],
+      [{name:'精鋭ゴーレムI',  icon:'🗿', atk:900,  hp:85000,  pres:28, mres:22, spd:40, cri:10}],
+      [{name:'精鋭ゴーレムI',  icon:'🗿', atk:900,  hp:85000,  pres:28, mres:22, spd:40, cri:10},
+       {name:'精鋭ゴーレムI',  icon:'🗿', atk:900,  hp:85000,  pres:28, mres:22, spd:40, cri:10}]
+    ]
+  },
+  { id:'dd_lv5', name:'デイリーダンジョン Lv.5', recLv:100, waves:5,
+    drops:{ t1:1, t2:2, t3:1, eiyuutan:0.3 },
+    enemies:[
+      [{name:'精鋭ゴーレムII', icon:'🗿', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12},
+       {name:'精鋭ゴーレムII', icon:'🗿', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12}],
+      [{name:'精鋭ゴーレムII', icon:'🗿', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12},
+       {name:'精鋭ゴーレムII', icon:'🗿', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12},
+       {name:'精鋭ゴーレムII', icon:'🗿', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12}],
+      [{name:'覇者ゴーレムI',  icon:'🗿', atk:1300, hp:150000, pres:35, mres:30, spd:45, cri:14}],
+      [{name:'覇者ゴーレムI',  icon:'🗿', atk:1300, hp:150000, pres:35, mres:30, spd:45, cri:14},
+       {name:'覇者ゴーレムI',  icon:'🗿', atk:1300, hp:150000, pres:35, mres:30, spd:45, cri:14}],
+      [{name:'覇者ゴーレムII', icon:'🗿', atk:1600, hp:220000, pres:40, mres:35, spd:48, cri:16}]
+    ]
+  },
+];
+
+// 今日のデイリーダンジョン対応ロールグループを返す
+// グループA（月・水・金）: アタッカー・タンク・トリックスター
+// グループB（火・木・土）: レンジ・サポート・スカウト
+// 日曜: 全ロール
+function getDailyDungeonGroups() {
+  const day = new Date().getDay(); // 0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土
+  const groupA = [
+    { key:'warrior',   name:'アタッカー' },
+    { key:'vanguard',  name:'タンク' },
+    { key:'trickster', name:'トリックスター' },
+  ];
+  const groupB = [
+    { key:'ranger',  name:'レンジ' },
+    { key:'support', name:'サポート' },
+    { key:'scout',   name:'スカウト' },
+  ];
+  if (day === 0) return [...groupA, ...groupB];
+  return (day % 2 === 1) ? groupA : groupB;
+}
+
 
 // roleからROLE_ICONSのキーを返す
 function getRoleIconKey(classId) {
@@ -8802,6 +8909,7 @@ function defaultState(clanName) {
       babel:{ clearedStages:{} },
       colosseum:{ rank:1, dailyChallenges:0, lastChallengeDate:'' },
       shrine:{ clearedToday:{} },
+      dailyDungeon:{ clearedToday:{} },
     },
     tickets:{ sweep:0, timeSkip:0 },
     settings: { battleMode: { ultAuto: true, skillAuto: true } },
@@ -8975,7 +9083,8 @@ function normalizeState() {
   if (!gState.progress.babel)      gState.progress.babel      = { clearedStages:{} };
   if (!gState.progress.abyss)      gState.progress.abyss      = { currentRun:null, bestLayer:0, clearedLayers:[], dailyRuns:0, lastRunDate:'' };
   if (!gState.progress.colosseum)  gState.progress.colosseum  = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
-  if (!gState.progress.shrine)     gState.progress.shrine     = { clearedToday:{} };
+  if (!gState.progress.shrine)        gState.progress.shrine        = { clearedToday:{} };
+  if (!gState.progress.dailyDungeon)  gState.progress.dailyDungeon  = { clearedToday:{} };
   if (!gState.progress.babel.clearedStages) gState.progress.babel.clearedStages = {};
 
   // tickets / missions
@@ -10661,8 +10770,9 @@ function launchApp() {
   if (!gState.progress.abyss.clearedLayers) gState.progress.abyss.clearedLayers = [];
   if (gState.progress.abyss.bestLayer === undefined) gState.progress.abyss.bestLayer = 0;
   if (gState.progress.abyss.currentRun && gState.progress.abyss.currentRun.layerId === undefined) gState.progress.abyss.currentRun = null;
-  if (!gState.progress.colosseum)  gState.progress.colosseum  = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
-  if (!gState.progress.shrine)     gState.progress.shrine     = { clearedToday:{} };
+  if (!gState.progress.colosseum)     gState.progress.colosseum     = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
+  if (!gState.progress.shrine)        gState.progress.shrine        = { clearedToday:{} };
+  if (!gState.progress.dailyDungeon)  gState.progress.dailyDungeon  = { clearedToday:{} };
 
   // ユニット補正
   gState.ownedUnits.forEach(u => {
@@ -13557,6 +13667,12 @@ function startShrineBattle(shrineId) {
   initBattle(sh.enemies, sh.name);
 }
 
+function startDailyDungeonBattle(stageId) {
+  const stage = DAILY_DUNGEON_STAGES.find(s=>s.id===stageId);
+  battleContext = { type:'dailyDungeon', stageId, stageName: stage.name, waves: stage.enemies };
+  initBattle(stage.enemies, stage.name);
+}
+
 function getFormationUnits() {
   const preset = gState.presets[gState.activePreset];
   const uids = (preset.formation.slots||[]).filter(Boolean);
@@ -16100,6 +16216,41 @@ function endBattle(victory) {
       const starPt = 3;
       drops.push({ name:`⭐ スターPt ×`+starPt });
       gState.player.starMapPoints = (gState.player.starMapPoints||0) + starPt;
+    }
+    if (battleContext.type==='dailyDungeon') {
+      const _ddStage = DAILY_DUNGEON_STAGES.find(s=>s.id===battleContext.stageId);
+      if (!gState.progress.dailyDungeon) gState.progress.dailyDungeon = { clearedToday:{} };
+      gState.progress.dailyDungeon.clearedToday[battleContext.stageId] =
+        (gState.progress.dailyDungeon.clearedToday[battleContext.stageId]||0) + 1;
+      const _ddRoles = getDailyDungeonGroups();
+      const _p = gState.player;
+      if (!_p.kyoten)   _p.kyoten   = {};
+      if (!_p.eiyuutan) _p.eiyuutan = {};
+      const _pickRole = () => _ddRoles[Math.floor(Math.random()*_ddRoles.length)];
+      const _cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+      for (let _i=0; _i<(_ddStage.drops.t1||0); _i++) {
+        const _r = _pickRole();
+        if (!_p.kyoten[_r.key]) _p.kyoten[_r.key] = {t1:0,t2:0,t3:0};
+        _p.kyoten[_r.key].t1++;
+        drops.push({ name:`${itemIconHTML('kyoten'+_cap(_r.key)+'T1','18px')} ${_r.name}の響典T1 ×1` });
+      }
+      for (let _i=0; _i<(_ddStage.drops.t2||0); _i++) {
+        const _r = _pickRole();
+        if (!_p.kyoten[_r.key]) _p.kyoten[_r.key] = {t1:0,t2:0,t3:0};
+        _p.kyoten[_r.key].t2++;
+        drops.push({ name:`${itemIconHTML('kyoten'+_cap(_r.key)+'T2','18px')} ${_r.name}の響典T2 ×1` });
+      }
+      for (let _i=0; _i<(_ddStage.drops.t3||0); _i++) {
+        const _r = _pickRole();
+        if (!_p.kyoten[_r.key]) _p.kyoten[_r.key] = {t1:0,t2:0,t3:0};
+        _p.kyoten[_r.key].t3++;
+        drops.push({ name:`${itemIconHTML('kyoten'+_cap(_r.key)+'T3','18px')} ${_r.name}の響典T3 ×1` });
+      }
+      if (_ddStage.drops.eiyuutan > 0 && Math.random() < _ddStage.drops.eiyuutan) {
+        const _r = _pickRole();
+        _p.eiyuutan[_r.key] = (_p.eiyuutan[_r.key]||0) + 1;
+        drops.push({ name:`${itemIconHTML('eiyuutan'+_cap(_r.key),'18px')} ${_r.name}の英雄譚 ×1` });
+      }
     }
     if (battleContext.type==='abyss') {
       onAbyssVictory(battleContext.layerId, battleContext.stage);
@@ -23570,6 +23721,46 @@ function renderSortieTab() {
     }
     wrap.appendChild(row);
   });
+
+  // デイリーダンジョン描画
+  const ddWrap = document.getElementById('daily-dungeon-wrap');
+  if (ddWrap) {
+    ddWrap.innerHTML = '';
+    const _ddGroups   = getDailyDungeonGroups();
+    const _dayNum     = new Date().getDay();
+    const _dayNames   = ['日','月','火','水','木','金','土'];
+    const _roleNames  = _ddGroups.map(r=>r.name).join(' / ');
+    const _infoBanner = document.createElement('div');
+    _infoBanner.style.cssText = 'padding:8px 12px;background:rgba(201,168,76,0.1);border-left:3px solid var(--gold);margin-bottom:8px;font-size:12px;color:var(--text-dim)';
+    _infoBanner.innerHTML = `📅 今日（${_dayNames[_dayNum]}）のドロップロール: <span style="color:var(--gold);font-weight:700">${_roleNames}</span>`;
+    ddWrap.appendChild(_infoBanner);
+    DAILY_DUNGEON_STAGES.forEach((stage, _idx) => {
+      const _cleared = gState.progress.dailyDungeon?.clearedToday?.[stage.id] || 0;
+      const _row = document.createElement('div');
+      _row.className = 'area-item';
+      const _dropParts = [];
+      if (stage.drops.t1 > 0) _dropParts.push(`響典T1×${stage.drops.t1}`);
+      if (stage.drops.t2 > 0) _dropParts.push(`響典T2×${stage.drops.t2}`);
+      if (stage.drops.t3 > 0) _dropParts.push(`響典T3×${stage.drops.t3}`);
+      if (stage.drops.eiyuutan > 0) _dropParts.push(`英雄譚(${Math.round(stage.drops.eiyuutan*100)}%)`);
+      _row.innerHTML = `
+        <div style="font-size:18px;flex-shrink:0">📚</div>
+        <div style="flex:1;min-width:0">
+          <div class="area-name">Lv.${_idx+1} &nbsp;推奨Lv${stage.recLv} &nbsp;WAVE${stage.waves}</div>
+          <div class="area-atk" style="color:var(--text-dim)">${_dropParts.join(' + ')}</div>
+          ${_cleared ? `<div style="font-size:10px;color:#aaa">本日${_cleared}回クリア済</div>` : ''}
+        </div>`;
+      const _btn = document.createElement('button');
+      _btn.className = 'btn btn-gold btn-sm';
+      _btn.style.marginLeft = 'auto';
+      _btn.textContent = '出撃';
+      _btn.addEventListener('click', () => startDailyDungeonBattle(stage.id));
+      _row.appendChild(_btn);
+      ddWrap.appendChild(_row);
+    });
+    const _ddSub = document.getElementById('daily-dungeon-sub');
+    if (_ddSub) _ddSub.textContent = _dayNum === 0 ? '日曜: 全ロール解放' : `本日: ${_roleNames}`;
+  }
 
   const shrineWrap = document.getElementById('shrine-list-wrap');
   if (shrineWrap) {
