@@ -2501,6 +2501,11 @@ img.item-icon {
         </div>
       </div>
 
+      <!-- クランホールボタン -->
+      <button class="btn btn-gold" style="width:100%;padding:16px;font-size:18px;font-weight:700;letter-spacing:2px;border-radius:14px;margin-bottom:12px;box-shadow:0 4px 16px rgba(201,168,76,0.3)" onclick="openClanHall()">
+        🏰 クランホール
+      </button>
+
       <!-- クイックメニュー -->
       <div class="quick-btns">
         <div class="quick-btn" onclick="switchTab('chara')"><img src="assets/images/nav-chara.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> キャラ</div>
@@ -20183,9 +20188,7 @@ function showBonusToast(msg, isHtml=false) {
     setTimeout(() => t.remove(), 400);
   }, 3000);
 }
-
-// ============================================================
-//  BASE
+const toast = showBonusToast;
 // ============================================================
 
 function renderMineExpiry() {
