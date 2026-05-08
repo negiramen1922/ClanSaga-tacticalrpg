@@ -1621,6 +1621,40 @@ img.item-icon {
 /* 旧 night-timer-bar は非表示 */
 .night-timer-bar { display: none !important; }
 .night-timer-fill { display: none !important; }
+/* ===== ATB タイムライン ===== */
+#atb-timeline {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 10px;
+  background: rgba(0,0,0,0.38);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  overflow-x: auto; overflow-y: visible;
+  scrollbar-width: none; flex-shrink: 0;
+}
+#atb-timeline::-webkit-scrollbar { display: none; }
+#atb-tl-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+  color: var(--gold); letter-spacing: 0.5px; flex-shrink: 0;
+  opacity: 0.75; margin-right: 2px;
+}
+.atb-tl-icon {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; border: 1.5px solid transparent;
+  flex-shrink: 0; transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.atb-tl-ally  { background: rgba(74,127,255,0.12); border-color: rgba(74,127,255,0.5); }
+.atb-tl-enemy { background: rgba(220,70,70,0.12);  border-color: rgba(220,70,70,0.5); }
+.atb-tl-next  {
+  width: 34px !important; height: 34px !important; font-size: 17px !important;
+  border-color: var(--gold) !important;
+  background: rgba(201,168,76,0.2) !important;
+  box-shadow: 0 0 10px rgba(201,168,76,0.55);
+}
+.atb-tl-divider {
+  width: 1px; height: 18px; background: rgba(255,255,255,0.1);
+  flex-shrink: 0; margin: 0 1px;
+}
 /* ===== NIGHT PHASE ===== */
 #scout-overlay {
   position: fixed; inset: 0; z-index: 2000;
@@ -2633,6 +2667,8 @@ img.item-icon {
   <div class="night-timer-bar" id="night-timer-bar" style="display:none">
     <div class="night-timer-fill" id="night-timer-fill" style="width:100%"></div>
   </div>
+  <!-- ATBタイムライン: 次の行動順を表示 -->
+  <div id="atb-timeline"><span id="atb-tl-label">▶ NEXT</span></div>
   <!-- 横画面: アリーナ(左) + ログ(右) -->
   <div id="battle-body">
     <div style="flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;height:100%;">
@@ -12744,6 +12780,29 @@ function initBattle(waveEnemies, stageName) {
   renderBattle();
 }
 
+function renderATBTimeline() {
+  const bar = document.getElementById('atb-timeline');
+  if (!bar || !battleState) return;
+  const bs = battleState;
+  const all = [
+    ...bs.allies.filter(c => !c.dead),
+    ...bs.enemies.filter(c => !c.dead && !c._underground)
+  ].sort((a, b) => {
+    const ta = (100 - a.atb) / Math.max(1, a.spd);
+    const tb = (100 - b.atb) / Math.max(1, b.spd);
+    return ta - tb;
+  });
+  const icons = all.map((c, i) => {
+    const cls = c.isEnemy ? 'atb-tl-enemy' : 'atb-tl-ally';
+    const nextCls = i === 0 ? ' atb-tl-next' : '';
+    const label = `${c.name}${i === 0 ? ' ─ 次に行動' : ''}`;
+    return `<div class="atb-tl-icon ${cls}${nextCls}" title="${label}">${c.icon}</div>`;
+  });
+  // 3番目と4番目の間に区切り線（"すぐ行動" / "後で行動" の境界）
+  if (icons.length > 3) icons.splice(3, 0, `<div class="atb-tl-divider"></div>`);
+  bar.innerHTML = `<span id="atb-tl-label">▶ NEXT</span>` + icons.join('');
+}
+
 function renderBattle() {
   const bs = battleState;
   if (!bs) return;
@@ -12821,6 +12880,7 @@ function renderBattle() {
 
   renderZone('ally-zone', bs.allies);
   renderZone('enemy-zone', bs.enemies.filter(e => !e._underground));
+  renderATBTimeline();
   updateTimer();
 }
 
