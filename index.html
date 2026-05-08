@@ -6091,40 +6091,47 @@ const BABEL_AREAS = [
          {name:'ヴェノムボア', icon:'🐗', hp:11000, mp:3500, atk:620, pres:18, mres:5, bres:5, lres:0, spd:62, cri:6,
           enemySkills:[{name:'猛毒突進', type:'phys', target:'single', power:1.8, cd:5, debuff:{type:'strong_poison', val:10, turns:3}},{name:'突進', type:'phys', target:'single', power:1.6, cd:4},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
-      { id:'a2cs5', name:'テオナナカトルの間', waves:3, enemies:[
-        [{name:'ヴェノムボア', icon:'🐗', hp:12000, mp:4000, atk:650, pres:18, mres:5, bres:5, lres:0, spd:62, cri:6,
-          enemySkills:[{name:'猛毒突進', type:'phys', target:'single', power:1.8, cd:5, debuff:{type:'strong_poison', val:10, turns:3}},{name:'突進', type:'phys', target:'single', power:1.6, cd:4},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'ヴェノムウルフ', icon:'🐺', hp:8000, mp:3000, atk:600, pres:5, mres:5, bres:0, lres:0, spd:95, cri:10,
-          enemySkills:[{name:'猛毒噛みつき', type:'phys', target:'single', power:1.6, cd:5, debuff:{type:'strong_poison', val:10, turns:3}},{name:'遠吠え', type:'spec', target:'all', power:0.5, cd:8, debuff:{type:'atk_down', val:-10, turns:2}},{name:'噛みつき', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'ヴェノムウルフ', icon:'🐺', hp:8000, mp:3000, atk:600, pres:5, mres:5, bres:0, lres:0, spd:95, cri:10,
-          enemySkills:[{name:'猛毒噛みつき', type:'phys', target:'single', power:1.6, cd:5, debuff:{type:'strong_poison', val:10, turns:3}},{name:'噛みつき', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'ヴェノムウルフ', icon:'🐺', hp:8000, mp:3000, atk:600, pres:5, mres:5, bres:0, lres:0, spd:95, cri:10,
-          enemySkills:[{name:'猛毒噛みつき', type:'phys', target:'single', power:1.6, cd:5, debuff:{type:'strong_poison', val:10, turns:3}},{name:'噛みつき', type:'phys', target:'single', power:1.0, cd:0}]}],
-        [{name:'ヴェノムマイコニド', icon:'🟣', hp:10000, mp:4500, atk:620, pres:25, mres:8, bres:0, lres:0, spd:52, cri:4,
-          enemySkills:[{name:'毒胞子散布', type:'phys', target:'all', power:1.0, cd:5, debuff:{type:'strong_poison', val:12, turns:3}},{name:'菌糸の縛り', type:'spec', target:'single', power:1.5, cd:7, debuff:{type:'paralysis', val:1, turns:1}},{name:'叩きつけ', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'ヴェノムマイコニド', icon:'🟣', hp:10000, mp:4500, atk:620, pres:25, mres:8, bres:0, lres:0, spd:52, cri:4,
-          enemySkills:[{name:'毒胞子散布', type:'phys', target:'all', power:1.0, cd:5, debuff:{type:'strong_poison', val:12, turns:3}},{name:'叩きつけ', type:'phys', target:'single', power:1.0, cd:0}]},
-         {name:'ピクシー', icon:'🧚', hp:6000, mp:8000, atk:420, pres:5, mres:20, bres:0, lres:0, spd:115, cri:10,
-          enemySkills:[{name:'妖精の癒し', type:'buff', target:'all_ally', power:0, cd:5, effect:{type:'heal_and_shield', healRatio:1.5, shieldRatio:0}},{name:'魔力奪取', type:'phys', target:'single', power:1.2, cd:8, debuff:{type:'mdef_down', val:-12, turns:2}},{name:'妖精の一撃', type:'spec', target:'single', power:1.0, cd:0}]},
-         {name:'スリープフラワー', icon:'🌸', hp:8000, mp:6000, atk:520, pres:10, mres:15, bres:0, lres:0, spd:58, cri:5,
-          enemySkills:[{name:'眠り花粉', type:'spec', target:'single', power:1.0, cd:5, debuff:{type:'sleep', val:1, turns:2}},{name:'甘い香り', type:'spec', target:'all', power:0.6, cd:8, debuff:{type:'paralysis', val:1, turns:1}},{name:'花弁散布', type:'phys', target:'single', power:1.0, cd:0}]}],
+      { id:'a2cs5', name:'テオナナカトルの間', waves:1, enemies:[
         [{name:'テオナナカトル', icon:'🍄', atk:1100, pres:22, mres:20, bres:10, lres:5, spd:55, cri:5,
+          passive:{type:'poison_atk', bonus:30},
           phases:[
             {hp:115000, skills:[
-              {name:'神聖なる胞子', type:'buff', target:'self',   power:0,   cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:18,turns:999},{type:'pdef_up',val:10,turns:999}]}},
-              {name:'死の胞子雲',   type:'phys', target:'all',    power:1.5, cd:6,  debuff:{type:'strong_poison', val:14, turns:3}},
-              {name:'眠りの霧',     type:'spec', target:'all',    power:1.0, cd:8,  debuff:{type:'sleep', val:1, turns:2}},
-              {name:'幻覚菌糸',     type:'spec', target:'single', power:2.0, cd:5,  debuff:{type:'mdef_down', val:-15, turns:2}},
-              {name:'大地の菌糸',   type:'phys', target:'all',    power:1.2, cd:7},
-              {name:'菌糸叩き',     type:'phys', target:'single', power:1.0, cd:0}]},
-            {hp:120000, skills:[
-              {name:'菌糸大爆発',   type:'phys', target:'all',    power:2.8, cd:-1, onlyOnce:true},
-              {name:'死の胞子嵐',   type:'phys', target:'all',    power:2.0, cd:5,  debuff:{type:'strong_poison', val:18, turns:3}},
-              {name:'深淵の眠り',   type:'spec', target:'all',    power:1.4, cd:7,  debuff:{type:'sleep', val:1, turns:3}},
-              {name:'幻覚菌糸・極', type:'spec', target:'single', power:3.0, cd:4,  debuff:{type:'mdef_down', val:-22, turns:2}},
-              {name:'連鎖菌糸爆発', type:'phys', target:'all',    power:1.8, cd:8,  hits:2},
-              {name:'菌糸叩き',     type:'phys', target:'single', power:1.4, cd:0}]}
-          ]}]
+              {name:'毒の胞子',   type:'spec', target:'all',    power:0.4, cd:-1, onlyOnce:true,
+                debuff:{type:'poison', val:1, turns:2, surpriseTurns:3}},
+              {name:'のしかかり', type:'phys', target:'single', power:2.5, cd:3},
+              {name:'毒霧散布',   type:'spec', target:'random2', power:0,  cd:5,
+                debuff:{type:'poison', val:1, turns:3}},
+              {name:'大地の菌糸', type:'phys', target:'all',   power:1.2, cd:7},
+              {name:'菌糸叩き',   type:'phys', target:'single', power:1.0, cd:0}]},
+            {hp:120000,
+              transitionSkill:{name:'菌糸活性化', type:'buff', target:'self',
+                effect:{type:'multi_buff', buffs:[{type:'atk_up',val:20,turns:999},{type:'spd_up',val:10,turns:999}]}},
+              summons:[{count:3, name:'ヴェノムウルフ', icon:'🐺', hp:8500, atk:620, pres:5, mres:5, bres:0, lres:0, spd:95, cri:10,
+                enemySkills:[{name:'猛毒噛みつき', type:'phys', target:'single', power:1.6, cd:5, debuff:{type:'poison', val:2, turns:3}},{name:'遠吠え', type:'spec', target:'all', power:0.5, cd:8, debuff:{type:'atk_down', val:-10, turns:2}},{name:'噛みつき', type:'phys', target:'single', power:1.0, cd:0}]}],
+              skills:[
+                {name:'のしかかり・強', type:'phys', target:'single',  power:3.0, cd:3},
+                {name:'毒霧散布',       type:'spec', target:'random2', power:0,   cd:5, debuff:{type:'poison', val:1, turns:3}},
+                {name:'夢幻の霧',       type:'spec', target:'random2', power:1.0, cd:6, debuff:{type:'sleep', val:1, turns:1}},
+                {name:'大地の菌糸・強', type:'phys', target:'all',     power:1.8, cd:6},
+                {name:'菌糸叩き',       type:'phys', target:'single',  power:1.2, cd:0}]},
+            {hp:100000,
+              transitionSkill:{name:'覚醒の大爆発', type:'phys', target:'all', power:2.6,
+                debuff:{type:'strong_poison', val:3, turns:3}},
+              summons:[{count:3, name:'ヴェノムウルフ', icon:'🐺', hp:8500, atk:620, pres:5, mres:5, bres:0, lres:0, spd:95, cri:10,
+                enemySkills:[{name:'猛毒噛みつき', type:'phys', target:'single', power:1.6, cd:5, debuff:{type:'poison', val:2, turns:3}},{name:'遠吠え', type:'spec', target:'all', power:0.5, cd:8, debuff:{type:'atk_down', val:-10, turns:2}},{name:'噛みつき', type:'phys', target:'single', power:1.0, cd:0}]}],
+              skills:[
+                {name:'のしかかり・極', type:'phys', target:'single',  power:3.5, cd:3, debuff:{type:'poison', val:1, turns:2}},
+                {name:'毒霧散布・強',   type:'spec', target:'random2', power:0,   cd:5, debuff:{type:'strong_poison', val:3, turns:3}},
+                {name:'夢幻の霧・強',   type:'spec', target:'random2', power:1.4, cd:5, debuff:{type:'sleep', val:1, turns:1}},
+                {name:'菌糸大爆発',     type:'phys', target:'all',     power:2.8, cd:7, debuff:{type:'strong_poison', val:3, turns:2}},
+                {name:'菌糸叩き',       type:'phys', target:'single',  power:1.4, cd:0}]}
+          ]},
+         {name:'ヴェノムウルフ', icon:'🐺', hp:8500, atk:620, pres:5, mres:5, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'猛毒噛みつき', type:'phys', target:'single', power:1.6, cd:5, debuff:{type:'poison', val:2, turns:3}},{name:'遠吠え', type:'spec', target:'all', power:0.5, cd:8, debuff:{type:'atk_down', val:-10, turns:2}},{name:'噛みつき', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ヴェノムウルフ', icon:'🐺', hp:8500, atk:620, pres:5, mres:5, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'猛毒噛みつき', type:'phys', target:'single', power:1.6, cd:5, debuff:{type:'poison', val:2, turns:3}},{name:'噛みつき', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ヴェノムウルフ', icon:'🐺', hp:8500, atk:620, pres:5, mres:5, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'猛毒噛みつき', type:'phys', target:'single', power:1.6, cd:5, debuff:{type:'poison', val:2, turns:3}},{name:'噛みつき', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
     ]
   },
@@ -13648,7 +13655,7 @@ function combatantAct(c, bs) {
         // 通常攻撃・全体攻撃
         if (sk.onlyOnce) c.usedOnce[skId] = true;
         if (sk.cd >= 0)  c.skillCDs[skId] = sk.cd;
-        const tDesc = sk.target === 'all' ? '全体' : sk.target === 'lowest_hp' ? '最低HP' : sk.target === 'random3' ? 'ランダム3体' : sk.target === 'highest_atk3' ? 'ATK上位3体' : (enemies.find(e=>!e.dead)?.name||'対象');
+        const tDesc = sk.target === 'all' ? '全体' : sk.target === 'lowest_hp' ? '最低HP' : sk.target === 'random3' ? 'ランダム3体' : sk.target === 'random2' ? 'ランダム2体' : sk.target === 'highest_atk3' ? 'ATK上位3体' : (enemies.find(e=>!e.dead)?.name||'対象');
         addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${tDesc}`, 'damage');
         if (sk.target === 'random3') {
           doAttack(c, enemies, sk);
@@ -13860,6 +13867,12 @@ function doAttack(attacker, targets, skill) {
     else {
       targetList = Array.from({length: 3}, () => alive[Math.floor(Math.random() * alive.length)]);
     }
+  } else if (skill.target === 'random2') {
+    const alive = targets.filter(t=>!t.dead);
+    if (!alive.length) { targetList = [...targets]; }
+    else {
+      targetList = Array.from({length: 2}, () => alive[Math.floor(Math.random() * alive.length)]);
+    }
   } else {
     const isSingle = skill.target==='single' || skill.target==='self';
     targetList = isSingle ? [targets[Math.floor(Math.random()*targets.length)]] : [...targets];
@@ -13921,6 +13934,12 @@ function doAttack(attacker, targets, skill) {
       battleStats.crits++;
     }
     hpDmg = Math.max(hpDmg > 0 ? 1 : 0, hpDmg);
+
+    // パッシブ: 毒付与対象への攻撃強化
+    if (attacker.passive?.type === 'poison_atk' && hpDmg > 0) {
+      const isPoisoned = (target.debuffs||[]).some(d=>['poison','strong_poison','lethal_poison'].includes(d.type));
+      if (isPoisoned) hpDmg = Math.floor(hpDmg * (1 + (attacker.passive.bonus||30) / 100));
+    }
 
     // 身代わり分配: coverTargetがいる場合、80%をcoverTargetに転送
     let mainHpDmg = hpDmg;
@@ -14020,7 +14039,11 @@ function doAttack(attacker, targets, skill) {
 
     // デバフ付与（しびれ・ひるみ・毒・スタン等すべて対応）
     if (skill.debuff) {
-      applyDebuff(target, skill.debuff, attacker);
+      const isAmbush = battleState?._scoutOutcome === 'ambush';
+      const debuffToApply = (isAmbush && skill.debuff.surpriseTurns)
+        ? {...skill.debuff, turns: skill.debuff.surpriseTurns}
+        : skill.debuff;
+      applyDebuff(target, debuffToApply, attacker);
       const debuffLabel = {
         pdef_down:'物理耐性↓', mdef_down:'特殊耐性↓',
         stun:'💫スタン', poison:'☠毒', lethal_poison:'☠☠猛毒', strong_poison:'☠☠猛毒',
