@@ -8883,7 +8883,7 @@ function defaultState(clanName) {
     ownedCards: [],   // フェーズ1: 所持スキルカード一覧
     mine:{ lastCollected:Date.now(), level:{ speed:1, cap:1 } },
     lab:{ level:1, slots:[{ role:null, tier:'t1', lastCollected:Date.now() }] },
-    expeditions:{ slots:[{ regionId:null, startedAt:null }] },
+    expeditions:{ slots:[{ regionId:null, startedAt:null, memberUids:[], pendingRegionId:null }] },
     starMap:{ unlockedNodes:[] },
     library:{ discovered:[] },
     gacha:{
@@ -8999,8 +8999,9 @@ function normalizeState() {
   if (!p.kyoten) p.kyoten = { warrior:{t1:0,t2:0,t3:0}, vanguard:{t1:0,t2:0,t3:0}, ranger:{t1:0,t2:0,t3:0}, support:{t1:0,t2:0,t3:0}, trickster:{t1:0,t2:0,t3:0}, scout:{t1:0,t2:0,t3:0} }; // 響典
   if (!gState.lab) gState.lab = { level:1, slots:[{ role:null, tier:'t1', lastCollected:Date.now() }] };
   if (!Array.isArray(gState.lab.slots)) gState.lab.slots = [{ role:null, tier:'t1', lastCollected:Date.now() }];
-  if (!gState.expeditions) gState.expeditions = { slots:[{ regionId:null, startedAt:null }] };
-  if (!Array.isArray(gState.expeditions.slots)) gState.expeditions.slots = [{ regionId:null, startedAt:null }];
+  if (!gState.expeditions) gState.expeditions = { slots:[{ regionId:null, startedAt:null, memberUids:[], pendingRegionId:null }] };
+  if (!Array.isArray(gState.expeditions.slots)) gState.expeditions.slots = [{ regionId:null, startedAt:null, memberUids:[], pendingRegionId:null }];
+  gState.expeditions.slots.forEach(s => { if (!s.memberUids) s.memberUids = []; if (s.pendingRegionId===undefined) s.pendingRegionId=null; });
   if (!p.eiyuutan) p.eiyuutan = { warrior:0, vanguard:0, ranger:0, support:0, trickster:0, scout:0 }; // 英雄譚
   if (p.stardust === undefined) p.stardust = 0;
   if (p.cryptoSoulT1 === undefined) p.cryptoSoulT1 = 0;
@@ -20730,37 +20731,41 @@ function _renderLabAlch(el, lab) {
 const EXPEDITION_REGIONS = [
   {
     id:'cave', icon:'⛏️', name:'石灰の洞窟', durationH:2,
+    aptitudes:['アタッカー','タンク'],
     desc:'序盤の洞窟。アトム秘石T1・T2が手に入る。',
     rewards:[
-      { label:'アトム秘石T1', give:(p)=>{ const n=_expRandInt(3,8); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t1+=n; return `${itemIconHTML('atomT1','13px')} ×${n}`; } },
-      { label:'アトム秘石T2', chance:0.5, give:(p)=>{ const n=_expRandInt(1,3); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t2=(p.atomStone.t2||0)+n; return `${itemIconHTML('atomT2','13px')} ×${n}`; } },
+      { label:'アトム秘石T1', give:(p,m)=>{ const n=Math.max(1,Math.round(_expRandInt(3,8)*m)); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t1+=n; return `${itemIconHTML('atomT1','13px')} ×${n}`; } },
+      { label:'アトム秘石T2', chance:0.5, give:(p,m)=>{ const n=Math.max(1,Math.round(_expRandInt(1,3)*m)); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t2=(p.atomStone.t2||0)+n; return `${itemIconHTML('atomT2','13px')} ×${n}`; } },
     ],
   },
   {
     id:'valley', icon:'💎', name:'星晶の谷', durationH:4,
+    aptitudes:['レンジ','スカウト'],
     desc:'美しい渓谷。アトム秘石T2・T3とアトミックコアが取れる。',
     rewards:[
-      { label:'アトム秘石T2', give:(p)=>{ const n=_expRandInt(2,5); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t2=(p.atomStone.t2||0)+n; return `${itemIconHTML('atomT2','13px')} ×${n}`; } },
-      { label:'アトム秘石T3', chance:0.4, give:(p)=>{ (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t3=(p.atomStone.t3||0)+1; return `${itemIconHTML('atomT3','13px')} ×1`; } },
-      { label:'アトミックコア', chance:0.6, give:(p)=>{ const n=_expRandInt(1,3); (p.atomCore=p.atomCore||{t1:0}).t1=(p.atomCore.t1||0)+n; return `${itemIconHTML('atomCore','13px')} ×${n}`; } },
+      { label:'アトム秘石T2', give:(p,m)=>{ const n=Math.max(1,Math.round(_expRandInt(2,5)*m)); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t2=(p.atomStone.t2||0)+n; return `${itemIconHTML('atomT2','13px')} ×${n}`; } },
+      { label:'アトム秘石T3', chance:0.4, give:(p,m)=>{ const n=Math.max(1,Math.round(1*m)); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t3=(p.atomStone.t3||0)+n; return `${itemIconHTML('atomT3','13px')} ×${n}`; } },
+      { label:'アトミックコア', chance:0.6, give:(p,m)=>{ const n=Math.max(1,Math.round(_expRandInt(1,3)*m)); (p.atomCore=p.atomCore||{t1:0}).t1=(p.atomCore.t1||0)+n; return `${itemIconHTML('atomCore','13px')} ×${n}`; } },
     ],
   },
   {
     id:'tower', icon:'🗼', name:'廃墟の塔', durationH:6,
+    aptitudes:['トリックスター','サポート'],
     desc:'謎めいた廃墟。星屑の砂と神刻ルーンが出る。',
     rewards:[
-      { label:'星屑の砂', give:(p)=>{ const n=_expRandInt(8,20); p.stardust=(p.stardust||0)+n; return `${itemIconHTML('stardust','13px')} ×${n}`; } },
-      { label:'神刻ルーンT1', chance:0.7, give:(p)=>{ const n=_expRandInt(1,3); (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t1=(p.runeStone.t1||0)+n; return `${itemIconHTML('runeT1','13px')} ×${n}`; } },
-      { label:'神刻ルーンT2', chance:0.3, give:(p)=>{ (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t2=(p.runeStone.t2||0)+1; return `${itemIconHTML('runeT2','13px')} ×1`; } },
+      { label:'星屑の砂', give:(p,m)=>{ const n=Math.max(1,Math.round(_expRandInt(8,20)*m)); p.stardust=(p.stardust||0)+n; return `${itemIconHTML('stardust','13px')} ×${n}`; } },
+      { label:'神刻ルーンT1', chance:0.7, give:(p,m)=>{ const n=Math.max(1,Math.round(_expRandInt(1,3)*m)); (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t1=(p.runeStone.t1||0)+n; return `${itemIconHTML('runeT1','13px')} ×${n}`; } },
+      { label:'神刻ルーンT2', chance:0.3, give:(p,m)=>{ const n=Math.max(1,Math.round(1*m)); (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t2=(p.runeStone.t2||0)+n; return `${itemIconHTML('runeT2','13px')} ×${n}`; } },
     ],
   },
   {
     id:'peak', icon:'⛰️', name:'霊峰の奥地', durationH:8,
-    desc:'伝説の霊山。高レアなAF素材と英雄譚が手に入る。',
+    aptitudes:['アタッカー','レンジ','タンク','サポート','トリックスター','スカウト'],
+    desc:'伝説の霊山。全ロール適性。高レアなAF素材が手に入る。',
     rewards:[
-      { label:'アトム秘石T3', give:(p)=>{ const n=_expRandInt(1,2); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t3=(p.atomStone.t3||0)+n; return `${itemIconHTML('atomT3','13px')} ×${n}`; } },
-      { label:'神刻ルーンT2', chance:0.5, give:(p)=>{ const n=_expRandInt(1,2); (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t2=(p.runeStone.t2||0)+n; return `${itemIconHTML('runeT2','13px')} ×${n}`; } },
-      { label:'神刻ルーンT3', chance:0.25, give:(p)=>{ (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t3=(p.runeStone.t3||0)+1; return `${itemIconHTML('runeT3','13px')} ×1`; } },
+      { label:'アトム秘石T3', give:(p,m)=>{ const n=Math.max(1,Math.round(_expRandInt(1,2)*m)); (p.atomStone=p.atomStone||{t1:0,t2:0,t3:0}).t3=(p.atomStone.t3||0)+n; return `${itemIconHTML('atomT3','13px')} ×${n}`; } },
+      { label:'神刻ルーンT2', chance:0.5, give:(p,m)=>{ const n=Math.max(1,Math.round(_expRandInt(1,2)*m)); (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t2=(p.runeStone.t2||0)+n; return `${itemIconHTML('runeT2','13px')} ×${n}`; } },
+      { label:'神刻ルーンT3', chance:0.25, give:(p,m)=>{ const n=Math.max(1,Math.round(1*m)); (p.runeStone=p.runeStone||{t1:0,t2:0,t3:0}).t3=(p.runeStone.t3||0)+n; return `${itemIconHTML('runeT3','13px')} ×${n}`; } },
     ],
   },
 ];
@@ -20774,10 +20779,74 @@ function _expSlotCount() {
 }
 function _expRandInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-function expeditionStart(slotIdx, regionId) {
+function _expEnsureSlot(slotIdx) {
   if (!gState.expeditions) gState.expeditions = { slots: [] };
-  while (gState.expeditions.slots.length <= slotIdx) gState.expeditions.slots.push({ regionId:null, startedAt:null });
-  gState.expeditions.slots[slotIdx] = { regionId, startedAt: Date.now() };
+  while (gState.expeditions.slots.length <= slotIdx)
+    gState.expeditions.slots.push({ regionId:null, startedAt:null, memberUids:[], pendingRegionId:null });
+  const s = gState.expeditions.slots[slotIdx];
+  if (!s.memberUids) s.memberUids = [];
+  if (s.pendingRegionId === undefined) s.pendingRegionId = null;
+  return s;
+}
+
+// 遠征出発地を選択（キャラ編成画面へ）
+function expeditionSelectRegion(slotIdx, regionId) {
+  const slot = _expEnsureSlot(slotIdx);
+  slot.pendingRegionId = regionId;
+  slot.memberUids = [];
+  renderClanHall();
+}
+
+// キャラ編成キャンセル
+function expeditionCancelSelect(slotIdx) {
+  const slot = _expEnsureSlot(slotIdx);
+  slot.pendingRegionId = null;
+  slot.memberUids = [];
+  renderClanHall();
+}
+
+// キャラのトグル（最大4人）
+function expeditionToggleMember(slotIdx, uid) {
+  const slot = _expEnsureSlot(slotIdx);
+  const idx = slot.memberUids.indexOf(uid);
+  if (idx >= 0) slot.memberUids.splice(idx, 1);
+  else if (slot.memberUids.length < 4) slot.memberUids.push(uid);
+  renderClanHall();
+}
+
+// オート編成：適性ロールを持つキャラを優先して最大4人選択
+function expeditionAutoSelect(slotIdx) {
+  const slot = _expEnsureSlot(slotIdx);
+  const region = EXPEDITION_REGIONS.find(r => r.id === slot.pendingRegionId);
+  if (!region) return;
+  const sorted = (gState.ownedUnits || []).slice().sort((a, b) => {
+    const aM = region.aptitudes.includes(CLASS_DATA[a.classId]?.role) ? 1 : 0;
+    const bM = region.aptitudes.includes(CLASS_DATA[b.classId]?.role) ? 1 : 0;
+    return bM - aM;
+  });
+  slot.memberUids = sorted.slice(0, 4).map(u => u.uid);
+  renderClanHall();
+}
+
+// 適性率を計算（0.0〜1.0）
+function calcExpeditionAptitude(memberUids, region) {
+  if (!memberUids || memberUids.length === 0) return 0;
+  const units = memberUids.map(uid => gState.ownedUnits.find(u => u.uid === uid)).filter(Boolean);
+  if (units.length === 0) return 0;
+  const matched = units.filter(u => region.aptitudes.includes(CLASS_DATA[u.classId]?.role)).length;
+  return matched / units.length;
+}
+
+// 遠征出発（キャラ編成確定後）
+function expeditionStart(slotIdx) {
+  const slot = _expEnsureSlot(slotIdx);
+  if (!slot.pendingRegionId || slot.memberUids.length === 0) {
+    toast('キャラを1人以上選んでください');
+    return;
+  }
+  slot.regionId = slot.pendingRegionId;
+  slot.startedAt = Date.now();
+  slot.pendingRegionId = null;
   saveState();
   renderClanHall();
 }
@@ -20790,30 +20859,36 @@ function expeditionCollect(slotIdx) {
   const elapsedH = (Date.now() - slot.startedAt) / 3600000;
   if (elapsedH < region.durationH) return;
 
+  const aptRate = calcExpeditionAptitude(slot.memberUids, region);
+  const mult = 0.5 + aptRate; // 適性率0%→×0.5、100%→×1.5
   const p = gState.player;
   const got = [];
   region.rewards.forEach(r => {
     if (r.chance === undefined || Math.random() < r.chance) {
-      got.push(r.give(p));
+      got.push(r.give(p, mult));
     }
   });
-  gState.expeditions.slots[slotIdx] = { regionId: null, startedAt: null };
+  const aptPct = Math.round(aptRate * 100);
+  gState.expeditions.slots[slotIdx] = { regionId:null, startedAt:null, memberUids:[], pendingRegionId:null };
   saveState();
-  toast(`${region.icon} 遠征帰還！ ${got.join(' ')}`);
+  toast(`${region.icon} 遠征帰還！ 適性率${aptPct}%（×${mult.toFixed(1)}） ${got.join(' ')}`);
   renderClanHall();
 }
 
 function _renderExpedition(el) {
   const slotCount = _expSlotCount();
-  const slots = gState.expeditions?.slots || [];
-  while (slots.length < slotCount) slots.push({ regionId: null, startedAt: null });
+  if (!gState.expeditions) gState.expeditions = { slots: [] };
+  const slots = gState.expeditions.slots;
+  while (slots.length < slotCount) slots.push({ regionId:null, startedAt:null, memberUids:[], pendingRegionId:null });
 
   let html = `<div class="lab-body">
-    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">遠征に出発するとアイテムを持ち帰ります。スロットは Clan Lv.15 で2枠、Lv.30 で3枠に増えます。</div>`;
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">遠征中のキャラはバトルにも連れていけます。スロットは Clan Lv.15 で2枠、Lv.30 で3枠に増えます。</div>`;
 
   for (let i = 0; i < slotCount; i++) {
-    const slot = slots[i] || { regionId: null, startedAt: null };
+    const slot = slots[i] || {};
+    if (!slot.memberUids) slot.memberUids = [];
     const region = slot.regionId ? EXPEDITION_REGIONS.find(r => r.id === slot.regionId) : null;
+    const pendingRegion = slot.pendingRegionId ? EXPEDITION_REGIONS.find(r => r.id === slot.pendingRegionId) : null;
     const now = Date.now();
     const elapsedH = region && slot.startedAt ? (now - slot.startedAt) / 3600000 : 0;
     const done = region && elapsedH >= region.durationH;
@@ -20824,39 +20899,92 @@ function _renderExpedition(el) {
       return h > 0 ? `${h}時間${m}分` : `${m}分`;
     })() : '';
 
-    html += `<div class="lab-slot" style="margin-bottom:10px">
+    html += `<div class="lab-slot" style="margin-bottom:12px">
       <div class="lab-slot-hd" style="font-size:12px;font-weight:700;color:var(--text2)">📤 遠征スロット ${i + 1}</div>`;
 
-    if (!region) {
-      // 未出発 → 地域選択
+    if (!region && !pendingRegion) {
+      // ── 状態①: 地域選択 ──
       html += `<div style="font-size:11px;color:var(--text3);margin-bottom:8px">出発先を選んでください：</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">`;
       EXPEDITION_REGIONS.forEach(reg => {
-        html += `<button onclick="expeditionStart(${i},'${reg.id}')" style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:8px;text-align:left;cursor:pointer">
+        html += `<button onclick="expeditionSelectRegion(${i},'${reg.id}')" style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:8px;text-align:left;cursor:pointer">
           <div style="font-size:16px">${reg.icon}</div>
           <div style="font-size:11px;font-weight:700;color:var(--text)">${reg.name}</div>
           <div style="font-size:10px;color:var(--accent2)">${reg.durationH}時間</div>
+          <div style="font-size:10px;color:var(--gold);margin-top:2px">適性: ${reg.aptitudes.join(' / ')}</div>
           <div style="font-size:9px;color:var(--text3);margin-top:2px">${reg.desc}</div>
         </button>`;
       });
       html += `</div>`;
+
+    } else if (!region && pendingRegion) {
+      // ── 状態②: キャラ編成 ──
+      const aptRate = calcExpeditionAptitude(slot.memberUids, pendingRegion);
+      const mult = 0.5 + aptRate;
+      const aptPct = Math.round(aptRate * 100);
+      const aptColor = aptPct >= 75 ? 'var(--green)' : aptPct >= 50 ? 'var(--gold)' : 'var(--red)';
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:var(--bg2);border-radius:6px">
+        <span style="font-size:20px">${pendingRegion.icon}</span>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:700;color:var(--text)">${pendingRegion.name}</div>
+          <div style="font-size:10px;color:var(--gold)">適性: ${pendingRegion.aptitudes.join(' / ')}</div>
+        </div>
+        <button onclick="expeditionCancelSelect(${i})" style="font-size:10px;background:none;border:1px solid var(--border);color:var(--text3);padding:3px 7px;border-radius:4px;cursor:pointer">戻る</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:11px;color:var(--text2)">メンバー選択（1〜4人）: <b>${slot.memberUids.length}/4</b></div>
+        <button onclick="expeditionAutoSelect(${i})" class="btn btn-blue btn-sm">🤖 オート</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;min-height:32px;padding:4px;background:var(--bg2);border-radius:5px;border:1px solid var(--border)">`;
+      (gState.ownedUnits || []).forEach(u => {
+        const cls = CLASS_DATA[u.classId];
+        if (!cls) return;
+        const sel = slot.memberUids.includes(u.uid);
+        const isApt = pendingRegion.aptitudes.includes(cls.role);
+        const borderCol = sel ? 'var(--gold)' : isApt ? 'var(--green)' : 'var(--border)';
+        const bgCol = sel ? 'rgba(201,168,76,0.18)' : 'transparent';
+        html += `<button onclick="expeditionToggleMember(${i},'${u.uid}')" title="${cls.name}（${cls.role}）" style="background:${bgCol};border:1px solid ${borderCol};border-radius:4px;padding:3px 7px;font-size:10px;cursor:pointer;color:var(--text)">
+          ${isApt ? '⭐' : ''}${u.name||cls.name}
+        </button>`;
+      });
+      html += `</div>
+      <div style="font-size:11px;margin-bottom:8px">
+        適性率: <span style="color:${aptColor};font-weight:700">${aptPct}%</span>
+        &nbsp;→&nbsp; 報酬倍率: <span style="color:${aptColor};font-weight:700">×${mult.toFixed(1)}</span>
+      </div>
+      <button onclick="expeditionStart(${i})" class="btn btn-gold" style="width:100%" ${slot.memberUids.length===0?'disabled':''}>出発！</button>`;
+
     } else if (done) {
-      // 帰還済み
+      // ── 状態③: 帰還完了 ──
+      const aptRate = calcExpeditionAptitude(slot.memberUids, region);
+      const mult = 0.5 + aptRate;
+      const members = (slot.memberUids||[]).map(uid => {
+        const u = gState.ownedUnits.find(u=>u.uid===uid);
+        return u ? (u.name || CLASS_DATA[u.classId]?.name || '?') : '?';
+      }).join('・');
       html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <span style="font-size:20px">${region.icon}</span>
-        <div>
+        <div style="flex:1">
           <div style="font-size:12px;font-weight:700;color:var(--green)">${region.name} — 帰還完了！</div>
-          <div style="font-size:10px;color:var(--text3)">${region.rewards.map(r=>r.label).join(' / ')}</div>
+          <div style="font-size:10px;color:var(--text3)">${members}</div>
+          <div style="font-size:10px;color:var(--gold)">適性率${Math.round(aptRate*100)}%（×${mult.toFixed(1)}）</div>
         </div>
         <button onclick="expeditionCollect(${i})" class="btn btn-gold btn-sm" style="margin-left:auto">回収</button>
       </div>`;
+
     } else {
-      // 遠征中
+      // ── 状態④: 遠征中 ──
+      const members = (slot.memberUids||[]).map(uid => {
+        const u = gState.ownedUnits.find(u=>u.uid===uid);
+        return u ? (u.name || CLASS_DATA[u.classId]?.name || '?') : '?';
+      }).join('・');
+      const aptRate = calcExpeditionAptitude(slot.memberUids, region);
       html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
         <span style="font-size:20px">${region.icon}</span>
         <div style="flex:1">
           <div style="font-size:12px;font-weight:700;color:var(--text)">${region.name} 遠征中…</div>
-          <div style="font-size:10px;color:var(--text3)">残り ${remaining}</div>
+          <div style="font-size:10px;color:var(--text3)">${members}</div>
+          <div style="font-size:10px;color:var(--gold)">適性率${Math.round(aptRate*100)}%（×${(0.5+aptRate).toFixed(1)}）&nbsp; 残り ${remaining}</div>
         </div>
       </div>
       <div class="lab-prog"><div class="lab-prog-fill" style="width:${pct.toFixed(1)}%"></div></div>`;
