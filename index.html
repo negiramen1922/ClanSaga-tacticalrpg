@@ -12401,14 +12401,26 @@ function _executeAbyssSweep(layerId, n) {
     gState.accessories.push(acc);
     gained.push(acc);
   }
+  // ゴールド・EXPポット（クリア報酬の約40%）
+  const goldPerRun  = Math.floor((ABYSS_CLEAR_GOLD[layerId]  || 0) * 0.4);
+  const etherPerRun = Math.floor((ABYSS_CLEAR_ETHER[layerId] || 0) * 0.4);
+  const totalGold   = goldPerRun  * n;
+  const totalEther  = etherPerRun * n;
+  gState.player.gold  = (gState.player.gold  || 0) + totalGold;
+  gState.player.ether = (gState.player.ether || 0) + totalEther;
   saveState(); updateTopBar();
-  const cost = abyssSweepCost(layerId) * n;
-  const set      = ACCESSORY_SETS.find(s => s.id === gained[0]?.setId);
+  const cost     = abyssSweepCost(layerId) * n;
   const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
   const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
+  const lines = [
+    `⚡-${cost}　×${n} 周回完了！`,
+    `<span style="color:${rarColor};font-weight:700">${rarLabel} アクセサリー ×${n}</span>`,
+    totalGold  > 0 ? `ゴールド +${fmt(totalGold)}` : null,
+    totalEther > 0 ? `EXPポット +${totalEther}` : null,
+  ].filter(Boolean).join('<br>');
   const t = document.createElement('div');
   t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--purple);color:var(--text);padding:10px 16px;border-radius:4px;z-index:9999;font-size:12px;text-align:center;pointer-events:none;';
-  t.innerHTML = `⚡-${cost} ×${n} 周回完了！<br><span style="color:${rarColor};font-weight:700">${rarLabel} アクセサリー ×${n}</span>`;
+  t.innerHTML = lines;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3500);
   renderAbyssContent();
@@ -13361,6 +13373,28 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       if (eff.type === 'stealth_cri')   { passiveCri += eff.cri||0; passiveStealth += eff.stealth||0; }
     });
 
+    // アビスランバフをステータスに事前適用
+    let _abyssDrain = 0, _abyssRegen = 0, _abyssReduce = 0, _abyssUltBoost = 0;
+    if (battleContext?.type === 'abyss') {
+      const _abyssRun = gState.progress?.abyss?.currentRun;
+      (_abyssRun?.buffs || []).forEach(bid => {
+        const bDef = ABYSS_FLOOR_BUFFS.find(b => b.id === bid);
+        if (!bDef) return;
+        const { type, val } = bDef.effect;
+        if      (type === 'atk')       atk      = Math.floor(atk  * (1 + val/100));
+        else if (type === 'hp')        hp       = Math.floor(hp   * (1 + val/100));
+        else if (type === 'cri')       passiveCri += val;
+        else if (type === 'cri_dmg')   stats.cridam = (stats.cridam || 150) + val;
+        else if (type === 'spd')       spd      += val;
+        else if (type === 'pdef')      pdef     = Math.floor(pdef * (1 + val/100));
+        else if (type === 'mdef')      mdef     = Math.floor(mdef * (1 + val/100));
+        else if (type === 'drain')     _abyssDrain    += val;
+        else if (type === 'reduce')    _abyssReduce   += val;
+        else if (type === 'regen')     _abyssRegen    += val;
+        else if (type === 'ult_boost') _abyssUltBoost += val;
+      });
+    }
+
     const cls2 = CLASS_DATA[unit.classId];
     const combatant = {
       uid: unit.uid, name: unit.name, icon: cls.icon,
@@ -13405,6 +13439,13 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       }
     });
     applyPassiveCards(combatant, unit);
+
+    // アビスバフのうち、combatant生成後に適用が必要なもの
+    if (_abyssDrain    > 0) combatant._drainBonus    = (_abyssDrain);
+    if (_abyssUltBoost > 0) combatant._ultBoostPct   = (_abyssUltBoost);
+    if (_abyssReduce   > 0) combatant.buffs.push({ type:'damage_reduce', val:_abyssReduce, turns:99999, icon:'🔽被ダメ↓', cssClass:'hp-up', isPassive:true });
+    if (_abyssRegen    > 0) combatant.buffs.push({ type:'regen', val:_abyssRegen, turns:99999, icon:'💚再生', cssClass:'hp-up', isPassive:true });
+
     return combatant;
   } else {
     const defaultSkill = { id:'normalAtk', name:'通常攻撃', type:'phys', target:'single', power:1.0, cd:0 };
@@ -22534,35 +22575,45 @@ function discardAccessory(idx, e) {
 // ============================================================
 
 const ABYSS_FLOOR_BUFFS = [
-  { id:'atk5',     label:'ATK+5%',       icon:'⚔️', effect:{type:'atk', val:5} },
-  { id:'atk10',    label:'ATK+10%',      icon:'⚔️', effect:{type:'atk', val:10} },
-  { id:'hp10',     label:'HP+10%',       icon:'❤️', effect:{type:'hp', val:10} },
-  { id:'hp20',     label:'HP+20%',       icon:'❤️', effect:{type:'hp', val:20} },
-  { id:'cri8',     label:'会心率+8%',    icon:'💥', effect:{type:'cri', val:8} },
-  { id:'spd15',    label:'SPD+15',       icon:'💨', effect:{type:'spd', val:15} },
-  { id:'drain10',  label:'吸血10%',      icon:'🩸', effect:{type:'drain', val:10} },
-  { id:'reduce8',  label:'被ダメ-8%',    icon:'🛡️', effect:{type:'reduce', val:8} },
-  { id:'regen5',   label:'毎T回復5%',    icon:'💚', effect:{type:'regen', val:5} },
-  { id:'ult_boost',label:'ULT威力+20%', icon:'⚡', effect:{type:'ult_boost', val:20} },
+  { id:'atk5',      label:'ATK+5%',       icon:'⚔️', effect:{type:'atk',      val:5} },
+  { id:'atk10',     label:'ATK+10%',      icon:'⚔️', effect:{type:'atk',      val:10} },
+  { id:'atk15',     label:'ATK+15%',      icon:'⚔️', effect:{type:'atk',      val:15} },
+  { id:'hp10',      label:'HP+10%',       icon:'❤️', effect:{type:'hp',       val:10} },
+  { id:'hp20',      label:'HP+20%',       icon:'❤️', effect:{type:'hp',       val:20} },
+  { id:'hp30',      label:'HP+30%',       icon:'❤️', effect:{type:'hp',       val:30} },
+  { id:'cri8',      label:'会心率+8%',    icon:'💥', effect:{type:'cri',      val:8} },
+  { id:'cri_dmg20', label:'会心ダメ+20%', icon:'💥', effect:{type:'cri_dmg',  val:20} },
+  { id:'spd15',     label:'SPD+15',       icon:'💨', effect:{type:'spd',      val:15} },
+  { id:'spd25',     label:'SPD+25',       icon:'💨', effect:{type:'spd',      val:25} },
+  { id:'drain10',   label:'吸血10%',      icon:'🩸', effect:{type:'drain',    val:10} },
+  { id:'reduce8',   label:'被ダメ-8%',    icon:'🛡️', effect:{type:'reduce',   val:8} },
+  { id:'reduce15',  label:'被ダメ-15%',   icon:'🛡️', effect:{type:'reduce',   val:15} },
+  { id:'regen5',    label:'毎T回復5%',    icon:'💚', effect:{type:'regen',    val:5} },
+  { id:'regen8',    label:'毎T回復8%',    icon:'💚', effect:{type:'regen',    val:8} },
+  { id:'ult_boost', label:'ULT威力+20%',  icon:'⚡', effect:{type:'ult_boost',val:20} },
+  { id:'pdef15',    label:'物理防御+15%', icon:'🔩', effect:{type:'pdef',     val:15} },
+  { id:'mdef15',    label:'魔法防御+15%', icon:'🔮', effect:{type:'mdef',     val:15} },
 ];
 
 // 15層定義 (areaId → BABEL_AREAS.id, statMult = 通常敵スケール, bossMult = ボス敵スケール)
+// statMult・bossMult は各エリアのベースATKに乗算。エリアをまたいでも実効難易度が下がらないよう調整済み。
+// accRarity: 1=N 2=R 3=SR 4=SSR (SSRは14層以降のみ)
 const ABYSS_LAYERS = [
-  {id:1,  name:'第一層',   icon:'🌱', areaId:'area1',  statMult:1.5, bossMult:0.5, accRarity:1, rec:'推奨 Lv10〜'},
-  {id:2,  name:'第二層',   icon:'🌿', areaId:'area1',  statMult:2.2, bossMult:0.8, accRarity:1, rec:'推奨 Lv13〜'},
-  {id:3,  name:'第三層',   icon:'🍃', areaId:'area1',  statMult:3.0, bossMult:1.2, accRarity:1, rec:'推奨 Lv16〜'},
-  {id:4,  name:'第四層',   icon:'🌿', areaId:'area1',  statMult:4.0, bossMult:1.5, accRarity:2, rec:'推奨 Lv18〜'},
-  {id:5,  name:'第五層',   icon:'🌿', areaId:'area1',  statMult:5.0, bossMult:2.0, accRarity:2, rec:'推奨 Lv20〜'},
-  {id:6,  name:'第六層',   icon:'👺', areaId:'area2',  statMult:1.0, bossMult:1.0, accRarity:2, rec:'推奨 Lv25〜'},
-  {id:7,  name:'第七層',   icon:'👺', areaId:'area2',  statMult:1.3, bossMult:1.3, accRarity:2, rec:'推奨 Lv30〜'},
-  {id:8,  name:'第八層',   icon:'🌲', areaId:'area2b', statMult:0.8, bossMult:0.7, accRarity:3, rec:'推奨 Lv33〜'},
-  {id:9,  name:'第九層',   icon:'🌲', areaId:'area2b', statMult:1.1, bossMult:1.0, accRarity:3, rec:'推奨 Lv37〜'},
-  {id:10, name:'第十層',   icon:'🍄', areaId:'area2c', statMult:1.0, bossMult:1.0, accRarity:3, rec:'推奨 Lv40〜'},
-  {id:11, name:'第十一層', icon:'🏔️', areaId:'area3',  statMult:0.8, bossMult:0.4, accRarity:3, rec:'推奨 Lv42〜'},
-  {id:12, name:'第十二層', icon:'🏔️', areaId:'area3',  statMult:1.0, bossMult:0.6, accRarity:4, rec:'推奨 Lv44〜'},
-  {id:13, name:'第十三層', icon:'🏔️', areaId:'area3',  statMult:1.2, bossMult:0.8, accRarity:4, rec:'推奨 Lv46〜'},
-  {id:14, name:'第十四層', icon:'🏔️', areaId:'area3',  statMult:1.5, bossMult:1.0, accRarity:4, rec:'推奨 Lv48〜'},
-  {id:15, name:'第十五層', icon:'🏔️', areaId:'area3',  statMult:1.8, bossMult:1.3, accRarity:4, rec:'推奨 Lv50〜'},
+  {id:1,  name:'第一層',   icon:'🌱', areaId:'area1',  statMult:1.5, bossMult:0.8,  accRarity:1, rec:'推奨 Lv10〜'},
+  {id:2,  name:'第二層',   icon:'🌿', areaId:'area1',  statMult:2.0, bossMult:1.1,  accRarity:1, rec:'推奨 Lv13〜'},
+  {id:3,  name:'第三層',   icon:'🍃', areaId:'area1',  statMult:2.8, bossMult:1.5,  accRarity:1, rec:'推奨 Lv16〜'},
+  {id:4,  name:'第四層',   icon:'🌾', areaId:'area1',  statMult:3.6, bossMult:2.0,  accRarity:2, rec:'推奨 Lv18〜'},
+  {id:5,  name:'第五層',   icon:'⚔️', areaId:'area1',  statMult:4.5, bossMult:2.5,  accRarity:2, rec:'推奨 Lv20〜', milestone:true},
+  {id:6,  name:'第六層',   icon:'👺', areaId:'area2',  statMult:1.7, bossMult:1.5,  accRarity:2, rec:'推奨 Lv25〜'},
+  {id:7,  name:'第七層',   icon:'🗡️', areaId:'area2',  statMult:2.0, bossMult:1.8,  accRarity:2, rec:'推奨 Lv28〜'},
+  {id:8,  name:'第八層',   icon:'🌲', areaId:'area2b', statMult:1.7, bossMult:1.4,  accRarity:3, rec:'推奨 Lv32〜'},
+  {id:9,  name:'第九層',   icon:'🍀', areaId:'area2b', statMult:2.0, bossMult:1.7,  accRarity:3, rec:'推奨 Lv36〜'},
+  {id:10, name:'第十層',   icon:'🍄', areaId:'area2c', statMult:1.5, bossMult:1.9,  accRarity:3, rec:'推奨 Lv40〜', milestone:true},
+  {id:11, name:'第十一層', icon:'🏔️', areaId:'area3',  statMult:1.2, bossMult:0.8,  accRarity:3, rec:'推奨 Lv42〜'},
+  {id:12, name:'第十二層', icon:'⛰️', areaId:'area3',  statMult:1.5, bossMult:1.0,  accRarity:3, rec:'推奨 Lv44〜'},
+  {id:13, name:'第十三層', icon:'🌋', areaId:'area3',  statMult:1.8, bossMult:1.3,  accRarity:3, rec:'推奨 Lv46〜'},
+  {id:14, name:'第十四層', icon:'💀', areaId:'area3',  statMult:2.2, bossMult:1.6,  accRarity:4, rec:'推奨 Lv48〜'},
+  {id:15, name:'第十五層', icon:'👑', areaId:'area3',  statMult:2.7, bossMult:2.0,  accRarity:4, rec:'推奨 Lv50〜', milestone:true},
 ];
 
 const ABYSS_RARITY_LABEL  = ['','N','R','SR','SSR'];
@@ -22591,7 +22642,7 @@ function getAbyssStageEnemies(layerId, stage) {
 }
 
 function abyssSweepCost(layerId) {
-  return layerId <= 5 ? 10 : layerId <= 10 ? 20 : 30;
+  return layerId <= 5 ? 10 : layerId <= 10 ? 20 : layerId <= 13 ? 30 : 40;
 }
 
 function renderAbyssContent() {
@@ -22742,26 +22793,51 @@ function onAbyssVictory(layerId, stage) {
 }
 
 function showAbyssBuffChoice(choices, layerId, stage) {
-  const layer    = ABYSS_LAYERS.find(l => l.id === layerId);
+  const layer      = ABYSS_LAYERS.find(l => l.id === layerId);
   const isBossNext = stage === 5;
-  const overlay  = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(5,6,8,0.95);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px;';
+  const run        = gState.progress.abyss.currentRun;
+  const acquiredIds = run?.buffs || [];
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(5,6,8,0.95);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px;overflow-y:auto;';
+
+  // 取得済みバフ一覧
+  let acquiredHtml = '';
+  if (acquiredIds.length > 0) {
+    const tags = acquiredIds.map(bid => {
+      const bd = ABYSS_FLOOR_BUFFS.find(b => b.id === bid);
+      return bd ? `<span style="background:rgba(155,107,222,0.15);border:1px solid var(--purple);color:var(--purple);font-size:11px;padding:2px 7px;">${bd.icon}${bd.label}</span>` : '';
+    }).join('');
+    acquiredHtml = `<div style="width:100%;max-width:360px;"><div style="font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:5px">取得済みバフ</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${tags}</div></div>`;
+  }
+
   overlay.innerHTML = `
     <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:18px;letter-spacing:3px">${layer.name} ステージ${stage} クリア！</div>
-    <div style="font-size:13px;color:var(--text2)">バフを1つ選択してください${isBossNext ? ' — 次はボス！' : ''}</div>`;
+    <div style="font-size:13px;color:var(--text2)">バフを1つ選択してください${isBossNext ? ' — <span style="color:var(--gold)">次はボス！</span>' : ''}</div>
+    ${acquiredHtml}`;
+
   const grid = document.createElement('div');
   grid.style.cssText = 'display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px;';
+
   choices.forEach(buff => {
+    const alreadyHas = acquiredIds.includes(buff.id);
     const btn = document.createElement('div');
-    btn.style.cssText = 'background:var(--panel);border:1px solid var(--purple);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.15s;';
-    btn.innerHTML = `<span style="font-size:24px">${buff.icon}</span><div><div style="font-size:14px;font-weight:700;color:var(--text)">${buff.label}</div></div>`;
-    btn.addEventListener('mouseover', () => btn.style.background = 'rgba(155,107,222,0.1)');
-    btn.addEventListener('mouseout',  () => btn.style.background = 'var(--panel)');
+    btn.style.cssText = `background:var(--panel);border:1px solid ${alreadyHas ? 'rgba(155,107,222,0.3)' : 'var(--purple)'};padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.15s;${alreadyHas ? 'opacity:0.7;' : ''}`;
+    btn.innerHTML = `
+      <span style="font-size:24px">${buff.icon}</span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">${buff.label}</div>
+        ${alreadyHas ? '<div style="font-size:10px;color:var(--purple);margin-top:2px">スタック可（重複効果）</div>' : ''}
+      </div>`;
+    btn.addEventListener('mouseover', () => { if (!btn._selecting) btn.style.background = 'rgba(155,107,222,0.1)'; });
+    btn.addEventListener('mouseout',  () => { if (!btn._selecting) btn.style.background = 'var(--panel)'; });
     btn.addEventListener('click', () => {
-      const run = gState.progress.abyss.currentRun;
-      if (run) {
-        run.buffs.push(buff.id);
-        run.stage = stage + 1;
+      btn._selecting = true;
+      btn.style.background = 'rgba(155,107,222,0.25)';
+      const currentRun = gState.progress.abyss.currentRun;
+      if (currentRun) {
+        currentRun.buffs.push(buff.id);
+        currentRun.stage = stage + 1;
         saveState();
       }
       document.body.removeChild(overlay);
@@ -22769,17 +22845,44 @@ function showAbyssBuffChoice(choices, layerId, stage) {
     });
     grid.appendChild(btn);
   });
+
   overlay.appendChild(grid);
   document.body.appendChild(overlay);
 }
+
+const ABYSS_CLEAR_GOLD  = [0, 200, 300, 400, 600, 800, 1000, 1200, 1500, 1800, 2200, 2500, 3000, 3500, 4000, 5000];
+const ABYSS_CLEAR_ETHER = [0,  15,  20,  30,  40,  60,   80,  100,  130,  160,  200,  230,  270,  320,  380,  500];
+const ABYSS_MILESTONE_CRYSTAL = { 5: 50, 10: 100, 15: 200 };
 
 function giveAbyssLayerReward(layerId) {
   const layer = ABYSS_LAYERS.find(l => l.id === layerId);
   if (!layer) return;
   if (!gState.accessories) gState.accessories = [];
+
   const acc      = generateAccessory(layer.accRarity);
   gState.accessories.push(acc);
-  saveState();
+
+  const gold  = ABYSS_CLEAR_GOLD[layerId]  || 0;
+  const ether = ABYSS_CLEAR_ETHER[layerId] || 0;
+  gState.player.gold  = (gState.player.gold  || 0) + gold;
+  gState.player.ether = (gState.player.ether || 0) + ether;
+
+  // マイルストーン報酬（初回クリアのみ）
+  let milestoneHtml = '';
+  const crystalReward = ABYSS_MILESTONE_CRYSTAL[layerId];
+  const milestoneKey  = `abyssMilestone${layerId}`;
+  if (crystalReward && !gState.progress[milestoneKey]) {
+    gState.progress[milestoneKey] = true;
+    gState.player.starCrystal = (gState.player.starCrystal || 0) + crystalReward;
+    milestoneHtml = `
+      <div style="text-align:center;border:1px solid var(--gold);padding:12px 20px;background:rgba(249,211,66,0.08);">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">🎉 マイルストーン達成！</div>
+        <div style="font-size:16px;font-weight:700;color:var(--gold)">星晶石 +${crystalReward}</div>
+      </div>`;
+  }
+
+  saveState(); updateTopBar();
+
   const set      = ACCESSORY_SETS.find(s => s.id === acc.setId);
   const rarColor = ABYSS_RARITY_COLOR[layer.accRarity] || '#aaa';
   const rarLabel = ABYSS_RARITY_LABEL[layer.accRarity] || 'N';
@@ -22788,11 +22891,22 @@ function giveAbyssLayerReward(layerId) {
   popup.innerHTML = `
     <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:22px;letter-spacing:3px">LAYER CLEAR!</div>
     <div style="font-size:14px;color:var(--text2)">${layer.icon} ${layer.name} 制覇！</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:320px;">
+      <div style="text-align:center;border:1px solid var(--border);padding:10px;background:rgba(0,0,0,0.4);">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">ゴールド</div>
+        <div style="font-size:16px;font-weight:700;color:var(--gold)">+${fmt(gold)}</div>
+      </div>
+      <div style="text-align:center;border:1px solid var(--border);padding:10px;background:rgba(0,0,0,0.4);">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">EXPポット</div>
+        <div style="font-size:16px;font-weight:700;color:#7dc8f7">+${ether}</div>
+      </div>
+    </div>
     <div style="text-align:center;border:1px solid ${rarColor};padding:16px 24px;background:rgba(0,0,0,0.4);">
       <div style="font-size:11px;color:var(--text3);margin-bottom:4px">アクセサリー獲得</div>
       <div style="font-size:18px;font-weight:700;color:${rarColor}">${rarLabel} ${set?.name || 'アクセサリー'}</div>
       <div style="font-size:13px;color:var(--text2);margin-top:4px">${acc.mainStat.label}+${acc.mainStat.val}</div>
     </div>
+    ${milestoneHtml}
     <button class="btn btn-gold" onclick="this.closest('div[style*=fixed]').remove()" style="min-width:120px">続ける</button>`;
   document.body.appendChild(popup);
 }
