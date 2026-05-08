@@ -564,8 +564,7 @@ img.item-icon {
 .combatant-card.is-acting { border-color: var(--gold); box-shadow: 0 0 8px rgba(201,168,76,0.3); }
 .combatant-card.dead { opacity: 0.3; filter: grayscale(1); }
 
-/* 前衛・後衛の視覚的奥行き */
-/* 味方：前衛は左端、後衛は右へ引っ込む */
+/* 前衛・後衛の視覚的奥行き（味方のみ） */
 #ally-zone .card-front-row {
   border-left: 3px solid var(--orange);
 }
@@ -575,18 +574,6 @@ img.item-icon {
   border-left: 3px solid var(--accent2);
   opacity: 0.92;
 }
-/* 敵：前衛は右端、後衛は左へ引っ込む */
-#enemy-zone .card-front-row {
-  border-right: 3px solid var(--orange);
-  border-left: 1px solid var(--border);
-}
-#enemy-zone .card-back-row {
-  margin-right: 18px;
-  width: calc(100% - 18px);
-  border-right: 3px solid var(--accent2);
-  border-left: 1px solid var(--border);
-  opacity: 0.92;
-}
 .combatant-card .cc-name { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 3px; display: flex; align-items: center; gap: 3px; }
 .combatant-card .cc-name .cc-icon { font-size: 14px; line-height:1; display:flex;align-items:center; }
 .combatant-card .cc-name .cc-name-text { flex: 1; }
@@ -594,6 +581,11 @@ img.item-icon {
 .pos-badge { font-family: 'Rajdhani', sans-serif; font-size: 8px; font-weight: 700; padding: 1px 3px; border-radius: 2px; flex-shrink: 0; }
 .pos-front { background: rgba(224,122,58,0.2); color: var(--orange); border: 1px solid rgba(224,122,58,0.4); }
 .pos-back  { background: rgba(74,127,255,0.2);  color: var(--accent2); border: 1px solid rgba(74,127,255,0.4); }
+/* 敵ヘイトバー */
+.hate-bar-wrap { height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; margin-top: 3px; }
+.hate-fill { height: 100%; background: linear-gradient(90deg, #c0392b, #e05a00); border-radius: 2px; transition: width 0.3s ease; }
+.hate-label { display: flex; align-items: center; gap: 2px; margin-top: 1px; }
+.hate-val  { font-family: 'Rajdhani', sans-serif; font-size: 8px; color: rgba(255,110,80,0.85); font-weight: 700; }
 
 /* 右側バトルログ */
 .battle-log-wrap {
@@ -2013,10 +2005,8 @@ img.item-icon {
   }
 
   /* 前衛・後衛の視覚的インデントをリセット（縦では不要） */
-  #ally-zone .card-back-row,
-  #enemy-zone .card-back-row {
+  #ally-zone .card-back-row {
     margin-left: 0 !important;
-    margin-right: 0 !important;
     width: calc(50% - 4px) !important;
   }
 
@@ -12715,11 +12705,7 @@ function initBattle(waveEnemies, stageName) {
     allies: units.map(u => makeCombatant(u, false, null, null, 'member', imagineBuffs)),
     waveIdx: 0,
     waveEnemies,
-    enemies: waveEnemies[0].map((e, i, arr) => {
-      const c = makeCombatant(null, true, e);
-      c.isBackRow = arr.length >= 3 && i >= Math.ceil(arr.length / 2);
-      return c;
-    }),
+    enemies: waveEnemies[0].map(e => makeCombatant(null, true, e)),
     startTime: Date.now(),
     elapsed: 0,
     running: false,
@@ -12817,6 +12803,15 @@ function renderBattle() {
         }
         existing.classList.toggle('dead', !!u.dead);
         existing.classList.toggle('staggered', !!u.staggered);
+        if (u.isEnemy) {
+          const liveEnemies = bs.enemies.filter(e=>!e.dead&&!e._underground);
+          const maxHate = Math.max(...liveEnemies.map(e=>e.hate||0), 1);
+          const hatePct = Math.min(100, Math.floor((u.hate||0) / maxHate * 100));
+          const hateFill = q('.hate-fill');
+          if (hateFill) hateFill.style.width = hatePct + '%';
+          const hateVal = q('.hate-val');
+          if (hateVal) hateVal.textContent = fmt(u.hate || 0);
+        }
         const buffHtml = buildBuffHtml(u.buffs, u.debuffs);
         const statusIcons = q('.status-icons');
         if (statusIcons) statusIcons.innerHTML = buffHtml;
@@ -12859,7 +12854,7 @@ function combatantCardHTML(c) {
   const leaderBadge = (!c.isEnemy && c.isLeader) ? `<span class="leader-combatant-badge">👑</span>` : '';
   const atkInfo = `<span class="cc-atk">⚔${fmt(c.atk)}</span>`;
   const staggerClass = c.staggered ? ' staggered' : '';
-  const rowClass = (c.isEnemy && c.isBackRow) ? ' card-back-row' : ' card-front-row';
+  const rowClass = c.isEnemy ? '' : (c.isBackRow ? ' card-back-row' : ' card-front-row');
   const clickAttr = !c.isEnemy ? `onclick="handleAllyCardClick('${c.uid}')"` : '';
   return `
     <div class="combatant-card${staggerClass}${rowClass} ${c.dead?'dead':''}${c.isLeader?' leader-slot':''}${ultReadyManual?' ult-tap-ready':''}" id="cc-${c.uid}" ${clickAttr}>
@@ -12878,6 +12873,7 @@ function combatantCardHTML(c) {
       <div class="hp-text">${fmt(Math.max(0,c.hp))} / ${fmt(c.maxHp)}${c.shield>0?` <span style="color:#88aaff">🛡${fmt(c.shield)}</span>`:''}</div>
       ${c.isEnemy && c.phases && c.phases.length > 1 ? `<div class="boss-phase-dots">${c.phases.map((_,i)=>`<div class="phase-dot${i<(c.phaseIdx||0)?' cleared':i===(c.phaseIdx||0)?' active':''}"></div>`).join('')}</div>` : ''}
       <div class="atb-bar"><div class="atb-fill" style="width:${atbPct}%"></div></div>
+      ${c.isEnemy ? `<div class="hate-bar-wrap"><div class="hate-fill" style="width:0%"></div></div><div class="hate-label"><span>⚠</span><span class="hate-val">-</span></div>` : ''}
       ${ultSection}
       ${buffHtml ? `<div class="status-icons">${buffHtml}</div>` : ''}
     </div>`;
@@ -13282,6 +13278,7 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       phaseIdx: enemyData.phases ? 0 : undefined,
       passive: enemyData.passive || null,
       passive2: enemyData.passive2 || null,
+      hate: enemyData.hate || 100,
       _baseAtk: enemyData.atk,
       _basePres: enemyData.pres || 0,
       _baseSpd: enemyData.spd || 0,
@@ -13828,7 +13825,6 @@ function combatantAct(c, bs) {
           const template = sk.summons[0];
           for (let i = 0; i < count; i++) {
             const newEnemy = makeCombatant(null, true, template);
-            newEnemy.isBackRow = false;
             battleState.enemies.push(newEnemy);
           }
           addLog(`${c.icon||''} <b>${c.name}</b>: <span class="tag tag-skill">${sk.name}</span> <span class="tag tag-buff">召喚 ×${count}</span>`, 'trigger');
@@ -14066,7 +14062,17 @@ function doAttack(attacker, targets, skill) {
     }
   } else {
     const isSingle = skill.target==='single' || skill.target==='self';
-    targetList = isSingle ? [targets[Math.floor(Math.random()*targets.length)]] : [...targets];
+    if (isSingle && !attacker.isEnemy) {
+      // プレイヤー攻撃: ヘイト最高の敵を優先ターゲット（同値はランダム）
+      const alive = targets.filter(t=>!t.dead);
+      if (alive.length) {
+        const maxHate = Math.max(...alive.map(t => t.hate||0));
+        const tops = alive.filter(t => (t.hate||0) === maxHate);
+        targetList = [tops[Math.floor(Math.random() * tops.length)]];
+      } else { targetList = [...targets]; }
+    } else {
+      targetList = isSingle ? [targets[Math.floor(Math.random()*targets.length)]] : [...targets];
+    }
   }
 
   // ガーディアン保護: 腕が生きている間は頭部への攻撃を腕に転送
@@ -14190,6 +14196,10 @@ function doAttack(attacker, targets, skill) {
     if (!attacker.isEnemy && totalDmg > 0) trackDamageDealt(totalDmg);
     gainUltGauge(attacker, 8);
     updateHate(attacker, calcHateGain('damage', totalDmg));
+    // 敵が攻撃するほど自身のヘイトが上昇（プレイヤーの優先ターゲットになる）
+    if (attacker.isEnemy && totalDmg > 0) {
+      attacker.hate = (attacker.hate || 100) + Math.floor(totalDmg * 0.03) + 15;
+    }
 
     // パッシブ: 戦士の闘志（攻撃命中でATKスタック）
     if (!attacker.isEnemy && attacker._passiveFightingSpirit && totalDmg > 0) {
@@ -15946,7 +15956,6 @@ function triggerBossPhaseTransition(boss, bs) {
       const {count = 1, ...enemyData} = summonData;
       for (let i = 0; i < count; i++) {
         const newEnemy = makeCombatant(null, true, enemyData);
-        newEnemy.isBackRow = false;
         bs.enemies.push(newEnemy);
       }
     });
