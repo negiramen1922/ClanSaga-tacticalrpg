@@ -476,6 +476,45 @@ img.item-icon {
 
 .area-list { display: none; background: var(--bg2); border: 1px solid var(--border); border-top: none; padding: 8px; }
 .area-list.open { display: block; }
+
+/* 郵便ボックス */
+.mailbox-btn-wrap { position: relative; display: inline-flex; }
+.mailbox-unread-dot {
+  position: absolute; top: -5px; right: -5px;
+  background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700;
+  min-width: 17px; height: 17px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; pointer-events: none; line-height: 1;
+}
+.mailbox-overlay {
+  position: fixed; inset: 0; z-index: 8000;
+  background: rgba(5,6,8,0.92);
+  display: flex; flex-direction: column;
+}
+.mailbox-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.mailbox-header h2 { font-family:'Cinzel',serif; font-size:16px; color:var(--gold); flex:1; margin:0; }
+.mailbox-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.mail-card {
+  background: var(--panel); border: 1px solid var(--border);
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+}
+.mail-card.unclaimed { border-color: var(--accent); }
+.mail-card.claimed { opacity: 0.5; }
+.mail-card-header { display: flex; align-items: center; gap: 8px; }
+.mail-card-title { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; }
+.mail-card-date { font-size: 10px; color: var(--text3); }
+.mail-card-desc { font-size: 12px; color: var(--text2); white-space: pre-line; line-height: 1.6; }
+.mail-card-items { display: flex; gap: 8px; flex-wrap: wrap; }
+.mail-item-tag {
+  background: rgba(249,211,66,0.1); border: 1px solid var(--gold);
+  color: var(--gold); font-size: 12px; font-weight: 700;
+  padding: 4px 10px;
+}
+.mailbox-footer { padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg2); }
 .area-item {
   display: flex; align-items: center; gap: 10px; padding: 10px;
   border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.15s;
@@ -2471,6 +2510,10 @@ img.item-icon {
         <div class="quick-btn" onclick="switchTab('artifact')">🔩 AF一覧</div>
         <div class="quick-btn" onclick="switchTab('acc')">💍 アクセサリー</div>
         <div class="quick-btn" onclick="openItemsMenu()">🎒 持ち物</div>
+        <div class="quick-btn mailbox-btn-wrap" onclick="openMailbox()" style="position:relative;">
+          📬 郵便BOX
+          <span id="mailbox-badge" class="mailbox-unread-dot" style="display:none">0</span>
+        </div>
         <div class="quick-btn" onclick="openHelpModal()"><img src="assets/images/nav-help.png" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;"> ヘルプ</div>
       </div>
 
@@ -8762,6 +8805,7 @@ function defaultState(clanName) {
     },
     tickets:{ sweep:0, timeSkip:0 },
     settings: { battleMode: { ultAuto: true, skillAuto: true } },
+    mailbox: [],
     missions:{
       daily:{ loginBonus:0, babelClears:0, mineCollect:0, classUpgrade:0, gachaPulls:0 },
       weekly:{ loginCount:0, babelClears:0, gachaPulls:0, dailyClears:0, cardUpgrade:0 },
@@ -9000,7 +9044,8 @@ function normalizeState() {
   if (gState.progress.abyss.currentRun && gState.progress.abyss.currentRun.layerId === undefined) {
     gState.progress.abyss.currentRun = null;
   }
-  // 既存クリア済み層への星晶石遡及配布（初回ロード時のみ）
+  // 既存クリア済み層への星晶石遡及配布（郵便ボックス経由・初回のみ）
+  if (!gState.mailbox) gState.mailbox = [];
   if (!gState.progress.abyssRetroReward) {
     const _retro = gState.progress.abyss.clearedLayers || [];
     let _retroTotal = 0;
@@ -9011,9 +9056,20 @@ function normalizeState() {
         _retroTotal += (lid % 5 === 0) ? 200 : 50;
       }
     });
-    if (_retroTotal > 0) gState.player.starCrystal = (gState.player.starCrystal || 0) + _retroTotal;
+    if (_retroTotal > 0) {
+      gState.mailbox.push({
+        id: 'abyss_retro_v1',
+        title: 'アビスダイブ 星晶石補填',
+        desc: 'アビスダイブのクリア報酬に星晶石が追加されました。\n既にクリア済みの層分として星晶石を補填配布します。',
+        items: [{ type:'starCrystal', amount:_retroTotal }],
+        claimed: false,
+        date: '2026-05-08',
+      });
+    }
     gState.progress.abyssRetroReward = true;
   }
+  // mailboxがない旧セーブへの対応
+  if (!gState.mailbox) gState.mailbox = [];
 
   // presets正規化（最大15スロット）
   while (gState.presets.length < 15) {
@@ -10296,6 +10352,139 @@ function closeNewsModal() {
   updateNewsBanner();
 }
 
+// ============================================================
+//  郵便ボックス
+// ============================================================
+
+// アイテムタイプ → 表示ラベル
+const MAIL_ITEM_LABELS = {
+  starCrystal: { label:'星晶石', icon:'💎' },
+  gold:         { label:'ゴールド', icon:'🪙' },
+  ether:        { label:'EXPポット', icon:'🧪' },
+  mithril:      { label:'ミスリル', icon:'🔷' },
+  stamina:      { label:'スタミナ', icon:'⚡' },
+};
+
+function getUnclaimedMailCount() {
+  return (gState?.mailbox || []).filter(m => !m.claimed).length;
+}
+
+function updateMailboxBadge() {
+  const badge = document.getElementById('mailbox-badge');
+  if (!badge) return;
+  const n = getUnclaimedMailCount();
+  if (n > 0) {
+    badge.textContent = n > 99 ? '99+' : n;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function openMailbox() {
+  const ov = document.getElementById('mailbox-overlay');
+  if (!ov) return;
+  ov.style.display = 'flex';
+  renderMailboxBody();
+}
+
+function closeMailbox() {
+  const ov = document.getElementById('mailbox-overlay');
+  if (ov) ov.style.display = 'none';
+}
+
+function _mailItemHtml(item) {
+  const def = MAIL_ITEM_LABELS[item.type] || { label: item.type, icon: '📦' };
+  return `<span class="mail-item-tag">${def.icon} ${def.label} ×${fmt(item.amount)}</span>`;
+}
+
+function renderMailboxBody() {
+  const body = document.getElementById('mailbox-body');
+  const allBtn = document.getElementById('mailbox-claim-all-btn');
+  if (!body) return;
+  const mails = gState.mailbox || [];
+
+  if (mails.length === 0) {
+    body.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--text3);font-size:13px;">メールはありません</div>`;
+    if (allBtn) allBtn.disabled = true;
+    return;
+  }
+
+  const hasUnclaimed = mails.some(m => !m.claimed);
+  if (allBtn) allBtn.disabled = !hasUnclaimed;
+
+  // 未受け取りを上に表示
+  const sorted = [...mails].sort((a, b) => (a.claimed ? 1 : 0) - (b.claimed ? 1 : 0));
+
+  body.innerHTML = sorted.map(mail => {
+    const itemsHtml = (mail.items || []).map(_mailItemHtml).join('');
+    return `
+      <div class="mail-card ${mail.claimed ? 'claimed' : 'unclaimed'}">
+        <div class="mail-card-header">
+          <span style="font-size:16px">${mail.claimed ? '✉️' : '📩'}</span>
+          <span class="mail-card-title">${mail.title}</span>
+          <span class="mail-card-date">${mail.date || ''}</span>
+        </div>
+        <div class="mail-card-desc">${mail.desc || ''}</div>
+        <div class="mail-card-items">${itemsHtml}</div>
+        ${!mail.claimed
+          ? `<button class="btn btn-gold btn-sm" style="align-self:flex-end;margin-top:4px" onclick="claimMail('${mail.id}')">受け取る</button>`
+          : `<div style="font-size:11px;color:var(--text3);text-align:right;margin-top:4px">受け取り済み</div>`}
+      </div>`;
+  }).join('');
+}
+
+function _applyMailItems(mail) {
+  (mail.items || []).forEach(item => {
+    const amt = item.amount || 0;
+    if (item.type === 'starCrystal') gState.player.starCrystal = (gState.player.starCrystal || 0) + amt;
+    else if (item.type === 'gold')    gState.player.gold    = (gState.player.gold    || 0) + amt;
+    else if (item.type === 'ether')   gState.player.ether   = (gState.player.ether   || 0) + amt;
+    else if (item.type === 'mithril') gState.player.mithril = (gState.player.mithril || 0) + amt;
+    else if (item.type === 'stamina') {
+      const si = staminaRegenInfo();
+      gState.player.stamina = Math.min(si.max, si.cur + amt);
+      gState.player.staminaLastRegen = Date.now();
+    }
+  });
+}
+
+function claimMail(mailId) {
+  const mail = (gState.mailbox || []).find(m => m.id === mailId);
+  if (!mail || mail.claimed) return;
+  mail.claimed = true;
+  _applyMailItems(mail);
+  saveState(); updateTopBar();
+  renderMailboxBody();
+  // 受け取り完了トースト
+  const itemSummary = (mail.items || []).map(it => {
+    const def = MAIL_ITEM_LABELS[it.type] || { icon:'📦', label:it.type };
+    return `${def.icon}${def.label}×${fmt(it.amount)}`;
+  }).join('　');
+  showBonusToast(`📬 受け取り完了！　${itemSummary}`);
+}
+
+function claimAllMail() {
+  const unclaimed = (gState.mailbox || []).filter(m => !m.claimed);
+  if (!unclaimed.length) return;
+  unclaimed.forEach(mail => {
+    mail.claimed = true;
+    _applyMailItems(mail);
+  });
+  saveState(); updateTopBar();
+  renderMailboxBody();
+  showBonusToast(`📬 ${unclaimed.length}件のメールを受け取りました！`);
+}
+
+// メールを追加するユーティリティ（将来の配布に使用）
+function addSystemMail(id, title, desc, items, date) {
+  if (!gState.mailbox) gState.mailbox = [];
+  if (gState.mailbox.find(m => m.id === id)) return; // 重複防止
+  gState.mailbox.push({ id, title, desc, items, claimed: false, date: date || new Date().toLocaleDateString('ja-JP') });
+  saveState();
+  updateMailboxBadge();
+}
+
 // 一覧表示
 function showNewsList() {
   const listEl = document.getElementById('news-list-view');
@@ -10526,6 +10715,7 @@ function updateTopBar() {
   const stEl = document.getElementById('disp-stamina');
   if (stEl) stEl.textContent = si.cur + '/' + si.max;
   updateHamburgerInfo();
+  updateMailboxBadge();
 }
 
 function grantVipDailyBonus() {
@@ -24579,6 +24769,19 @@ function endPassiveTutorial() {
 <!-- Admin Debug Panel -->
 <div id="debug-overlay" onclick="if(event.target===this)closeDebugPanel()">
   <div id="debug-panel"></div>
+</div>
+
+<!-- 郵便ボックス -->
+<div id="mailbox-overlay" class="mailbox-overlay" style="display:none">
+  <div class="mailbox-header">
+    <h2>📬 郵便ボックス</h2>
+    <button class="btn btn-outline btn-sm" onclick="claimAllMail()" id="mailbox-claim-all-btn">全て受け取る</button>
+    <button class="btn btn-outline btn-sm" onclick="closeMailbox()" style="border-color:var(--text3);color:var(--text3)">✕</button>
+  </div>
+  <div class="mailbox-body" id="mailbox-body"></div>
+  <div class="mailbox-footer">
+    <div style="font-size:11px;color:var(--text3);text-align:center">受け取り済みのメールは自動的にグレー表示されます</div>
+  </div>
 </div>
 
 </body>
