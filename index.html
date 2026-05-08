@@ -8882,7 +8882,7 @@ function defaultState(clanName) {
     artifacts:[], runes:[], celestial:[], imagines:[],
     ownedCards: [],   // フェーズ1: 所持スキルカード一覧
     mine:{ lastCollected:Date.now(), level:{ speed:1, cap:1 } },
-    lab:{ level:1, slots:[{ role:null, tier:'t1', lastCollected:Date.now() }] },
+    lab:{ level:1, slots:[{ focus:null, lastCollected:Date.now() }] },
     expeditions:{ slots:[{ regionId:null, startedAt:null, memberUids:[], pendingRegionId:null }] },
     starMap:{ unlockedNodes:[] },
     library:{ discovered:[] },
@@ -8997,8 +8997,10 @@ function normalizeState() {
   if (!p.atomStone)  p.atomStone  = { t1:0, t2:0, t3:0 };
   if (!p.runeStone)  p.runeStone  = { t1:0, t2:0, t3:0 };   // 神刻ルーン
   if (!p.kyoten) p.kyoten = { warrior:{t1:0,t2:0,t3:0}, vanguard:{t1:0,t2:0,t3:0}, ranger:{t1:0,t2:0,t3:0}, support:{t1:0,t2:0,t3:0}, trickster:{t1:0,t2:0,t3:0}, scout:{t1:0,t2:0,t3:0} }; // 響典
-  if (!gState.lab) gState.lab = { level:1, slots:[{ role:null, tier:'t1', lastCollected:Date.now() }] };
-  if (!Array.isArray(gState.lab.slots)) gState.lab.slots = [{ role:null, tier:'t1', lastCollected:Date.now() }];
+  if (!gState.lab) gState.lab = { level:1, slots:[{ focus:null, lastCollected:Date.now() }] };
+  if (!Array.isArray(gState.lab.slots)) gState.lab.slots = [{ focus:null, lastCollected:Date.now() }];
+  // migrate old slot format (role/tier → focus)
+  gState.lab.slots.forEach(s => { if (s.role !== undefined && s.focus === undefined) { s.focus = s.role || null; delete s.role; delete s.tier; } });
   if (!gState.expeditions) gState.expeditions = { slots:[{ regionId:null, startedAt:null, memberUids:[], pendingRegionId:null }] };
   if (!Array.isArray(gState.expeditions.slots)) gState.expeditions.slots = [{ regionId:null, startedAt:null, memberUids:[], pendingRegionId:null }];
   gState.expeditions.slots.forEach(s => { if (!s.memberUids) s.memberUids = []; if (s.pendingRegionId===undefined) s.pendingRegionId=null; });
@@ -20246,17 +20248,15 @@ const LAB_ROLES = [
   { key:'support',   label:'サポート系',         color:'#ffd84a' },
   { key:'trickster', label:'トリックスター系',   color:'#c47aff' },
   { key:'scout',     label:'スカウト系',         color:'#7ab4ff' },
+  { key:'mix',       label:'ミックス',           color:'#aaaaaa' },
 ];
-// level設定: slots=スロット数, maxTier=最大ティア, speedMult=速度倍率, upgCost=次Lvへの強化コスト
 const LAB_LEVEL_CFG = [
-  { lv:1, slots:1, maxTier:'t1', speedMult:1.0, upgCost:5000   },
-  { lv:2, slots:2, maxTier:'t2', speedMult:1.0, upgCost:15000  },
-  { lv:3, slots:3, maxTier:'t2', speedMult:1.3, upgCost:40000  },
-  { lv:4, slots:3, maxTier:'t3', speedMult:1.3, upgCost:100000 },
-  { lv:5, slots:4, maxTier:'t3', speedMult:1.5, upgCost:0      }, // MAX
+  { lv:1, slots:1, lvMult:1.0, upgCost:5000   },
+  { lv:2, slots:2, lvMult:1.2, upgCost:15000  },
+  { lv:3, slots:3, lvMult:1.5, upgCost:40000  },
+  { lv:4, slots:3, lvMult:1.8, upgCost:100000 },
+  { lv:5, slots:4, lvMult:2.2, upgCost:0      }, // MAX
 ];
-// T1:2h/個, T2:8h/個, T3:32h/個（speedMultで除算）
-const LAB_BASE_HOURS = { t1:2, t2:8, t3:32 };
 const LAB_MAX_HOURS = 24;
 // 錬金レシピ: fromTierをinQty個＋ゴールドでtoTier×1に変換
 const LAB_ALCH_RECIPES = [
@@ -20503,7 +20503,7 @@ function _renderClanHallLabTab(el) {
   lvBar.className = 'lab-lv-bar';
   lvBar.innerHTML = `
     <span style="font-size:12px;color:var(--text3)">研究所 Lv.${cfg.lv}</span>
-    <span style="font-size:11px;color:var(--text3)">スロット×${cfg.slots} / 速度×${cfg.speedMult}</span>
+    <span style="font-size:11px;color:var(--text3)">スロット×${cfg.slots} / 生産倍率×${cfg.lvMult}</span>
     <span style="flex:1"></span>
     ${isMax
       ? `<span style="font-size:11px;color:var(--gold)">MAX</span>`
@@ -20522,47 +20522,120 @@ function _labCfg() {
   return LAB_LEVEL_CFG[Math.min(LAB_LEVEL_CFG.length - 1, (gState.lab.level || 1) - 1)];
 }
 
-function calcLabSlotYield(slot) {
-  if (!slot.role) return 0;
-  const cfg = _labCfg();
-  const hrsPerItem = LAB_BASE_HOURS[slot.tier || 't1'] / cfg.speedMult;
+function _labRewardDefs(focus, labLv) {
+  // Returns reward descriptors representing 24h full-period output (before f*m scaling).
+  const isMix = focus === 'mix';
+  const focusRoles = isMix
+    ? ['warrior','vanguard','ranger','support','trickster','scout']
+    : [focus];
+  const defs = [];
+  focusRoles.forEach(role => {
+    const scale = isMix ? 0.35 : 1.0;
+    // 響典T1: 2-4 per 24h (focus), ~1 (mix)
+    defs.push({ type:'kyoten', role, tier:'t1',
+      minQty: Math.max(1, Math.round(2 * scale)),
+      maxQty: Math.max(1, Math.round(4 * scale)), chance:1.0 });
+    if (labLv >= 2)
+      defs.push({ type:'kyoten', role, tier:'t2',
+        minQty:1, maxQty:1, chance: isMix ? 0.05 : 0.12 });
+    if (labLv >= 4 && !isMix)
+      defs.push({ type:'kyoten', role, tier:'t3', minQty:1, maxQty:1, chance:0.04 });
+    if (labLv >= 3 && !isMix)
+      defs.push({ type:'eiyuutan', role, minQty:1, maxQty:1, chance:0.06 });
+  });
+  // Common drops
+  defs.push({ type:'atomStone', tier:'t1', minQty:2, maxQty:2, chance:1.0 });
+  if (labLv >= 3) defs.push({ type:'atomStone', tier:'t2', minQty:1, maxQty:1, chance:0.20 });
+  if (labLv >= 2) defs.push({ type:'atomCore',  tier:'t1', minQty:1, maxQty:1, chance:0.12 });
+  defs.push({ type:'soul', tier:'t1', minQty:1, maxQty:2, chance:0.25 });
+  if (labLv >= 4) defs.push({ type:'soul', tier:'t2', minQty:1, maxQty:1, chance:0.08 });
+  return defs;
+}
+
+function calcLabSlotRewards(slotIdx) {
+  const lab = gState.lab;
+  const slot = lab.slots[slotIdx];
+  if (!slot || !slot.focus) return [];
+  const labLv = lab.level || 1;
   const elapsed = Math.min(LAB_MAX_HOURS, (Date.now() - (slot.lastCollected || Date.now())) / 3600000);
-  return Math.floor(elapsed / hrsPerItem);
+  if (elapsed < 0.05) return [];
+  const f = elapsed / LAB_MAX_HOURS;
+  const cfg = LAB_LEVEL_CFG[Math.min(labLv - 1, LAB_LEVEL_CFG.length - 1)];
+  const m = cfg.lvMult;
+  const defs = _labRewardDefs(slot.focus, labLv);
+  const results = [];
+  defs.forEach(def => {
+    const randQty = () => def.minQty + Math.floor(Math.random() * (def.maxQty - def.minQty + 1));
+    if (def.chance >= 1.0) {
+      const qty = Math.floor(randQty() * f * m);
+      if (qty > 0) results.push({ ...def, qty });
+    } else {
+      if (Math.random() < Math.min(1.0, def.chance * f * m))
+        results.push({ ...def, qty: randQty() });
+    }
+  });
+  return results;
+}
+
+function applyLabRewards(rewards) {
+  const p = gState.player;
+  rewards.forEach(r => {
+    if (r.type === 'kyoten') {
+      if (!p.kyoten[r.role]) p.kyoten[r.role] = { t1:0, t2:0, t3:0 };
+      p.kyoten[r.role][r.tier] = (p.kyoten[r.role][r.tier] || 0) + r.qty;
+    } else if (r.type === 'eiyuutan') {
+      if (!p.eiyuutan) p.eiyuutan = {};
+      p.eiyuutan[r.role] = (p.eiyuutan[r.role] || 0) + r.qty;
+    } else if (r.type === 'atomStone') {
+      if (!p.atomStone) p.atomStone = { t1:0, t2:0, t3:0 };
+      p.atomStone[r.tier] = (p.atomStone[r.tier] || 0) + r.qty;
+    } else if (r.type === 'atomCore') {
+      if (!p.atomCore) p.atomCore = { t1:0, t2:0, t3:0 };
+      p.atomCore[r.tier] = (p.atomCore[r.tier] || 0) + r.qty;
+    } else if (r.type === 'soul') {
+      const key = r.tier === 't1' ? 'cryptoSoulT1' : r.tier === 't2' ? 'cryptoSoulT2' : 'cryptoSoulT3';
+      p[key] = (p[key] || 0) + r.qty;
+    }
+  });
 }
 
 function collectLabSlot(idx) {
   const lab = gState.lab;
   const slot = lab.slots[idx];
-  if (!slot || !slot.role) return;
-  const qty = calcLabSlotYield(slot);
-  if (qty <= 0) { toast('まだ生産中です...'); return; }
-  if (!gState.player.kyoten[slot.role]) gState.player.kyoten[slot.role] = { t1:0, t2:0, t3:0 };
-  gState.player.kyoten[slot.role][slot.tier || 't1'] += qty;
+  if (!slot || !slot.focus) return;
+  const rewards = calcLabSlotRewards(idx);
+  if (rewards.length === 0) { toast('まだ生産中です...'); return; }
+  applyLabRewards(rewards);
   slot.lastCollected = Date.now();
   saveState();
   updateTopBar();
-  const roleInfo = LAB_ROLES.find(r => r.key === slot.role);
-  const tLbl = (slot.tier || 't1').toUpperCase();
-  toast(`${roleInfo?.label || slot.role} 響典${tLbl} ×${qty} 回収！`);
+  const lines = rewards.map(r => {
+    if (r.type === 'kyoten') return `${LAB_ROLES.find(x=>x.key===r.role)?.label||r.role} 響典${r.tier.toUpperCase()}×${r.qty}`;
+    if (r.type === 'eiyuutan') return `${LAB_ROLES.find(x=>x.key===r.role)?.label||r.role} 英雄譚×${r.qty}`;
+    if (r.type === 'atomStone') return `アトム秘石${r.tier.toUpperCase()}×${r.qty}`;
+    if (r.type === 'atomCore')  return `アトミックコア×${r.qty}`;
+    if (r.type === 'soul')      return `クリプトソウル${r.tier.toUpperCase()}×${r.qty}`;
+    return '';
+  }).filter(Boolean);
+  toast(`回収: ${lines.join(' / ')}`);
   renderClanHall();
 }
 
 function collectAllLab() {
   const lab = gState.lab;
-  let total = 0;
+  const allRewards = [];
   lab.slots.forEach((slot, idx) => {
-    if (!slot.role) return;
-    const qty = calcLabSlotYield(slot);
-    if (qty <= 0) return;
-    if (!gState.player.kyoten[slot.role]) gState.player.kyoten[slot.role] = { t1:0, t2:0, t3:0 };
-    gState.player.kyoten[slot.role][slot.tier || 't1'] += qty;
+    if (!slot.focus) return;
+    const rewards = calcLabSlotRewards(idx);
+    if (rewards.length === 0) return;
+    allRewards.push(...rewards);
     slot.lastCollected = Date.now();
-    total += qty;
   });
-  if (total === 0) { toast('回収できるものがありません'); return; }
+  if (allRewards.length === 0) { toast('回収できるものがありません'); return; }
+  applyLabRewards(allRewards);
   saveState();
   updateTopBar();
-  toast(`研究所: 計 ${total}個の素材を回収しました！`);
+  toast(`研究所: ${allRewards.length}種類の素材を回収しました！`);
   renderClanHall();
 }
 
@@ -20577,7 +20650,7 @@ function upgradeLabLevel() {
   lab.level = curLv + 1;
   const nextCfg = LAB_LEVEL_CFG[lab.level - 1];
   while (lab.slots.length < nextCfg.slots) {
-    lab.slots.push({ role: null, tier: 't1', lastCollected: Date.now() });
+    lab.slots.push({ focus: null, lastCollected: Date.now() });
   }
   Audio.mineUpgrade?.();
   saveState();
@@ -20607,66 +20680,69 @@ function _renderLabProduce(el, lab, cfg) {
   const wrap = document.createElement('div');
   wrap.className = 'lab-body';
 
-  // 全回収ボタン
   const allBtn = document.createElement('button');
   allBtn.className = 'btn btn-gold btn-sm';
   allBtn.style.cssText = 'width:100%;margin-bottom:12px;';
-  allBtn.textContent = '📦 全スロットを回収';
+  allBtn.textContent = '全スロットを回収';
   allBtn.addEventListener('click', collectAllLab);
   wrap.appendChild(allBtn);
 
-  const tiers = (tier) => {
-    if (tier === 't1') return ['t1'];
-    if (tier === 't2') return ['t1','t2'];
-    return ['t1','t2','t3'];
-  };
-
   for (let i = 0; i < cfg.slots; i++) {
-    if (!lab.slots[i]) lab.slots[i] = { role:null, tier:'t1', lastCollected:Date.now() };
+    if (!lab.slots[i]) lab.slots[i] = { focus:null, lastCollected:Date.now() };
     const slot = lab.slots[i];
 
     const slotEl = document.createElement('div');
     slotEl.className = 'lab-slot';
 
-    const availTiers = tiers(cfg.maxTier);
-    const curTier = availTiers.includes(slot.tier) ? slot.tier : 't1';
-    if (slot.tier !== curTier) slot.tier = curTier;
-
-    const roleOpts = `<option value="">-- 役職を選択 --</option>` +
-      LAB_ROLES.map(r => `<option value="${r.key}"${slot.role===r.key?' selected':''}>${r.label}</option>`).join('');
-    const tierOpts = availTiers.map(t => `<option value="${t}"${curTier===t?' selected':''}>${t.toUpperCase()}</option>`).join('');
+    const focusOpts = `<option value="">-- フォーカスを選択 --</option>` +
+      LAB_ROLES.map(r => `<option value="${r.key}"${slot.focus===r.key?' selected':''}>${r.label}</option>`).join('');
 
     slotEl.innerHTML = `<div class="lab-slot-hd">
       <span class="lab-slot-no">SLOT ${i+1}</span>
-      <select class="lab-slot-sel" onchange="gState.lab.slots[${i}].role=this.value;gState.lab.slots[${i}].lastCollected=Date.now();saveState();renderClanHall()">${roleOpts}</select>
-      <select class="lab-slot-sel" style="max-width:55px" onchange="gState.lab.slots[${i}].tier=this.value;gState.lab.slots[${i}].lastCollected=Date.now();saveState();renderClanHall()">${tierOpts}</select>
+      <select class="lab-slot-sel" onchange="gState.lab.slots[${i}].focus=this.value||null;gState.lab.slots[${i}].lastCollected=Date.now();saveState();renderClanHall()">${focusOpts}</select>
     </div>`;
 
-    if (slot.role) {
-      const hrsPerItem = LAB_BASE_HOURS[curTier] / cfg.speedMult;
+    if (slot.focus) {
       const elapsed = Math.min(LAB_MAX_HOURS, (Date.now() - (slot.lastCollected || Date.now())) / 3600000);
-      const qty = Math.floor(elapsed / hrsPerItem);
-      const nextPct = ((elapsed % hrsPerItem) / hrsPerItem) * 100;
-      const remainH = hrsPerItem - (elapsed % hrsPerItem);
-      const remHInt = Math.floor(remainH);
-      const remMInt = Math.floor((remainH - remHInt) * 60);
+      const pct = (elapsed / LAB_MAX_HOURS) * 100;
       const atCap = elapsed >= LAB_MAX_HOURS;
-      const roleInfo = LAB_ROLES.find(r => r.key === slot.role);
+      const remH = LAB_MAX_HOURS - elapsed;
+      const remHInt = Math.floor(remH);
+      const remMInt = Math.floor((remH - remHInt) * 60);
+      const roleInfo = LAB_ROLES.find(r => r.key === slot.focus);
       const roleColor = roleInfo?.color || 'var(--accent2)';
 
+      // Preview rewards (deterministic estimate only, no random)
+      const labLv = lab.level || 1;
+      const cfgLv = LAB_LEVEL_CFG[Math.min(labLv - 1, LAB_LEVEL_CFG.length - 1)];
+      const m = cfgLv.lvMult;
+      const f = elapsed / LAB_MAX_HOURS;
+      const defs = _labRewardDefs(slot.focus, labLv);
+      const previewLines = [];
+      defs.filter(d => d.chance >= 1.0).forEach(d => {
+        const avg = Math.floor(((d.minQty + d.maxQty) / 2) * f * m);
+        if (avg > 0) {
+          if (d.type === 'kyoten')    previewLines.push(`響典${d.tier.toUpperCase()}×${avg}`);
+          if (d.type === 'atomStone') previewLines.push(`秘石${d.tier.toUpperCase()}×${avg}`);
+        }
+      });
+      const probCount = defs.filter(d => d.chance < 1.0).length;
+      if (probCount > 0) previewLines.push(`確率素材${probCount}種`);
+      const previewStr = previewLines.length ? previewLines.join(', ') : '生産中...';
+
       slotEl.innerHTML += `
-        <div class="lab-prog"><div class="lab-prog-fill" style="width:${nextPct}%"></div></div>
+        <div class="lab-prog"><div class="lab-prog-fill" style="width:${pct}%"></div></div>
         <div class="lab-yield-row">
           <div style="font-size:11px;color:var(--text3)">
-            ${atCap ? '<span style="color:var(--red)">貯蔵上限</span>' : `次まで ${remHInt}h${remMInt}m`}
+            ${atCap ? '<span style="color:var(--red)">貯蔵上限 (24h)</span>' : `残り ${remHInt}h${remMInt}m`}
           </div>
-          <div class="lab-yield-val" style="color:${roleColor}">${qty}個</div>
+          <div class="lab-yield-val" style="color:${roleColor};font-size:11px">${previewStr}</div>
         </div>
         <button class="btn btn-gold btn-sm" style="width:100%;margin-top:8px" onclick="collectLabSlot(${i})">
-          回収 (${roleInfo?.label || slot.role} 響典${curTier.toUpperCase()} ×${qty})
+          回収 (${roleInfo?.label || slot.focus})
         </button>`;
     } else {
-      slotEl.innerHTML += `<div style="font-size:12px;color:var(--text3);text-align:center;padding:6px 0">役職を選択して生産を開始</div>`;
+      slotEl.innerHTML += `<div style="font-size:12px;color:var(--text3);text-align:center;padding:6px 0">フォーカスを選択して放置生産を開始</div>`;
     }
 
     wrap.appendChild(slotEl);
