@@ -2083,23 +2083,23 @@ img.item-icon {
 
   /* アリーナ: 残り高さを全部使う */
   .battle-arena {
-    grid-template-columns: 1fr !important;
-    grid-template-rows: auto auto auto !important;
+    grid-template-columns: 1fr 28px 1fr !important;
+    grid-template-rows: 1fr !important;
     flex: 1 !important;
     min-height: 0 !important;
-    padding: 6px !important;
-    gap: 4px !important;
-    overflow-y: auto !important;
-    align-content: center !important;
+    padding: 6px 4px !important;
+    gap: 3px !important;
+    overflow: hidden !important;
+    align-content: stretch !important;
   }
 
-  /* 味方・敵ゾーン: 横並びカードに、クリッピングなし */
+  /* 味方・敵ゾーン: PCと同じ縦1列 */
   .combatant-zone {
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    gap: 4px !important;
-    overflow: visible !important;
-    justify-content: center;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    gap: 3px !important;
+    overflow-y: auto !important;
+    justify-content: flex-start !important;
   }
 
   .combatant-zone h4 {
@@ -2107,28 +2107,29 @@ img.item-icon {
     text-align: center;
   }
 
-  /* コンバタントカード: 横画面より小さく */
+  /* コンバタントカード: 列の全幅 */
   .combatant-card {
-    width: calc(50% - 4px) !important;
-    min-width: 130px;
-    max-width: 160px;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
     flex-shrink: 0;
   }
 
-  /* 前衛・後衛の視覚的インデントをリセット（縦では不要） */
+  /* 後衛インデントを復元（ただし幅は列幅に合わせる） */
   #ally-zone .card-back-row {
-    margin-left: 0 !important;
-    width: calc(50% - 4px) !important;
+    margin-left: 10px !important;
+    width: calc(100% - 10px) !important;
   }
 
   /* VS テキスト */
   .battle-center {
-    flex-direction: row !important;
+    flex-direction: column !important;
     justify-content: center;
-    padding: 2px 0;
+    padding: 0 !important;
   }
   .battle-center .vs-text {
-    font-size: 14px !important;
+    font-size: 11px !important;
+    writing-mode: vertical-rl;
   }
 
   /* バトルログ: 下部に固定・高さ抑制 */
