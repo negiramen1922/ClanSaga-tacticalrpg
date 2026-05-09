@@ -55,6 +55,9 @@ window._fbGProvider = _fbGProvider;
 // ── Auth状態監視 ──
 _fbAuth.onAuthStateChanged(async (user) => {
   window._fbCurrentUser = user;
+  if (typeof window._updateAdminMenuVisibility === 'function') {
+    window._updateAdminMenuVisibility();
+  }
   if (user) {
     console.log('[Auth] ログイン済み:', user.email || user.uid);
     if (typeof window._onFirebaseSignIn === 'function') {
@@ -2428,7 +2431,7 @@ img.item-icon {
         <div class="hm-divider"></div>
         <div class="hm-item" onclick="closeHamburger();signOutUser()" style="color:var(--text3);">🚪<span>ログアウト</span></div>
         <div class="hm-item hm-danger" onclick="confirmReset()">🔄<span>データリセット</span></div>
-        <div class="hm-item" onclick="closeHamburger();openDebugPanel()" style="color:var(--text3);font-size:11px">⚙<span>管理者パネル</span></div>
+        <div class="hm-item" id="hm-admin-item" onclick="closeHamburger();openDebugPanel()" style="color:var(--text3);font-size:11px;display:none">⚙<span>管理者パネル</span></div>
       </nav>
       <div id="hm-footer">
         <div id="hm-account-info" style="margin-bottom:6px;font-size:10px;color:var(--text3);line-height:1.5;"></div>
@@ -24743,27 +24746,26 @@ document.addEventListener('DOMContentLoaded', () => {
 //  ADMIN DEBUG PANEL
 // ============================================================
 (function() {
-  const _ADMIN_PW = 'admin9999';
-  let _tapCount = 0, _tapTimer = null;
+  const _ADMIN_EMAIL = 'bedrock1922@gmail.com';
+
+  function _isAdmin() {
+    return window._fbCurrentUser?.email === _ADMIN_EMAIL;
+  }
+
+  // 管理者メニュー項目の表示制御（ログイン後に呼び出す）
+  window._updateAdminMenuVisibility = function() {
+    const el = document.getElementById('hm-admin-item');
+    if (el) el.style.display = _isAdmin() ? '' : 'none';
+  };
 
   window._debugTap = function() {
-    _tapCount++;
-    clearTimeout(_tapTimer);
-    if (_tapCount >= 7) {
-      _tapCount = 0;
-      const pw = prompt('管理者パスワードを入力してください');
-      if (pw === _ADMIN_PW) {
-        openDebugPanel();
-      } else if (pw !== null) {
-        alert('パスワードが違います');
-      }
-      return;
-    }
-    _tapTimer = setTimeout(() => { _tapCount = 0; }, 5000);
+    if (!_isAdmin()) return;
+    openDebugPanel();
   };
 
   window.openDebugPanel = function() {
-    if (!gState?.player) { alert('ゲームを起動してログインしてください'); return; }
+    if (!_isAdmin()) return;
+    if (!gState?.player) { showBonusToast('ゲームを起動してログインしてください'); return; }
     const p = gState.player;
     const fields = [
       { id:'dbg_starCrystal', label:'星晶石',       key:'starCrystal' },
