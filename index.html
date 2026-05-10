@@ -13820,7 +13820,10 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       hate:    isLeader ? Math.floor((cls2?.baseHate ?? 400) * 1.5) : (cls2?.baseHate ?? 400),
       atb: 0, isEnemy: false, dead: false,
       staggered: false, staggerUsed: false,
-      skills: activeSkillDefs, skillCDs: {},
+      skills: (activeSkillDefs||[]).map(sk => {
+        const lv = (gState.unitProgress[unit.uid]?.skillLevels?.[sk.id]) || 1;
+        return lv > 1 ? { ...sk, _skillLv: lv } : sk;
+      }), skillCDs: {},
       ultimate: ult, ultGauge: 0,
       buffs: [], debuffs: [],
       tacticsList: unit.tactics ? JSON.parse(JSON.stringify(unit.tactics)) : null,
@@ -15190,6 +15193,7 @@ function getBattleHealBonus(sourceUnit) {
 function applyBuff(c, skill, sourceUnit) {
   if (!skill.effect) return;
   const eff = skill.effect;
+  const _slMult = getSkillLvMult(skill);
   const iconMap = {
     atk_up:'⬆ATK', hp_up:'⬆HP',
     pdef_up:'⬆物理耐性', mdef_up:'⬆特殊耐性',
@@ -15210,7 +15214,7 @@ function applyBuff(c, skill, sourceUnit) {
 
   // シールド付与
   if (eff.type === 'shield') {
-    const shieldAmt = Math.floor((sourceUnit?.atk || c.atk) * (eff.val || 1.0));
+    const shieldAmt = Math.floor((sourceUnit?.atk || c.atk) * (eff.val || 1.0) * _slMult);
     applyShield(c, shieldAmt);
     if (eff.turns) { c.shieldTurns = eff.turns; }
     flashCard(c.uid, 'buff');
@@ -15224,31 +15228,33 @@ function applyBuff(c, skill, sourceUnit) {
   // ===== プリースト: HP回復+ATKバフ（単体）=====
   if (eff.type === 'heal_and_atk_buff') {
     const atk = sourceUnit?.atk || c.atk;
-    const healAmt = Math.floor(atk * (eff.healRatio||1.5));
+    const healAmt = Math.floor(atk * (eff.healRatio||1.5) * _slMult);
     const healBonus = getBattleHealBonus(sourceUnit);
     const finalHeal = Math.floor(healAmt * healBonus);
     c.hp = Math.min(c.maxHp, c.hp + finalHeal);
     battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
-    c.buffs.push({ type:'atk_up', val:eff.atkVal||10, turns:eff.atkTurns||3, icon:'⬆ATK', cssClass:'atk-up' });
+    const _atkVal1 = Math.round((eff.atkVal||10) * _slMult);
+    c.buffs.push({ type:'atk_up', val:_atkVal1, turns:eff.atkTurns||3, icon:'⬆ATK', cssClass:'atk-up' });
     flashCard(c.uid, 'buff');
     spawnSkillNamePop(c.uid, skill.name, 'buff');
     spawnFloatNum(c.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
-    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(finalHeal)} / ATK+${eff.atkVal||10}%(${eff.atkTurns||3}T)`, 'trigger');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(finalHeal)} / ATK+${_atkVal1}%(${eff.atkTurns||3}T)`, 'trigger');
     Audio.buff(); return;
   }
 
   // ===== プリースト: HP回復+ATKバフ（全体）=====
   if (eff.type === 'heal_all_and_atk_buff') {
     const atk = sourceUnit?.atk || c.atk;
-    const healAmt = Math.floor(atk * (eff.healRatio||1.5));
+    const healAmt = Math.floor(atk * (eff.healRatio||1.5) * _slMult);
     const healBonus = getBattleHealBonus(sourceUnit);
     const finalHeal = Math.floor(healAmt * healBonus);
     c.hp = Math.min(c.maxHp, c.hp + finalHeal);
     battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
-    c.buffs.push({ type:'atk_up', val:eff.atkVal||10, turns:eff.atkTurns||2, icon:'⬆ATK', cssClass:'atk-up' });
+    const _atkVal2 = Math.round((eff.atkVal||10) * _slMult);
+    c.buffs.push({ type:'atk_up', val:_atkVal2, turns:eff.atkTurns||2, icon:'⬆ATK', cssClass:'atk-up' });
     flashCard(c.uid, 'buff');
     spawnFloatNum(c.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
-    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(finalHeal)} / ATK+${eff.atkVal||10}%(${eff.atkTurns||2}T)`, 'trigger');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(finalHeal)} / ATK+${_atkVal2}%(${eff.atkTurns||2}T)`, 'trigger');
     Audio.buff(); return;
   }
 
@@ -15265,17 +15271,18 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'dispel_and_atk_buff') {
     const removed = (c.buffs||[]).filter(b => b.val < 0 || ['atk_down','mres_down','pres_down','bres_down','spd_down','flinch','paralysis'].includes(b.type)).length;
     c.buffs = (c.buffs||[]).filter(b => !(b.val < 0 || ['atk_down','mres_down','pres_down','bres_down','spd_down','flinch','paralysis'].includes(b.type)));
-    c.buffs.push({ type:'atk_up', val:eff.atkVal||20, turns:eff.atkTurns||2, icon:'⬆ATK', cssClass:'atk-up' });
+    const _atkVal3 = Math.round((eff.atkVal||20) * _slMult);
+    c.buffs.push({ type:'atk_up', val:_atkVal3, turns:eff.atkTurns||2, icon:'⬆ATK', cssClass:'atk-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
     spawnFloatNum(c.uid, '✨浄化', 'float-buff');
-    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> デバフ${removed}個解除 / ATK+${eff.atkVal||20}%(${eff.atkTurns||2}T)`, 'trigger');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> デバフ${removed}個解除 / ATK+${_atkVal3}%(${eff.atkTurns||2}T)`, 'trigger');
     Audio.buff(); return;
   }
 
   // ===== プリースト: HP再生 =====
   if (eff.type === 'regen_hp_mp' || eff.type === 'regen_hp') {
     const atk = sourceUnit?.atk || c.atk;
-    const hpRegen = Math.floor(atk * (eff.hpRegenRatio||0.20));
+    const hpRegen = Math.floor(atk * (eff.hpRegenRatio||0.20) * _slMult);
     c.buffs.push({ type:'hp_regen_tick', val:hpRegen, turns:eff.turns||3, icon:'💚再生', cssClass:'hp-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
     spawnFloatNum(c.uid, '💚再生', 'float-buff');
@@ -15286,7 +15293,7 @@ function applyBuff(c, skill, sourceUnit) {
   // ===== プリースト: 奇跡の光（全体大回復+デバフ解除）=====
   if (eff.type === 'miracle_heal') {
     const atk = sourceUnit?.atk || c.atk;
-    const healAmt = Math.floor(atk * (eff.healRatio||3.0));
+    const healAmt = Math.floor(atk * (eff.healRatio||3.0) * _slMult);
     const healBonus = getBattleHealBonus(sourceUnit);
     const finalHeal = Math.floor(healAmt * healBonus);
     c.hp = Math.min(c.maxHp, c.hp + finalHeal);
@@ -15303,19 +15310,20 @@ function applyBuff(c, skill, sourceUnit) {
   // ===== プリースト: 開幕 女神の加護 =====
   if (eff.type === 'opening_goddess') {
     const atk = sourceUnit?.atk || c.atk;
-    const hpRegen = Math.floor(atk * (eff.hpRegenRatio||0.10));
-    c.buffs.push({ type:'atk_up', val:eff.atkVal||20, turns:eff.atkTurns||3, icon:'⬆ATK', cssClass:'atk-up' });
+    const hpRegen = Math.floor(atk * (eff.hpRegenRatio||0.10) * _slMult);
+    const _atkValOG = Math.round((eff.atkVal||20) * _slMult);
+    c.buffs.push({ type:'atk_up', val:_atkValOG, turns:eff.atkTurns||3, icon:'⬆ATK', cssClass:'atk-up' });
     c.buffs.push({ type:'hp_regen_tick', val:hpRegen, turns:eff.regenTurns||3, icon:'💚再生', cssClass:'hp-up' });
     flashCard(c.uid, 'buff');
     spawnFloatNum(c.uid, '🌟女神の加護', 'float-buff');
-    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> ATK+${eff.atkVal||20}%(${eff.atkTurns||3}T) / HP再生+${fmt(hpRegen)}/T`, 'trigger');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> ATK+${_atkValOG}%(${eff.atkTurns||3}T) / HP再生+${fmt(hpRegen)}/T`, 'trigger');
     Audio.buff(); return;
   }
 
   // ===== プリースト: 開幕 祝福の祈り =====
   if (eff.type === 'heal_and_mres') {
     const atk = sourceUnit?.atk || c.atk;
-    const healAmt = Math.floor(atk * (eff.healRatio||0.8));
+    const healAmt = Math.floor(atk * (eff.healRatio||0.8) * _slMult);
     const healBonus = getBattleHealBonus(sourceUnit);
     const finalHeal = Math.floor(healAmt * healBonus);
     c.hp = Math.min(c.maxHp, c.hp + finalHeal);
@@ -15330,7 +15338,7 @@ function applyBuff(c, skill, sourceUnit) {
   // ── パラディン: heal_and_cleanse（全体回復＋デバフ全解除）──
   if (eff.type === 'heal_and_cleanse') {
     const atk = sourceUnit?.atk || c.atk;
-    const healAmt = Math.floor(atk * (eff.healRatio||1.2));
+    const healAmt = Math.floor(atk * (eff.healRatio||1.2) * _slMult);
     const healBonus = getBattleHealBonus(sourceUnit);
     const finalHeal = Math.floor(healAmt * healBonus);
     c.hp = Math.min(c.maxHp, c.hp + finalHeal);
@@ -15346,7 +15354,7 @@ function applyBuff(c, skill, sourceUnit) {
 
   // ── パラディン開幕: shield_and_res（全体シールド＋耐性バフ）──
   if (eff.type === 'shield_and_res') {
-    const shieldAmt = Math.floor(c.maxHp * (eff.shieldRatio||0.20));
+    const shieldAmt = Math.floor(c.maxHp * (eff.shieldRatio||0.20) * _slMult);
     applyShield(c, shieldAmt);
     const resIcon = eff.resType==='wres'?'⬆特殊耐性':'⬆物理耐性';
     c.buffs.push({ type:`${eff.resType}_up`, val:eff.resVal||15, turns:eff.turns||3, icon:resIcon, cssClass:'mdef-up' });
@@ -15368,7 +15376,7 @@ function applyBuff(c, skill, sourceUnit) {
   // ===== プリースト: サンクチュアリ =====
   if (eff.type === 'sanctuary') {
     const atk = sourceUnit?.atk || c.atk;
-    const hpRegen = Math.floor(atk * (eff.hpRegenRatio||0.15));
+    const hpRegen = Math.floor(atk * (eff.hpRegenRatio||0.15) * _slMult);
     c.buffs.push({ type:'hp_regen_tick', val:hpRegen, turns:eff.turns||3, icon:'💚再生', cssClass:'hp-up' });
     if (eff.ccImmune) c.buffs.push({ type:'cc_immune', val:1, turns:eff.turns||3, icon:'💪CC無効', cssClass:'hp-up' });
     flashCard(c.uid, 'buff');
@@ -15443,8 +15451,8 @@ function applyBuff(c, skill, sourceUnit) {
 
   // HP回復+シールド同時付与（不滅の要塞）
   if (eff.type === 'heal_and_shield') {
-    const healAmt   = Math.floor((sourceUnit?.atk||c.atk) * (eff.healRatio||2.0));
-    const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldRatio||3.0));
+    const healAmt   = Math.floor((sourceUnit?.atk||c.atk) * (eff.healRatio||2.0) * _slMult);
+    const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldRatio||3.0) * _slMult);
     c.hp = Math.min(c.maxHp, c.hp + healAmt);
     applyShield(c, shieldAmt);
     flashCard(c.uid, 'buff');
@@ -15457,7 +15465,7 @@ function applyBuff(c, skill, sourceUnit) {
 
   // シールド+PRES同時付与（先陣の盾など）
   if (eff.type === 'shield_and_pres') {
-    const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||0.8));
+    const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||0.8) * _slMult);
     applyShield(c, shieldAmt);
     if (c.uid === (sourceUnit||c).uid) {
       c.buffs.push({ type:'pdef_up', val:eff.presVal||20, turns:eff.presTurns||3, icon:'⬆物理耐性', cssClass:'pdef-up' });
@@ -15471,7 +15479,7 @@ function applyBuff(c, skill, sourceUnit) {
 
   // シールド+特殊耐性同時付与（守護の誓い等）
   if (eff.type === 'shield_and_mres') {
-    const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||0.3));
+    const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||0.3) * _slMult);
     applyShield(c, shieldAmt);
     c.buffs.push({ type:'mdef_up', val:eff.mresVal||8, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
@@ -15481,7 +15489,7 @@ function applyBuff(c, skill, sourceUnit) {
 
   // シールド+特殊耐性同時付与（聖盾の加護等）
   if (eff.type === 'shield_and_bres') {
-    const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||1.5));
+    const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||1.5) * _slMult);
     applyShield(c, shieldAmt);
     c.buffs.push({ type:'pdef_up', val:eff.bresVal||10, turns:eff.bresTurns||3, icon:'⬆物理耐性', cssClass:'pdef-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
@@ -15491,7 +15499,7 @@ function applyBuff(c, skill, sourceUnit) {
 
   // シールド+PRES+特殊耐性同時付与（先陣の盾等）
   if (eff.type === 'shield_pres_bres') {
-    const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||0.8));
+    const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||0.8) * _slMult);
     applyShield(c, shieldAmt);
     // PRESは自身（sourceUnit）にのみ付与
     if (c.uid === (sourceUnit||c).uid && eff.presVal) {
@@ -15508,8 +15516,8 @@ function applyBuff(c, skill, sourceUnit) {
   // HP回復+シールド同時付与（不滅の要塞）
   if (eff.type === 'heal_mp_and_shield') {
     const atk = sourceUnit?.atk || c.atk;
-    const healAmt   = Math.floor(atk * (eff.healRatio||2.0));
-    const shieldAmt = Math.floor(atk * (eff.shieldRatio||3.0));
+    const healAmt   = Math.floor(atk * (eff.healRatio||2.0) * _slMult);
+    const shieldAmt = Math.floor(atk * (eff.shieldRatio||3.0) * _slMult);
     c.hp = Math.min(c.maxHp, c.hp + healAmt);
     applyShield(c, shieldAmt);
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
@@ -15558,36 +15566,38 @@ function applyBuff(c, skill, sourceUnit) {
   }
 
   // 通常バフ
-  c.buffs.push({ type:eff.type, val:eff.val, turns:eff.turns, icon, cssClass });
+  const _scalableBuffTypes = new Set(['atk_up','pdef_up','mdef_up','pres_up','mres_up','bres_up','damage_reduce','hp_up','fortress','eagle_eye','spd_up']);
+  const _scaledVal = _scalableBuffTypes.has(eff.type) ? Math.round((eff.val||0) * _slMult) : eff.val;
+  c.buffs.push({ type:eff.type, val:_scaledVal, turns:eff.turns, icon, cssClass });
 
   // 効果量の詳細ログ
   const buffDetailMap = {
-    atk_up:       () => `ATK +${eff.val}% (${eff.turns}T)`,
-    pdef_up:      () => `物理耐性 +${eff.val}% (${eff.turns}T)`,
-    mdef_up:      () => `特殊耐性 +${eff.val}% (${eff.turns}T)`,
-    pres_up:      () => `物理耐性 +${eff.val}% (${eff.turns}T)`,
-    mres_up:      () => `特殊耐性 +${eff.val}% (${eff.turns}T)`,
-    damage_reduce:() => `被ダメ -${eff.val}% (${eff.turns}T)`,
+    atk_up:       () => `ATK +${_scaledVal}% (${eff.turns}T)`,
+    pdef_up:      () => `物理耐性 +${_scaledVal}% (${eff.turns}T)`,
+    mdef_up:      () => `特殊耐性 +${_scaledVal}% (${eff.turns}T)`,
+    pres_up:      () => `物理耐性 +${_scaledVal}% (${eff.turns}T)`,
+    mres_up:      () => `特殊耐性 +${_scaledVal}% (${eff.turns}T)`,
+    damage_reduce:() => `被ダメ -${_scaledVal}% (${eff.turns}T)`,
     taunt:        () => `挑発: 敵の攻撃を引きつける (${eff.turns}T)`,
     counter:      () => `反撃: 被攻撃時Pw${(eff.val/100).toFixed(1)}で反撃 (${eff.turns}T)`,
-    fortress:     () => `要塞: ATK+${eff.val}% 物理耐性+${eff.val}% (${eff.turns}T)`,
-    eagle_eye:    () => `鷹眼: 会心率+${eff.val}% (${eff.turns}T)`,
-    rampart:      () => `城壁: 物理耐性+${eff.val}% / HP30%回復 (${eff.turns}T)`,
-    aegis:        () => `盾: 全員被ダメ-${eff.val}% (${eff.turns}T)`,
-    hp_up:        () => { const b = Math.floor(c.maxHp*eff.val/100); return `HP+${eff.val}% (+${fmt(b)})`; },
+    fortress:     () => `要塞: ATK+${_scaledVal}% 物理耐性+${_scaledVal}% (${eff.turns}T)`,
+    eagle_eye:    () => `鷹眼: 会心率+${_scaledVal}% (${eff.turns}T)`,
+    rampart:      () => `城壁: 物理耐性+${_scaledVal}% / HP30%回復 (${eff.turns}T)`,
+    aegis:        () => `盾: 全員被ダメ-${_scaledVal}% (${eff.turns}T)`,
+    hp_up:        () => { const b = Math.floor(c.maxHp*_scaledVal/100); return `HP+${_scaledVal}% (+${fmt(b)})`; },
   };
-  const detail = buffDetailMap[eff.type] ? buffDetailMap[eff.type]() : `${eff.type} +${eff.val||''} (${eff.turns||'?'}T)`;
+  const detail = buffDetailMap[eff.type] ? buffDetailMap[eff.type]() : `${eff.type} +${_scaledVal||''} (${eff.turns||'?'}T)`;
 
   if (eff.type==='hp_up') {
-    const bonus = Math.floor(c.maxHp*eff.val/100);
+    const bonus = Math.floor(c.maxHp*_scaledVal/100);
     c.hp = Math.min(c.maxHp, c.hp+bonus);
     spawnFloatNum(c.uid, '+'+fmt(bonus), 'float-heal');
   }
   if (eff.type==='damage_reduce') {
-    spawnFloatNum(c.uid, `被ダメ-${eff.val}%`, 'float-buff');
+    spawnFloatNum(c.uid, `被ダメ-${_scaledVal}%`, 'float-buff');
   }
   if (eff.type==='rampart') {
-    c.buffs.push({ type:'pdef_up', val:eff.val, turns:eff.turns, icon:'⬆物理耐性', cssClass:'pdef-up' });
+    c.buffs.push({ type:'pdef_up', val:_scaledVal, turns:eff.turns, icon:'⬆物理耐性', cssClass:'pdef-up' });
     const heal = Math.floor(c.maxHp*0.3);
     c.hp = Math.min(c.maxHp, c.hp+heal);
     spawnFloatNum(c.uid, '+'+fmt(heal), 'float-heal');
@@ -15612,6 +15622,13 @@ function applyBuff(c, skill, sourceUnit) {
  * ダメージ計算 — 物理/特殊の2種対応
  * @returns {{ hpDmg:number, dmgType:string }}
  */
+// スキルレベル倍率（Lv1=1.00 ～ Lv10=2.00）
+const _SKILL_LV_SCALE = [1.00, 1.08, 1.16, 1.25, 1.35, 1.45, 1.55, 1.65, 1.80, 2.00];
+function getSkillLvMult(skill) {
+  const lv = skill._skillLv || 1;
+  return _SKILL_LV_SCALE[Math.min(lv - 1, 9)] || 1.0;
+}
+
 function computeDmg(attacker, target, skill) {
   const dmgType = skill.type; // 'phys'|'spec'|'buff'
 
@@ -15651,7 +15668,7 @@ function computeDmg(attacker, target, skill) {
     base *= (1 + attacker._passiveTauntSpirit.val / 100);
   }
 
-  let power = skill.power || 1.0;
+  let power = (skill.power || 1.0) * getSkillLvMult(skill);
   // スキルPwバフ（混沌爆発など）
   const _skillPwBuff = (attacker.buffs||[]).filter(b=>b.type==='skillPw_up').reduce((s,b)=>s+b.val,0);
   if (_skillPwBuff) power *= (1 + _skillPwBuff / 100);
