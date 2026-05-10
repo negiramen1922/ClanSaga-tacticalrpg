@@ -17,11 +17,13 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
 // ── Firebase 初期化 ──
 const _firebaseConfig = {
   apiKey:            "AIzaSyCXF6WDhk8woJN_Ook6r44mJi3PtghLz3A",
   authDomain:        "clanofbabel.firebaseapp.com",
+  databaseURL:       "https://clanofbabel-default-rtdb.firebaseio.com",
   projectId:         "clanofbabel",
   storageBucket:     "clanofbabel.firebasestorage.app",
   messagingSenderId: "422789307114",
@@ -31,6 +33,7 @@ const _firebaseConfig = {
 const _fbApp  = firebase.initializeApp(_firebaseConfig);
 const _fbAuth = firebase.auth();
 const _fbDb   = firebase.firestore();
+const _fbRtdb = firebase.database();
 const _fbGProvider = new firebase.auth.GoogleAuthProvider();
 
 // compat版では関数を直接使うのでラッパーオブジェクトを用意
@@ -939,6 +942,20 @@ img.item-icon {
 .species-daemon    { background: rgba(220,50,50,0.15); color: #f87171; border: 1px solid rgba(220,50,50,0.35); }
 
 /* ===== ARTIFACT SYSTEM ===== */
+.rank-tab-btn { flex:1; padding:6px 4px; font-size:11px; background:var(--bg3); border:1px solid var(--border); color:var(--text2); cursor:pointer; border-radius:4px; transition:all 0.15s; }
+.rank-tab-btn:hover { border-color:var(--accent); color:var(--text); }
+.rank-tab-active { background:rgba(74,127,255,0.15); border-color:var(--accent); color:var(--accent2); }
+.rank-row { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid var(--border); font-size:12px; }
+.rank-row:last-child { border-bottom:none; }
+.rank-row.is-me { background:rgba(201,168,76,0.07); }
+.rank-row.top3 { background:rgba(201,168,76,0.04); }
+.rank-num { width:28px; text-align:center; font-weight:700; font-size:13px; color:var(--text3); flex-shrink:0; }
+.rank-num.gold { color:#ffd700; }
+.rank-num.silver { color:#c0c0c0; }
+.rank-num.bronze { color:#cd7f32; }
+.rank-name { flex:1; color:var(--text); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rank-score { font-size:13px; font-weight:700; color:var(--gold); white-space:nowrap; }
+.rank-sub { font-size:10px; color:var(--text3); }
 .af2-card { background:var(--bg3); border:1px solid var(--border); padding:12px; cursor:pointer; transition:border-color 0.15s; }
 .af2-card:hover { border-color:var(--accent); }
 .af2-card.af2-N   { border-color:var(--text3); }
@@ -2427,6 +2444,7 @@ img.item-icon {
         <div class="hm-item" onclick="closeHamburger();openGacha()">✨<span>ガチャ</span></div>
         <div class="hm-item" onclick="closeHamburger();openLibraryMonsterBook()">📚<span>大図書館（図鑑）</span></div>
         <div class="hm-item" onclick="closeHamburger();openClanHall()">🏰<span>クランホール</span></div>
+        <div class="hm-item" onclick="closeHamburger();openRankingModal()">🏆<span>ランキング</span></div>
         <div class="hm-item" onclick="closeHamburger();openHelpModal()"><img src="assets/images/nav-help.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;"><span>チュートリアル・ヘルプ</span></div>
         <div class="hm-item" onclick="closeHamburger();openVipPanel()">👑<span id="hm-vip-label">VIP特典</span></div>
         <div class="hm-divider"></div>
@@ -2923,6 +2941,34 @@ img.item-icon {
       <button class="close-btn" onclick="closeStageList()">✕</button>
     </div>
     <div id="slm-stages"></div>
+  </div>
+</div>
+
+<!-- RANKING MODAL -->
+<div class="modal-overlay" id="ranking-modal" onclick="if(event.target===this)closeRankingModal()">
+  <div class="modal-panel" style="max-width:480px">
+    <div class="modal-header">
+      <h3>🏆 ランキング</h3>
+      <button class="close-btn" onclick="closeRankingModal()">✕</button>
+    </div>
+    <div style="padding:12px">
+      <div id="ranking-online-bar" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)"></span>
+        <span style="font-size:12px;color:var(--text2)">オンライン: <b id="ranking-online-count" style="color:var(--green)">--</b> 人</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--text3)" id="ranking-updated-at"></span>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button onclick="setRankingTab('abyss')" id="rtab-abyss" class="rank-tab-btn rank-tab-active">⚔️ アビス</button>
+        <button onclick="setRankingTab('babel')" id="rtab-babel" class="rank-tab-btn">🗺️ バベル</button>
+        <button onclick="setRankingTab('level')" id="rtab-level" class="rank-tab-btn">⭐ Clan Lv</button>
+      </div>
+      <div id="ranking-list" style="min-height:200px">
+        <div style="text-align:center;padding:40px;color:var(--text3);font-size:13px">読み込み中...</div>
+      </div>
+      <div id="ranking-myrank" style="margin-top:10px;padding:8px 12px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:6px;display:none">
+        <span style="font-size:11px;color:var(--gold)">あなたの順位: <b id="ranking-myrank-text"></b></span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -10841,6 +10887,10 @@ function launchApp() {
 
   renderAll();
   Audio.playHome();
+
+  // RTDBランキング初期同期
+  _ensureAnonId();
+  syncProgressToRtdb();
 
   // 廃止カード払い戻し通知
   if (gState._pendingCardRefundMsg) {
@@ -24718,6 +24768,181 @@ async function cloudSaveState(uid) {
 // ============================================================
 //  セーブ管理（ローカルのみ）
 // ============================================================
+// REALTIME DATABASE — ランキング・オンライン状態同期
+// ============================================================
+
+// Babel進捗を数値スコアに変換（エリア×100 + ステージ）
+function _babelScore() {
+  const stages = gState?.progress?.babel?.clearedStages || {};
+  let best = 0;
+  Object.keys(stages).forEach(k => {
+    const m = k.match(/^a(\d+)s(\d+)$/);
+    if (m) {
+      const score = parseInt(m[1]) * 100 + parseInt(m[2]);
+      if (score > best) best = score;
+    }
+  });
+  return best;
+}
+
+function _babelLabel(score) {
+  if (!score) return '未クリア';
+  const area = Math.floor(score / 100);
+  const stage = score % 100;
+  return `Area ${area} - S${stage}`;
+}
+
+// プレイヤーの進捗スナップショットを作成
+function _buildRtdbPayload() {
+  if (!gState) return null;
+  const uid = window._fbCurrentUser?.uid || localStorage.getItem('cs_anonId');
+  if (!uid) return null;
+  return {
+    name: gState.player?.clanName || '名無し',
+    clanLevel: gState.player?.level || 1,
+    abyssLayer: gState.progress?.abyss?.bestLayer || 0,
+    babelScore: _babelScore(),
+    unitCount: (gState.ownedUnits || []).length,
+    lastActive: Date.now(),
+  };
+}
+
+// RTDBにプレイヤー進捗を書き込む（saveState呼び出し時）
+let _rtdbSyncTimer = null;
+function syncProgressToRtdb() {
+  if (!window._fbRtdb) return;
+  const payload = _buildRtdbPayload();
+  if (!payload) return;
+  const uid = window._fbCurrentUser?.uid || localStorage.getItem('cs_anonId');
+  // 連続書き込みを防ぐため5秒デバウンス
+  clearTimeout(_rtdbSyncTimer);
+  _rtdbSyncTimer = setTimeout(() => {
+    _fbRtdb.ref('players/' + uid).set(payload).catch(e => console.warn('[RTDB]', e));
+  }, 5000);
+}
+
+// 匿名IDを生成（未ログインでもランキングに参加できる）
+function _ensureAnonId() {
+  let id = localStorage.getItem('cs_anonId');
+  if (!id) {
+    id = 'anon_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem('cs_anonId', id);
+  }
+  return id;
+}
+
+// ============================================================
+// ランキングモーダル
+// ============================================================
+let _rankingTab = 'abyss';
+let _rankingData = [];
+
+function openRankingModal() {
+  document.getElementById('ranking-modal').style.display = 'flex';
+  setRankingTab('abyss');
+  _loadRankingData();
+}
+function closeRankingModal() {
+  document.getElementById('ranking-modal').style.display = 'none';
+}
+
+function setRankingTab(tab) {
+  _rankingTab = tab;
+  ['abyss','babel','level'].forEach(t => {
+    const btn = document.getElementById('rtab-' + t);
+    if (btn) btn.className = 'rank-tab-btn' + (t === tab ? ' rank-tab-active' : '');
+  });
+  _renderRankingList();
+}
+
+function _loadRankingData() {
+  if (!window._fbRtdb) {
+    document.getElementById('ranking-list').innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--text3);font-size:12px">Firebaseに接続できません</div>';
+    return;
+  }
+  document.getElementById('ranking-list').innerHTML =
+    '<div style="text-align:center;padding:40px;color:var(--text3);font-size:13px">読み込み中...</div>';
+
+  const tenMinAgo = Date.now() - 10 * 60 * 1000;
+
+  _fbRtdb.ref('players').once('value').then(snap => {
+    const raw = snap.val() || {};
+    _rankingData = Object.entries(raw).map(([uid, d]) => ({ uid, ...d }));
+
+    // オンライン人数（10分以内に更新）
+    const onlineCount = _rankingData.filter(p => (p.lastActive || 0) > tenMinAgo).length;
+    const onlineEl = document.getElementById('ranking-online-count');
+    if (onlineEl) onlineEl.textContent = onlineCount;
+    const updEl = document.getElementById('ranking-updated-at');
+    if (updEl) updEl.textContent = '最終更新: ' + new Date().toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'});
+
+    _renderRankingList();
+  }).catch(e => {
+    console.warn('[RTDB ranking]', e);
+    document.getElementById('ranking-list').innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--red);font-size:12px">読み込みに失敗しました</div>';
+  });
+}
+
+function _renderRankingList() {
+  const el = document.getElementById('ranking-list');
+  if (!el || !_rankingData.length) {
+    if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:12px">データがありません</div>';
+    return;
+  }
+
+  const myUid = window._fbCurrentUser?.uid || localStorage.getItem('cs_anonId');
+
+  // タブに応じてソート
+  const sorted = [..._rankingData].sort((a, b) => {
+    if (_rankingTab === 'abyss')  return (b.abyssLayer||0) - (a.abyssLayer||0);
+    if (_rankingTab === 'babel')  return (b.babelScore||0) - (a.babelScore||0);
+    return (b.clanLevel||0) - (a.clanLevel||0);
+  });
+
+  const medals = ['🥇','🥈','🥉'];
+  const numClass = ['gold','silver','bronze'];
+  const top50 = sorted.slice(0, 50);
+
+  el.innerHTML = top50.map((p, i) => {
+    const rank = i + 1;
+    const isMe = p.uid === myUid;
+    const numC = rank <= 3 ? numClass[rank-1] : '';
+    const numTxt = rank <= 3 ? medals[rank-1] : `${rank}`;
+    let score = '', sub = '';
+    if (_rankingTab === 'abyss') {
+      score = `${p.abyssLayer || 0}層`;
+      sub = `Clan Lv.${p.clanLevel || 1} / ${(p.unitCount||0)}人編成`;
+    } else if (_rankingTab === 'babel') {
+      score = _babelLabel(p.babelScore || 0);
+      sub = `Clan Lv.${p.clanLevel || 1}`;
+    } else {
+      score = `Lv.${p.clanLevel || 1}`;
+      sub = `アビス ${p.abyssLayer||0}層`;
+    }
+    return `<div class="rank-row${isMe?' is-me':''}${rank<=3?' top3':''}">
+      <span class="rank-num ${numC}">${numTxt}</span>
+      <span class="rank-name">${isMe ? '⭐ ' : ''}${p.name || '名無し'}</span>
+      <span style="text-align:right"><span class="rank-score">${score}</span><br><span class="rank-sub">${sub}</span></span>
+    </div>`;
+  }).join('');
+
+  // 自分の順位表示
+  const myRank = sorted.findIndex(p => p.uid === myUid);
+  const myRankEl = document.getElementById('ranking-myrank');
+  const myRankText = document.getElementById('ranking-myrank-text');
+  if (myRankEl && myRankText) {
+    if (myRank >= 0) {
+      myRankEl.style.display = 'block';
+      myRankText.textContent = `${myRank + 1}位 / ${sorted.length}人中`;
+    } else {
+      myRankEl.style.display = 'none';
+    }
+  }
+}
+
+// ============================================================
 // セーブ：localStorageに保存 + クラウド同期
 window.saveState = function() {
   localStorage.setItem('cs_state', JSON.stringify(gState));
@@ -24725,6 +24950,8 @@ window.saveState = function() {
   if (window._fbCurrentUser && window._fbFns && window._fbDb) {
     cloudSaveState(window._fbCurrentUser.uid).catch(e => console.warn('[AutoSave]', e));
   }
+  // RTDBにランキングデータを同期
+  syncProgressToRtdb();
 };
 saveState = window.saveState;
 
