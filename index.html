@@ -3052,14 +3052,23 @@ img.item-icon {
 
 <!-- フロー型チュートリアルパネル -->
 <div id="flow-tut" style="display:none;position:fixed;bottom:68px;left:0;right:0;z-index:9000;padding:0 10px;">
-  <div style="background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:14px 16px;max-width:480px;margin:0 auto;box-shadow:0 4px 24px rgba(0,0,0,0.7);">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-      <span id="ft-icon" style="font-size:22px"></span>
-      <div id="ft-title" style="font-weight:700;font-size:14px;color:var(--gold);flex:1"></div>
-      <div id="ft-progress" style="font-size:10px;color:var(--text3)"></div>
-      <button onclick="skipFlowTutorial()" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;padding:2px 6px;margin-left:4px;">スキップ</button>
+  <div style="background:var(--panel);border:2px solid var(--accent);border-radius:16px;padding:12px 14px;max-width:480px;margin:0 auto;box-shadow:0 4px 28px rgba(0,0,0,0.75);">
+    <!-- ナビゲーター行 -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#3a4a7f,#5a3a7f);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.4)"><span id="ft-icon">🧙</span></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:9px;color:var(--gold);font-weight:700;letter-spacing:1.5px;margin-bottom:1px;">NAVIGATOR · ルーナ</div>
+        <div id="ft-title" style="font-weight:700;font-size:13px;color:var(--text);line-height:1.2;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+        <div id="ft-progress" style="font-size:10px;color:var(--text3);"></div>
+        <button onclick="skipFlowTutorial()" style="font-size:10px;color:var(--text3);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:3px 7px;white-space:nowrap;">スキップ</button>
+      </div>
     </div>
-    <div id="ft-text" style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:12px;white-space:pre-wrap;"></div>
+    <!-- 吹き出し本文 -->
+    <div style="position:relative;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+      <div id="ft-text" style="font-size:13px;color:var(--text2);line-height:1.75;white-space:pre-wrap;"></div>
+    </div>
     <div style="display:flex;justify-content:flex-end;">
       <button id="ft-btn" onclick="flowTutNext()" class="btn btn-gold" style="padding:8px 24px;font-size:13px;display:none;">次へ</button>
     </div>
@@ -24839,51 +24848,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const FLOW_STEPS = [
   {
-    id: 'ft_welcome', type: 'info', icon: '🏰',
-    title: 'ようこそ！',
-    getText: () => `${gState.player.clanName}クランのリーダーよ、\n剣と魔法の世界へようこそ！\n\nこれから基本操作を一緒に確認しましょう。`,
+    id: 'ft_welcome', type: 'info', icon: '🧙',
+    title: 'ようこそ、クランSAGAへ！',
+    getText: () => `${gState.player.clanName}クランのリーダー、ようこそ！\n私はルーナ、あなたのナビゲーターです✨\n\nこのゲームは仲間を集めてダンジョンに挑む\nタクティカルRPGよ。\n一緒に基本操作を覚えていきましょう！`,
     btnText: 'はじめよう！',
     spotlight: null,
   },
   {
     id: 'ft_goto_sortie', type: 'action', icon: '⚔️',
-    title: 'まず出撃！',
-    getText: () => 'ホーム画面の大きな\n「⚔️ 出撃」ボタンをタップしてください',
+    title: 'まずはバトルに挑戦！',
+    getText: () => 'ホーム画面の大きな\n「⚔️ 出撃」ボタンをタップしてください。\n\n出撃画面でダンジョンを選べます！',
     spotlight: 'ft-home-sortie-btn',
     trigger: 'tab_sortie',
   },
   {
     id: 'ft_open_section', type: 'action', icon: '🗺️',
     title: 'メインステージを開く',
-    getText: () => '「🗼 メインステージ」のタイトル部分を\nタップして展開してください',
+    getText: () => '出撃画面に移動しました！\n\n「🗼 メインステージ」のタイトル部分を\nタップしてステージ一覧を展開してみて。',
     spotlight: 'ft-babel-header',
     trigger: 'babel_open',
   },
   {
     id: 'ft_open_area', type: 'action', icon: '🗺️',
     title: 'エリア1を選択',
-    getText: () => 'エリア1の「挑戦」ボタンを\nタップしてください',
+    getText: () => 'ステージが展開されました！\n\nまずはエリア1「草原の試練」の\n「挑戦」ボタンをタップしてください。',
     spotlight: 'ft-area1-btn',
     trigger: 'open_area1',
   },
   {
     id: 'ft_start_battle', type: 'action', icon: '⚔️',
-    title: 'バトル開始！',
-    getText: () => 'S1「はじまりの平原」の\n「出撃」ボタンをタップ！',
+    title: '最初のバトルへ！',
+    getText: () => 'ステージ一覧が開きました。\n\nS1「はじまりの平原」の\n「出撃」ボタンをタップしよう！\n\n初めてのバトルに挑戦よ🔥',
     spotlight: 'ft-s1-btn',
     trigger: 'battle_start',
   },
   {
     id: 'ft_press_battle_start', type: 'action', icon: '▶',
     title: 'バトルスタート！',
-    getText: () => '「BATTLE START」ボタンを\nタップしてバトルを始めましょう！',
+    getText: () => 'バトル準備完了！\n\n「BATTLE START」ボタンをタップして\nいざ出陣です！',
     spotlight: 'battle-start-btn',
     trigger: 'battle_start_btn',
   },
   {
     id: 'ft_battle_watch', type: 'info', icon: '⚡',
     title: 'バトルは自動進行！',
-    getText: () => 'ATBゲージが溜まると自動でスキルを発動します。\n\n勝利するまでバトルを見守りましょう！',
+    getText: () => 'バトルは自動で進みます。\n\n⚡ ATBゲージ（キャラ下の青いバー）が\n満タンになると自動でスキルを発動！\n\n🎯 画面上部の「行動順バー」で\n次に動くキャラを先読みできるわ。\n\n敵を全滅させるまで見守りましょう！',
     noBtn: true,
     spotlight: null,
     autoTrigger: 'battle_victory',
@@ -24891,42 +24900,56 @@ const FLOW_STEPS = [
   {
     id: 'ft_victory', type: 'info', icon: '🏆',
     title: '初勝利おめでとう！',
-    getText: () => 'バトルに勝利しました！\n\n次はキャラタブでユニットを強化してみましょう。',
+    getText: () => '🎉 素晴らしい！バトル勝利！\n\nバトルに勝つと\n・ゴールド（通貨）\n・EXPポット（経験値アイテム）\n・装備アイテム\nなどが手に入るわ。\n\n次はキャラを強化してみましょう！',
     btnText: '次へ',
     spotlight: null,
   },
   {
     id: 'ft_goto_chara', type: 'action', icon: '👤',
     title: 'キャラタブへ移動',
-    getText: () => '画面下の「👤 キャラ」タブを\nタップしてください',
+    getText: () => '画面下のナビバーから\n「👤 キャラ」タブをタップしてください。',
     spotlight: 'nav-chara',
     trigger: 'tab_chara',
   },
   {
     id: 'ft_open_unit', type: 'action', icon: '🔍',
     title: 'ユニットを確認！',
-    getText: () => 'キャラ一覧からユニットをタップして\n詳細を開いてみましょう',
+    getText: () => 'キャラ一覧が表示されました！\n\n仲間のユニットをタップして\n詳細ステータスを確認してみて。',
     spotlight: 'unit-grid-wrap',
     trigger: 'open_unit_detail',
   },
   {
     id: 'ft_levelup_unit', type: 'action', icon: '⬆️',
     title: 'レベルアップ！',
-    getText: () => '「+1」ボタンをタップして\nユニットをレベルアップしましょう！\n\nEXPポットを消費してレベルが上がります',
+    getText: () => 'ユニット詳細が開きました。\n\n「+1」ボタンをタップすると\nEXPポットを消費してレベルアップ！\n\nレベルが上がるとHP・ATKが強化されます。\nどんどん育ててあげてね！',
     spotlight: 'udp-lvup-btn',
     trigger: 'level_up_unit',
   },
   {
     id: 'ft_awaken_info', type: 'info', icon: '🔴',
-    title: 'レベル上限の解放',
-    getText: () => 'ユニットにはレベルの上限（初期はLv.20）があります。\n\n「覚醒ポット」を使うと上限を段階的に引き上げられます！\n\n覚醒ポットは鉱山やバトル報酬で入手できます',
+    title: 'レベル上限を解放しよう',
+    getText: () => 'ユニットのレベルには上限があります\n（初期は Lv.20）。\n\n「覚醒ポット」を使うと上限を\n段階的に引き上げられるわ！\n\n覚醒ポットは鉱山・バトル報酬で入手可能。\nこまめに強化していきましょう。',
+    btnText: '次へ',
+    spotlight: null,
+  },
+  {
+    id: 'ft_formation_info', type: 'info', icon: '🗂️',
+    title: '編成を整えよう',
+    getText: () => '画面下の「🗂️ 編成」タブから\nパーティを自由に組み替えられます！\n\n前衛スロット（3枠）… タンク・戦士系\n後衛スロット（3枠）… 遠距離・支援系\n\n前衛は敵のヘイト（攻撃対象）を\n引き受ける壁役が向いています。\n\nロールに合った配置で\nバトルをどんどん有利にしよう！',
+    btnText: '次へ',
+    spotlight: null,
+  },
+  {
+    id: 'ft_clanHall_info', type: 'info', icon: '🏰',
+    title: 'クランホールを活用しよう',
+    getText: () => 'ホームの「🏰 クランホール」では\n放置するだけで素材が増える施設があります！\n\n⛏️ 鉱山 … ゴールド・EXPポットを放置収集\n🔬 研究所 … 響典（スキル強化素材）を生産\n\nどちらも定期的に回収するだけで\nどんどん強くなれます。\n忘れずに活用してね！',
     btnText: '次へ',
     spotlight: null,
   },
   {
     id: 'ft_complete', type: 'info', icon: '🎉',
     title: 'チュートリアル完了！',
-    getText: () => '基本操作をマスターしました！\n\nあとはミッションに沿ってゲームを進めましょう。\n\n⭐ 星晶石 ×500 獲得！',
+    getText: () => 'お疲れ様！基本操作をマスターしたわ🎊\n\nこれからやること：\n① バトルでゴールド・装備を集める\n② キャラをレベルアップ・覚醒させる\n③ スキルカードを装備して強化する\n④ クランホールで放置収入を活用する\n\nあとはミッションに沿って進めましょう！\n\n⭐ 星晶石 ×500 獲得！',
     btnText: 'ミッションを確認',
     spotlight: null,
     isLast: true,
