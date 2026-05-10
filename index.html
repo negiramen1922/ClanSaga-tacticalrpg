@@ -9134,6 +9134,10 @@ function normalizeState() {
       ((gState.unitProgress?.[u.uid]?.level) || 1) >= 40
     );
   }
+  if (gState.tutorial.firstBattleGachaDone === undefined) {
+    // 既存プレイヤー（エリア1ステージ1クリア済み）は初回無料ガチャ不要
+    gState.tutorial.firstBattleGachaDone = !!(gState.progress?.babel?.clearedStages?.['a1s1']);
+  }
 
   // beginnerMissions
   if (!gState.beginnerMissions) gState.beginnerMissions = { vanguardGiven:false, archerGiven:false };
@@ -16353,6 +16357,9 @@ function endBattle(victory) {
   // Result screen
   if (victory && battleContext?.type === 'babel' && battleContext?.stageId === 'a1s1') {
     flowTutAdvance('battle_victory');
+    if (!gState.tutorial.firstBattleGachaDone) {
+      setTimeout(doFirstBattleGacha, 1200);
+    }
   }
   document.getElementById('result-title').textContent = victory ? 'VICTORY' : 'DEFEAT';
   document.getElementById('result-title').className = 'result-title ' + (victory?'victory':'defeat');
@@ -17662,6 +17669,172 @@ function execMileageExchange() {
   saveState(); updateTopBar();
   document.querySelectorAll('.modal-overlay').forEach(o=>o.remove());
   renderCharaTab();
+}
+
+// ============================================================
+//  初回無料10連ガチャ（最初のバトル勝利後）
+// ============================================================
+function doFirstBattleGacha() {
+  if (gState.tutorial.firstBattleGachaDone) return;
+  gState.tutorial.firstBattleGachaDone = true;
+  saveState();
+
+  // キャラガチャ10連（無料）: 少なくとも1枠はクラス確定
+  const charResults = [];
+  for (let i = 0; i < 10; i++) charResults.push(rollCharGacha());
+  // 1クラスも出なかった場合は最後の枠をSRクラスに差し替え
+  const hasClass = charResults.some(r => r.type === 'char');
+  if (!hasClass) {
+    charResults[9] = { type:'char', rarity:2, classId: CHAR_POOL[2][Math.floor(Math.random()*CHAR_POOL[2].length)] };
+  }
+  // 結果を適用（コスト不要）
+  charResults.forEach(r => {
+    if (r.type === 'char') {
+      const already = gState.ownedUnits.find(u => u.classId === r.classId);
+      if (!already) {
+        const unit = makeUnit(r.classId);
+        gState.ownedUnits.push(unit);
+        gState.unitProgress[unit.uid] = { level:1, exp:0 };
+        giveStarterCardsForClass(r.classId);
+        r.isNew = true;
+      } else {
+        const specFrag = r.rarity===3?60:15;
+        const genFrag  = r.rarity===3?10:3;
+        if (!gState.player.unitFragments) gState.player.unitFragments={};
+        gState.player.unitFragments[r.classId] = (gState.player.unitFragments[r.classId]||0)+specFrag;
+        gState.player.genericFragments = (gState.player.genericFragments||0)+genFrag;
+        r.isNew = false; r.specFrag = specFrag; r.genFrag = genFrag;
+      }
+    } else {
+      r.label = r.entry.give(gState.player);
+    }
+  });
+  saveState(); updateTopBar();
+
+  // キャラガチャ結果モーダル表示 → 閉じたらAFガチャへ
+  _showFirstBattleCharResult(charResults);
+}
+
+function _showFirstBattleCharResult(results) {
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay open';
+  ov.style.zIndex = '9999';
+  const star3 = results.filter(r=>r.type==='char'&&r.rarity===3);
+  const star2 = results.filter(r=>r.type==='char'&&r.rarity===2);
+  const mats  = results.filter(r=>r.type==='mat');
+  const rowsHTML = [...results].sort((a,b)=>{
+    const rar = r => r.type==='char'?r.rarity:0;
+    return rar(b)-rar(a);
+  }).map(r => {
+    if (r.type==='char') {
+      const cls  = CLASS_DATA[r.classId];
+      const col  = r.rarity===3?'var(--gold)':'var(--purple)';
+      const stars= r.rarity===3?'★★★':'★★☆';
+      const badge= r.isNew
+        ? `<span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:3px;border:1px solid rgba(201,168,76,0.4)">NEW</span>`
+        : `<span style="font-size:9px;color:var(--text3)">→専用+${r.specFrag} 汎用+${r.genFrag}</span>`;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        ${classIconHTML(r.classId,'28px')}
+        <span style="flex:1;font-size:12px;color:var(--text)">${cls?.name||r.classId}</span>
+        <span style="font-size:11px;color:${col};font-family:Rajdhani;font-weight:700">${stars}</span>
+        ${badge}
+      </div>`;
+    } else {
+      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:14px">📦</span>
+        <span style="flex:1;font-size:11px;color:var(--text2)">${r.label}</span>
+        <span style="font-size:10px;color:var(--text3)">★☆☆</span>
+      </div>`;
+    }
+  }).join('');
+  ov.innerHTML = `<div class="modal-panel" style="max-width:420px">
+    <div class="modal-header">
+      <h3>🎁 初回無料10連 — キャラガチャ</h3>
+      <button class="close-btn" onclick="this.closest('.modal-overlay').remove();_showFirstBattleAFGacha()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:11px;color:var(--gold);text-align:center;margin-bottom:10px">クラスが1体以上確定！完全無料です</div>
+      <div style="display:flex;gap:10px;justify-content:center;padding:6px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px">
+        ${star3.length?`<span style="color:var(--gold);font-family:Rajdhani;font-size:14px;font-weight:700">★★★ ×${star3.length}</span>`:''}
+        ${star2.length?`<span style="color:var(--purple);font-family:Rajdhani;font-size:14px;font-weight:700">★★☆ ×${star2.length}</span>`:''}
+        ${mats.length?`<span style="color:var(--text3);font-family:Rajdhani;font-size:14px;font-weight:700">素材 ×${mats.length}</span>`:''}
+      </div>
+      <div style="max-height:55vh;overflow-y:auto">${rowsHTML}</div>
+    </div>
+    <div style="padding:10px 16px 16px">
+      <button onclick="this.closest('.modal-overlay').remove();_showFirstBattleAFGacha()" class="btn btn-gold" style="width:100%">次へ：アーティファクトガチャ →</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function _showFirstBattleAFGacha() {
+  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
+  // af2Pickup はグローバルletで定義済み（line ~22887）
+  const results = [];
+  for (let i = 0; i < 10; i++) {
+    const roll = Math.random() * 100;
+    let rarity;
+    if (roll < 5) rarity = 'SSR';
+    else if (roll < 30) rarity = 'SR';
+    else rarity = 'N';
+    let pool;
+    if (rarity === 'SSR' && af2Pickup) {
+      pool = [ARTIFACT_POOL.find(d => d.id === af2Pickup)].filter(Boolean);
+    } else {
+      pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
+    }
+    if (!pool.length) pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
+    const def = pool[Math.floor(Math.random() * pool.length)];
+    if (!def) continue;
+    if (!gState.artifacts) gState.artifacts = [];
+    const already = gState.artifacts.find(a => a.id === def.id);
+    if (already) {
+      if (!gState.player.afDuplicates) gState.player.afDuplicates = {};
+      gState.player.afDuplicates[def.id] = (gState.player.afDuplicates[def.id] || 0) + 1;
+      results.push({ def, rarity, isDupe: true });
+    } else {
+      const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000) + '_' + i;
+      gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0, conste: 0 });
+      results.push({ def, rarity, isDupe: false });
+    }
+  }
+  gState.player.afMileage = (gState.player.afMileage||0) + 10;
+  saveState(); updateTopBar();
+
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay open';
+  ov.style.zIndex = '9999';
+  const rowsHTML = results.map(({def, rarity, isDupe}) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:24px">${def.icon}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:${rarColor[rarity]}">${def.name}</div>
+        <div style="font-size:10px;color:${isDupe?'var(--gold)':'var(--text3)'}">${rarity}${isDupe?' ✦ 凸素材+1':''}</div>
+      </div>
+      <span style="font-size:11px;color:${rarColor[rarity]};font-weight:700">${rarity}</span>
+    </div>`).join('');
+  const ssrCount = results.filter(r=>r.rarity==='SSR').length;
+  const srCount  = results.filter(r=>r.rarity==='SR').length;
+  ov.innerHTML = `<div class="modal-panel" style="max-width:380px">
+    <div class="modal-header">
+      <h3>🎁 初回無料10連 — アーティファクトガチャ</h3>
+      <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:11px;color:var(--gold);text-align:center;margin-bottom:10px">完全無料です！アーティファクトを装備して強くなろう</div>
+      <div style="display:flex;gap:10px;justify-content:center;padding:6px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px">
+        ${ssrCount?`<span style="color:var(--gold);font-family:Rajdhani;font-size:14px;font-weight:700">SSR ×${ssrCount}</span>`:''}
+        ${srCount?`<span style="color:var(--purple);font-family:Rajdhani;font-size:14px;font-weight:700">SR ×${srCount}</span>`:''}
+        <span style="color:var(--text3);font-size:11px;margin-left:auto">マイレージ: ${gState.player.afMileage||0}/${AF_MILEAGE_CAP}</span>
+      </div>
+      <div style="max-height:55vh;overflow-y:auto">${rowsHTML}</div>
+    </div>
+    <div style="padding:10px 16px 16px">
+      <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-gold" style="width:100%">閉じる</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
 }
 
 // ============================================================
