@@ -12759,6 +12759,7 @@ function _executeBabelSweep(areaId, stageId, n) {
   gState.player.starCrystal = (gState.player.starCrystal || 0) + totalCoin;
   gState.missions.daily.babelClears  = (gState.missions.daily.babelClears  || 0) + n;
   gState.missions.weekly.babelClears = (gState.missions.weekly.babelClears || 0) + n;
+  if (gState.missions.event) gState.missions.event.babelClears = (gState.missions.event.babelClears || 0) + n;
   checkAchievements(); saveState(); updateTopBar();
   const lines = [
     `🔄 ×${n} 周回完了！（⚡-${10 * n}）`,
@@ -16173,6 +16174,7 @@ function endBattle(victory) {
       }
       gState.missions.daily.babelClears = (gState.missions.daily.babelClears||0)+1;
       gState.missions.weekly.babelClears = (gState.missions.weekly.babelClears||0)+1;
+      if (gState.missions.event) gState.missions.event.babelClears = (gState.missions.event.babelClears||0)+1;
       // 実績統計
       trackBabelClear(battleContext.stageId);
       checkAchievements();
