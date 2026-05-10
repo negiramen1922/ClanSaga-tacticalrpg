@@ -11411,12 +11411,12 @@ function openUnitDetail(uid) {
     return `<img src="${src}" style="width:${size}px;height:${size}px;object-fit:contain;vertical-align:middle;">`;
   };
   const _skillTypeBadge = (type, cd) => {
-    const dmgLabel = { phys:'物理', spec:'特殊', red:'物理', black:'物理', white:'特殊', blue:'特殊', buff:'支援' }[type] || type;
-    const dmgColor = { phys:'var(--orange)', spec:'#7ab4ff', red:'var(--orange)', black:'var(--orange)', white:'#7ab4ff', blue:'#7ab4ff', buff:'var(--green)' }[type] || 'var(--text3)';
+    const dmgLabel = { phys:'物理', spec:'特殊', buff:'支援' }[type] || type;
+    const dmgColor = { phys:'var(--orange)', spec:'#7ab4ff', buff:'var(--green)' }[type] || 'var(--text3)';
     const cdStr = cd ? `<span class="tac-badge tac-badge-cd" style="margin-left:3px;">CD:${cd}</span>` : '';
     return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;color:${dmgColor};font-weight:700;">${_skTypeImg(type,12)} ${dmgLabel}</span>${cdStr}`;
   };
-  const _skillBorderColor = { phys:'#e07a3a', spec:'#4a7fff', red:'#e07a3a', black:'#e07a3a', white:'#4a7fff', blue:'#4a7fff', buff:'var(--accent)' };
+  const _skillBorderColor = { phys:'#e07a3a', spec:'#4a7fff', buff:'var(--accent)' };
   const _typeIcon = (src, label, cls) => `
     <span style="display:inline-flex;align-items:center;gap:3px;">
       <img src="${src}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">
@@ -11633,8 +11633,7 @@ function openUnitDetail(uid) {
   document.getElementById('udp-add-party-btn')?.addEventListener('click', () => {
     const preset = gState.presets[gState.activePreset];
     const slots = preset.formation.slots || [];
-    const ft = FORMATION_TYPES[preset.formationType || 'standard'];
-    const maxSlots = ft ? (ft.slots || 6) : 6;
+    const maxSlots = 6;
     if (slots.includes(uid)) { showBonusToast('すでに編成されています'); return; }
     const emptyIdx = [...Array(maxSlots).keys()].find(i => !slots[i]);
     if (emptyIdx === undefined) { showBonusToast('編成が満員です（最大' + maxSlots + '人）'); return; }
@@ -14708,8 +14707,8 @@ function doAttack(attacker, targets, skill) {
     const coverTarget = coverInfo.coverTarget;
     const coverRatio  = coverInfo.coverRatio || 0.8;
 
-    // Step7a: ブロック判定（🔴レッド/物理のみ）
-    if (['red','black','phys'].includes(skill.type) && rollBlock(target)) {
+    // Step7a: ブロック判定（物理のみ）
+    if (skill.type === 'phys' && rollBlock(target)) {
       spawnBall(attacker.uid, target.uid, ballType);
       setTimeout(() => {
         flashCard(target.uid, 'hit');
@@ -17173,7 +17172,7 @@ function playOneOpeningSkill(action, callback) {
 
     const isSurprise = (battleState._scoutOutcome === 'success');
     const power = ((isSurprise && eff.powerOnSurprise) ? eff.powerOnSurprise : (eff.power || 1.0)) * lvMult * bonusMult;
-    const dmgType = eff.damageType || 'red';
+    const dmgType = eff.damageType || 'phys';
     const isSingle = (card.target !== 'all' && card.target !== 'all_enemy');
     const targets = isSingle ? [enemies[Math.floor(Math.random()*enemies.length)]] : [...enemies];
 
@@ -19466,7 +19465,7 @@ function renderTacticsOrderList() {
       const isOn = tac.enabled !== false;
       const typeColor = { phys:'#e07755', spec:'#6699ee', buff:'var(--accent)' }[sk.type] || 'var(--text2)';
       const _tacTypeImgSrc = sk.type === 'buff' ? 'assets/images/card-type-support.png' : 'assets/images/card-type-attack.png';
-      const _tacTypeLabel  = { red:'RED', black:'BLACK', white:'WHITE', blue:'BLUE', buff:'支援' }[sk.type] || '—';
+      const _tacTypeLabel  = { phys:'物理', spec:'特殊', buff:'支援' }[sk.type] || sk.type || '—';
       const _tacTypeCls    = sk.type === 'buff' ? 'tac-badge tac-badge-type-sup' : 'tac-badge tac-badge-type-atk';
       const typeBadge = `<span style="display:inline-flex;align-items:center;gap:2px;"><img src="${_tacTypeImgSrc}" style="width:12px;height:12px;object-fit:contain;vertical-align:middle;"><span class="${_tacTypeCls}">${_tacTypeLabel}</span></span>`;
       const cdBadge = sk.cd ? `<span class="tac-badge tac-badge-cd">CD:${sk.cd}</span>` : '';
@@ -25127,6 +25126,7 @@ const FLOW_STEPS = [
     title: 'バトルスタート！',
     getText: () => 'バトル準備完了！\n\n「BATTLE START」ボタンをタップして\nいざ出陣です！',
     spotlight: 'battle-start-btn',
+    panelPos: 'top',
     trigger: 'battle_start_btn',
   },
   {
@@ -25180,6 +25180,13 @@ const FLOW_STEPS = [
     spotlight: null,
   },
   {
+    id: 'ft_imagine_info', type: 'info', icon: '🐺',
+    title: 'イマジンシステム',
+    getText: () => 'イマジンとは、パーティに宿る「守護精霊」です！\n\n出撃前の編成画面でイマジンを選ぶと\n・パーティ全体にバフがかかる\n・編成ロールに応じた追加効果が発動\n・バトル中に1回だけ強力なアクティブスキルが使える\n\nイマジンはエリアをクリアするほど\n種類が増えていくわ。\nパーティ構成に合わせて使い分けよう！',
+    btnText: '次へ',
+    spotlight: null,
+  },
+  {
     id: 'ft_complete', type: 'info', icon: '🎉',
     title: 'チュートリアル完了！',
     getText: () => 'お疲れ様！基本操作をマスターしたわ🎊\n\nこれからやること：\n① バトルでゴールド・装備を集める\n② キャラをレベルアップ・覚醒させる\n③ スキルカードを装備して強化する\n④ クランホールで放置収入を活用する\n\nあとはミッションに沿って進めましょう！\n\n⭐ 星晶石 ×500 獲得！',
@@ -25225,7 +25232,15 @@ function renderFlowStep() {
     btn.style.display = 'none';
   }
 
-  document.getElementById('flow-tut').style.display = 'block';
+  const panel = document.getElementById('flow-tut');
+  panel.style.display = 'block';
+  if (step.panelPos === 'top') {
+    panel.style.bottom = '';
+    panel.style.top = '8px';
+  } else {
+    panel.style.top = '';
+    panel.style.bottom = '68px';
+  }
 
   if (step.spotlight) {
     setTimeout(() => spotlightFlowEl(step.spotlight), 150);
