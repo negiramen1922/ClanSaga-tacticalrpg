@@ -21222,7 +21222,7 @@ function expeditionCollect(slotIdx) {
   const aptPct = Math.round(aptRate * 100);
   gState.expeditions.slots[slotIdx] = { regionId:null, startedAt:null, memberUids:[], pendingRegionId:null };
   saveState();
-  toast(`${region.icon} 遠征帰還！ 適性率${aptPct}%（×${mult.toFixed(1)}） ${got.join(' ')}`);
+  toast(`${region.icon} 遠征帰還！ 適性率${aptPct}%（×${mult.toFixed(1)}） ${got.join(' ')}`, true);
   renderClanHall();
 }
 
