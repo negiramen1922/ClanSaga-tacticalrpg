@@ -2660,7 +2660,7 @@ img.item-icon {
       </div>
 
       <div class="content-section">
-        <div class="section-header" onclick="toggleSection(this,'abyss-panel')">
+        <div class="section-header" id="abyss-section-header" onclick="toggleSection(this,'abyss-panel')">
           <span class="sec-icon">🌀</span>
           <div>
             <div class="sec-title">アビスダイブ</div>
@@ -24058,12 +24058,19 @@ function renderSortieTab() {
   // 解放状況テキスト更新
   const lv = gState.player.level;
   const abyssSub = document.getElementById('abyss-sub');
+  const abyssHdr = document.getElementById('abyss-section-header');
   if (abyssSub) {
     const cl = (gState.progress.abyss.clearedLayers||[]);
     const best = cl.length > 0 ? Math.max(...cl) : 0;
-    abyssSub.textContent = isAbyssUnlocked()
+    const unlocked = isAbyssUnlocked();
+    abyssSub.textContent = unlocked
       ? `クリア: ${cl.length}/15層 (最深 ${best||0}層)`
-      : 'エリア1クリアで解放';
+      : '🔒 エリア1クリアで解放';
+    if (abyssHdr) {
+      abyssHdr.style.opacity = unlocked ? '' : '0.45';
+      abyssHdr.style.pointerEvents = unlocked ? '' : 'none';
+      abyssHdr.style.cursor = unlocked ? '' : 'default';
+    }
   }
   const colSub = document.getElementById('colosseum-sub');
   if (colSub) colSub.textContent = lv>=31 ? `ランク: ${gState.progress.colosseum.rank||1}` : 'Clan Lv.31で解放';
@@ -24933,13 +24940,6 @@ const FLOW_STEPS = [
     spotlight: null,
   },
   {
-    id: 'ft_formation_info', type: 'info', icon: '🗂️',
-    title: '編成を整えよう',
-    getText: () => '画面下の「🗂️ 編成」タブから\nパーティを自由に組み替えられます！\n\n前衛スロット（3枠）… タンク・戦士系\n後衛スロット（3枠）… 遠距離・支援系\n\n前衛は敵のヘイト（攻撃対象）を\n引き受ける壁役が向いています。\n\nロールに合った配置で\nバトルをどんどん有利にしよう！',
-    btnText: '次へ',
-    spotlight: null,
-  },
-  {
     id: 'ft_clanHall_info', type: 'info', icon: '🏰',
     title: 'クランホールを活用しよう',
     getText: () => 'ホームの「🏰 クランホール」では\n放置するだけで素材が増える施設があります！\n\n⛏️ 鉱山 … ゴールド・EXPポットを放置収集\n🔬 研究所 … 響典（スキル強化素材）を生産\n\nどちらも定期的に回収するだけで\nどんどん強くなれます。\n忘れずに活用してね！',
@@ -25209,15 +25209,29 @@ const ABYSS_TUT_STEPS = [
   {
     id: 'ab_unlocked', type: 'info', icon: '🏔️',
     title: 'アビスダイブ解放！',
-    getText: () => 'エリア1クリアおめでとう！\n\n「アビスダイブ」が解放されました。\nアクセサリーを入手できる\nローグライクダンジョンです！',
+    getText: () => 'エリア1クリアおめでとう！🎉\n\n新コンテンツ「アビスダイブ」が\n解放されました！\n\nアビスはアクセサリーを集めるための\nローグライクダンジョンです。\nどんどん潜って装備を強化しよう！',
     btnText: '詳しく見る',
     spotlight: null,
   },
   {
-    id: 'ab_explain', type: 'info', icon: '💍',
+    id: 'ab_system', type: 'info', icon: '🌀',
+    title: 'アビスダイブの仕組み',
+    getText: () => 'アビスは40層まで続くダンジョンです。\n\n📌 ポイント：\n・1層から順番に攻略していく\n・クリアした層は次回から再挑戦可能\n・1日の挑戦回数に上限あり\n・深い層ほど強い敵・レアな報酬\n\n途中で敗北しても\n次回は同じ層から再開できます！',
+    btnText: '次へ',
+    spotlight: null,
+  },
+  {
+    id: 'ab_accessory', type: 'info', icon: '💍',
     title: 'アクセサリーとは？',
-    getText: () => 'アクセサリーはキャラに装備できる\n強化アイテムです。\n\nアビスは層ごとに強敵と戦うダンジョンで\nクリアするとアクセサリーが獲得できます。\n\n出撃 → アビスダイブ から挑戦しましょう！',
-    btnText: '閉じる',
+    getText: () => 'アクセサリーはキャラに装備する\n強化アイテムです。\n\n💍 主な効果：\n・ATK・HP・SPDなどを底上げ\n・レアリティ★1〜★4がある\n・高レアほど強力なサブ効果付き\n\nアビスをクリアするとランダムで\nアクセサリーが手に入ります。\nより深い層ほど高レアが出やすい！',
+    btnText: '次へ',
+    spotlight: null,
+  },
+  {
+    id: 'ab_go', type: 'info', icon: '⚔️',
+    title: 'さっそく挑戦しよう！',
+    getText: () => '出撃タブの「アビスダイブ」から\nいつでも挑戦できます！\n\n初回クリアごとに星晶石がもらえるので\n積極的に攻略しましょう。\n\n育成が足りなければ\nまずメインステージを進めて\nキャラを強化してからでもOKよ！',
+    btnText: '挑戦する！',
     spotlight: null,
     isLast: true,
   },
