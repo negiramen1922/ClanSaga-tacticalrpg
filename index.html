@@ -1141,6 +1141,105 @@ img.item-icon {
 .gacha-card-mini .stars { font-size: 12px; margin-top: 3px; }
 @keyframes cardAppear { 0%{transform:translateY(20px);opacity:0} 100%{transform:translateY(0);opacity:1} }
 
+/* ===== ガチャ強化演出（予兆カラー & スロー演出） ===== */
+#gacha-cinematic {
+  position: fixed; inset: 0; z-index: 9990;
+  background: radial-gradient(ellipse at center, rgba(8,10,18,0.65) 0%, rgba(0,0,0,0.98) 80%);
+  display: none; align-items: center; justify-content: center;
+  flex-direction: column; overflow: hidden;
+}
+#gacha-cinematic.active { display: flex; }
+.gc-orb {
+  width: 200px; height: 200px; border-radius: 50%; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 0.6s;
+}
+.gc-aura-ring {
+  position: absolute; inset: -14px; border-radius: 50%;
+  border: 3px solid currentColor;
+  animation: gcAuraPulse 1.3s ease-in-out infinite;
+}
+@keyframes gcAuraPulse {
+  0%,100% { transform: scale(0.92); opacity: 0.7; box-shadow: 0 0 35px 8px currentColor; }
+  50%     { transform: scale(1.18); opacity: 1.0; box-shadow: 0 0 70px 30px currentColor; }
+}
+.gc-aura-burst {
+  position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  animation: gcBurst 0.9s ease-out forwards;
+}
+@keyframes gcBurst {
+  0%   { transform: scale(0.5); opacity: 1;   box-shadow: 0 0 0 0 currentColor; }
+  100% { transform: scale(5.5); opacity: 0;   box-shadow: 0 0 80px 40px currentColor; }
+}
+.gc-rays {
+  position: absolute; inset: -40px; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from 0deg,
+    transparent 0deg, currentColor 4deg, transparent 14deg,
+    transparent 56deg, currentColor 60deg, transparent 70deg,
+    transparent 112deg, currentColor 116deg, transparent 126deg,
+    transparent 168deg, currentColor 172deg, transparent 182deg,
+    transparent 224deg, currentColor 228deg, transparent 238deg,
+    transparent 280deg, currentColor 284deg, transparent 294deg,
+    transparent 336deg, currentColor 340deg, transparent 350deg);
+  opacity: 0.35;
+  animation: gcRotate 9s linear infinite;
+}
+@keyframes gcRotate { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+.gc-iconwrap {
+  position: relative; z-index: 2;
+  font-size: 80px; filter: drop-shadow(0 0 20px currentColor);
+}
+.gc-stage { text-align: center; }
+.gc-text { margin-top: 26px; transition: opacity 0.4s; }
+.gc-namebig {
+  font-family: 'Cinzel', serif; font-size: 28px; letter-spacing: 3px;
+  text-shadow: 0 0 18px currentColor, 0 0 4px #000;
+  margin-bottom: 6px; transition: color 0.4s;
+}
+.gc-cls { font-size: 13px; color: var(--text2); letter-spacing: 2px; }
+.gc-newbadge {
+  display: inline-block; font-family: 'Cinzel', serif;
+  font-size: 13px; letter-spacing: 4px; margin-left: 8px;
+  background: linear-gradient(135deg, #ffd84a, #fff5b8, #ffd84a);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+  animation: gcShine 1.6s ease-in-out infinite;
+}
+@keyframes gcShine {
+  0%,100% { filter: brightness(1.0) drop-shadow(0 0 4px rgba(255,215,80,0.5)); }
+  50%     { filter: brightness(1.5) drop-shadow(0 0 14px rgba(255,215,80,0.95)); }
+}
+.gc-skip {
+  position: absolute; bottom: 32px; left: 0; right: 0; text-align: center;
+  font-size: 11px; color: var(--text3); letter-spacing: 2px;
+  cursor: pointer; user-select: none;
+}
+.gc-skip:hover { color: var(--gold); }
+
+/* 天井ゲージ */
+.gc-pity-row { margin-bottom: 12px; }
+.gc-pity-head {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 10px; color: var(--text3); margin-bottom: 4px;
+}
+.gc-pity-bar {
+  height: 10px; background: var(--bg3); border-radius: 5px; overflow: hidden;
+  position: relative; border: 1px solid var(--border);
+}
+.gc-pity-fill {
+  height: 100%; border-radius: 4px; position: relative;
+  transition: width 0.4s, background 0.4s;
+}
+.gc-pity-fill::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%);
+  animation: gcShimmer 2.2s linear infinite;
+}
+@keyframes gcShimmer {
+  0% { transform: translateX(-100%); }
+  100%{ transform: translateX(100%); }
+}
+
 /* ===== BASE TAB ===== */
 .base-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .base-card {
@@ -17645,12 +17744,35 @@ function renderCharGachaTab(el) {
     <div style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px">
         <span>🎫 マイレージ ${mileage} / ${CHAR_MILEAGE_CAP}</span>
-        <span>天井まで: ${Math.max(0, 90-pity)} 回</span>
       </div>
       <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
         <div style="height:100%;width:${Math.min(100,(mileage/CHAR_MILEAGE_CAP*100)).toFixed(1)}%;background:linear-gradient(90deg,var(--gold),#f0cc6e);border-radius:3px;transition:width 0.3s"></div>
       </div>
     </div>
+    ${(() => {
+      const pityMax = 90;
+      const pct = Math.min(100, pity / pityMax * 100);
+      const remain = Math.max(0, pityMax - pity);
+      // 天井に近づくほど赤→橙→金へ変化
+      let fillGrad;
+      if (pity >= 80)      fillGrad = 'linear-gradient(90deg,#ffd84a,#fff5b8)';
+      else if (pity >= 60) fillGrad = 'linear-gradient(90deg,#e07a3a,#ffd84a)';
+      else if (pity >= 30) fillGrad = 'linear-gradient(90deg,#7a4adf,#e07a3a)';
+      else                 fillGrad = 'linear-gradient(90deg,#4a7fff,#7a4adf)';
+      const label = remain === 0
+        ? `<b style="color:var(--gold)">次回 ★3 確定！</b>`
+        : `あと <b style="color:${pity>=60?'var(--gold)':'var(--text2)'}">${remain}</b> 回で ★3 確定`;
+      return `
+      <div class="gc-pity-row">
+        <div class="gc-pity-head">
+          <span>🎯 ピックアップ天井</span>
+          <span>${label}</span>
+        </div>
+        <div class="gc-pity-bar">
+          <div class="gc-pity-fill" style="width:${pct.toFixed(1)}%;background:${fillGrad}"></div>
+        </div>
+      </div>`;
+    })()}
     <div style="font-size:10px;color:var(--text3);margin-bottom:10px">
       ${itemIconHTML('crystal','12px')} 星晶石: <b style="color:#89e3ff">${crystal.toLocaleString()}</b>
     </div>
@@ -17787,7 +17909,129 @@ function drawCharGacha(count) {
   closeGacha(); Audio.gacha();
   showCharGachaResult(results);
 }
+// ============================================================
+//  ガチャ強化演出: 予兆カラー & スロー演出
+// ============================================================
+function _ensureGachaCinematicEl() {
+  let el = document.getElementById('gacha-cinematic');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'gacha-cinematic';
+    el.innerHTML = `<div id="gc-stage" class="gc-stage"></div>
+      <div class="gc-skip" onclick="closeGachaCinematic()">タップしてスキップ ▶</div>`;
+    el.addEventListener('click', e => {
+      // スキップ表記以外のクリックでも進む（モバイル想定）
+      if (e.target.id === 'gacha-cinematic') closeGachaCinematic();
+    });
+    document.body.appendChild(el);
+  }
+  return el;
+}
+function closeGachaCinematic() {
+  const el = document.getElementById('gacha-cinematic');
+  if (!el) return;
+  el.classList.remove('active');
+  if (el._timers) el._timers.forEach(clearTimeout);
+  el._timers = [];
+  if (el._onDone) { const cb = el._onDone; el._onDone = null; cb(); }
+}
+// 演出ティアを results から決定
+function _gachaCinematicTier(results, kind) {
+  // kind: 'char' | 'artifact'
+  if (kind === 'char') {
+    const chars = (results||[]).filter(r => r.type === 'char');
+    const newSsr = chars.find(r => r.rarity === 3 && r.isNew);
+    if (newSsr) return { tier:'ultra', target:newSsr };
+    const dupSsr = chars.find(r => r.rarity === 3);
+    if (dupSsr) return { tier:'high',  target:dupSsr };
+    const sr     = chars.find(r => r.rarity === 2);
+    if (sr)     return { tier:'mid',   target:sr };
+    return { tier:'low', target:null };
+  } else {
+    const newSsr = (results||[]).find(r => r.rarity==='SSR' && !r.isDupe);
+    if (newSsr) return { tier:'ultra', target:newSsr };
+    const dupSsr = (results||[]).find(r => r.rarity==='SSR');
+    if (dupSsr) return { tier:'high',  target:dupSsr };
+    const sr     = (results||[]).find(r => r.rarity==='SR');
+    if (sr)     return { tier:'mid',   target:sr };
+    return { tier:'low', target:null };
+  }
+}
+// メイン: 演出を流して onDone を呼ぶ。低レアのみなら即時 onDone
+function playGachaCinematic(results, kind, onDone) {
+  const { tier, target } = _gachaCinematicTier(results, kind);
+  if (tier === 'low' || !target) { onDone && onDone(); return; }
+
+  const el = _ensureGachaCinematicEl();
+  el._timers = [];
+  el._onDone = onDone;
+  const stage = el.querySelector('#gc-stage');
+
+  // 表示用の名前・アイコン
+  let iconHTML, name, sub;
+  if (kind === 'char') {
+    const cls = CLASS_DATA[target.classId];
+    iconHTML = classIconHTML(target.classId, '80px');
+    name = cls?.name || target.classId;
+    sub  = cls?.role || '';
+  } else {
+    iconHTML = `<span style="font-size:80px">${target.def?.icon || '🔩'}</span>`;
+    name = target.def?.name || 'Artifact';
+    sub  = target.rarity;
+  }
+  const showNewBadge = (tier === 'ultra');
+
+  stage.innerHTML = `
+    <div class="gc-orb" id="gc-orb" style="color:#7ab4ff">
+      <div class="gc-aura-ring"></div>
+      <div class="gc-rays"></div>
+      <div class="gc-iconwrap" id="gc-iconwrap" style="opacity:0">${iconHTML}</div>
+    </div>
+    <div class="gc-text" id="gc-text" style="opacity:0">
+      <div class="gc-namebig" id="gc-name" style="color:#7ab4ff">？？？</div>
+      <div class="gc-cls" id="gc-cls">召喚中...</div>
+    </div>`;
+
+  el.classList.add('active');
+  const orb       = stage.querySelector('#gc-orb');
+  const iconWrap  = stage.querySelector('#gc-iconwrap');
+  const textBlock = stage.querySelector('#gc-text');
+  const nameEl    = stage.querySelector('#gc-name');
+  const clsEl     = stage.querySelector('#gc-cls');
+  const _t = (ms, fn) => { el._timers.push(setTimeout(fn, ms)); };
+
+  // 予兆カラー段階: 青(0ms) → 紫(900ms) → 金(1700ms, high/ultra のみ)
+  _t(900, () => { orb.style.color = '#c47aff'; }); // 紫へ
+  _t(1700, () => {
+    if (tier === 'high' || tier === 'ultra') {
+      orb.style.color = '#ffd84a';
+      const burst = document.createElement('div');
+      burst.className = 'gc-aura-burst';
+      burst.style.color = '#ffd84a';
+      orb.appendChild(burst);
+    }
+  });
+
+  // ultra（新規★3）はスローモーション: revealまでの溜めを長く
+  const finalCol = (tier==='mid') ? '#c47aff' : '#ffd84a';
+  const revealMs = (tier==='ultra') ? 2900 : (tier==='high') ? 2200 : 1900;
+  const totalMs  = (tier==='ultra') ? 5200 : (tier==='high') ? 3900 : 3100;
+  _t(revealMs, () => {
+    iconWrap.style.transition = 'opacity 0.5s';
+    iconWrap.style.opacity = '1';
+    textBlock.style.opacity = '1';
+    nameEl.style.color = finalCol;
+    nameEl.style.textShadow = `0 0 22px ${finalCol}, 0 0 4px #000`;
+    nameEl.textContent = name;
+    clsEl.innerHTML = sub + (showNewBadge ? ' <span class="gc-newbadge">★ NEW ★</span>' : '');
+  });
+  _t(totalMs, () => closeGachaCinematic());
+}
+
 function showCharGachaResult(results) {
+  playGachaCinematic(results, 'char', () => _renderCharGachaResultModal(results));
+}
+function _renderCharGachaResultModal(results) {
   const ov = document.createElement('div');
   ov.className = 'modal-overlay open';
   ov.style.zIndex = '9999';
@@ -17922,6 +18166,9 @@ function doFirstBattleGacha() {
 }
 
 function _showFirstBattleCharResult(results) {
+  playGachaCinematic(results, 'char', () => _renderFirstBattleCharResultModal(results));
+}
+function _renderFirstBattleCharResultModal(results) {
   const ov = document.createElement('div');
   ov.className = 'modal-overlay open';
   ov.style.zIndex = '9999';
@@ -18149,11 +18396,15 @@ function doArtifactGachaFromPanel(count) {
   gState.player.afMileage = (gState.player.afMileage||0) + count;
   saveState(); updateTopBar();
 
-  // 結果モーダル表示
+  // 結果モーダル表示（演出後）
+  playGachaCinematic(results, 'artifact', () => _renderArtifactGachaResultModal(results, rarColor));
+}
+
+function _renderArtifactGachaResultModal(results, rarColor) {
   const ov = document.createElement('div');
   ov.className = 'modal-overlay open';
   ov.style.zIndex = '9998';
-  const rowsHTML = results.map(({def, rarity}) => `
+  const rowsHTML = results.map(({def, rarity, isDupe}) => `
     <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
       <span style="font-size:24px">${def.icon}</span>
       <div style="flex:1">
