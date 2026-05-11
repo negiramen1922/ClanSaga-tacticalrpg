@@ -18477,21 +18477,28 @@ function drawCharGacha(count) {
 // ============================================================
 //  クラスガチャ = 召喚契約書: ハンコでドン → 結果公開
 // ============================================================
-function showCharGachaContract(results, cost, count) {
+function showCharGachaContract(results, cost, count, onComplete) {
   // 既存があれば破棄
   document.getElementById('contract-overlay')?.remove();
   const ov = document.createElement('div');
   ov.id = 'contract-overlay';
   const clanName = gState.player?.clanName || 'クラン';
+  // 対価表示: 0 ならば「初代特典（無償）」、それ以外は星晶石コスト
+  const costStr = cost > 0
+    ? `星晶石 ${cost.toLocaleString()}`
+    : '初代特典（無 償）';
+  const countSuffix = count === 10
+    ? (cost > 0 ? '（10連保証付）' : '（クラス1体以上確定）')
+    : '';
   // 契約内容（レア度は伏せ、合計口数のみ提示してサプライズを残す）
   const termsHTML = `
     <div class="contract-term-row">
       <span class="term-label">対  価</span>
-      <span class="term-value">星晶石 ${cost.toLocaleString()}</span>
+      <span class="term-value">${costStr}</span>
     </div>
     <div class="contract-term-row">
       <span class="term-label">召喚数</span>
-      <span class="term-value">${count}口${count===10?'（10連保証付）':''}</span>
+      <span class="term-value">${count}口${countSuffix}</span>
     </div>
     <div class="contract-term-row">
       <span class="term-label">立会人</span>
@@ -18514,7 +18521,10 @@ function showCharGachaContract(results, cost, count) {
         <span class="stamp-hint">タップ</span>
       </div>
     </div>`;
+  // 押印完了後に実行する処理。未指定なら通常のキャラガチャ結果表示
+  const _done = onComplete || (() => { Audio.gacha && Audio.gacha(); showCharGachaResult(results); });
   ov._pendingResults = results;
+  ov._onContractDone = _done;
   document.body.appendChild(ov);
   requestAnimationFrame(() => ov.classList.add('open'));
   Audio.contractOpen && Audio.contractOpen();
@@ -18558,23 +18568,19 @@ function showCharGachaContract(results, cost, count) {
     // 1.2秒後に契約書を閉じて既存ガチャ演出へ
     setTimeout(() => {
       ov.classList.add('closing');
-      setTimeout(() => {
-        ov.remove();
-        Audio.gacha && Audio.gacha();
-        showCharGachaResult(results);
-      }, 480);
+      setTimeout(() => { ov.remove(); _done(); }, 480);
     }, 1100);
   };
   stampArea.addEventListener('click', onStamp);
 }
 
-// 契約演出をスキップして結果へ（既に星晶石は消費済み・契約は確定）
+// 契約演出をスキップして結果へ（既に契約は確定済み）
 function skipCharGachaContract() {
   const ov = document.getElementById('contract-overlay');
-  if (!ov || !ov._pendingResults) return;
-  const results = ov._pendingResults;
+  if (!ov) return;
+  const done = ov._onContractDone;
   ov.classList.add('closing');
-  setTimeout(() => { ov.remove(); showCharGachaResult(results); }, 280);
+  setTimeout(() => { ov.remove(); if (done) done(); }, 280);
 }
 // ============================================================
 //  ガチャ強化演出: 予兆カラー & スロー演出
@@ -18896,7 +18902,12 @@ function doFirstBattleGacha() {
 }
 
 function _showFirstBattleCharResult(results) {
-  playGachaCinematic(results, 'char', () => _renderFirstBattleCharResultModal(results));
+  // 通常のキャラガチャと同じく契約書 → 押印 → 既存演出 → 結果モーダルへ
+  // 初回は無償なので cost=0 を渡し、結果モーダルは初回専用版を使う
+  showCharGachaContract(results, 0, 10, () => {
+    Audio.gacha && Audio.gacha();
+    playGachaCinematic(results, 'char', () => _renderFirstBattleCharResultModal(results));
+  });
 }
 function _renderFirstBattleCharResultModal(results) {
   const ov = document.createElement('div');
