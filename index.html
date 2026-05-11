@@ -2513,11 +2513,9 @@ img.item-icon {
         </div>
         <div class="formation-grid">
           <div class="formation-col">
-            <div class="formation-col-label">前衛</div>
             <div id="home-front"></div>
           </div>
           <div class="formation-col">
-            <div class="formation-col-label">後衛</div>
             <div id="home-back"></div>
           </div>
         </div>
@@ -3259,6 +3257,21 @@ img.item-icon {
       <button class="close-btn" onclick="document.getElementById('celestial-modal').classList.remove('open')">✕</button>
     </div>
     <div class="modal-body" id="celestial-content"></div>
+  </div>
+</div>
+
+<!-- SORTIE CONFIRM MODAL -->
+<div class="modal-overlay" id="sortie-confirm-modal" onclick="if(event.target===this)closeSortieConfirm()">
+  <div class="modal-panel" style="max-width:540px">
+    <div class="modal-header">
+      <h3 id="sortie-confirm-title">⚔️ 出撃確認</h3>
+      <button class="close-btn" onclick="closeSortieConfirm()">✕</button>
+    </div>
+    <div id="sortie-confirm-body" class="modal-body" style="max-height:70vh;overflow-y:auto"></div>
+    <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px">
+      <button class="btn btn-outline btn-sm" style="flex:1" onclick="closeSortieConfirm()">キャンセル</button>
+      <button class="btn btn-gold" style="flex:2;font-weight:700" id="sortie-confirm-start-btn" onclick="confirmSortieStart()">⚔️ 出撃</button>
+    </div>
   </div>
 </div>
 
@@ -12750,7 +12763,7 @@ function openStageList(areaId) {
       btn.className = 'start-btn';
       btn.textContent = '出撃';
       if (areaId === 'area1' && i === 0) btn.id = 'ft-s1-btn';
-      btn.addEventListener('click', (e) => { e.stopPropagation(); startBabelBattle(areaId, s.id); });
+      btn.addEventListener('click', (e) => { e.stopPropagation(); confirmSortieBabel(areaId, s.id); });
       row.appendChild(btn);
     }
 
@@ -20404,11 +20417,8 @@ function renderMissionPanel(type, missions, elId, claimedKey) {
   });
 }
 
-// クイック出撃（最後にいたエリアの未クリアステージ or 最初のステージ）
+// クイック出撃（最後にいたエリアの未クリアステージ or 最初のステージ）→ 出撃確認モーダル経由
 function quickSortie() {
-  const units = getFormationUnits();
-  if (!units.length) { alert('編成にユニットを設定してください'); switchTab('formation'); return; }
-
   let targetArea = null, targetStage = null;
   for (const area of BABEL_AREAS) {
     if (!isAreaUnlocked(area.id) || !area.stages.length) continue;
@@ -20421,8 +20431,202 @@ function quickSortie() {
     if (lastArea) { targetArea=lastArea; targetStage=lastArea.stages[lastArea.stages.length-1]; }
   }
   if (!targetArea || !targetStage) { alert('出撃できるステージがありません'); return; }
-  startBabelBattle(targetArea.id, targetStage.id);
+  openSortieConfirm({ type:'babel', areaId:targetArea.id, stageId:targetStage.id });
 }
+
+// ============================================================
+//  SORTIE CONFIRM MODAL — プリセット選択・ステージ情報・装備確認
+// ============================================================
+let _sortiePayload = null;
+
+function openSortieConfirm(payload) {
+  if (!gState?.ownedUnits?.length) {
+    alert('ガチャでユニットを召喚してから出撃しましょう');
+    return;
+  }
+  _sortiePayload = payload;
+  renderSortieConfirm();
+  document.getElementById('sortie-confirm-modal').classList.add('open');
+}
+
+function closeSortieConfirm() {
+  document.getElementById('sortie-confirm-modal').classList.remove('open');
+}
+
+// ステージ情報フォーマッタ: タイプ別に表示用の構造体を返す
+function _getSortieStageInfo(payload) {
+  if (!payload) return null;
+  if (payload.type === 'babel') {
+    const area  = BABEL_AREAS.find(a=>a.id===payload.areaId);
+    const stage = area?.stages.find(s=>s.id===payload.stageId);
+    if (!area || !stage) return null;
+    const tags = [{ icon:'📊', label:`WAVE ${stage.waves || stage.enemies.length}` }];
+    if (stage.surpriseForced) tags.push({ icon:'⚠️', label:'敵の奇襲発生' });
+    const cleared = gState.progress.babel.clearedStages[stage.id];
+    if (cleared) tags.push({ icon:'✅', label:`クリア済 ${cleared.rank||''}`.trim() });
+    return {
+      title: `${area.icon||'🗺️'} ${area.name} — ${stage.name}`,
+      rec:   area.recAtk || '',
+      boss:  area.boss ? `BOSS: ${area.boss}` : '',
+      tags,
+      stamina: 10,
+    };
+  }
+  if (payload.type === 'daily') {
+    const stage = DAILY_DUNGEON_STAGES.find(s=>s.id===payload.stageId);
+    if (!stage) return null;
+    const tags = [{ icon:'📊', label:`WAVE ${stage.waves}` }];
+    const groups = (typeof getDailyDungeonGroups === 'function') ? getDailyDungeonGroups() : [];
+    const rolesText = groups.map(r=>r.name).join(' / ');
+    const drops = [];
+    if (stage.drops.t1) drops.push(`響典T1×${stage.drops.t1}`);
+    if (stage.drops.t2) drops.push(`響典T2×${stage.drops.t2}`);
+    if (stage.drops.t3) drops.push(`響典T3×${stage.drops.t3}`);
+    if (stage.drops.eiyuutan) drops.push(`英雄譚 ${Math.round(stage.drops.eiyuutan*100)}%`);
+    return {
+      title:     `🌳 ${stage.name}`,
+      subtitle:  '世界樹ユグドラシルの試練',
+      rec:       `推奨 Lv.${stage.recLv}`,
+      drops:     drops.join(' + '),
+      rolesNote: rolesText ? `🎲 本日のロール: ${rolesText}` : '',
+      tags,
+      stamina: 0,
+    };
+  }
+  if (payload.type === 'abyss') {
+    const layer = (typeof ABYSS_LAYERS !== 'undefined') ? ABYSS_LAYERS.find(l=>l.id===payload.layerId) : null;
+    if (!layer) return null;
+    const area = BABEL_AREAS.find(a=>a.id===layer.areaId);
+    const tags = [
+      { icon:'⚔️', label:`敵強化 ×${(layer.statMult||1).toFixed(1)}` },
+      { icon:'💍', label:`アクセ ★${layer.accRarity||1}` },
+    ];
+    if (layer.milestone) tags.push({ icon:'🏆', label:'マイルストーン層' });
+    return {
+      title:    `🕳️ アビス ${layer.icon||''} ${layer.name}`,
+      subtitle: area ? `（${area.name}の写し身が出現）` : '',
+      rec:      layer.rec || '',
+      tags,
+      stamina: 0,
+    };
+  }
+  return null;
+}
+
+function renderSortieConfirm() {
+  const body = document.getElementById('sortie-confirm-body');
+  if (!body || !_sortiePayload) return;
+  const info = _getSortieStageInfo(_sortiePayload);
+  if (!info) { body.innerHTML = '<div style="padding:14px">情報を取得できませんでした</div>'; return; }
+
+  const preset = gState.presets[gState.activePreset];
+  const slots  = preset?.formation?.slots || [];
+  const hasUnits = slots.filter(Boolean).length > 0;
+
+  // ステージ情報
+  const stageHtml = `
+    <div style="padding:10px 12px;border-bottom:1px solid var(--border)">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">${info.title}</div>
+      ${info.subtitle ? `<div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">${info.subtitle}</div>` : ''}
+      ${info.rec     ? `<div style="font-size:11px;color:var(--gold);margin-bottom:4px">${info.rec}</div>` : ''}
+      ${info.boss    ? `<div style="font-size:11px;color:var(--red);margin-bottom:4px">${info.boss}</div>` : ''}
+      ${info.drops   ? `<div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">🎁 ${info.drops}</div>` : ''}
+      ${info.rolesNote ? `<div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">${info.rolesNote}</div>` : ''}
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+        ${info.tags.map(t=>`<span style="font-size:10px;color:var(--text2);border:1px solid var(--border);background:var(--bg3);padding:2px 6px;border-radius:3px">${t.icon} ${t.label}</span>`).join('')}
+        ${info.stamina ? `<span style="font-size:10px;color:#7ac08a;border:1px solid #7ac08a;background:rgba(122,192,138,0.1);padding:2px 6px;border-radius:3px">⚡消費 ${info.stamina}</span>` : ''}
+      </div>
+    </div>`;
+
+  // プリセット選択
+  const presetHtml = `<div style="padding:10px 12px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:11px;color:var(--text2);font-weight:700;flex:1">📋 プリセット選択（現在 #${gState.activePreset+1}）</span>
+      <button class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:10px" onclick="closeSortieConfirm();switchTab('formation')">編成画面 →</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap" id="sortie-preset-chips"></div>
+  </div>`;
+
+  // 出撃編成プレビュー
+  const unitsHtml = `<div style="padding:10px 12px">
+    <div style="font-size:11px;color:var(--text2);margin-bottom:6px">🛡️ 出撃編成（タップでキャラ詳細・装備変更）</div>
+    <div id="sortie-units-list"></div>
+  </div>`;
+
+  body.innerHTML = stageHtml + presetHtml + unitsHtml;
+
+  // プリセットチップ生成
+  const chipsWrap = document.getElementById('sortie-preset-chips');
+  (gState.presets || []).forEach((p, idx) => {
+    const isActive = idx === gState.activePreset;
+    const slotCount = (p.formation?.slots||[]).filter(Boolean).length;
+    const chip = document.createElement('button');
+    chip.className = isActive ? 'btn btn-gold btn-sm' : 'btn btn-outline btn-sm';
+    chip.style.cssText = 'padding:4px 10px;font-size:11px';
+    chip.textContent = `#${idx+1} (${slotCount})`;
+    chip.addEventListener('click', () => {
+      gState.activePreset = idx;
+      saveState();
+      renderSortieConfirm();
+      if (typeof renderHome === 'function') renderHome();
+    });
+    chipsWrap.appendChild(chip);
+  });
+
+  // 編成プレビュー（タップでキャラ詳細）
+  const unitsWrap = document.getElementById('sortie-units-list');
+  const renderUnitRow = (uid) => {
+    if (!uid) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px dashed var(--border);margin-bottom:4px;color:var(--text3);font-size:11px';
+      empty.textContent = '空スロット';
+      unitsWrap.appendChild(empty);
+      return;
+    }
+    const u = gState.ownedUnits.find(x=>x.uid===uid);
+    if (!u) return;
+    const cls = CLASS_DATA[u.classId]; if (!cls) return;
+    const lv = (gState.unitProgress[u.uid]||{level:1}).level;
+    const s  = calcStats(u);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid var(--border);background:var(--bg3);margin-bottom:4px;cursor:pointer';
+    row.innerHTML = `
+      <div style="font-size:22px">${cls.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;color:var(--text);font-weight:700">${u.name || cls.name} <span style="color:var(--text3);font-size:10px">Lv.${lv}</span></div>
+        <div style="font-size:10px;color:var(--text3)">ATK ${s.atk} / HP ${s.hp} / SPD ${s.spd}</div>
+      </div>
+      <div style="font-size:10px;color:var(--gold)">装備 →</div>`;
+    row.addEventListener('click', () => {
+      closeSortieConfirm();
+      if (typeof openUnitDetail === 'function') openUnitDetail(uid);
+    });
+    unitsWrap.appendChild(row);
+  };
+  const startBtn = document.getElementById('sortie-confirm-start-btn');
+  if (!hasUnits) {
+    unitsWrap.innerHTML = '<div style="padding:8px;text-align:center;color:var(--red);font-size:11px">⚠️ このプリセットにはユニットがいません。別プリセットを選ぶか編成画面で設定してください</div>';
+    if (startBtn) startBtn.disabled = true;
+  } else {
+    for (let i = 0; i < 6; i++) renderUnitRow(slots[i]);
+    if (startBtn) startBtn.disabled = false;
+  }
+}
+
+function confirmSortieStart() {
+  if (!_sortiePayload) return;
+  const p = _sortiePayload;
+  _sortiePayload = null;
+  closeSortieConfirm();
+  if      (p.type === 'babel') startBabelBattle(p.areaId, p.stageId);
+  else if (p.type === 'daily') startDailyDungeonBattle(p.stageId);
+  else if (p.type === 'abyss') startAbyssLayer(p.layerId);
+}
+
+// 公開ラッパー: UI ボタンから呼ぶ。内部の戦闘継続/リトライは元の関数を直接呼ぶ。
+function confirmSortieBabel(areaId, stageId) { openSortieConfirm({ type:'babel', areaId, stageId }); }
+function confirmSortieDaily(stageId)         { openSortieConfirm({ type:'daily', stageId }); }
+function confirmSortieAbyssLayer(layerId)    { openSortieConfirm({ type:'abyss', layerId }); }
 
 // ユニット名前変更
 function renameUnit(uid) {
@@ -23743,7 +23947,7 @@ function renderAbyssContent() {
       </div>
       <div style="display:flex;gap:6px;align-items:center;">
         ${isCleared ? `<button class="btn btn-outline" style="font-size:11px;padding:4px 8px;" onclick="openSweepCountPicker('abyss',{layerId:${layer.id}})">⚡${sweepCost} 周回</button>` : ''}
-        ${isUnlocked && !isActiveRun ? `<button class="btn btn-gold" style="font-size:11px;padding:4px 10px;" onclick="startAbyssLayer(${layer.id})">挑戦</button>` : ''}
+        ${isUnlocked && !isActiveRun ? `<button class="btn btn-gold" style="font-size:11px;padding:4px 10px;" onclick="confirmSortieAbyssLayer(${layer.id})">挑戦</button>` : ''}
         ${!isUnlocked ? `<span style="font-size:11px;color:var(--text3)">🔒</span>` : ''}
       </div>`;
     grid.appendChild(row);
@@ -24395,7 +24599,7 @@ function renderSortieTab() {
       } else {
         _btn.textContent = '出撃';
       }
-      _btn.addEventListener('click', () => startDailyDungeonBattle(stage.id));
+      _btn.addEventListener('click', () => confirmSortieDaily(stage.id));
       _row.appendChild(_btn);
       ddWrap.appendChild(_row);
     });
