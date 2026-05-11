@@ -1251,6 +1251,14 @@ img.item-icon {
 .base-card .bc-name { font-family: 'Cinzel', serif; font-size: 13px; color: var(--gold); }
 .base-card .bc-desc { font-size: 11px; color: var(--text3); }
 .base-card .bc-locked { font-size: 11px; color: var(--red); }
+.base-card { position: relative; }
+.base-notify-dot {
+  position:absolute; top:6px; right:6px;
+  width:11px; height:11px; border-radius:50%;
+  background:var(--red); border:1px solid rgba(255,255,255,0.4);
+  box-shadow:0 0 5px rgba(224,85,85,0.8);
+  pointer-events:none;
+}
 
 /* MINE MODAL */
 .mine-content { padding: 16px; }
@@ -1601,7 +1609,7 @@ img.item-icon {
 .sc-unlock-btn { background:var(--accent);border:none;color:white;font-size:10px;padding:2px 8px;cursor:pointer;font-family:'Rajdhani';font-weight:700; }
 .sc-unlock-btn:disabled { background:var(--bg3);color:var(--text3);cursor:default; }
 .library-class-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
-.lib-class-card { background:var(--bg3);border:1px solid var(--border);padding:10px;text-align:center; }
+.lib-class-card { background:var(--bg3);border:1px solid var(--border);padding:10px;text-align:center;position:relative; }
 .lib-class-card.collected { border-color:var(--gold);background:rgba(201,168,76,0.05); }
 .lib-icon { font-size:24px;margin-bottom:4px; }
 .lib-name { font-size:11px;color:var(--text2); }
@@ -1611,8 +1619,15 @@ img.item-icon {
 .lib-bonus-item { display:flex;justify-content:space-between;font-size:12px;color:var(--text2);padding:3px 0; }
 .lib-bonus-val { color:var(--accent2); }
 .lib-monster-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px; }
-.lib-monster-card { background:var(--bg3);border:1px solid var(--border);padding:8px;text-align:center;cursor:pointer;border-radius:4px; }
+.lib-monster-card { background:var(--bg3);border:1px solid var(--border);padding:8px;text-align:center;cursor:pointer;border-radius:4px;position:relative; }
 .lib-monster-card:hover { border-color:var(--accent); }
+.lib-notify-dot {
+  position:absolute; top:4px; right:4px;
+  width:10px; height:10px; border-radius:50%;
+  background:var(--red); border:1px solid rgba(255,255,255,0.4);
+  box-shadow:0 0 4px rgba(224,85,85,0.7);
+  pointer-events:none;
+}
 .shop-item { display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:8px; }
 .shop-item-icon { font-size:24px;flex-shrink:0; }
 .shop-item-info { flex:1; }
@@ -2832,6 +2847,7 @@ img.item-icon {
           <div class="bc-icon">📚</div>
           <div class="bc-name">大図書館</div>
           <div class="bc-locked" id="library-locked-txt"></div>
+          <div class="base-notify-dot" id="library-notify-dot" style="display:none"></div>
         </div>
         <div class="base-card" onclick="openShop()">
           <div class="bc-icon">🛒</div>
@@ -3260,7 +3276,7 @@ img.item-icon {
   <div class="modal-panel" style="max-width:520px">
     <div class="modal-header">
       <h3>📚 大図書館</h3>
-      <button class="close-btn" onclick="document.getElementById('library-modal').classList.remove('open')">✕</button>
+      <button class="close-btn" onclick="closeLibraryPanel()">✕</button>
     </div>
     <div class="modal-body" id="library-content"></div>
   </div>
@@ -23066,9 +23082,37 @@ function unlockStarNode(nodeId, cost) {
 }
 
 // ===== 大図書館 =====
+// 未閲覧の図鑑エントリ（所持クラス・発見済みモンスター）があるか
+function hasUnviewedLibraryItems() {
+  if (!gState || !gState.library) return false;
+  const viewedClasses  = new Set(gState.library.viewedClasses  || []);
+  const ownedClassIds  = new Set((gState.ownedUnits||[]).map(u=>u.classId));
+  for (const cid of ownedClassIds) {
+    if (!viewedClasses.has(cid)) return true;
+  }
+  const viewedMonsters = new Set(gState.library.viewedMonsters || []);
+  const discovered     = gState.library.discovered || [];
+  for (const name of discovered) {
+    if (!viewedMonsters.has(name)) return true;
+  }
+  return false;
+}
+
+// 大図書館カードの赤丸通知を更新
+function updateLibraryBaseNotify() {
+  const dot = document.getElementById('library-notify-dot');
+  if (!dot) return;
+  dot.style.display = hasUnviewedLibraryItems() ? '' : 'none';
+}
+
 function openLibraryPanel() {
   renderLibraryContent();
   document.getElementById('library-modal').classList.add('open');
+}
+
+function closeLibraryPanel() {
+  document.getElementById('library-modal').classList.remove('open');
+  updateLibraryBaseNotify();
 }
 
 function openLibraryMonsterBook() {
@@ -23110,18 +23154,21 @@ function renderLibraryContent() {
   el.appendChild(bonusArea);
 
   // クラス一覧
+  const viewedClasses = new Set((gState.library && gState.library.viewedClasses) || []);
   const grid = document.createElement('div');
   grid.className = 'library-class-grid';
   allClasses.forEach(cid => {
     const cls = CLASS_DATA[cid];
     const count = gState.ownedUnits.filter(u=>u.classId===cid).length;
+    const isUnviewed = count > 0 && !viewedClasses.has(cid);
     const card = document.createElement('div');
     card.className = 'lib-class-card' + (count>0?' collected':'');
     if (count > 0) card.style.cursor = 'pointer';
     card.innerHTML = `
       <div class="lib-icon">${classIconHTML(cid,"32px")}</div>
       <div class="lib-name">${cls.name}</div>
-      <div class="lib-count">${count>0?`所持: ${count}体`:'未収集'}</div>`;
+      <div class="lib-count">${count>0?`所持: ${count}体`:'未収集'}</div>
+      ${isUnviewed ? '<div class="lib-notify-dot"></div>' : ''}`;
     // 所持済みクラスのみ詳細画面を開ける
     if (count > 0) card.addEventListener('click', () => openClassDetail(cid));
     grid.appendChild(card);
@@ -23227,11 +23274,13 @@ function renderLibraryMonsters(el) {
   // アビス敵はBABEL_AREASからスケールして生成されるため図鑑には含めない
 
   const discovered = new Set(gState.library?.discovered || []);
+  const viewedMonsters = new Set(gState.library?.viewedMonsters || []);
   const total = _monsterBookList.length;
   const foundCount = _monsterBookList.filter(m => discovered.has(m.name)).length;
 
   const grid = _monsterBookList.map((m, i) => {
     const isFound = discovered.has(m.name);
+    const isUnviewed = isFound && !viewedMonsters.has(m.name);
     const sp = isFound ? (m.species || ENEMY_SPECIES_MAP[m.name] || null) : null;
     if (isFound) {
       return `
@@ -23240,6 +23289,7 @@ function renderLibraryMonsters(el) {
         <div style="font-size:11px;font-weight:700;color:var(--text);margin:4px 0 2px">${m.name}</div>
         ${sp ? `<div style="margin:2px 0">${speciesBadgeHTML(sp)}</div>` : ''}
         <div style="font-size:10px;color:var(--text3)">HP ${fmt(m.hp)}</div>
+        ${isUnviewed ? '<div class="lib-notify-dot"></div>' : ''}
       </div>`;
     } else {
       return `
@@ -23479,6 +23529,7 @@ function renderBaseTab() {
   if (smithyTxt) smithyTxt.textContent = '鋳造・強化';
   if (starTxt)   starTxt.textContent   = lv>=11 ? 'ノードを解放して強化' : 'Clan Lv.11で解放';
   if (libTxt)    libTxt.textContent    = `収集: ${new Set(gState.ownedUnits.map(u=>u.classId)).size}/${Object.keys(CLASS_DATA).length}クラス`;
+  updateLibraryBaseNotify();
 
   // 資源バー
   const bar = document.getElementById('base-resources-bar');
