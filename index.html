@@ -2692,8 +2692,8 @@ img.item-icon {
         <div class="section-header" onclick="toggleSection(this,'colosseum-panel')">
           <span class="sec-icon">🏟️</span>
           <div>
-            <div class="sec-title">クランコロシアム</div>
-            <div class="sec-sub" id="colosseum-sub">Clan Lv.31で解放 — 非同期PVP</div>
+            <div class="sec-title">クランコロシアム — 戦闘演習</div>
+            <div class="sec-sub" id="colosseum-sub">Clan Lv.31で解放 — 他クランとの戦闘演習</div>
           </div>
           <span class="sec-arrow">▶</span>
         </div>
@@ -3271,6 +3271,25 @@ img.item-icon {
     <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px">
       <button class="btn btn-outline btn-sm" style="flex:1" onclick="closeSortieConfirm()">キャンセル</button>
       <button class="btn btn-gold" style="flex:2;font-weight:700" id="sortie-confirm-start-btn" onclick="confirmSortieStart()">⚔️ 出撃</button>
+    </div>
+  </div>
+</div>
+
+<!-- COLOSSEUM DEFENSE EDITOR MODAL -->
+<div class="modal-overlay" id="colosseum-defense-modal" onclick="if(event.target===this)closeColosseumDefenseEditor()">
+  <div class="modal-panel" style="max-width:520px">
+    <div class="modal-header">
+      <h3>🛡️ 演習用 防衛編成</h3>
+      <button class="close-btn" onclick="closeColosseumDefenseEditor()">✕</button>
+    </div>
+    <div style="padding:10px 12px;font-size:11px;color:var(--text-dim);line-height:1.6;border-bottom:1px solid var(--border)">
+      他クランからの演習挑戦を受ける際、ここで設定したユニットがAI制御で防衛します。最大6体まで選択可能。<br>
+      <span style="color:var(--text3)">※ 編成内容と装備のスナップショットがクラウドに同期されます。</span>
+    </div>
+    <div class="modal-body" id="colosseum-defense-content" style="max-height:60vh;overflow-y:auto"></div>
+    <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center">
+      <div style="flex:1;font-size:11px;color:var(--text2)">選択中: <b id="colosseum-defense-count" style="color:var(--gold)">0</b>/6</div>
+      <button class="btn btn-gold btn-sm" onclick="saveColosseumDefense()">保存して同期</button>
     </div>
   </div>
 </div>
@@ -8973,7 +8992,7 @@ function defaultState(clanName) {
     achievements: { unlocked:{}, claimed:{} },
     progress:{
       babel:{ clearedStages:{} },
-      colosseum:{ rank:1, dailyChallenges:0, lastChallengeDate:'' },
+      colosseum:{ rank:1, rating:1000, wins:0, losses:0, dailyChallenges:0, lastChallengeDate:'', defenseUnitUids:[], defenseLastSyncAt:0 },
       shrine:{ clearedToday:{} },
       dailyDungeon:{ clearedStages:{}, clearedToday:{}, dailyRuns:0, lastRunDate:'' },
     },
@@ -9151,7 +9170,12 @@ function normalizeState() {
   if (!gState.progress || typeof gState.progress !== 'object') gState.progress = {};
   if (!gState.progress.babel)      gState.progress.babel      = { clearedStages:{} };
   if (!gState.progress.abyss)      gState.progress.abyss      = { currentRun:null, bestLayer:0, clearedLayers:[], dailyRuns:0, lastRunDate:'' };
-  if (!gState.progress.colosseum)  gState.progress.colosseum  = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
+  if (!gState.progress.colosseum)  gState.progress.colosseum  = { rank:1, rating:1000, wins:0, losses:0, dailyChallenges:0, lastChallengeDate:'', defenseUnitUids:[], defenseLastSyncAt:0 };
+  // 旧セーブの移行: rating/wins/losses/defenseUnitUids が未設定なら追加
+  if (typeof gState.progress.colosseum.rating !== 'number') gState.progress.colosseum.rating = 1000;
+  if (typeof gState.progress.colosseum.wins   !== 'number') gState.progress.colosseum.wins   = 0;
+  if (typeof gState.progress.colosseum.losses !== 'number') gState.progress.colosseum.losses = 0;
+  if (!Array.isArray(gState.progress.colosseum.defenseUnitUids)) gState.progress.colosseum.defenseUnitUids = [];
   if (!gState.progress.shrine)        gState.progress.shrine        = { clearedToday:{} };
   if (!gState.progress.dailyDungeon)  gState.progress.dailyDungeon  = { clearedStages:{}, clearedToday:{}, dailyRuns:0, lastRunDate:'' };
   if (!gState.progress.babel.clearedStages) gState.progress.babel.clearedStages = {};
@@ -10916,7 +10940,7 @@ function launchApp() {
   if (!gState.progress.abyss.clearedLayers) gState.progress.abyss.clearedLayers = [];
   if (gState.progress.abyss.bestLayer === undefined) gState.progress.abyss.bestLayer = 0;
   if (gState.progress.abyss.currentRun && gState.progress.abyss.currentRun.layerId === undefined) gState.progress.abyss.currentRun = null;
-  if (!gState.progress.colosseum)     gState.progress.colosseum     = { rank:1, dailyChallenges:0, lastChallengeDate:'' };
+  if (!gState.progress.colosseum)     gState.progress.colosseum     = { rank:1, rating:1000, wins:0, losses:0, dailyChallenges:0, lastChallengeDate:'', defenseUnitUids:[], defenseLastSyncAt:0 };
   if (!gState.progress.shrine)        gState.progress.shrine        = { clearedToday:{} };
   if (!gState.progress.dailyDungeon)  gState.progress.dailyDungeon  = { clearedStages:{}, clearedToday:{}, dailyRuns:0, lastRunDate:'' };
 
@@ -16462,27 +16486,39 @@ function endBattle(victory) {
       onAbyssVictory(battleContext.layerId, battleContext.stage);
     }
     if (battleContext.type==='colosseum') {
-      const reward = battleContext.reward || 5;
-      drops.push({ name:`${itemIconHTML('crystal','14px')} 星晶石 ×${reward}` });
-      gState.player.starCrystal += reward;
-      // ランク昇格
       const col = gState.progress.colosseum;
-      const maxRank = COLOSSEUM_OPPONENTS.length;
-      const oldRank = col.rank || 1;
-      const oppRank = (battleContext.oppIdx||0) + 1;
-      if (oppRank >= oldRank && oldRank < maxRank) {
-        col.rank = Math.min(maxRank, oldRank + 1);
-        drops.push({ name:`🏆 ランク昇格！ → ${col.rank}` });
-      } else {
-        drops.push({ name:'🏆 コロシアム勝利' });
+      const opp = battleContext.opponent || { rating: 1000, name:'不明なクラン' };
+      // ELO-lite レート変動
+      const myR = col.rating || 1000;
+      const delta = colosseumEloDelta(myR, opp.rating || 1000, true);
+      col.rating = myR + delta;
+      col.wins = (col.wins || 0) + 1;
+      // 称号到達ボーナス: 100 レート毎に星晶石を上乗せ
+      const baseReward = 5 + Math.max(0, Math.floor((opp.rating||1000) / 200) - 4);
+      gState.player.starCrystal += baseReward;
+      drops.push({ name:`${itemIconHTML('crystal','14px')} 星晶石 ×${baseReward}` });
+      drops.push({ name:`📈 レート +${delta} (${col.rating})` });
+      // 防衛編成が登録されていれば最新スナップショットを同期
+      if ((col.defenseUnitUids||[]).length > 0) {
+        syncColosseumDefenseToCloud().catch(()=>{});
       }
     }
     saveState();
   } else {
     // 敗北
     if (battleContext.type==='colosseum') {
+      const col = gState.progress.colosseum;
+      const opp = battleContext.opponent || { rating: 1000 };
+      const myR = col.rating || 1000;
+      const delta = colosseumEloDelta(myR, opp.rating || 1000, false); // 負値
+      col.rating = Math.max(800, myR + delta);
+      col.losses = (col.losses || 0) + 1;
       gState.player.starCrystal += 1;
       drops.push({ name:`${itemIconHTML('crystal','14px')} 星晶石 ×1（敗北報酬）` });
+      drops.push({ name:`📉 レート ${delta} (${col.rating})` });
+      if ((col.defenseUnitUids||[]).length > 0) {
+        syncColosseumDefenseToCloud().catch(()=>{});
+      }
       saveState();
     }
     if (battleContext.type==='abyss') {
@@ -24155,17 +24191,163 @@ function retreatAbyss() {
 }
 
 // ============================================================
-//  PHASE 4: COLOSSEUM
+//  PHASE 4: COLOSSEUM — 戦闘演習（非同期PvP）
 // ============================================================
+// 他クランから提出された防衛編成のスナップショットをクラウドで取得し、
+// AI制御の戦闘演習として対戦する。実時間PvPではなく非同期。
 
-const COLOSSEUM_OPPONENTS = [
-  { name:'見習い傭兵団',   rank:'C',  units:[{classId:'warrior', lv:5}], reward:5 },
-  { name:'鉄の盾部隊',     rank:'C+', units:[{classId:'vanguard',lv:8},{classId:'warrior',lv:6}], reward:5 },
-  { name:'蒼天弓兵隊',     rank:'B',  units:[{classId:'archer',  lv:12},{classId:'archer',lv:10}], reward:5 },
-  { name:'混成戦闘部隊',   rank:'B+', units:[{classId:'warrior', lv:15},{classId:'vanguard',lv:12},{classId:'archer',lv:10}], reward:6 },
-  { name:'精鋭突撃隊',     rank:'A',  units:[{classId:'warrior', lv:20},{classId:'warrior',lv:18},{classId:'archer',lv:15}], reward:6 },
-  { name:'伝説の傭兵団',   rank:'S',  units:[{classId:'warrior', lv:30},{classId:'vanguard',lv:28},{classId:'archer',lv:25}], reward:8 },
+// 称号（レート帯）
+const COLOSSEUM_TIERS = [
+  { min: 0,    label: 'ブロンズ',   icon: '🥉', color: '#c08a5a' },
+  { min: 1100, label: 'シルバー',   icon: '🥈', color: '#bcc4d0' },
+  { min: 1250, label: 'ゴールド',   icon: '🥇', color: '#e6c25c' },
+  { min: 1400, label: 'プラチナ',   icon: '💎', color: '#7dd4d6' },
+  { min: 1550, label: 'ダイヤモンド', icon: '💠', color: '#9bb8ff' },
+  { min: 1700, label: 'マスター',   icon: '👑', color: '#c97aff' },
 ];
+function getColosseumTier(rating) {
+  let tier = COLOSSEUM_TIERS[0];
+  for (const t of COLOSSEUM_TIERS) if ((rating||1000) >= t.min) tier = t;
+  return tier;
+}
+
+// ELO-lite: 期待勝率 → 勝敗で K=24 増減
+function colosseumEloDelta(myR, oppR, won) {
+  const E = 1 / (1 + Math.pow(10, ((oppR||1000) - (myR||1000)) / 400));
+  const K = 24;
+  return Math.round(K * ((won ? 1 : 0) - E));
+}
+
+// 防衛編成スナップショット: クラウドに保存する形式（最小限のステータス情報）
+function buildColosseumDefenseSnapshot() {
+  const col = gState.progress.colosseum;
+  const uids = (col?.defenseUnitUids || []).filter(Boolean);
+  const units = [];
+  uids.forEach(uid => {
+    const u = gState.ownedUnits.find(x => x.uid === uid);
+    if (!u) return;
+    const cls = CLASS_DATA[u.classId];
+    if (!cls) return;
+    const s = calcStats(u);
+    units.push({
+      classId: u.classId,
+      name:    cls.name,
+      icon:    cls.icon,
+      lv:      (gState.unitProgress[uid]||{level:1}).level,
+      atk:     s.atk,
+      hp:      s.hp,
+      spd:     s.spd,
+      pres:    s.pdef,
+      mres:    s.mdef,
+      cri:     s.cri,
+    });
+  });
+  return units;
+}
+
+// Firestore: 自分の防衛編成をクラウドに同期
+async function syncColosseumDefenseToCloud() {
+  try {
+    if (!window._fbDb || !window._fbCurrentUser) return false;
+    const db  = window._fbDb;
+    const uid = window._fbCurrentUser.uid;
+    const col = gState.progress.colosseum;
+    const units = buildColosseumDefenseSnapshot();
+    if (!units.length) return false;
+    await db.collection('colosseum_defenses').doc(uid).set({
+      uid,
+      clanName:    gState.player?.clanName || '名無しクラン',
+      displayName: window._fbCurrentUser?.displayName || '',
+      rating:      col.rating || 1000,
+      wins:        col.wins   || 0,
+      losses:      col.losses || 0,
+      units,
+      updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    col.defenseLastSyncAt = Date.now();
+    saveState();
+    return true;
+  } catch (e) {
+    console.warn('[Colosseum] defense sync failed:', e);
+    return false;
+  }
+}
+
+// Firestore: 対戦候補（他クランの防衛編成）を取得
+let _colosseumOppCache = { list: [], fetchedAt: 0 };
+async function fetchColosseumOpponents(force) {
+  const now = Date.now();
+  // 3分キャッシュ
+  if (!force && _colosseumOppCache.list.length && (now - _colosseumOppCache.fetchedAt) < 180000) {
+    return _colosseumOppCache.list;
+  }
+  const myUid = window._fbCurrentUser?.uid;
+  const myRating = gState.progress.colosseum.rating || 1000;
+  let online = [];
+  try {
+    if (window._fbDb) {
+      // ±200レート帯を中心に最大40件取得 → ランダムサンプル
+      const lo = myRating - 200, hi = myRating + 250;
+      const snap = await window._fbDb.collection('colosseum_defenses')
+        .where('rating', '>=', lo).where('rating', '<=', hi)
+        .limit(40).get();
+      snap.forEach(d => {
+        const data = d.data();
+        if (!data || data.uid === myUid) return;
+        if (!Array.isArray(data.units) || !data.units.length) return;
+        online.push({ source:'cloud', oppUid: d.id, name: data.clanName || '名無しクラン', rating: data.rating||1000, units: data.units });
+      });
+    }
+  } catch (e) {
+    console.warn('[Colosseum] fetch failed:', e);
+  }
+  // 不足分は NPC で補充
+  const npcs = _generateColosseumNpcPool(myRating);
+  const pool = online.concat(npcs);
+  // シャッフルして先頭6件
+  pool.sort(() => Math.random() - 0.5);
+  _colosseumOppCache = { list: pool.slice(0, 6), fetchedAt: now };
+  return _colosseumOppCache.list;
+}
+
+// NPC補充プール: 自分のレートに近い擬似クランを生成
+function _generateColosseumNpcPool(myRating) {
+  const clanNames = [
+    '鋼鉄の同盟','蒼天連邦','紅蓮騎士団','黎明戦線','銀月の盟約',
+    '碧波の旅団','黄昏結社','烈日守護隊','霜花同朋','聖塔義勇軍',
+    '茨の親衛団','灰燼の使徒','彩雲の従士','蒼炎連帯','古鉄の盾',
+  ];
+  const classIds = ['warrior','vanguard','archer','priest','assassin','sentinel','shooter','lancer'];
+  const out = [];
+  for (let i = 0; i < 6; i++) {
+    const rating = Math.round((myRating - 150) + Math.random() * 400);
+    const teamSize = 2 + Math.floor(Math.random() * 4); // 2〜5体
+    const lv = Math.max(10, Math.round((rating - 800) / 8));
+    const units = [];
+    for (let j = 0; j < teamSize; j++) {
+      const cid = classIds[Math.floor(Math.random() * classIds.length)];
+      const cls = CLASS_DATA[cid] || CLASS_DATA.warrior;
+      const scale = 1 + (lv - 1) * 9 / 99;
+      units.push({
+        classId: cid, name: cls.name, icon: cls.icon, lv,
+        atk:  Math.floor(cls.baseStats.atk * scale),
+        hp:   Math.floor(cls.baseStats.hp  * scale),
+        spd:  cls.baseStats.spd,
+        pres: cls.baseStats.pres || cls.baseStats.pdef || 0,
+        mres: cls.baseStats.mres || cls.baseStats.mdef || 0,
+        cri:  cls.baseStats.cri  || 0,
+      });
+    }
+    out.push({
+      source: 'npc',
+      oppUid: 'npc_' + i + '_' + Math.random().toString(36).slice(2,6),
+      name:   clanNames[(i * 3 + Math.floor(Math.random()*clanNames.length)) % clanNames.length],
+      rating,
+      units,
+    });
+  }
+  return out;
+}
 
 function renderColosseumContent() {
   const lv = gState.player.level;
@@ -24173,7 +24355,10 @@ function renderColosseumContent() {
   if (!el) return;
 
   if (lv < 31) {
-    el.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3)">🔒 Clan Lv.31で解放されます（現在: Lv.${lv}）</div>`;
+    el.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3);font-size:12px;line-height:1.7">
+      🔒 Clan Lv.31で解放されます（現在: Lv.${lv}）<br>
+      <span style="color:var(--text-dim)">他クランとの戦闘演習で腕を磨こう。</span>
+    </div>`;
     return;
   }
 
@@ -24184,62 +24369,202 @@ function renderColosseumContent() {
     col.lastChallengeDate = today;
   }
   const remaining = 3 - (col.dailyChallenges||0);
-  const colCoin = gState.player.starCrystal;
+  const tier = getColosseumTier(col.rating);
+  const defenseCount = (col.defenseUnitUids||[]).filter(Boolean).length;
 
   el.innerHTML = '';
+
+  // ストーリー風フレーバーバナー
+  const story = document.createElement('div');
+  story.style.cssText = 'padding:8px 12px;margin:8px 12px 0;background:rgba(155,107,222,0.10);border-left:3px solid var(--purple);font-size:11px;color:var(--text-dim);line-height:1.6';
+  story.innerHTML = `⚔️ <b style="color:#b48cf0">戦闘演習</b> — 他クランの防衛編成と非同期で模擬戦を行う訓練場。勝敗で<b style="color:${tier.color}">称号レート</b>が変動し、レートが高いほど強敵に挑むことになる。本物の侵略ではない、あくまで演習だ。`;
+  el.appendChild(story);
+
+  // ステータス行
   const header = document.createElement('div');
-  header.style.cssText = 'display:flex;gap:8px;padding:10px 12px;align-items:center;';
+  header.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 12px;';
   header.innerHTML = `
-    <div class="base-res-item" style="flex:1"><div class="base-res-val">${col.rank||1}</div><div class="base-res-label">🏆 ランク</div></div>
-    <div class="base-res-item" style="flex:1"><div class="base-res-val">${remaining}</div><div class="base-res-label">⚔️ 残り挑戦</div></div>`;
+    <div class="base-res-item"><div class="base-res-val" style="color:${tier.color}">${tier.icon}${tier.label}</div><div class="base-res-label">🏆 称号</div></div>
+    <div class="base-res-item"><div class="base-res-val">${col.rating||1000}</div><div class="base-res-label">📈 レート</div></div>
+    <div class="base-res-item"><div class="base-res-val">${remaining}/3</div><div class="base-res-label">⚔️ 残り挑戦</div></div>`;
   el.appendChild(header);
 
+  // 戦績
+  const stat2 = document.createElement('div');
+  stat2.style.cssText = 'display:flex;gap:12px;padding:0 12px 8px;font-size:11px;color:var(--text-dim)';
+  stat2.innerHTML = `🏅 通算 <b style="color:var(--green)">${col.wins||0}</b>勝 <b style="color:var(--red)">${col.losses||0}</b>敗`;
+  el.appendChild(stat2);
+
+  // 防衛編成バー
+  const defBar = document.createElement('div');
+  defBar.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(201,168,76,0.08);border-top:1px solid var(--border);border-bottom:1px solid var(--border)';
+  defBar.innerHTML = `<div style="flex:1;font-size:11px;color:var(--text2)">🛡️ 防衛編成: <b style="color:${defenseCount>0?'var(--gold)':'var(--red)'}">${defenseCount}</b>体</div>`;
+  const editBtn = document.createElement('button');
+  editBtn.className = 'btn btn-purple btn-sm';
+  editBtn.textContent = defenseCount > 0 ? '編成変更' : '編成を設定';
+  editBtn.addEventListener('click', openColosseumDefenseEditor);
+  defBar.appendChild(editBtn);
+  el.appendChild(defBar);
+
+  // 対戦相手リスト
   const listTitle = document.createElement('div');
-  listTitle.style.cssText = 'font-size:10px;color:var(--text3);letter-spacing:2px;padding:4px 12px 6px;';
-  listTitle.textContent = '対戦相手';
+  listTitle.style.cssText = 'display:flex;align-items:center;font-size:10px;color:var(--text3);letter-spacing:2px;padding:8px 12px 4px;';
+  listTitle.innerHTML = `<span style="flex:1">対戦相手</span>`;
+  const refreshBtn = document.createElement('button');
+  refreshBtn.className = 'btn btn-sm';
+  refreshBtn.style.cssText = 'padding:2px 8px;font-size:10px';
+  refreshBtn.textContent = '🔄 更新';
+  refreshBtn.addEventListener('click', async () => {
+    refreshBtn.disabled = true; refreshBtn.textContent = '⌛';
+    await fetchColosseumOpponents(true);
+    renderColosseumContent();
+  });
+  listTitle.appendChild(refreshBtn);
   el.appendChild(listTitle);
 
-  COLOSSEUM_OPPONENTS.forEach((opp, i) => {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);';
-    row.innerHTML = `
-      <div style="background:var(--bg3);border:1px solid var(--border);padding:4px 8px;font-family:'Rajdhani';font-size:12px;color:var(--gold);font-weight:700;">${opp.rank}</div>
-      <div style="flex:1">
-        <div style="font-size:13px;color:var(--text);font-weight:700;">${opp.name}</div>
-        <div style="font-size:10px;color:var(--text3);">${opp.units.map(u=>`${CLASS_DATA[u.classId].icon}Lv.${u.lv}`).join(' ')}</div>
-      </div>
-      <div style="font-size:11px;color:var(--gold2);margin-right:8px;">✒️+${opp.reward}</div>`;
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-blue btn-sm';
-    btn.textContent = '挑戦';
-    btn.disabled = remaining <= 0;
-    btn.addEventListener('click', () => startColosseumBattle(i));
-    row.appendChild(btn);
-    el.appendChild(row);
+  const listWrap = document.createElement('div');
+  listWrap.innerHTML = '<div style="padding:14px;text-align:center;color:var(--text3);font-size:11px">対戦相手を読み込み中…</div>';
+  el.appendChild(listWrap);
+
+  fetchColosseumOpponents(false).then(opps => {
+    listWrap.innerHTML = '';
+    if (!opps.length) {
+      listWrap.innerHTML = '<div style="padding:14px;text-align:center;color:var(--text3);font-size:11px">対戦相手が見つかりません</div>';
+      return;
+    }
+    opps.forEach((opp, i) => {
+      const oppTier = getColosseumTier(opp.rating);
+      const expectedDelta = colosseumEloDelta(col.rating, opp.rating, true);
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);';
+      const teamPreview = (opp.units||[]).slice(0, 6).map(u => `${u.icon || (CLASS_DATA[u.classId]?.icon || '⚔️')}Lv.${u.lv||1}`).join(' ');
+      row.innerHTML = `
+        <div title="${oppTier.label}" style="background:var(--bg3);border:1px solid var(--border);padding:4px 8px;font-family:'Rajdhani';font-size:12px;color:${oppTier.color};font-weight:700;min-width:60px;text-align:center">${oppTier.icon}${opp.rating}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;color:var(--text);font-weight:700;display:flex;align-items:center;gap:6px">${opp.name}${opp.source==='cloud'?'<span style="font-size:9px;color:var(--green);border:1px solid var(--green);padding:0 4px;border-radius:3px">CLOUD</span>':'<span style="font-size:9px;color:var(--text3);border:1px solid var(--border);padding:0 4px;border-radius:3px">NPC</span>'}</div>
+          <div style="font-size:10px;color:var(--text3);">${teamPreview}</div>
+        </div>
+        <div style="font-size:10px;color:var(--green);margin-right:8px;text-align:right">勝利<br>+${expectedDelta}</div>`;
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-blue btn-sm';
+      btn.textContent = '演習';
+      btn.disabled = remaining <= 0;
+      btn.addEventListener('click', () => startColosseumBattle(opp));
+      row.appendChild(btn);
+      listWrap.appendChild(row);
+    });
   });
 }
 
-function startColosseumBattle(oppIdx) {
-  const opp = COLOSSEUM_OPPONENTS[oppIdx];
-  const col = gState.progress.colosseum;
+// ───── 防衛編成エディタ ─────
+let _colosseumEditorSelection = [];
 
-  // 敵ユニットを生成（classIdとlvから）
-  const enemies = opp.units.map(u => {
+function openColosseumDefenseEditor() {
+  const col = gState.progress.colosseum;
+  _colosseumEditorSelection = [...(col.defenseUnitUids || [])];
+  renderColosseumDefenseEditor();
+  document.getElementById('colosseum-defense-modal').classList.add('open');
+}
+
+function closeColosseumDefenseEditor() {
+  document.getElementById('colosseum-defense-modal').classList.remove('open');
+}
+
+function renderColosseumDefenseEditor() {
+  const wrap = document.getElementById('colosseum-defense-content');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const units = (gState.ownedUnits || []).slice();
+  // レベル降順 / 同レベルはATK降順
+  units.sort((a,b) => {
+    const la = (gState.unitProgress[a.uid]||{level:1}).level;
+    const lb = (gState.unitProgress[b.uid]||{level:1}).level;
+    if (lb !== la) return lb - la;
+    return (calcStats(b).atk||0) - (calcStats(a).atk||0);
+  });
+  if (!units.length) {
+    wrap.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">ユニットがいません</div>';
+    document.getElementById('colosseum-defense-count').textContent = '0';
+    return;
+  }
+  units.forEach(u => {
+    const cls = CLASS_DATA[u.classId]; if (!cls) return;
+    const lv = (gState.unitProgress[u.uid]||{level:1}).level;
+    const s  = calcStats(u);
+    const selected = _colosseumEditorSelection.includes(u.uid);
+    const row = document.createElement('div');
+    row.style.cssText = `display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;${selected?'background:rgba(155,107,222,0.12)':''}`;
+    row.innerHTML = `
+      <div style="font-size:20px">${cls.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;color:var(--text);font-weight:700">${u.name || cls.name} <span style="color:var(--text3);font-size:10px">Lv.${lv}</span></div>
+        <div style="font-size:10px;color:var(--text3)">ATK ${s.atk} / HP ${s.hp} / SPD ${s.spd}</div>
+      </div>
+      <div style="font-size:18px;color:${selected?'var(--purple)':'var(--text3)'}">${selected?'☑':'☐'}</div>`;
+    row.addEventListener('click', () => {
+      const idx = _colosseumEditorSelection.indexOf(u.uid);
+      if (idx >= 0) {
+        _colosseumEditorSelection.splice(idx, 1);
+      } else {
+        if (_colosseumEditorSelection.length >= 6) {
+          showBonusToast && showBonusToast('防衛編成は最大6体までです');
+          return;
+        }
+        _colosseumEditorSelection.push(u.uid);
+      }
+      renderColosseumDefenseEditor();
+    });
+    wrap.appendChild(row);
+  });
+  document.getElementById('colosseum-defense-count').textContent = String(_colosseumEditorSelection.length);
+}
+
+async function saveColosseumDefense() {
+  if (!_colosseumEditorSelection.length) {
+    showBonusToast && showBonusToast('1体以上選択してください');
+    return;
+  }
+  gState.progress.colosseum.defenseUnitUids = [..._colosseumEditorSelection];
+  saveState();
+  closeColosseumDefenseEditor();
+  renderColosseumContent();
+  const ok = await syncColosseumDefenseToCloud();
+  showBonusToast && showBonusToast(ok ? '🛡️ 防衛編成を同期しました' : '🛡️ 防衛編成を保存（クラウド同期は未認証）');
+}
+
+function startColosseumBattle(opponent) {
+  // 後方互換: 旧呼び出し（数値 oppIdx）はキャッシュから取得
+  if (typeof opponent === 'number') {
+    opponent = (_colosseumOppCache.list || [])[opponent];
+    if (!opponent) { showBonusToast && showBonusToast('対戦相手の取得に失敗しました'); return; }
+  }
+  const col = gState.progress.colosseum;
+  const today = new Date().toDateString();
+  if (col.lastChallengeDate !== today) { col.dailyChallenges = 0; col.lastChallengeDate = today; }
+  if ((col.dailyChallenges||0) >= 3) {
+    showBonusToast && showBonusToast('本日の挑戦回数上限に達しました（3回/日）');
+    return;
+  }
+  const enemies = (opponent.units || []).map(u => {
     const cls = CLASS_DATA[u.classId];
-    const scale = 1 + (u.lv-1)*9/99;
+    const baseAtk = u.atk || (cls ? cls.baseStats.atk : 100);
+    const baseHp  = u.hp  || (cls ? cls.baseStats.hp  : 1000);
     return {
-      name: cls.name, icon: cls.icon,
-      atk: Math.floor(cls.baseStats.atk * scale),
-      hp:  Math.floor(cls.baseStats.hp  * scale),
-      pres: cls.baseStats.pres, mres: cls.baseStats.mres,
-      spd: cls.baseStats.spd, cri: cls.baseStats.cri,
+      name: u.name || (cls ? cls.name : 'Unknown'),
+      icon: u.icon || (cls ? cls.icon : '⚔️'),
+      atk:  baseAtk,
+      hp:   baseHp,
+      spd:  u.spd  || (cls ? cls.baseStats.spd : 60),
+      pres: u.pres || (cls ? (cls.baseStats.pres || cls.baseStats.pdef || 0) : 0),
+      mres: u.mres || (cls ? (cls.baseStats.mres || cls.baseStats.mdef || 0) : 0),
+      cri:  u.cri  || (cls ? cls.baseStats.cri : 0),
     };
   });
-
-  battleContext = { type:'colosseum', oppIdx, reward: opp.reward };
+  if (!enemies.length) { showBonusToast && showBonusToast('対戦相手の編成が空でした'); return; }
+  battleContext = { type:'colosseum', opponent };
   col.dailyChallenges = (col.dailyChallenges||0) + 1;
   saveState();
-  initBattle([enemies], `コロシアム: ${opp.name}`);
+  initBattle([enemies], `戦闘演習: ${opponent.name}`);
 }
 
 // ============================================================
@@ -24629,7 +24954,14 @@ function renderSortieTab() {
     }
   }
   const colSub = document.getElementById('colosseum-sub');
-  if (colSub) colSub.textContent = lv>=31 ? `ランク: ${gState.progress.colosseum.rank||1}` : 'Clan Lv.31で解放';
+  if (colSub) {
+    if (lv >= 31) {
+      const _tier = getColosseumTier(gState.progress.colosseum.rating || 1000);
+      colSub.textContent = `${_tier.icon}${_tier.label} (レート ${gState.progress.colosseum.rating||1000})`;
+    } else {
+      colSub.textContent = '🔒 Clan Lv.31で解放 — 他クランとの戦闘演習';
+    }
+  }
 }
 
 // ============================================================
