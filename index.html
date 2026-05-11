@@ -16999,7 +16999,8 @@ function endBattle(victory) {
   // Result screen
   if (victory && battleContext?.type === 'babel' && battleContext?.stageId === 'a1s1') {
     flowTutAdvance('battle_victory');
-    if (!gState.tutorial.firstBattleGachaDone) {
+    // チュートリアル進行中はチュートリアル側でガチャ画面に誘導するので自動ガチャはスキップ
+    if (!gState.tutorial.firstBattleGachaDone && gState.tutorial?.flowDone) {
       setTimeout(doFirstBattleGacha, 1200);
     }
   }
@@ -18030,6 +18031,12 @@ function playOneOpeningSkill(action, callback) {
 let gachaActiveTab = 'char';
 function openGacha() {
   document.getElementById('gacha-modal').classList.add('open');
+  // チュートリアル: ガチャ画面を開いたタイミングで進行
+  flowTutAdvance('open_gacha');
+  // チュートリアル中はキャラタブを強制（10連ボタンをスポットライト対象にするため）
+  if (flowTutState.active && FLOW_STEPS[flowTutState.stepIdx]?.id === 'ft_first_gacha_pull') {
+    gachaActiveTab = 'char';
+  }
   renderGachaPanel();
 }
 function renderGachaPanel() {
@@ -18117,7 +18124,7 @@ function renderCharGachaTab(el) {
       <button class="gacha-btn gacha-btn-1" onclick="drawCharGacha(1)" ${crystal<300?'disabled':''} style="flex:1;padding:10px;cursor:${crystal>=300?'pointer':'default'};opacity:${crystal>=300?1:0.4}">
         1回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 300</span>
       </button>
-      <button class="gacha-btn gacha-btn-10" onclick="drawCharGacha(10)" ${crystal<3000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=3000?'pointer':'default'};opacity:${crystal>=3000?1:0.4}">
+      <button class="gacha-btn gacha-btn-10" id="ft-char-gacha-10-btn" onclick="drawCharGacha(10)" ${crystal<3000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=3000?'pointer':'default'};opacity:${crystal>=3000?1:0.4}">
         10回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 3,000</span>
       </button>
     </div>
@@ -18244,6 +18251,14 @@ function drawCharGacha(count) {
   });
   saveState(); updateTopBar(); setTimeout(checkAchievements,100);
   closeGacha(); Audio.gacha();
+  // 初回ガチャチュートリアル: 10連を引いたら自動ガチャマーカーを完了扱いにし、次ステップへ
+  if (count === 10) {
+    flowTutAdvance('first_gacha_pulled');
+    if (gState.tutorial && !gState.tutorial.firstBattleGachaDone) {
+      gState.tutorial.firstBattleGachaDone = true;
+      saveState();
+    }
+  }
   showCharGachaResult(results);
 }
 // ============================================================
@@ -18431,6 +18446,14 @@ function playGachaCinematic(results, kind, onDone) {
 function showCharGachaResult(results) {
   playGachaCinematic(results, 'char', () => _renderCharGachaResultModal(results));
 }
+// チュートリアル中はガチャモーダル再オープンを抑制してキャラタブへの誘導を妨げない
+function _closeCharGachaResult(btn) {
+  btn.closest('.modal-overlay').remove();
+  if (flowTutState?.active && FLOW_STEPS[flowTutState.stepIdx]?.id === 'ft_goto_chara') {
+    return;
+  }
+  openGacha();
+}
 function _renderCharGachaResultModal(results) {
   const ov = document.createElement('div');
   ov.className = 'modal-overlay open';
@@ -18466,7 +18489,7 @@ function _renderCharGachaResultModal(results) {
   ov.innerHTML = `<div class="modal-panel" style="max-width:420px">
     <div class="modal-header">
       <h3>✨ キャラガチャ結果</h3>
-      <button class="close-btn" onclick="this.closest('.modal-overlay').remove();openGacha()">✕</button>
+      <button class="close-btn" onclick="_closeCharGachaResult(this)">✕</button>
     </div>
     <div class="modal-body">
       <div style="display:flex;gap:10px;justify-content:center;padding:6px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px">
@@ -21169,6 +21192,10 @@ function openSortieConfirm(payload) {
   _sortiePayload = payload;
   renderSortieConfirm();
   document.getElementById('sortie-confirm-modal').classList.add('open');
+  // 初回バトルチュートリアル: 出撃確認モーダルが開いたタイミングで誘導
+  if (payload?.type === 'babel' && payload.stageId === 'a1s1') {
+    flowTutAdvance('open_sortie_confirm');
+  }
 }
 
 function closeSortieConfirm() {
@@ -26988,6 +27015,14 @@ const FLOW_STEPS = [
     title: '最初のバトルへ！',
     getText: () => 'ステージ一覧が開きました。\n\nS1「はじまりの平原」の\n「出撃」ボタンをタップしよう！\n\n初めてのバトルに挑戦よ🔥',
     spotlight: 'ft-s1-btn',
+    trigger: 'open_sortie_confirm',
+  },
+  {
+    id: 'ft_sortie_confirm', type: 'action', icon: '⚔️',
+    title: '出撃を確定しよう',
+    getText: () => '出撃確認画面が開きました！\n\n編成を確認したら金色の\n「⚔️ 出撃」ボタンをタップして\nバトル準備に進もう。',
+    spotlight: 'sortie-confirm-start-btn',
+    panelPos: 'top',
     trigger: 'battle_start',
   },
   {
@@ -27009,9 +27044,32 @@ const FLOW_STEPS = [
   {
     id: 'ft_victory', type: 'info', icon: '🏆',
     title: '初勝利おめでとう！',
-    getText: () => '🎉 素晴らしい！バトル勝利！\n\nバトルに勝つと\n・ゴールド（通貨）\n・EXPポット（経験値アイテム）\n・装備アイテム\nなどが手に入るわ。\n\n次はキャラを強化してみましょう！',
-    btnText: '次へ',
+    getText: () => '🎉 素晴らしい！バトル勝利！\n\nバトルに勝つと\n・ゴールド（通貨）\n・EXPポット（経験値アイテム）\n・装備アイテム\nなどが手に入るわ。\n\n勝利のごほうびに\n星晶石 ×3,000 をプレゼント！⭐',
+    btnText: '星晶石を受け取る',
     spotlight: null,
+  },
+  {
+    id: 'ft_first_gacha_intro', type: 'info', icon: '✨',
+    title: 'ガチャで仲間を増やそう！',
+    getText: () => '星晶石 ×3,000 を獲得！\n（画面上部の💎マークで確認できるよ）\n\n星晶石を使えば「ガチャ」で\n新しい仲間（クラス）を召喚できるわ。\n\nさっそく試してみましょう！',
+    btnText: 'ガチャ画面を開く',
+    spotlight: null,
+  },
+  {
+    id: 'ft_first_gacha_open', type: 'action', icon: '✨',
+    title: 'ガチャ画面を開こう',
+    getText: () => 'ナビゲーションバーの\n「✨ ガチャ」ボタンをタップしてください。',
+    spotlight: 'nav-gacha',
+    trigger: 'open_gacha',
+    panelPos: 'top',
+  },
+  {
+    id: 'ft_first_gacha_pull', type: 'action', icon: '🎰',
+    title: '10連ガチャを引こう！',
+    getText: () => '金色の「10回ガチャ」ボタンをタップ！\n\n星晶石 3,000 で10体まとめて召喚できるわ。\n★3クラスが出るかもしれない…ドキドキ💫',
+    spotlight: 'ft-char-gacha-10-btn',
+    trigger: 'first_gacha_pulled',
+    panelPos: 'top',
   },
   {
     id: 'ft_goto_chara', type: 'action', icon: '👤',
@@ -27168,10 +27226,15 @@ function flowTutNext() {
     setTimeout(() => {
       // ステージ一覧が開いていれば閉じる
       if (document.getElementById('stage-list-modal')?.classList.contains('open')) closeStageList();
-      // キャラタブへ自動移動
-      switchTab('chara');
-      // ft_goto_charaをスキップしてft_open_unitへ直接進む
-      flowTutState.stepIdx = FLOW_STEPS.findIndex(s => s.id === 'ft_open_unit');
+      // 勝利のごほうびに星晶石 3000 をプレゼント（ガチャチュートリアル用）
+      if (gState?.player) {
+        gState.player.starCrystal = (gState.player.starCrystal || 0) + 3000;
+        updateTopBar();
+        saveState();
+        try { Audio.itemGet && Audio.itemGet(); } catch(_) {}
+      }
+      // 次ステップへ自然に進行（ft_first_gacha_intro）
+      flowTutState.stepIdx++;
       setTimeout(() => renderFlowStep(), 200);
     }, 400);
     return;
