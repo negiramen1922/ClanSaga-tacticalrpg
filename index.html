@@ -141,6 +141,18 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   50% { text-shadow: 0 0 60px rgba(201,168,76,0.8), 0 0 120px rgba(201,168,76,0.4); }
 }
 #overlay .subtitle { font-family: 'Rajdhani', sans-serif; color: var(--silver); letter-spacing: 8px; font-size: 13px; }
+
+/* 新規ユーザーパネル: ログイン後にクラン名入力画面が出てきたことを明確に示す */
+#auth-newuser-panel.fade-in { animation: newuserFadeIn 0.55s cubic-bezier(0.2,1.2,0.3,1); }
+@keyframes newuserFadeIn {
+  0%   { opacity: 0; transform: translateY(20px) scale(0.92); }
+  60%  { opacity: 1; transform: translateY(0)    scale(1.04); }
+  100% { opacity: 1; transform: translateY(0)    scale(1.0);  }
+}
+#newuser-clanname:focus {
+  border-color: var(--gold2);
+  box-shadow: 0 0 24px rgba(255,220,120,0.6), 0 0 0 3px rgba(201,168,76,0.25);
+}
 #clan-name-box { display: flex; flex-direction: column; gap: 12px; align-items: center; }
 #clan-name-box label { color: var(--text2); font-size: 13px; }
 #clan-name-input {
@@ -2554,13 +2566,19 @@ img.item-icon {
 
   <!-- ログイン済みの場合: クラン名入力（新規ユーザーのみ） -->
   <div id="auth-newuser-panel" style="display:none;flex-direction:column;align-items:center;gap:14px;width:300px;">
-    <div style="color:var(--text2);font-size:13px;text-align:center;line-height:1.8;">
-      アカウント作成完了！<br>クラン名を入力してゲームを始めましょう。
+    <div style="text-align:center;width:100%;">
+      <div style="font-family:'Cinzel',serif;font-size:22px;font-weight:900;color:var(--gold);letter-spacing:4px;text-shadow:0 0 18px rgba(201,168,76,0.45);margin-bottom:6px;">CLAN NAME</div>
+      <div style="color:var(--text2);font-size:13px;line-height:1.7;">
+        アカウント作成完了！<br>あなたのクラン名を決めましょう。
+      </div>
     </div>
-    <input id="newuser-clanname" type="text" maxlength="16" placeholder="クラン名（1〜16文字）" autocomplete="off"
-      style="width:100%;background:var(--bg3);border:1px solid var(--gold);color:var(--gold2);padding:10px 12px;font-size:18px;font-family:'Cinzel',serif;text-align:center;letter-spacing:3px;outline:none;">
+    <div style="position:relative;width:100%;">
+      <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-family:'Cinzel',serif;font-size:9px;color:var(--gold);letter-spacing:3px;background:var(--bg);padding:0 6px;">▼ CLAN NAME ▼</div>
+      <input id="newuser-clanname" type="text" maxlength="16" placeholder="クラン名（1〜16文字）" autocomplete="off"
+        style="width:100%;background:var(--bg3);border:2px solid var(--gold);color:var(--gold2);padding:14px 12px;font-size:20px;font-family:'Cinzel',serif;text-align:center;letter-spacing:3px;outline:none;box-shadow:0 0 16px rgba(201,168,76,0.35);">
+    </div>
     <button onclick="authNewUserStart()"
-      style="width:100%;padding:12px;background:linear-gradient(135deg,#8b6a1f,#c9a84c,#8b6a1f);color:#0a0b0f;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:15px;font-weight:700;letter-spacing:4px;">
+      style="width:100%;padding:14px;background:linear-gradient(135deg,#8b6a1f,#c9a84c,#8b6a1f);color:#0a0b0f;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:16px;font-weight:700;letter-spacing:5px;box-shadow:0 4px 16px rgba(201,168,76,0.35);">
       ゲーム開始
     </button>
     <div id="newuser-error" style="display:none;color:#ff6666;font-size:12px;text-align:center;"></div>
@@ -16981,7 +16999,8 @@ function endBattle(victory) {
   // Result screen
   if (victory && battleContext?.type === 'babel' && battleContext?.stageId === 'a1s1') {
     flowTutAdvance('battle_victory');
-    if (!gState.tutorial.firstBattleGachaDone) {
+    // チュートリアル進行中はチュートリアル側でガチャ画面に誘導するので自動ガチャはスキップ
+    if (!gState.tutorial.firstBattleGachaDone && gState.tutorial?.flowDone) {
       setTimeout(doFirstBattleGacha, 1200);
     }
   }
@@ -18012,6 +18031,17 @@ function playOneOpeningSkill(action, callback) {
 let gachaActiveTab = 'char';
 function openGacha() {
   document.getElementById('gacha-modal').classList.add('open');
+  // チュートリアル: ガチャ画面を開いたタイミングで進行
+  flowTutAdvance('open_gacha');
+  // チュートリアル中はステップに応じてタブを強制（スポットライト対象を確実に表示）
+  if (flowTutState.active) {
+    const tutId = FLOW_STEPS[flowTutState.stepIdx]?.id;
+    if (tutId === 'ft_first_gacha_open' || tutId === 'ft_first_gacha_pull') {
+      gachaActiveTab = 'char';
+    } else if (tutId === 'ft_first_af_intro' || tutId === 'ft_first_af_pull') {
+      gachaActiveTab = 'artifact';
+    }
+  }
   renderGachaPanel();
 }
 function renderGachaPanel() {
@@ -18099,7 +18129,7 @@ function renderCharGachaTab(el) {
       <button class="gacha-btn gacha-btn-1" onclick="drawCharGacha(1)" ${crystal<300?'disabled':''} style="flex:1;padding:10px;cursor:${crystal>=300?'pointer':'default'};opacity:${crystal>=300?1:0.4}">
         1回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 300</span>
       </button>
-      <button class="gacha-btn gacha-btn-10" onclick="drawCharGacha(10)" ${crystal<3000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=3000?'pointer':'default'};opacity:${crystal>=3000?1:0.4}">
+      <button class="gacha-btn gacha-btn-10" id="ft-char-gacha-10-btn" onclick="drawCharGacha(10)" ${crystal<3000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=3000?'pointer':'default'};opacity:${crystal>=3000?1:0.4}">
         10回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 3,000</span>
       </button>
     </div>
@@ -18143,7 +18173,7 @@ function renderArtifactGachaTab(el) {
       <button class="gacha-btn gacha-btn-1" onclick="doArtifactGachaFromPanel(1)" ${mithril<200?'disabled':''} style="flex:1;padding:10px;cursor:${mithril>=200?'pointer':'default'};opacity:${mithril>=200?1:0.4}">
         1回ガチャ<br><span style="font-size:10px">⛏️ ミスリル×200</span>
       </button>
-      <button class="gacha-btn gacha-btn-10" onclick="doArtifactGachaFromPanel(10)" ${mithril<2000?'disabled':''} style="flex:2;padding:10px;cursor:${mithril>=2000?'pointer':'default'};opacity:${mithril>=2000?1:0.4}">
+      <button class="gacha-btn gacha-btn-10" id="ft-af-gacha-10-btn" onclick="doArtifactGachaFromPanel(10)" ${mithril<2000?'disabled':''} style="flex:2;padding:10px;cursor:${mithril>=2000?'pointer':'default'};opacity:${mithril>=2000?1:0.4}">
         10回ガチャ<br><span style="font-size:10px">⛏️ ミスリル×2,000</span>
       </button>
     </div>
@@ -18226,6 +18256,14 @@ function drawCharGacha(count) {
   });
   saveState(); updateTopBar(); setTimeout(checkAchievements,100);
   closeGacha(); Audio.gacha();
+  // 初回ガチャチュートリアル: 10連を引いたら自動ガチャマーカーを完了扱いにし、次ステップへ
+  if (count === 10) {
+    flowTutAdvance('first_gacha_pulled');
+    if (gState.tutorial && !gState.tutorial.firstBattleGachaDone) {
+      gState.tutorial.firstBattleGachaDone = true;
+      saveState();
+    }
+  }
   showCharGachaResult(results);
 }
 // ============================================================
@@ -18413,6 +18451,41 @@ function playGachaCinematic(results, kind, onDone) {
 function showCharGachaResult(results) {
   playGachaCinematic(results, 'char', () => _renderCharGachaResultModal(results));
 }
+// チュートリアル中はステップに応じてガチャモーダルの挙動を切り替える
+function _closeCharGachaResult(btn) {
+  btn.closest('.modal-overlay').remove();
+  if (flowTutState?.active) {
+    const tutId = FLOW_STEPS[flowTutState.stepIdx]?.id;
+    if (tutId === 'ft_goto_chara') {
+      // キャラタブへの誘導を妨げないためガチャを再オープンしない
+      return;
+    }
+    if (tutId === 'ft_first_af_intro' || tutId === 'ft_first_af_pull') {
+      // AFガチャチュートリアルへ: ミスリル付与＋AFタブに切り替えて再オープン
+      if (gState?.player && !gState.tutorial?.firstAfGachaSetup) {
+        gState.player.mithril = (gState.player.mithril||0) + 3000;
+        if (!gState.tutorial) gState.tutorial = {};
+        gState.tutorial.firstAfGachaSetup = true;
+        updateTopBar();
+        saveState();
+        try { Audio.itemGet && Audio.itemGet(); } catch(_) {}
+      }
+      gachaActiveTab = 'artifact';
+      openGacha();
+      return;
+    }
+  }
+  openGacha();
+}
+// AFガチャ結果モーダルの閉鎖: チュートリアル中はガチャモーダル自体も閉じてキャラタブ誘導を可能にする
+function _closeArtifactGachaResult(btn) {
+  btn.closest('.modal-overlay').remove();
+  if (flowTutState?.active && FLOW_STEPS[flowTutState.stepIdx]?.id === 'ft_goto_chara') {
+    closeGacha();
+    return;
+  }
+  renderArtifactGachaTab(document.getElementById('gacha-tab-content'));
+}
 function _renderCharGachaResultModal(results) {
   const ov = document.createElement('div');
   ov.className = 'modal-overlay open';
@@ -18448,7 +18521,7 @@ function _renderCharGachaResultModal(results) {
   ov.innerHTML = `<div class="modal-panel" style="max-width:420px">
     <div class="modal-header">
       <h3>✨ キャラガチャ結果</h3>
-      <button class="close-btn" onclick="this.closest('.modal-overlay').remove();openGacha()">✕</button>
+      <button class="close-btn" onclick="_closeCharGachaResult(this)">✕</button>
     </div>
     <div class="modal-body">
       <div style="display:flex;gap:10px;justify-content:center;padding:6px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px">
@@ -18780,6 +18853,9 @@ function doArtifactGachaFromPanel(count) {
   gState.player.afMileage = (gState.player.afMileage||0) + count;
   saveState(); updateTopBar();
 
+  // 初回AFガチャチュートリアル: 10連を引いたら進行
+  if (count === 10) flowTutAdvance('first_af_pulled');
+
   // 結果モーダル表示（演出後）
   playGachaCinematic(results, 'artifact', () => _renderArtifactGachaResultModal(results, rarColor));
 }
@@ -18802,7 +18878,7 @@ function _renderArtifactGachaResultModal(results, rarColor) {
   ov.innerHTML = `<div class="modal-panel" style="max-width:380px">
     <div class="modal-header">
       <h3>🔩 アーティファクトガチャ結果</h3>
-      <button class="close-btn" onclick="this.closest('.modal-overlay').remove();renderArtifactGachaTab(document.getElementById('gacha-tab-content'))">✕</button>
+      <button class="close-btn" onclick="_closeArtifactGachaResult(this)">✕</button>
     </div>
     <div class="modal-body">
       <div style="display:flex;gap:10px;justify-content:center;padding:6px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px">
@@ -21151,6 +21227,10 @@ function openSortieConfirm(payload) {
   _sortiePayload = payload;
   renderSortieConfirm();
   document.getElementById('sortie-confirm-modal').classList.add('open');
+  // 初回バトルチュートリアル: 出撃確認モーダルが開いたタイミングで誘導
+  if (payload?.type === 'babel' && payload.stageId === 'a1s1') {
+    flowTutAdvance('open_sortie_confirm');
+  }
 }
 
 function closeSortieConfirm() {
@@ -26257,6 +26337,12 @@ async function authWithGoogle() {
   }
   try {
     await auth.signInWithPopup(window._fbGProvider);
+    // ポップアップが閉じた瞬間にローディングを出し、_onFirebaseSignIn の遷移までを橋渡し
+    const panel = document.getElementById('auth-panel');
+    if (panel) panel.style.display = 'none';
+    const loadingEl = document.getElementById('auth-loading');
+    if (loadingEl) loadingEl.style.display = '';
+    _setLoadingStatus('Googleアカウントを確認中...', 30);
     // onAuthStateChanged → _onFirebaseSignIn が呼ばれる
   } catch(e) {
     console.error(e);
@@ -26632,8 +26718,25 @@ function _resetLoadingUI() {
 }
 
 // ── Firebase Auth コールバック ──
+function _showNewUserPanel() {
+  document.getElementById('auth-loading').style.display = 'none';
+  document.getElementById('auth-panel').style.display   = 'none';
+  const newPanel = document.getElementById('auth-newuser-panel');
+  if (!newPanel) return;
+  newPanel.style.display = 'flex';
+  // 入場アニメーションをかける（再表示時に確実に再生されるよう reflow を挟む）
+  newPanel.classList.remove('fade-in');
+  void newPanel.offsetWidth;
+  newPanel.classList.add('fade-in');
+  // 入力欄にフォーカス（モバイルでもキーボードが立ち上がる）
+  const input = document.getElementById('newuser-clanname');
+  if (input) setTimeout(() => { try { input.focus(); } catch(_){} }, 100);
+}
 window._onFirebaseSignIn = async function(user) {
   console.log('[Boot] Firebase SignIn:', user.uid);
+  // Googleログイン直後にここに来ることもあるので、ローディング表示を強制する
+  document.getElementById('auth-panel').style.display   = 'none';
+  document.getElementById('auth-loading').style.display = '';
   _setLoadingStatus('アカウント確認中...', 60);
   try {
     // クラウドからセーブデータ読み込み試行
@@ -26643,13 +26746,8 @@ window._onFirebaseSignIn = async function(user) {
       setTimeout(() => launchApp(), 300);
     } else {
       // クラウドにデータなし → 新規ユーザーパネル表示
-      _setLoadingStatus('完了！', 100);
-      setTimeout(() => {
-        document.getElementById('auth-loading').style.display = 'none';
-        document.getElementById('auth-panel').style.display   = 'none';
-        const newPanel = document.getElementById('auth-newuser-panel');
-        if (newPanel) newPanel.style.display = 'flex';
-      }, 300);
+      _setLoadingStatus('クラン名を決めましょう', 100);
+      setTimeout(_showNewUserPanel, 400);
     }
   } catch(e) {
     console.error('[Boot] cloudLoad error:', e);
@@ -26657,9 +26755,7 @@ window._onFirebaseSignIn = async function(user) {
     if (loadState()) {
       launchApp();
     } else {
-      const newPanel = document.getElementById('auth-newuser-panel');
-      if (newPanel) newPanel.style.display = 'flex';
-      document.getElementById('auth-loading').style.display = 'none';
+      _showNewUserPanel();
     }
   }
 };
@@ -26954,6 +27050,14 @@ const FLOW_STEPS = [
     title: '最初のバトルへ！',
     getText: () => 'ステージ一覧が開きました。\n\nS1「はじまりの平原」の\n「出撃」ボタンをタップしよう！\n\n初めてのバトルに挑戦よ🔥',
     spotlight: 'ft-s1-btn',
+    trigger: 'open_sortie_confirm',
+  },
+  {
+    id: 'ft_sortie_confirm', type: 'action', icon: '⚔️',
+    title: '出撃を確定しよう',
+    getText: () => '出撃確認画面が開きました！\n\n編成を確認したら金色の\n「⚔️ 出撃」ボタンをタップして\nバトル準備に進もう。',
+    spotlight: 'sortie-confirm-start-btn',
+    panelPos: 'top',
     trigger: 'battle_start',
   },
   {
@@ -26975,9 +27079,47 @@ const FLOW_STEPS = [
   {
     id: 'ft_victory', type: 'info', icon: '🏆',
     title: '初勝利おめでとう！',
-    getText: () => '🎉 素晴らしい！バトル勝利！\n\nバトルに勝つと\n・ゴールド（通貨）\n・EXPポット（経験値アイテム）\n・装備アイテム\nなどが手に入るわ。\n\n次はキャラを強化してみましょう！',
-    btnText: '次へ',
+    getText: () => '🎉 素晴らしい！バトル勝利！\n\nバトルに勝つと\n・ゴールド（通貨）\n・EXPポット（経験値アイテム）\n・装備アイテム\nなどが手に入るわ。\n\n勝利のごほうびに\n星晶石 ×3,000 をプレゼント！⭐',
+    btnText: '星晶石を受け取る',
     spotlight: null,
+  },
+  {
+    id: 'ft_first_gacha_intro', type: 'info', icon: '✨',
+    title: 'ガチャで仲間を増やそう！',
+    getText: () => '星晶石 ×3,000 を獲得！\n（画面上部の💎マークで確認できるよ）\n\n星晶石を使えば「ガチャ」で\n新しい仲間（クラス）を召喚できるわ。\n\nさっそく試してみましょう！',
+    btnText: 'ガチャ画面を開く',
+    spotlight: null,
+  },
+  {
+    id: 'ft_first_gacha_open', type: 'action', icon: '✨',
+    title: 'ガチャ画面を開こう',
+    getText: () => 'ナビゲーションバーの\n「✨ ガチャ」ボタンをタップしてください。',
+    spotlight: 'nav-gacha',
+    trigger: 'open_gacha',
+    panelPos: 'top',
+  },
+  {
+    id: 'ft_first_gacha_pull', type: 'action', icon: '🎰',
+    title: '10連ガチャを引こう！',
+    getText: () => '金色の「10回ガチャ」ボタンをタップ！\n\n星晶石 3,000 で10体まとめて召喚できるわ。\n★3クラスが出るかもしれない…ドキドキ💫',
+    spotlight: 'ft-char-gacha-10-btn',
+    trigger: 'first_gacha_pulled',
+    panelPos: 'top',
+  },
+  {
+    id: 'ft_first_af_intro', type: 'info', icon: '🔩',
+    title: 'アーティファクトも引いてみよう！',
+    getText: () => 'お疲れさま！次は\nアーティファクトガチャに挑戦しましょう。\n\nアーティファクトはキャラに装備すると\nステータスや特殊効果が上昇するわ。\n\nミスリル ×3,000 をプレゼント！⛏️',
+    btnText: 'アーティファクト10連へ',
+    spotlight: null,
+  },
+  {
+    id: 'ft_first_af_pull', type: 'action', icon: '🎰',
+    title: 'アーティファクト10連！',
+    getText: () => '銀色の「10回ガチャ」ボタンをタップ！\n\nミスリル 2,000 で10個まとめて召喚。\nSSRが出るとアツいわよ💎',
+    spotlight: 'ft-af-gacha-10-btn',
+    trigger: 'first_af_pulled',
+    panelPos: 'top',
   },
   {
     id: 'ft_goto_chara', type: 'action', icon: '👤',
@@ -27128,16 +27270,39 @@ function flowTutNext() {
     setTimeout(() => openMissionModal(), 300);
     return;
   }
+  // AFガチャチュートリアル: 「次へ」タップでミスリル付与＋AFタブに切り替え
+  if (step.id === 'ft_first_af_intro') {
+    if (gState?.player && !gState.tutorial?.firstAfGachaSetup) {
+      gState.player.mithril = (gState.player.mithril||0) + 3000;
+      if (!gState.tutorial) gState.tutorial = {};
+      gState.tutorial.firstAfGachaSetup = true;
+      updateTopBar();
+      saveState();
+      try { Audio.itemGet && Audio.itemGet(); } catch(_) {}
+    }
+    gachaActiveTab = 'artifact';
+    const gm = document.getElementById('gacha-modal');
+    if (gm && !gm.classList.contains('open')) openGacha();
+    else renderGachaPanel();
+    flowTutState.stepIdx++;
+    setTimeout(() => renderFlowStep(), 200);
+    return;
+  }
   // 勝利画面が開いたまま次ステップに進まないよう、ft_victoryではバトルを閉じてから進む
   if (step.id === 'ft_victory') {
     exitBattle();
     setTimeout(() => {
       // ステージ一覧が開いていれば閉じる
       if (document.getElementById('stage-list-modal')?.classList.contains('open')) closeStageList();
-      // キャラタブへ自動移動
-      switchTab('chara');
-      // ft_goto_charaをスキップしてft_open_unitへ直接進む
-      flowTutState.stepIdx = FLOW_STEPS.findIndex(s => s.id === 'ft_open_unit');
+      // 勝利のごほうびに星晶石 3000 をプレゼント（ガチャチュートリアル用）
+      if (gState?.player) {
+        gState.player.starCrystal = (gState.player.starCrystal || 0) + 3000;
+        updateTopBar();
+        saveState();
+        try { Audio.itemGet && Audio.itemGet(); } catch(_) {}
+      }
+      // 次ステップへ自然に進行（ft_first_gacha_intro）
+      flowTutState.stepIdx++;
       setTimeout(() => renderFlowStep(), 200);
     }, 400);
     return;
