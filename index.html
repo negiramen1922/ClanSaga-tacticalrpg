@@ -320,8 +320,9 @@ img.item-icon {
 .passive-dot.gray { background: var(--text3); }
 
 /* UNIT DETAIL MODAL */
+/* z-index は .modal-overlay (2500) より高くして、出撃確認モーダルの上に重ねて表示する */
 #unit-detail-modal {
-  display: none; position: fixed; inset: 0; z-index: 1000;
+  display: none; position: fixed; inset: 0; z-index: 2700;
   background: rgba(5,6,8,0.92); align-items: center; justify-content: center; padding: 8px;
 }
 #unit-detail-modal.open { display: flex; }
@@ -21113,7 +21114,8 @@ function renderSortieConfirm() {
       </div>
       <div style="font-size:10px;color:var(--gold)">装備 →</div>`;
     row.addEventListener('click', () => {
-      closeSortieConfirm();
+      // 出撃確認モーダルは閉じずに、ユニット詳細を上に重ねて表示する
+      // （詳細を閉じれば直前の出撃確認画面に戻れる）
       if (typeof openUnitDetail === 'function') openUnitDetail(uid);
     });
     unitsWrap.appendChild(row);
