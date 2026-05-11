@@ -2664,11 +2664,11 @@ img.item-icon {
       </div>
 
       <div class="content-section">
-        <div class="section-header" onclick="toggleSection(this,'daily-dungeon-panel')">
-          <span class="sec-icon">📅</span>
+        <div class="section-header" id="daily-dungeon-section-header" onclick="toggleSection(this,'daily-dungeon-panel')">
+          <span class="sec-icon">🌳</span>
           <div>
-            <div class="sec-title">デイリーダンジョン</div>
-            <div class="sec-sub" id="daily-dungeon-sub">響典・英雄譚を収集</div>
+            <div class="sec-title">ユグドラシルの試練</div>
+            <div class="sec-sub" id="daily-dungeon-sub">世界樹から響典・英雄譚を授かる（デイリー）</div>
           </div>
           <span class="sec-arrow">▶</span>
         </div>
@@ -8480,61 +8480,64 @@ const SHRINE_STAGES = [
   ]},
 ];
 
-// ── デイリーダンジョン（響典・英雄譚収集）──
+// ── ユグドラシルの試練（デイリー：響典・英雄譚収集）──
+// 世界樹ユグドラシルが世界各地のクラン候補に課す訓練。試錬体（=世界樹の意志が
+// 木霊と石を模してかたどった守護者）を打ち倒すと、世界樹の知恵の断片である
+// 響典と英雄譚が授けられる。エリア1「翠緑の草原」を踏破した者にのみ門が開く。
 const DAILY_DUNGEON_STAGES = [
-  { id:'dd_lv1', name:'デイリーダンジョン Lv.1', recLv:10,  waves:1,
+  { id:'dd_lv1', name:'ユグドラシル試練 Lv.1', recLv:10,  waves:1,
     drops:{ t1:1, t2:0, t3:0, eiyuutan:0 },
     enemies:[
-      [{name:'試錬ゴーレムI',  icon:'🗿', atk:180,  hp:6000,   pres:5,  mres:0,  spd:20, cri:2},
-       {name:'試錬ゴーレムI',  icon:'🗿', atk:180,  hp:6000,   pres:5,  mres:0,  spd:20, cri:2}]
+      [{name:'若木の試錬体',  icon:'🌱', atk:180,  hp:6000,   pres:5,  mres:0,  spd:20, cri:2},
+       {name:'若木の試錬体',  icon:'🌱', atk:180,  hp:6000,   pres:5,  mres:0,  spd:20, cri:2}]
     ]
   },
-  { id:'dd_lv2', name:'デイリーダンジョン Lv.2', recLv:30,  waves:2,
+  { id:'dd_lv2', name:'ユグドラシル試練 Lv.2', recLv:30,  waves:2,
     drops:{ t1:2, t2:0, t3:0, eiyuutan:0 },
     enemies:[
-      [{name:'試錬ゴーレムII', icon:'🗿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4},
-       {name:'試錬ゴーレムII', icon:'🗿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4}],
-      [{name:'試錬ゴーレムII', icon:'🗿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4},
-       {name:'試錬ゴーレムII', icon:'🗿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4},
-       {name:'試錬ゴーレムII', icon:'🗿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4}]
+      [{name:'木霊の試錬体', icon:'🌿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4},
+       {name:'木霊の試錬体', icon:'🌿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4}],
+      [{name:'木霊の試錬体', icon:'🌿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4},
+       {name:'木霊の試錬体', icon:'🌿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4},
+       {name:'木霊の試錬体', icon:'🌿', atk:320,  hp:18000,  pres:10, mres:5,  spd:28, cri:4}]
     ]
   },
-  { id:'dd_lv3', name:'デイリーダンジョン Lv.3', recLv:50,  waves:3,
+  { id:'dd_lv3', name:'ユグドラシル試練 Lv.3', recLv:50,  waves:3,
     drops:{ t1:1, t2:1, t3:0, eiyuutan:0 },
     enemies:[
-      [{name:'強化ゴーレムI',  icon:'🗿', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6},
-       {name:'強化ゴーレムI',  icon:'🗿', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6}],
-      [{name:'強化ゴーレムI',  icon:'🗿', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6},
-       {name:'強化ゴーレムI',  icon:'🗿', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6},
-       {name:'強化ゴーレムI',  icon:'🗿', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6}],
-      [{name:'強化ゴーレムII', icon:'🗿', atk:650,  hp:55000,  pres:20, mres:15, spd:35, cri:8}]
+      [{name:'石樹の試錬体',  icon:'🪨', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6},
+       {name:'石樹の試錬体',  icon:'🪨', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6}],
+      [{name:'石樹の試錬体',  icon:'🪨', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6},
+       {name:'石樹の試錬体',  icon:'🪨', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6},
+       {name:'石樹の試錬体',  icon:'🪨', atk:500,  hp:35000,  pres:15, mres:10, spd:32, cri:6}],
+      [{name:'古樹の番人',    icon:'🌳', atk:650,  hp:55000,  pres:20, mres:15, spd:35, cri:8}]
     ]
   },
-  { id:'dd_lv4', name:'デイリーダンジョン Lv.4', recLv:70,  waves:4,
+  { id:'dd_lv4', name:'ユグドラシル試練 Lv.4', recLv:70,  waves:4,
     drops:{ t1:2, t2:2, t3:0, eiyuutan:0 },
     enemies:[
-      [{name:'強化ゴーレムII', icon:'🗿', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8},
-       {name:'強化ゴーレムII', icon:'🗿', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8}],
-      [{name:'強化ゴーレムII', icon:'🗿', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8},
-       {name:'強化ゴーレムII', icon:'🗿', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8},
-       {name:'強化ゴーレムII', icon:'🗿', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8}],
-      [{name:'精鋭ゴーレムI',  icon:'🗿', atk:900,  hp:85000,  pres:28, mres:22, spd:40, cri:10}],
-      [{name:'精鋭ゴーレムI',  icon:'🗿', atk:900,  hp:85000,  pres:28, mres:22, spd:40, cri:10},
-       {name:'精鋭ゴーレムI',  icon:'🗿', atk:900,  hp:85000,  pres:28, mres:22, spd:40, cri:10}]
+      [{name:'古樹の番人',    icon:'🌳', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8},
+       {name:'古樹の番人',    icon:'🌳', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8}],
+      [{name:'古樹の番人',    icon:'🌳', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8},
+       {name:'古樹の番人',    icon:'🌳', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8},
+       {name:'古樹の番人',    icon:'🌳', atk:750,  hp:65000,  pres:22, mres:18, spd:38, cri:8}],
+      [{name:'霊樹の守護者',  icon:'🌲', atk:900,  hp:85000,  pres:28, mres:22, spd:40, cri:10}],
+      [{name:'霊樹の守護者',  icon:'🌲', atk:900,  hp:85000,  pres:28, mres:22, spd:40, cri:10},
+       {name:'霊樹の守護者',  icon:'🌲', atk:900,  hp:85000,  pres:28, mres:22, spd:40, cri:10}]
     ]
   },
-  { id:'dd_lv5', name:'デイリーダンジョン Lv.5', recLv:100, waves:5,
+  { id:'dd_lv5', name:'ユグドラシル試練 Lv.5', recLv:100, waves:5,
     drops:{ t1:1, t2:2, t3:1, eiyuutan:0.3 },
     enemies:[
-      [{name:'精鋭ゴーレムII', icon:'🗿', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12},
-       {name:'精鋭ゴーレムII', icon:'🗿', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12}],
-      [{name:'精鋭ゴーレムII', icon:'🗿', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12},
-       {name:'精鋭ゴーレムII', icon:'🗿', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12},
-       {name:'精鋭ゴーレムII', icon:'🗿', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12}],
-      [{name:'覇者ゴーレムI',  icon:'🗿', atk:1300, hp:150000, pres:35, mres:30, spd:45, cri:14}],
-      [{name:'覇者ゴーレムI',  icon:'🗿', atk:1300, hp:150000, pres:35, mres:30, spd:45, cri:14},
-       {name:'覇者ゴーレムI',  icon:'🗿', atk:1300, hp:150000, pres:35, mres:30, spd:45, cri:14}],
-      [{name:'覇者ゴーレムII', icon:'🗿', atk:1600, hp:220000, pres:40, mres:35, spd:48, cri:16}]
+      [{name:'霊樹の守護者',   icon:'🌲', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12},
+       {name:'霊樹の守護者',   icon:'🌲', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12}],
+      [{name:'霊樹の守護者',   icon:'🌲', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12},
+       {name:'霊樹の守護者',   icon:'🌲', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12},
+       {name:'霊樹の守護者',   icon:'🌲', atk:1100, hp:110000, pres:30, mres:25, spd:42, cri:12}],
+      [{name:'世界樹の使徒',   icon:'🌟', atk:1300, hp:150000, pres:35, mres:30, spd:45, cri:14}],
+      [{name:'世界樹の使徒',   icon:'🌟', atk:1300, hp:150000, pres:35, mres:30, spd:45, cri:14},
+       {name:'世界樹の使徒',   icon:'🌟', atk:1300, hp:150000, pres:35, mres:30, spd:45, cri:14}],
+      [{name:'世界樹の代行者', icon:'✨', atk:1600, hp:220000, pres:40, mres:35, spd:48, cri:16}]
     ]
   },
 ];
@@ -13752,6 +13755,10 @@ function getDailyDungeonMaxRuns() {
 }
 
 function startDailyDungeonBattle(stageId) {
+  if (!isDailyDungeonUnlocked()) {
+    showBonusToast('🔒 エリア1「翠緑の草原」をクリアすると解放されます');
+    return;
+  }
   const stageIdx = DAILY_DUNGEON_STAGES.findIndex(s=>s.id===stageId);
   const stage = DAILY_DUNGEON_STAGES[stageIdx];
   if (!gState.progress.dailyDungeon) gState.progress.dailyDungeon = { clearedStages:{}, clearedToday:{}, dailyRuns:0, lastRunDate:'' };
@@ -16204,6 +16211,8 @@ function endBattle(victory) {
         if (battleContext.stageId === 'a1s5') setTimeout(() => triggerMineUnlock(), 1500);
         // アビスアンロック (エリア1最終S10初クリア)
         if (battleContext.stageId === 'a1s10') setTimeout(() => triggerAbyssUnlock(), 2000);
+        // ユグドラシルの試練アンロック (同じくエリア1最終S10初クリア)
+        if (battleContext.stageId === 'a1s10') setTimeout(() => triggerDailyDungeonUnlock(), 3500);
         const _crystal = getFirstClearCrystal(battleContext.stageId);
         if (_crystal > 0) {
           gState.player.starCrystal = (gState.player.starCrystal||0) + _crystal;
@@ -24254,10 +24263,22 @@ function renderSortieTab() {
     wrap.appendChild(row);
   });
 
-  // デイリーダンジョン描画
+  // ユグドラシルの試練（デイリー）描画
   const ddWrap = document.getElementById('daily-dungeon-wrap');
   if (ddWrap) {
     ddWrap.innerHTML = '';
+    const _ddHdr = document.getElementById('daily-dungeon-section-header');
+    const _ddSubEl = document.getElementById('daily-dungeon-sub');
+    const _ddUnlocked = isDailyDungeonUnlocked();
+    if (!_ddUnlocked) {
+      ddWrap.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3);font-size:12px;line-height:1.7">
+        🔒 エリア1「翠緑の草原」を全ステージクリアすると解放されます<br>
+        <span style="color:var(--text-dim)">世界樹ユグドラシルは、草原を越えた者にのみ門を開く。</span>
+      </div>`;
+      if (_ddSubEl) _ddSubEl.textContent = '🔒 エリア1クリアで解放';
+      if (_ddHdr) _ddHdr.style.opacity = '0.45';
+    } else {
+    if (_ddHdr) _ddHdr.style.opacity = '';
     const _ddGroups   = getDailyDungeonGroups();
     const _dayNum     = new Date().getDay();
     const _dayNames   = ['日','月','火','水','木','金','土'];
@@ -24267,9 +24288,14 @@ function renderSortieTab() {
     const _ddRuns    = (_ddState.lastRunDate === _ddToday) ? (_ddState.dailyRuns || 0) : 0;
     const _ddMax     = getDailyDungeonMaxRuns();
     const _ddRemain  = Math.max(0, _ddMax - _ddRuns);
+    // ストーリー風のフレーバーバナー
+    const _storyBanner = document.createElement('div');
+    _storyBanner.style.cssText = 'padding:8px 12px;background:rgba(74,160,90,0.10);border-left:3px solid #4aa05a;margin-bottom:6px;font-size:11px;color:var(--text-dim);line-height:1.6';
+    _storyBanner.innerHTML = `🌳 <b style="color:#7ac08a">世界樹ユグドラシルの試練</b> — 木霊と石が編む試錬体を打ち倒し、世界樹の知恵「<span style="color:var(--gold)">響典</span>」「<span style="color:var(--gold)">英雄譚</span>」を授かれ。これらの宝はユグドラシルでのみ手に入る。`;
+    ddWrap.appendChild(_storyBanner);
     const _infoBanner = document.createElement('div');
     _infoBanner.style.cssText = 'padding:8px 12px;background:rgba(201,168,76,0.1);border-left:3px solid var(--gold);margin-bottom:8px;font-size:12px;color:var(--text-dim)';
-    _infoBanner.innerHTML = `📅 今日（${_dayNames[_dayNum]}）のドロップロール: <span style="color:var(--gold);font-weight:700">${_roleNames}</span>`
+    _infoBanner.innerHTML = `📅 今日（${_dayNames[_dayNum]}）の試練ロール: <span style="color:var(--gold);font-weight:700">${_roleNames}</span>`
       + `&emsp;残り <span style="color:${_ddRemain>0?'var(--gold)':'var(--red)'};font-weight:700">${_ddRemain}/${_ddMax}</span>回`;
     ddWrap.appendChild(_infoBanner);
     DAILY_DUNGEON_STAGES.forEach((stage, _idx) => {
@@ -24309,6 +24335,7 @@ function renderSortieTab() {
     });
     const _ddSub = document.getElementById('daily-dungeon-sub');
     if (_ddSub) _ddSub.textContent = _dayNum === 0 ? `日曜: 全ロール解放 (残${_ddRemain}/${_ddMax}回)` : `本日: ${_roleNames} (残${_ddRemain}/${_ddMax}回)`;
+    }
   }
 
   renderAbyssContent();
@@ -25650,6 +25677,18 @@ function endMineTutorial() {
 
 function isAbyssUnlocked() {
   return !!(gState?.progress?.babel?.clearedStages?.['a1s10']);
+}
+
+// ユグドラシルの試練（デイリー）: エリア1「翠緑の草原」最終ステージ初クリアで解放
+function isDailyDungeonUnlocked() {
+  return !!(gState?.progress?.babel?.clearedStages?.['a1s10']);
+}
+
+function triggerDailyDungeonUnlock() {
+  // 戦闘パネルの再描画は renderBabel タブで行われるため、ここではトースト通知のみ。
+  if (typeof showBonusToast === 'function') {
+    showBonusToast('🌳 ユグドラシルが門を開いた — 「ユグドラシルの試練」が解放されました！世界樹の知恵「響典・英雄譚」を集めよう。', true);
+  }
 }
 
 function triggerAbyssUnlock() {
