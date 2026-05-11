@@ -18033,9 +18033,14 @@ function openGacha() {
   document.getElementById('gacha-modal').classList.add('open');
   // チュートリアル: ガチャ画面を開いたタイミングで進行
   flowTutAdvance('open_gacha');
-  // チュートリアル中はキャラタブを強制（10連ボタンをスポットライト対象にするため）
-  if (flowTutState.active && FLOW_STEPS[flowTutState.stepIdx]?.id === 'ft_first_gacha_pull') {
-    gachaActiveTab = 'char';
+  // チュートリアル中はステップに応じてタブを強制（スポットライト対象を確実に表示）
+  if (flowTutState.active) {
+    const tutId = FLOW_STEPS[flowTutState.stepIdx]?.id;
+    if (tutId === 'ft_first_gacha_open' || tutId === 'ft_first_gacha_pull') {
+      gachaActiveTab = 'char';
+    } else if (tutId === 'ft_first_af_intro' || tutId === 'ft_first_af_pull') {
+      gachaActiveTab = 'artifact';
+    }
   }
   renderGachaPanel();
 }
@@ -18168,7 +18173,7 @@ function renderArtifactGachaTab(el) {
       <button class="gacha-btn gacha-btn-1" onclick="doArtifactGachaFromPanel(1)" ${mithril<200?'disabled':''} style="flex:1;padding:10px;cursor:${mithril>=200?'pointer':'default'};opacity:${mithril>=200?1:0.4}">
         1回ガチャ<br><span style="font-size:10px">⛏️ ミスリル×200</span>
       </button>
-      <button class="gacha-btn gacha-btn-10" onclick="doArtifactGachaFromPanel(10)" ${mithril<2000?'disabled':''} style="flex:2;padding:10px;cursor:${mithril>=2000?'pointer':'default'};opacity:${mithril>=2000?1:0.4}">
+      <button class="gacha-btn gacha-btn-10" id="ft-af-gacha-10-btn" onclick="doArtifactGachaFromPanel(10)" ${mithril<2000?'disabled':''} style="flex:2;padding:10px;cursor:${mithril>=2000?'pointer':'default'};opacity:${mithril>=2000?1:0.4}">
         10回ガチャ<br><span style="font-size:10px">⛏️ ミスリル×2,000</span>
       </button>
     </div>
@@ -18446,13 +18451,40 @@ function playGachaCinematic(results, kind, onDone) {
 function showCharGachaResult(results) {
   playGachaCinematic(results, 'char', () => _renderCharGachaResultModal(results));
 }
-// チュートリアル中はガチャモーダル再オープンを抑制してキャラタブへの誘導を妨げない
+// チュートリアル中はステップに応じてガチャモーダルの挙動を切り替える
 function _closeCharGachaResult(btn) {
   btn.closest('.modal-overlay').remove();
-  if (flowTutState?.active && FLOW_STEPS[flowTutState.stepIdx]?.id === 'ft_goto_chara') {
-    return;
+  if (flowTutState?.active) {
+    const tutId = FLOW_STEPS[flowTutState.stepIdx]?.id;
+    if (tutId === 'ft_goto_chara') {
+      // キャラタブへの誘導を妨げないためガチャを再オープンしない
+      return;
+    }
+    if (tutId === 'ft_first_af_intro' || tutId === 'ft_first_af_pull') {
+      // AFガチャチュートリアルへ: ミスリル付与＋AFタブに切り替えて再オープン
+      if (gState?.player && !gState.tutorial?.firstAfGachaSetup) {
+        gState.player.mithril = (gState.player.mithril||0) + 3000;
+        if (!gState.tutorial) gState.tutorial = {};
+        gState.tutorial.firstAfGachaSetup = true;
+        updateTopBar();
+        saveState();
+        try { Audio.itemGet && Audio.itemGet(); } catch(_) {}
+      }
+      gachaActiveTab = 'artifact';
+      openGacha();
+      return;
+    }
   }
   openGacha();
+}
+// AFガチャ結果モーダルの閉鎖: チュートリアル中はガチャモーダル自体も閉じてキャラタブ誘導を可能にする
+function _closeArtifactGachaResult(btn) {
+  btn.closest('.modal-overlay').remove();
+  if (flowTutState?.active && FLOW_STEPS[flowTutState.stepIdx]?.id === 'ft_goto_chara') {
+    closeGacha();
+    return;
+  }
+  renderArtifactGachaTab(document.getElementById('gacha-tab-content'));
 }
 function _renderCharGachaResultModal(results) {
   const ov = document.createElement('div');
@@ -18821,6 +18853,9 @@ function doArtifactGachaFromPanel(count) {
   gState.player.afMileage = (gState.player.afMileage||0) + count;
   saveState(); updateTopBar();
 
+  // 初回AFガチャチュートリアル: 10連を引いたら進行
+  if (count === 10) flowTutAdvance('first_af_pulled');
+
   // 結果モーダル表示（演出後）
   playGachaCinematic(results, 'artifact', () => _renderArtifactGachaResultModal(results, rarColor));
 }
@@ -18843,7 +18878,7 @@ function _renderArtifactGachaResultModal(results, rarColor) {
   ov.innerHTML = `<div class="modal-panel" style="max-width:380px">
     <div class="modal-header">
       <h3>🔩 アーティファクトガチャ結果</h3>
-      <button class="close-btn" onclick="this.closest('.modal-overlay').remove();renderArtifactGachaTab(document.getElementById('gacha-tab-content'))">✕</button>
+      <button class="close-btn" onclick="_closeArtifactGachaResult(this)">✕</button>
     </div>
     <div class="modal-body">
       <div style="display:flex;gap:10px;justify-content:center;padding:6px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px">
@@ -27072,6 +27107,21 @@ const FLOW_STEPS = [
     panelPos: 'top',
   },
   {
+    id: 'ft_first_af_intro', type: 'info', icon: '🔩',
+    title: 'アーティファクトも引いてみよう！',
+    getText: () => 'お疲れさま！次は\nアーティファクトガチャに挑戦しましょう。\n\nアーティファクトはキャラに装備すると\nステータスや特殊効果が上昇するわ。\n\nミスリル ×3,000 をプレゼント！⛏️',
+    btnText: 'アーティファクト10連へ',
+    spotlight: null,
+  },
+  {
+    id: 'ft_first_af_pull', type: 'action', icon: '🎰',
+    title: 'アーティファクト10連！',
+    getText: () => '銀色の「10回ガチャ」ボタンをタップ！\n\nミスリル 2,000 で10個まとめて召喚。\nSSRが出るとアツいわよ💎',
+    spotlight: 'ft-af-gacha-10-btn',
+    trigger: 'first_af_pulled',
+    panelPos: 'top',
+  },
+  {
     id: 'ft_goto_chara', type: 'action', icon: '👤',
     title: 'キャラタブへ移動',
     getText: () => '画面下のナビバーから\n「👤 キャラ」タブをタップしてください。',
@@ -27218,6 +27268,24 @@ function flowTutNext() {
   if (step.isLast) {
     endFlowTutorial();
     setTimeout(() => openMissionModal(), 300);
+    return;
+  }
+  // AFガチャチュートリアル: 「次へ」タップでミスリル付与＋AFタブに切り替え
+  if (step.id === 'ft_first_af_intro') {
+    if (gState?.player && !gState.tutorial?.firstAfGachaSetup) {
+      gState.player.mithril = (gState.player.mithril||0) + 3000;
+      if (!gState.tutorial) gState.tutorial = {};
+      gState.tutorial.firstAfGachaSetup = true;
+      updateTopBar();
+      saveState();
+      try { Audio.itemGet && Audio.itemGet(); } catch(_) {}
+    }
+    gachaActiveTab = 'artifact';
+    const gm = document.getElementById('gacha-modal');
+    if (gm && !gm.classList.contains('open')) openGacha();
+    else renderGachaPanel();
+    flowTutState.stepIdx++;
+    setTimeout(() => renderFlowStep(), 200);
     return;
   }
   // 勝利画面が開いたまま次ステップに進まないよう、ft_victoryではバトルを閉じてから進む
