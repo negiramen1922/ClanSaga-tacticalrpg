@@ -20546,6 +20546,29 @@ function _getSortieStageInfo(payload) {
       stamina: 0,
     };
   }
+  if (payload.type === 'colosseum') {
+    const opp = payload.opponent || {};
+    const oppTier = (typeof getColosseumTier === 'function') ? getColosseumTier(opp.rating) : { label:'?', icon:'🏆', color:'var(--gold)' };
+    const myCol  = gState.progress.colosseum || {};
+    const myR    = myCol.rating || 1000;
+    const expectedWin = (typeof colosseumEloDelta === 'function') ? colosseumEloDelta(myR, opp.rating || 1000, true)  : 0;
+    const expectedLose= (typeof colosseumEloDelta === 'function') ? colosseumEloDelta(myR, opp.rating || 1000, false) : 0;
+    const teamPreview = (opp.units||[]).map(u => `${u.icon || (CLASS_DATA[u.classId]?.icon || '⚔️')}Lv.${u.lv||1}`).join(' ');
+    const tags = [
+      { icon: oppTier.icon, label: `${oppTier.label} ${opp.rating||1000}` },
+      { icon: '👥', label: `${(opp.units||[]).length}体` },
+    ];
+    if (opp.source === 'cloud') tags.push({ icon:'☁️', label:'他クラン' });
+    else                        tags.push({ icon:'🤖', label:'演習NPC' });
+    return {
+      title:    `⚔️ 戦闘演習: ${opp.name || '不明なクラン'}`,
+      subtitle: '他クランの防衛編成と非同期で模擬戦',
+      rec:      `📈 勝利時 +${expectedWin} / 敗北時 ${expectedLose}`,
+      drops:    teamPreview ? `相手編成: ${teamPreview}` : '',
+      tags,
+      stamina: 0,
+    };
+  }
   return null;
 }
 
@@ -20654,15 +20677,26 @@ function confirmSortieStart() {
   const p = _sortiePayload;
   _sortiePayload = null;
   closeSortieConfirm();
-  if      (p.type === 'babel') startBabelBattle(p.areaId, p.stageId);
-  else if (p.type === 'daily') startDailyDungeonBattle(p.stageId);
-  else if (p.type === 'abyss') startAbyssLayer(p.layerId);
+  if      (p.type === 'babel')     startBabelBattle(p.areaId, p.stageId);
+  else if (p.type === 'daily')     startDailyDungeonBattle(p.stageId);
+  else if (p.type === 'abyss')     startAbyssLayer(p.layerId);
+  else if (p.type === 'colosseum') startColosseumBattle(p.opponent);
 }
 
 // 公開ラッパー: UI ボタンから呼ぶ。内部の戦闘継続/リトライは元の関数を直接呼ぶ。
 function confirmSortieBabel(areaId, stageId) { openSortieConfirm({ type:'babel', areaId, stageId }); }
 function confirmSortieDaily(stageId)         { openSortieConfirm({ type:'daily', stageId }); }
 function confirmSortieAbyssLayer(layerId)    { openSortieConfirm({ type:'abyss', layerId }); }
+function confirmSortieColosseum(opponent)    {
+  // 当日上限のチェックを先に行う（モーダルが空振りしないように）
+  const col = gState.progress.colosseum;
+  const today = new Date().toDateString();
+  if (col && col.lastChallengeDate === today && (col.dailyChallenges||0) >= 3) {
+    showBonusToast && showBonusToast('本日の挑戦回数上限に達しました（3回/日）');
+    return;
+  }
+  openSortieConfirm({ type:'colosseum', opponent });
+}
 
 // ユニット名前変更
 function renameUnit(uid) {
@@ -24449,7 +24483,7 @@ function renderColosseumContent() {
       btn.className = 'btn btn-blue btn-sm';
       btn.textContent = '演習';
       btn.disabled = remaining <= 0;
-      btn.addEventListener('click', () => startColosseumBattle(opp));
+      btn.addEventListener('click', () => confirmSortieColosseum(opp));
       row.appendChild(btn);
       listWrap.appendChild(row);
     });
