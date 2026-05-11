@@ -2958,8 +2958,8 @@ img.item-icon {
         <span style="margin-left:auto;font-size:10px;color:var(--text3)" id="ranking-updated-at"></span>
       </div>
       <div style="display:flex;gap:6px;margin-bottom:10px">
-        <button onclick="setRankingTab('abyss')" id="rtab-abyss" class="rank-tab-btn rank-tab-active">⚔️ アビス</button>
-        <button onclick="setRankingTab('babel')" id="rtab-babel" class="rank-tab-btn">🗺️ バベル</button>
+        <button onclick="setRankingTab('babel')" id="rtab-babel" class="rank-tab-btn rank-tab-active">🗺️ メインステージ</button>
+        <button onclick="setRankingTab('abyss')" id="rtab-abyss" class="rank-tab-btn">⚔️ アビス</button>
         <button onclick="setRankingTab('level')" id="rtab-level" class="rank-tab-btn">⭐ Clan Lv</button>
       </div>
       <div id="ranking-list" style="min-height:200px">
@@ -24834,12 +24834,12 @@ function _ensureAnonId() {
 // ============================================================
 // ランキングモーダル
 // ============================================================
-let _rankingTab = 'abyss';
+let _rankingTab = 'babel';
 let _rankingData = [];
 
 function openRankingModal() {
   document.getElementById('ranking-modal').style.display = 'flex';
-  setRankingTab('abyss');
+  setRankingTab('babel');
   _loadRankingData();
 }
 function closeRankingModal() {
