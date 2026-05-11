@@ -4049,9 +4049,9 @@ const CLASS_DATA = {
     role: 'スカウト',
     species: 'specter',
     attackTypes: ['斬','裂'],
-    baseStats: { atk:950, hp:2000, pdef:5, mdef:5, spd:118, cri:22, cridam:180 },
-    baseSearch:  48,
-    baseStealth: 45,
+    baseStats: { atk:680, hp:2000, pdef:5, mdef:5, spd:118, cri:18, cridam:180 },
+    baseSearch:  52,
+    baseStealth: 50,
     baseHate:    150,
     openingSkill: {
       id:'as_open_shadow', name:'影潜り', type:'opening', target:'single',
@@ -4070,11 +4070,11 @@ const CLASS_DATA = {
     ],
     passiveSkills: [
       { id:'as_pass_night', name:'夜の狩人', type:'passive',
-        desc:'夜戦中ATK+20%・CRI+15%・SPD+15%',
-        effect:{ type:'night_bonus', atk:20, cri:15, spd:15 } },
+        desc:'夜戦中ATK+60%・CRI+30%・SPD+25。昼戦中ATK-15%',
+        effect:{ type:'night_bonus', atk:60, cri:30, spd:25, dayPenaltyAtk:-15 } },
       { id:'as_pass_shadow', name:'影の達人', type:'passive',
-        desc:'隠密+20%・CRI率常時+8%',
-        effect:{ type:'stealth_cri', stealth:20, cri:8 } },
+        desc:'隠密+25%・CRI率常時+8%',
+        effect:{ type:'stealth_cri', stealth:25, cri:8 } },
     ],
     skillPool: [],
     ultimates: [
@@ -4390,8 +4390,8 @@ const CLASS_DATA = {
     },
     activeSkills: [
       { id:'lc_dragon_pierce', name:'竜貫き', type:'red', target:'single',
-        power:3.0, cd:5, desc:'単体 ⚔️ Pw:3.0（後列にも50%貫通ダメージ）',
-        pierceHit:{ ratio:0.5 } },
+        power:3.0, cd:5, desc:'単体 ⚔️ Pw:3.0（対象の防御を50%無視）',
+        defPierce:{ ratio:0.5 } },
       { id:'lc_moon_slash', name:'円月槍', type:'red', target:'all',
         power:1.2, cd:7, desc:'全体 ⚔️ Pw:1.2 ＋ ATK-15% 2T',
         debuff:{ type:'atk_down', val:-15, turns:2 } },
@@ -4407,9 +4407,9 @@ const CLASS_DATA = {
     skillPool: [],
     ultimates: [
       { id:'lcu_heaven_thrust', name:'皇槍天衝',
-        effect:'前衛全体 ⚔️ Pw:4.5（後列に50%貫通）＋ 自身ATK+40%・SPD+20 3T',
+        effect:'敵全体 ⚔️ Pw:4.5（対象の防御を50%無視）＋ 自身ATK+40%・SPD+20 3T',
         power:4.5, type:'red', target:'front_row',
-        pierceHit:{ ratio:0.5 },
+        defPierce:{ ratio:0.5 },
         selfBuff:{ atk_up:40, spd_up:20, turns:3 } },
     ],
   },
@@ -4438,8 +4438,8 @@ const CLASS_DATA = {
     ],
     passiveSkills: [
       { id:'mn_pas_resonance', name:'戦歌の共鳴', type:'passive',
-        desc:'味方がスキルを使うたびMP+5%回復（全員）',
-        effect:{ type:'team_mp_on_skill', val:5 } },
+        desc:'3ターン毎、味方全体のスキルCDを1短縮',
+        effect:{ type:'team_cd_reduce_periodic', interval:3, val:1 } },
       { id:'mn_pas_ballad', name:'バラードの加護', type:'passive',
         desc:'味方全体SPD+8（常時）',
         effect:{ type:'team_spd_bonus', val:8 } },
@@ -4454,43 +4454,46 @@ const CLASS_DATA = {
     ],
   },
 
-  // ── プロフェッサー（ヒューム・レンジ）★3 ──
+  // ── プロフェッサー（ヒューム・サポート）★3 ──
   professor: {
     name: 'プロフェッサー', icon: '📚', iconImg: 'assets/images/class-professor.png',
-    role: 'レンジ', species: 'hume', attackTypes: ['魔'],
-    baseStats: { atk:820, hp:2300, mp:2800, pres:5, mres:14, bres:3, lres:0, spd:70, cri:9, cridam:150 },
-    baseSearch: 22, baseStealth: 5, baseHate: 200,
+    role: 'サポート', species: 'hume', attackTypes: ['魔'],
+    baseStats: { atk:600, hp:2800, mp:2800, pres:6, mres:16, bres:6, lres:0, spd:72, cri:4, cridam:135 },
+    baseSearch: 22, baseStealth: 5, baseHate: 170,
     openingSkill: {
       id:'pf_open_analyze', name:'解析眼', type:'buff', target:'all_enemy',
       desc:'敵全体の全耐性-15% 3T（奇襲時-25%）',
       effect:{ type:'all_res_down_all', val:-15, turns:3, surpriseVal:-25 }
     },
     activeSkills: [
-      { id:'pf_gravity', name:'重力魔法', type:'black', target:'all',
-        power:1.0, cd:7, desc:'全体 ✨ Pw:1.0 ＋ SPD-20・ATK-20% 3T',
+      { id:'pf_gravity', name:'重力場', type:'buff', target:'all_enemy',
+        power:0, cd:7, desc:'敵全体 SPD-25・ATK-25% 3T',
         effect:{ type:'multi_debuff', debuffs:[
-          { type:'spd_down', val:-20, turns:3 },
-          { type:'atk_down', val:-20, turns:3 },
+          { type:'spd_down', val:-25, turns:3 },
+          { type:'atk_down', val:-25, turns:3 },
         ]}},
-      { id:'pf_amplify', name:'弱体強化', type:'black', target:'single',
+      { id:'pf_amplify', name:'弱体強化', type:'buff', target:'single_enemy',
         power:0, cd:6, desc:'単体のデバフを強化（効果2倍・期間+2T）',
         effect:{ type:'debuff_amplify', multiplier:2, extraTurns:2 } },
     ],
     passiveSkills: [
       { id:'pf_pas_research', name:'研究の成果', type:'passive',
-        desc:'デバフ中の敵への与ダメ+18%（常時）',
-        effect:{ type:'dmg_vs_debuffed', val:18 } },
+        desc:'デバフ中の敵への味方全体の与ダメ+12%（常時）',
+        effect:{ type:'team_dmg_vs_debuffed', val:12 } },
       { id:'pf_pas_theory', name:'魔法理論', type:'passive',
-        desc:'全体攻撃時、対象の最も低い耐性に追加ダメージ+20%',
-        effect:{ type:'lowest_res_bonus', val:20 } },
+        desc:'自身が与えるデバフの持続時間+1T（常時）',
+        effect:{ type:'self_debuff_duration_extend', val:1 } },
     ],
     skillPool: [],
     ultimates: [
       { id:'pfu_forbidden', name:'禁断の理論',
-        effect:'単体 ✨ Pw:2.0 ＋ 全ステータス-25%・全耐性-25%（永続）→ 全体 ⚔️ Pw:1.5',
-        power:2.0, type:'black', target:'single',
-        debuff:{ type:'grand_debuff_permanent', statVal:-25, resVal:-25, turns:999 },
-        followUp:{ type:'red', target:'all', power:1.5 } },
+        effect:'敵全体 全ステータス-25%・全耐性-25% 5T ＋ 味方全体 全耐性+25%・SPD+25 3T',
+        power:0, type:'buff', target:'all_enemy',
+        debuff:{ type:'grand_debuff', statVal:-25, resVal:-25, turns:5 },
+        allyBuffs:[
+          { type:'all_res_up', val:25, turns:3 },
+          { type:'spd_up', val:25, turns:3 },
+        ]},
     ],
   },
 
@@ -13894,6 +13897,11 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       if (ps.effect?.type === 'heal_bonus') {
         combatant._passiveHealBonus = (ps.effect.val||20) / 100;
       }
+      // 夜戦特化パッシブの昼戦ペナルティを事前適用（夜戦突入時に解除される）
+      if (ps.effect?.type === 'night_bonus' && ps.effect.dayPenaltyAtk) {
+        combatant._dayPenaltyAtk = ps.effect.dayPenaltyAtk;
+        combatant.atk = Math.floor(combatant.atk * (1 + ps.effect.dayPenaltyAtk/100));
+      }
     });
     applyPassiveCards(combatant, unit);
 
@@ -14310,6 +14318,32 @@ function combatantAct(c, bs) {
     const key = c.isEnemy ? sk.name : sk.id;
     if ((c.skillCDs[key] || 0) > 0) c.skillCDs[key]--;
   });
+
+  // パッシブ: ミンストレル「戦歌の共鳴」 — 行動回数で味方全体のスキルCDを短縮
+  if (!c.isEnemy) {
+    const cdPass = (c.classPassives||[]).find(p => p.effect?.type === 'team_cd_reduce_periodic');
+    if (cdPass) {
+      const interval = cdPass.effect.interval || 3;
+      const reduceVal = cdPass.effect.val || 1;
+      c._cdResonanceCount = (c._cdResonanceCount || 0) + 1;
+      if (c._cdResonanceCount >= interval) {
+        c._cdResonanceCount = 0;
+        let reduced = 0;
+        (battleState?.allies || []).forEach(a => {
+          if (a.dead) return;
+          Object.keys(a.skillCDs || {}).forEach(k => {
+            if (a.skillCDs[k] > 0) {
+              a.skillCDs[k] = Math.max(0, a.skillCDs[k] - reduceVal);
+              reduced++;
+            }
+          });
+        });
+        if (reduced > 0) {
+          addLog(`${c.name}: <span class="tag tag-buff">${cdPass.name}</span> 味方全体スキルCD-${reduceVal}`, 'trigger');
+        }
+      }
+    }
+  }
 
   // eagle_eye 会心補正
   const eagleBuff = (c.buffs||[]).filter(b=>b.type==='eagle_eye');
@@ -15760,15 +15794,20 @@ function computeDmg(attacker, target, skill) {
     return Math.min(90, Math.max(0, res));
   };
 
+  // 防御貫通（対象の有効防御を ratio 分無視）
+  const defPierceRatio = Math.max(0, Math.min(1, skill.defPierce?.ratio || 0));
+
   const isSpec = ['spec','white','blue'].includes(dmgType);
   if (isSpec) {
     // 特殊ダメージ（spec/white/blue）: mdef耐性
-    const mdef = getRes(target.mdef||0, ['mdef_up'], ['mdef_down']);
+    let mdef = getRes(target.mdef||0, ['mdef_up'], ['mdef_down']);
+    if (defPierceRatio) mdef = mdef * (1 - defPierceRatio);
     const hpDmg = Math.max(minDmg, Math.floor(base * (1 - mdef/100) * staggerMult * nightMult));
     return { hpDmg, dmgType: 'spec' };
   } else {
     // 物理ダメージ（phys/red/black）: pdef耐性
-    const pdef = getRes(target.pdef||0, ['pdef_up','rampart','aegis'], ['pdef_down']);
+    let pdef = getRes(target.pdef||0, ['pdef_up','rampart','aegis'], ['pdef_down']);
+    if (defPierceRatio) pdef = pdef * (1 - defPierceRatio);
     const hpDmg = Math.max(minDmg, Math.floor(base * (1 - pdef/100) * staggerMult * nightMult));
     return { hpDmg, dmgType: 'phys' };
   }
@@ -16939,10 +16978,15 @@ function applyNightModifiers() {
         c.nightDamageMult = 1.35;
         addLog(`${c.name}: 夜戦 ダメージ+35%`, 'trigger');
       }
-      // パッシブ: 夜の狩人（アサシン: 夜戦ATK+20%・CRI+15%・SPD+15%）
+      // パッシブ: 夜の狩人（アサシン等の夜戦特化）
       const nightPass = (cls?.passiveSkills||[]).find(p=>p.effect?.type==='night_bonus');
       if (nightPass) {
         const np = nightPass.effect;
+        // 昼戦ペナルティが付与されていれば先に解除
+        if (c._dayPenaltyAtk) {
+          c.atk = Math.floor(c.atk / (1 + c._dayPenaltyAtk/100));
+          c._dayPenaltyAtk = 0;
+        }
         c.atk = Math.floor(c.atk * (1 + (np.atk||0)/100));
         c.cri += (np.cri||0);
         c.spd += (np.spd||0);
