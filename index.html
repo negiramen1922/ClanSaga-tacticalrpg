@@ -22866,17 +22866,104 @@ function renderLibraryContent() {
     const count = gState.ownedUnits.filter(u=>u.classId===cid).length;
     const card = document.createElement('div');
     card.className = 'lib-class-card' + (count>0?' collected':'');
+    if (count > 0) card.style.cursor = 'pointer';
     card.innerHTML = `
       <div class="lib-icon">${classIconHTML(cid,"32px")}</div>
       <div class="lib-name">${cls.name}</div>
       <div class="lib-count">${count>0?`所持: ${count}体`:'未収集'}</div>`;
+    // 所持済みクラスのみ詳細画面を開ける
+    if (count > 0) card.addEventListener('click', () => openClassDetail(cid));
     grid.appendChild(card);
   });
   el.appendChild(grid);
 }
 
+function openClassDetail(cid) {
+  const cls = CLASS_DATA[cid];
+  if (!cls) return;
+  // 初閲覧ボーナス（10）
+  _claimFirstViewReward('class', cid);
+  const el = document.getElementById('library-content');
+  const bs = cls.baseStats || {};
+  const atkTypes = Array.isArray(cls.attackTypes) ? cls.attackTypes.join(' / ') : '';
+  const ult = (cls.ultimates && cls.ultimates[0]) || null;
+  const open = cls.openingSkill;
+  const passives = (cls.passiveSkills || []).map(p =>
+    `<div style="font-size:11px;color:var(--text2);padding:2px 0">・${p.name} <span style="color:var(--text3)">${p.desc||''}</span></div>`
+  ).join('');
+  el.innerHTML = `
+    <button class="btn btn-outline btn-sm" onclick="renderLibraryContent()" style="margin-bottom:12px">← 図鑑に戻る</button>
+    <div style="text-align:center;padding:16px 0 12px">
+      <div style="font-size:52px">${classIconHTML(cid,'52px')}</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin:8px 0 4px">${cls.name}</div>
+      <div style="font-size:11px;color:var(--text3);letter-spacing:2px">${roleIconHTML(cid,'14px')} ${cls.role||''}${atkTypes?` ・ ${atkTypes}`:''}</div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);padding:12px;margin-bottom:8px;border-radius:4px">
+      <div class="lib-bonus-title">基本ステータス</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px;color:var(--text2)">
+        <div>HP <span style="color:var(--green);font-weight:700">${fmt(bs.hp||0)}</span></div>
+        <div>ATK <span style="color:var(--orange);font-weight:700">${fmt(bs.atk||0)}</span></div>
+        <div>SPD <span style="color:var(--accent2)">${bs.spd||0}</span></div>
+        <div>CRI <span style="color:var(--gold)">${bs.cri||0}%</span></div>
+        <div>物理耐性 <span style="color:var(--text)">${bs.pdef||0}</span></div>
+        <div>特殊耐性 <span style="color:var(--text)">${bs.mdef||0}</span></div>
+      </div>
+    </div>
+    ${open ? `<div style="background:var(--bg3);border:1px solid var(--border);padding:12px;margin-bottom:8px;border-radius:4px">
+      <div class="lib-bonus-title">開幕スキル</div>
+      <div style="font-size:11px;color:var(--text2)">・${open.name} <span style="color:var(--text3)">${open.desc||''}</span></div>
+    </div>` : ''}
+    ${passives ? `<div style="background:var(--bg3);border:1px solid var(--border);padding:12px;margin-bottom:8px;border-radius:4px">
+      <div class="lib-bonus-title">パッシブ</div>${passives}
+    </div>` : ''}
+    ${ult ? `<div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(74,127,255,0.05));border:1px solid rgba(201,168,76,0.3);padding:12px;border-radius:4px">
+      <div class="lib-bonus-title" style="color:var(--gold)">必殺技</div>
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:2px">${ult.name}</div>
+      <div style="font-size:11px;color:var(--text2)">${ult.effect||''}</div>
+    </div>` : ''}`;
+}
+
 // ===== モンスター図鑑 =====
 let _monsterBookList = [];
+let _bossMonsterNames = null;
+
+// 各エリア最終ステージに出てくる敵をボスとみなす（遅延構築）
+function _getBossMonsterNames() {
+  if (_bossMonsterNames) return _bossMonsterNames;
+  const set = new Set();
+  BABEL_AREAS.forEach(area => {
+    const last = area.stages[area.stages.length - 1];
+    if (!last) return;
+    (last.enemies || []).forEach(wave => wave.forEach(e => set.add(e.name)));
+  });
+  _bossMonsterNames = set;
+  return set;
+}
+
+// 初回詳細閲覧で星晶石を付与（モンスター: 通常5/ボス20、クラス: 10）
+function _claimFirstViewReward(kind, key) {
+  if (!gState.library) gState.library = { discovered: [] };
+  if (!gState.library.viewedMonsters) gState.library.viewedMonsters = [];
+  if (!gState.library.viewedClasses)  gState.library.viewedClasses  = [];
+  const list = kind === 'monster' ? gState.library.viewedMonsters : gState.library.viewedClasses;
+  if (list.includes(key)) return 0;
+  let reward;
+  let label;
+  if (kind === 'monster') {
+    const isBoss = _getBossMonsterNames().has(key);
+    reward = isBoss ? 20 : 5;
+    label  = isBoss ? '初観察ボーナス（ボス）' : '初観察ボーナス';
+  } else {
+    reward = 10;
+    label  = '初閲覧ボーナス';
+  }
+  list.push(key);
+  gState.player.starCrystal = (gState.player.starCrystal||0) + reward;
+  saveState();
+  updateTopBar();
+  toast(`💎 星晶石 +${reward}（${label}）`);
+  return reward;
+}
 
 function renderLibraryMonsters(el) {
   const seen = new Set();
@@ -22923,6 +23010,8 @@ function renderLibraryMonsters(el) {
 function openMonsterDetail(idx) {
   const m = _monsterBookList[idx];
   if (!m) return;
+  // 初観察ボーナス（通常5・ボス20）
+  _claimFirstViewReward('monster', m.name);
   const skills = (m.enemySkills||[]).map(s =>
     `<div style="font-size:11px;color:var(--text2);padding:2px 0">・${s.name} <span style="color:var(--text3)">(${s.type}属性 ×${s.power}${s.target==='all'?' 全体':''})</span></div>`
   ).join('');
