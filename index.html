@@ -1628,6 +1628,17 @@ img.item-icon {
   box-shadow:0 0 4px rgba(224,85,85,0.7);
   pointer-events:none;
 }
+.lib-shelf-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:4px; }
+.lib-book {
+  background:linear-gradient(160deg,rgba(120,90,60,0.18),rgba(60,40,30,0.25));
+  border:1px solid rgba(201,168,76,0.35); border-radius:6px;
+  padding:18px 12px; text-align:center; cursor:pointer; position:relative;
+  transition:transform 0.12s, border-color 0.12s, background 0.12s;
+}
+.lib-book:hover { border-color:var(--gold); transform:translateY(-2px); }
+.lib-book .lb-icon { font-size:36px; line-height:1; margin-bottom:6px; }
+.lib-book .lb-title { font-family:'Cinzel',serif; font-size:13px; color:var(--gold); margin-bottom:2px; }
+.lib-book .lb-count { font-size:10px; color:var(--text3); }
 .shop-item { display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:8px; }
 .shop-item-icon { font-size:24px;flex-shrink:0; }
 .shop-item-info { flex:1; }
@@ -13143,6 +13154,7 @@ function _executeAbyssSweep(layerId, n) {
     const accRarity = rollAbyssAccRarity(layerId);
     const acc = generateAccessory(accRarity);
     gState.accessories.push(acc);
+    if (typeof _markAccessoryDiscovered === 'function') _markAccessoryDiscovered(acc.setId, acc.partId);
     gained.push(acc);
     rarCount[accRarity] = (rarCount[accRarity] || 0) + 1;
   }
@@ -16575,6 +16587,7 @@ function endBattle(victory) {
           } else {
             const _fcUid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
             gState.artifacts.push({ id: _fcDef.id, uid: _fcUid, level: 0, rank: 0, conste: 0 });
+            if (typeof _markArtifactDiscovered === 'function') _markArtifactDiscovered(_fcDef.id);
             drops.push({ name:`${_fcDef.icon} <span style="color:${_rarColor[_fcRarity]};font-weight:700">${_fcRarity}</span> 【${_fcDef.name}】（初回クリア）` });
           }
         }
@@ -16675,6 +16688,7 @@ function endBattle(victory) {
         if (!gState.accessories) gState.accessories = [];
         const _newAcc = generateAccessory(1);
         gState.accessories.push(_newAcc);
+        if (typeof _markAccessoryDiscovered === 'function') _markAccessoryDiscovered(_newAcc.setId, _newAcc.partId);
         const _aSet = ACCESSORY_SETS.find(s=>s.id===_newAcc.setId);
         drops.push({ name:`${_aSet?.icon||'✦'} ★ アクセサリー [${_aSet?.name||'?'}] (${_newAcc.mainStat.label}+${_newAcc.mainStat.val})` });
       }
@@ -18362,6 +18376,7 @@ function _showFirstBattleAFGacha() {
     } else {
       const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000) + '_' + i;
       gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0, conste: 0 });
+      if (typeof _markArtifactDiscovered === 'function') _markArtifactDiscovered(def.id);
       results.push({ def, rarity, isDupe: false });
     }
   }
@@ -18501,6 +18516,7 @@ function doArtifactGachaFromPanel(count) {
     } else {
       const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000) + '_' + i;
       gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0, conste: 0 });
+      if (typeof _markArtifactDiscovered === 'function') _markArtifactDiscovered(def.id);
       results.push({ def, rarity, isDupe: false });
     }
   }
@@ -18586,6 +18602,7 @@ function execAfMileageExchange(artifactId, overlayEl) {
   } else {
     const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
     gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0, conste: 0 });
+    if (typeof _markArtifactDiscovered === 'function') _markArtifactDiscovered(def.id);
     toast(`${def.icon}【${def.name}】(SSR) を交換で入手しました！`);
   }
   saveState(); updateTopBar();
@@ -23082,19 +23099,60 @@ function unlockStarNode(nodeId, cost) {
 }
 
 // ===== 大図書館 =====
-// 未閲覧の図鑑エントリ（所持クラス・発見済みモンスター）があるか
+// 発見記録の初期化と現所持品からのスイープ
+function _ensureLibraryState() {
+  if (!gState.library) gState.library = { discovered: [] };
+  const lib = gState.library;
+  if (!Array.isArray(lib.discovered))            lib.discovered = [];
+  if (!Array.isArray(lib.viewedMonsters))        lib.viewedMonsters = [];
+  if (!Array.isArray(lib.viewedClasses))         lib.viewedClasses = [];
+  if (!Array.isArray(lib.discoveredArtifacts))   lib.discoveredArtifacts = [];
+  if (!Array.isArray(lib.viewedArtifacts))       lib.viewedArtifacts = [];
+  if (!Array.isArray(lib.discoveredAccessories)) lib.discoveredAccessories = [];
+  if (!Array.isArray(lib.viewedAccessorySets))   lib.viewedAccessorySets = [];
+}
+function _syncLibraryDiscovery() {
+  _ensureLibraryState();
+  const lib = gState.library;
+  // アーティファクトは手放す機能がないので現所持品からスイープで十分
+  const af = new Set(lib.discoveredArtifacts);
+  (gState.artifacts||[]).forEach(a => { if (a && a.id) af.add(a.id); });
+  lib.discoveredArtifacts = [...af];
+  // アクセサリーは分解で消えるので、ここでも所持品をスイープしておく
+  const acc = new Set(lib.discoveredAccessories);
+  (gState.accessories||[]).forEach(a => { if (a && a.setId && a.partId) acc.add(`${a.setId}:${a.partId}`); });
+  lib.discoveredAccessories = [...acc];
+}
+function _markArtifactDiscovered(id) {
+  _ensureLibraryState();
+  if (id && !gState.library.discoveredArtifacts.includes(id)) {
+    gState.library.discoveredArtifacts.push(id);
+  }
+}
+function _markAccessoryDiscovered(setId, partId) {
+  _ensureLibraryState();
+  if (!setId || !partId) return;
+  const key = `${setId}:${partId}`;
+  if (!gState.library.discoveredAccessories.includes(key)) {
+    gState.library.discoveredAccessories.push(key);
+  }
+}
+
+// 未閲覧の図鑑エントリ（クラス・モンスター・AF・アクセセット）があるか
 function hasUnviewedLibraryItems() {
   if (!gState || !gState.library) return false;
-  const viewedClasses  = new Set(gState.library.viewedClasses  || []);
-  const ownedClassIds  = new Set((gState.ownedUnits||[]).map(u=>u.classId));
-  for (const cid of ownedClassIds) {
-    if (!viewedClasses.has(cid)) return true;
-  }
-  const viewedMonsters = new Set(gState.library.viewedMonsters || []);
-  const discovered     = gState.library.discovered || [];
-  for (const name of discovered) {
-    if (!viewedMonsters.has(name)) return true;
-  }
+  _syncLibraryDiscovery();
+  const lib = gState.library;
+  const viewedClasses = new Set(lib.viewedClasses || []);
+  const ownedClassIds = new Set((gState.ownedUnits||[]).map(u=>u.classId));
+  for (const cid of ownedClassIds) if (!viewedClasses.has(cid)) return true;
+  const viewedMonsters = new Set(lib.viewedMonsters || []);
+  for (const name of (lib.discovered||[])) if (!viewedMonsters.has(name)) return true;
+  const viewedAF = new Set(lib.viewedArtifacts || []);
+  for (const id of (lib.discoveredArtifacts||[])) if (!viewedAF.has(id)) return true;
+  const viewedAccSets = new Set(lib.viewedAccessorySets || []);
+  const discAccSets = new Set((lib.discoveredAccessories||[]).map(k => k.split(':')[0]));
+  for (const sid of discAccSets) if (!viewedAccSets.has(sid)) return true;
   return false;
 }
 
@@ -23106,7 +23164,8 @@ function updateLibraryBaseNotify() {
 }
 
 function openLibraryPanel() {
-  renderLibraryContent();
+  _syncLibraryDiscovery();
+  renderLibraryShelf();
   document.getElementById('library-modal').classList.add('open');
 }
 
@@ -23116,21 +23175,67 @@ function closeLibraryPanel() {
 }
 
 function openLibraryMonsterBook() {
+  _syncLibraryDiscovery();
   document.getElementById('library-modal').classList.add('open');
   renderLibraryMonsters(document.getElementById('library-content'));
 }
 
-function renderLibraryContent() {
+// ===== 本棚画面：4冊の本 =====
+function renderLibraryShelf() {
+  _syncLibraryDiscovery();
+  const el = document.getElementById('library-content');
+  if (!el) return;
+  const lib = gState.library;
+  const allClasses = Object.keys(CLASS_DATA);
+  const ownedClassIds = new Set(gState.ownedUnits.map(u=>u.classId));
+  const classCollected = allClasses.filter(c => ownedClassIds.has(c)).length;
+  const viewedClasses  = new Set(lib.viewedClasses || []);
+  const monsterTotal = _getMonsterBookTotal();
+  const monsterFound = (lib.discovered||[]).length;
+  const viewedMonsters = new Set(lib.viewedMonsters || []);
+  const afTotal = ARTIFACT_POOL.length;
+  const afFound = (lib.discoveredArtifacts||[]).length;
+  const viewedAF = new Set(lib.viewedArtifacts || []);
+  const accTotal = ACCESSORY_SETS.length;
+  const discAccSets = new Set((lib.discoveredAccessories||[]).map(k => k.split(':')[0]));
+  const viewedAccSets = new Set(lib.viewedAccessorySets || []);
+
+  const classUnviewed   = [...ownedClassIds].some(c => !viewedClasses.has(c));
+  const monsterUnviewed = (lib.discovered||[]).some(n => !viewedMonsters.has(n));
+  const afUnviewed      = (lib.discoveredArtifacts||[]).some(id => !viewedAF.has(id));
+  const accUnviewed     = [...discAccSets].some(sid => !viewedAccSets.has(sid));
+
+  const books = [
+    { id:'class',  icon:'📖', title:'キャラクター図鑑', count:`${classCollected}/${allClasses.length}種`, unviewed:classUnviewed,   handler:'renderLibraryClasses()' },
+    { id:'mon',    icon:'🐉', title:'モンスター図鑑',  count:`${monsterFound}/${monsterTotal}種`,        unviewed:monsterUnviewed, handler:"renderLibraryMonsters(document.getElementById('library-content'))" },
+    { id:'af',     icon:'🔩', title:'アーティファクト図鑑', count:`${afFound}/${afTotal}種`,              unviewed:afUnviewed,      handler:'renderLibraryArtifacts()' },
+    { id:'acc',    icon:'💍', title:'アクセサリー図鑑',     count:`${discAccSets.size}/${accTotal}星座`, unviewed:accUnviewed,     handler:'renderLibraryAccessories()' },
+  ];
+
+  el.innerHTML = `
+    <div style="font-size:11px;color:var(--text3);letter-spacing:2px;margin-bottom:10px;text-align:center">📚 開きたい本を選んでください</div>
+    <div class="lib-shelf-grid">
+      ${books.map(b => `
+        <div class="lib-book" onclick="${b.handler}">
+          <div class="lb-icon">${b.icon}</div>
+          <div class="lb-title">${b.title}</div>
+          <div class="lb-count">${b.count}</div>
+          ${b.unviewed ? '<div class="lib-notify-dot"></div>' : ''}
+        </div>`).join('')}
+    </div>`;
+}
+
+// ===== キャラクター図鑑 =====
+function renderLibraryClasses() {
   const el = document.getElementById('library-content');
   el.innerHTML = '';
 
-  // モンスター図鑑ボタン
-  const monBtn = document.createElement('button');
-  monBtn.className = 'btn btn-outline btn-sm';
-  monBtn.style.cssText = 'width:100%;margin-bottom:12px;font-size:12px;';
-  monBtn.innerHTML = '🐉 モンスター図鑑を開く';
-  monBtn.addEventListener('click', () => renderLibraryMonsters(el));
-  el.appendChild(monBtn);
+  const backBtn = document.createElement('button');
+  backBtn.className = 'btn btn-outline btn-sm';
+  backBtn.style.cssText = 'margin-bottom:10px;font-size:11px;';
+  backBtn.textContent = '← 本棚に戻る';
+  backBtn.addEventListener('click', renderLibraryShelf);
+  el.appendChild(backBtn);
 
   const collectedClasses = new Set(gState.ownedUnits.map(u=>u.classId));
   const allClasses = Object.keys(CLASS_DATA);
@@ -23190,7 +23295,7 @@ function openClassDetail(cid) {
     `<div style="font-size:11px;color:var(--text2);padding:2px 0">・${p.name} <span style="color:var(--text3)">${p.desc||''}</span></div>`
   ).join('');
   el.innerHTML = `
-    <button class="btn btn-outline btn-sm" onclick="renderLibraryContent()" style="margin-bottom:12px">← 図鑑に戻る</button>
+    <button class="btn btn-outline btn-sm" onclick="renderLibraryClasses()" style="margin-bottom:12px">← キャラクター図鑑に戻る</button>
     <div style="text-align:center;padding:16px 0 12px">
       <div style="font-size:52px">${classIconHTML(cid,'52px')}</div>
       <div style="font-size:18px;font-weight:700;color:var(--text);margin:8px 0 4px">${cls.name}</div>
@@ -23238,15 +23343,27 @@ function _getBossMonsterNames() {
   return set;
 }
 
-// 初回詳細閲覧で星晶石を付与（モンスター: 通常5/ボス20、クラス: 10）
+// 図鑑におけるモンスター総数（重複除去）
+function _getMonsterBookTotal() {
+  const seen = new Set();
+  BABEL_AREAS.forEach(area => area.stages.forEach(stage => {
+    (stage.enemies||[]).forEach(wave => wave.forEach(e => seen.add(e.name)));
+  }));
+  return seen.size;
+}
+
+// 初回詳細閲覧で星晶石を付与（モンスター: 通常5/ボス20、クラス/AF/アクセセット: 10）
 function _claimFirstViewReward(kind, key) {
-  if (!gState.library) gState.library = { discovered: [] };
-  if (!gState.library.viewedMonsters) gState.library.viewedMonsters = [];
-  if (!gState.library.viewedClasses)  gState.library.viewedClasses  = [];
-  const list = kind === 'monster' ? gState.library.viewedMonsters : gState.library.viewedClasses;
+  _ensureLibraryState();
+  const lib = gState.library;
+  let list;
+  if      (kind === 'monster')      list = lib.viewedMonsters;
+  else if (kind === 'class')        list = lib.viewedClasses;
+  else if (kind === 'artifact')     list = lib.viewedArtifacts;
+  else if (kind === 'accessorySet') list = lib.viewedAccessorySets;
+  else return 0;
   if (list.includes(key)) return 0;
-  let reward;
-  let label;
+  let reward, label;
   if (kind === 'monster') {
     const isBoss = _getBossMonsterNames().has(key);
     reward = isBoss ? 20 : 5;
@@ -23302,7 +23419,7 @@ function renderLibraryMonsters(el) {
   }).join('');
 
   el.innerHTML = `
-    <button class="btn btn-outline btn-sm" onclick="renderLibraryContent()" style="margin-bottom:10px">← キャラクター図鑑</button>
+    <button class="btn btn-outline btn-sm" onclick="renderLibraryShelf()" style="margin-bottom:10px">← 本棚に戻る</button>
     <div class="lib-bonus-title" style="margin-bottom:8px">モンスター図鑑 ${foundCount}/${total}種 発見済み</div>
     ${foundCount === 0 ? '<div style="color:var(--text3);font-size:11px;padding:8px 0 12px">まだモンスターを倒していません。バトルで倒したモンスターが登録されます。</div>' : ''}
     <div class="lib-monster-grid">${grid}</div>`;
@@ -23342,6 +23459,160 @@ function openMonsterDetail(idx) {
     ${skills ? `<div style="background:var(--bg3);border:1px solid var(--border);padding:12px;border-radius:4px">
       <div class="lib-bonus-title">スキル</div>${skills}
     </div>` : ''}`;
+}
+
+// ===== アーティファクト図鑑 =====
+const _LIB_AF_RARITY_COLOR = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
+const _LIB_AF_RARITY_ORDER = { SSR:0, SR:1, N:2 };
+
+function renderLibraryArtifacts() {
+  _syncLibraryDiscovery();
+  const el = document.getElementById('library-content');
+  if (!el) return;
+  const lib = gState.library;
+  const discovered = new Set(lib.discoveredArtifacts || []);
+  const viewed     = new Set(lib.viewedArtifacts || []);
+  const sorted = ARTIFACT_POOL.slice().sort((a,b)=>{
+    const ra = _LIB_AF_RARITY_ORDER[a.rarity] ?? 99;
+    const rb = _LIB_AF_RARITY_ORDER[b.rarity] ?? 99;
+    if (ra !== rb) return ra - rb;
+    return a.name.localeCompare(b.name);
+  });
+  const total = sorted.length;
+  const foundCount = sorted.filter(d => discovered.has(d.id)).length;
+
+  const grid = sorted.map(def => {
+    const isFound = discovered.has(def.id);
+    const isUnviewed = isFound && !viewed.has(def.id);
+    const rc = _LIB_AF_RARITY_COLOR[def.rarity] || 'var(--text3)';
+    if (isFound) {
+      return `
+      <div class="lib-monster-card" style="border-color:${rc}" onclick="openLibraryArtifactDetail('${def.id}')">
+        <div style="font-size:28px">${def.icon||'🔩'}</div>
+        <div style="font-size:11px;font-weight:700;color:${rc};margin-top:4px">${def.rarity}</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text);margin:2px 0">${def.name}</div>
+        <div style="font-size:10px;color:var(--text3)">${def.kind||''}</div>
+        ${isUnviewed ? '<div class="lib-notify-dot"></div>' : ''}
+      </div>`;
+    }
+    return `
+      <div class="lib-monster-card" style="opacity:0.35;cursor:default;filter:grayscale(1)">
+        <div style="font-size:28px">❓</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin:4px 0 2px">???</div>
+        <div style="font-size:10px;color:var(--text3)">未発見</div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <button class="btn btn-outline btn-sm" onclick="renderLibraryShelf()" style="margin-bottom:10px;font-size:11px">← 本棚に戻る</button>
+    <div class="lib-bonus-title" style="margin-bottom:8px">アーティファクト図鑑 ${foundCount}/${total}種 発見済み</div>
+    ${foundCount === 0 ? '<div style="color:var(--text3);font-size:11px;padding:8px 0 12px">まだアーティファクトを入手していません。ガチャで入手しましょう。</div>' : ''}
+    <div class="lib-monster-grid">${grid}</div>`;
+}
+
+function openLibraryArtifactDetail(id) {
+  const def = ARTIFACT_POOL.find(d => d.id === id);
+  if (!def) return;
+  _claimFirstViewReward('artifact', id);
+  const rc = _LIB_AF_RARITY_COLOR[def.rarity] || 'var(--text3)';
+  const ms = def.mainStat || {};
+  const conds = (def.conditions||[]).map(c => `
+    <div style="padding:6px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:700;color:var(--accent2);margin-bottom:2px">[${c.type||'-'}]${c.req?` <span style="color:var(--text3)">${c.req}</span>`:''}</div>
+      <div style="font-size:11px;color:var(--text2)">${c.desc||''}</div>
+    </div>`).join('');
+  const el = document.getElementById('library-content');
+  el.innerHTML = `
+    <button class="btn btn-outline btn-sm" onclick="renderLibraryArtifacts()" style="margin-bottom:12px;font-size:11px">← アーティファクト図鑑に戻る</button>
+    <div style="text-align:center;padding:16px 0 12px">
+      <div style="font-size:52px">${def.icon||'🔩'}</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin:8px 0 4px">${def.name}</div>
+      <div style="font-size:11px;letter-spacing:2px"><span style="color:${rc};font-weight:700">${def.rarity}</span> <span style="color:var(--text3)">${def.kind||''}</span></div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);padding:12px;margin-bottom:8px;border-radius:4px">
+      <div class="lib-bonus-title">メインステータス</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px;color:var(--text2)">
+        <div>ATK <span style="color:var(--orange);font-weight:700">+${ms.atk||0}</span></div>
+        <div>HP <span style="color:var(--green);font-weight:700">+${ms.hp||0}</span></div>
+      </div>
+    </div>
+    ${conds ? `<div style="background:var(--bg3);border:1px solid var(--border);padding:12px;border-radius:4px">
+      <div class="lib-bonus-title">発動条件</div>${conds}
+    </div>` : ''}`;
+}
+
+// ===== アクセサリー図鑑 =====
+function renderLibraryAccessories() {
+  _syncLibraryDiscovery();
+  const el = document.getElementById('library-content');
+  if (!el) return;
+  const lib = gState.library;
+  const discAccSets = new Set((lib.discoveredAccessories||[]).map(k => k.split(':')[0]));
+  const viewedSets  = new Set(lib.viewedAccessorySets || []);
+  const total = ACCESSORY_SETS.length;
+  const foundCount = ACCESSORY_SETS.filter(s => discAccSets.has(s.id)).length;
+
+  const grid = ACCESSORY_SETS.map(set => {
+    const isFound = discAccSets.has(set.id);
+    const isUnviewed = isFound && !viewedSets.has(set.id);
+    if (isFound) {
+      const partCount = (lib.discoveredAccessories||[]).filter(k => k.startsWith(set.id + ':')).length;
+      return `
+      <div class="lib-monster-card" onclick="openLibraryAccessoryDetail('${set.id}')">
+        <div style="font-size:28px">${set.icon||'✦'}</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text);margin:4px 0 2px">${set.name}</div>
+        <div style="font-size:10px;color:var(--text3)">${partCount}/6 部位</div>
+        ${isUnviewed ? '<div class="lib-notify-dot"></div>' : ''}
+      </div>`;
+    }
+    return `
+      <div class="lib-monster-card" style="opacity:0.35;cursor:default;filter:grayscale(1)">
+        <div style="font-size:28px">❓</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin:4px 0 2px">???</div>
+        <div style="font-size:10px;color:var(--text3)">未発見</div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <button class="btn btn-outline btn-sm" onclick="renderLibraryShelf()" style="margin-bottom:10px;font-size:11px">← 本棚に戻る</button>
+    <div class="lib-bonus-title" style="margin-bottom:8px">アクセサリー図鑑 ${foundCount}/${total}星座 発見済み</div>
+    ${foundCount === 0 ? '<div style="color:var(--text3);font-size:11px;padding:8px 0 12px">まだアクセサリーを入手していません。アビスや鍛冶屋で入手しましょう。</div>' : ''}
+    <div class="lib-monster-grid">${grid}</div>`;
+}
+
+function openLibraryAccessoryDetail(setId) {
+  const set = ACCESSORY_SETS.find(s => s.id === setId);
+  if (!set) return;
+  _claimFirstViewReward('accessorySet', setId);
+  const ownedKeys = new Set(gState.library?.discoveredAccessories || []);
+  const partsHTML = ACC_PARTS.map(p => {
+    const has = ownedKeys.has(`${setId}:${p.id}`);
+    return `
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);${has?'':'opacity:0.4'}">
+        <span style="font-size:14px;width:18px;text-align:center">${has?'✓':'—'}</span>
+        <div style="flex:1">
+          <div style="font-size:11px;font-weight:700;color:${has?'var(--text)':'var(--text3)'}">${p.name} <span style="font-size:10px;color:var(--text3)">[${p.slot}]</span></div>
+        </div>
+        <span style="font-size:10px;color:var(--text3)">${has?'発見済':'未発見'}</span>
+      </div>`;
+  }).join('');
+  const el = document.getElementById('library-content');
+  el.innerHTML = `
+    <button class="btn btn-outline btn-sm" onclick="renderLibraryAccessories()" style="margin-bottom:12px;font-size:11px">← アクセサリー図鑑に戻る</button>
+    <div style="text-align:center;padding:16px 0 12px">
+      <div style="font-size:52px">${set.icon||'✦'}</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin:8px 0 4px">${set.name}</div>
+      <div style="font-size:11px;color:var(--text3);letter-spacing:2px">星辰のアクセサリー</div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);padding:12px;margin-bottom:8px;border-radius:4px">
+      <div class="lib-bonus-title">セット効果</div>
+      <div style="font-size:11px;color:var(--text2);padding:3px 0">・2部位: <span style="color:var(--accent2)">${set.label2||'—'}</span></div>
+      <div style="font-size:11px;color:var(--text2);padding:3px 0">・4部位: <span style="color:var(--gold)">${set.label4||'—'}</span></div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);padding:12px;border-radius:4px">
+      <div class="lib-bonus-title">部位発見状況</div>
+      ${partsHTML}
+    </div>`;
 }
 
 // ===== ショップ =====
@@ -23834,6 +24105,7 @@ function doArtifactGacha() {
   } else {
     const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000);
     gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0, conste: 0 });
+    if (typeof _markArtifactDiscovered === 'function') _markArtifactDiscovered(def.id);
     showBonusToast(`${def.icon} <span style="color:${rarColor[def.rarity]};font-weight:700">${def.rarity}</span> 【${def.name}】 鋳造完了！`, true);
   }
   saveState();
@@ -24207,7 +24479,9 @@ function buyAccWithCoin(rarity, cost) {
   if ((gState.player.starCrystal||0) < cost) return;
   gState.player.starCrystal -= cost;
   if (!gState.accessories) gState.accessories = [];
-  gState.accessories.push(generateAccessory(rarity));
+  const _newAcc = generateAccessory(rarity);
+  gState.accessories.push(_newAcc);
+  if (typeof _markAccessoryDiscovered === 'function') _markAccessoryDiscovered(_newAcc.setId, _newAcc.partId);
   saveState(); updateTopBar();
   const inner = document.getElementById('acc-buy-inner');
   if (inner) _renderAccBuy(inner); else renderAccListTab();
@@ -24217,7 +24491,9 @@ function buyAccessory(rarity, cost) {
   if ((gState.player.starCrystal||0) < cost) return;
   gState.player.starCrystal -= cost;
   if (!gState.accessories) gState.accessories = [];
-  gState.accessories.push(generateAccessory(rarity));
+  const _newAcc = generateAccessory(rarity);
+  gState.accessories.push(_newAcc);
+  if (typeof _markAccessoryDiscovered === 'function') _markAccessoryDiscovered(_newAcc.setId, _newAcc.partId);
   saveState(); updateTopBar();
   const inner = document.getElementById('acc-buy-inner');
   if (inner) _renderAccBuy(inner); else renderAccListTab();
@@ -24607,6 +24883,7 @@ function giveAbyssLayerReward(layerId) {
   const accRarity = rollAbyssAccRarity(layerId);
   const acc = generateAccessory(accRarity);
   gState.accessories.push(acc);
+  if (typeof _markAccessoryDiscovered === 'function') _markAccessoryDiscovered(acc.setId, acc.partId);
 
   // 星晶石（初回クリアのみ）
   const milestoneKey    = `abyssMilestone${layerId}`;
