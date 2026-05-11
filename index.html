@@ -1217,6 +1217,64 @@ img.item-icon {
 }
 .gc-skip:hover { color: var(--gold); }
 
+/* パチンコ風: 画面フラッシュ */
+.gc-flash {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, currentColor 0%, transparent 70%);
+  opacity: 0; mix-blend-mode: screen;
+  animation: gcFlash 0.55s ease-out forwards;
+}
+@keyframes gcFlash {
+  0%   { opacity: 0; }
+  18%  { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+/* パチンコ風: リーチ/プレミア告知バナー */
+.gc-banner {
+  position: absolute; left: 50%; top: 18%;
+  transform: translate(-50%, -40%) scale(0.6) rotate(-6deg);
+  font-family: 'Cinzel', serif; font-weight: 900;
+  font-size: 48px; letter-spacing: 8px;
+  color: currentColor;
+  text-shadow:
+    0 0 12px currentColor,
+    0 0 28px currentColor,
+    0 4px 0 rgba(0,0,0,0.5);
+  pointer-events: none;
+  animation: gcBannerIn 1.2s cubic-bezier(0.2,1.4,0.3,1) forwards;
+  white-space: nowrap;
+}
+@keyframes gcBannerIn {
+  0%   { transform: translate(-50%, -120%) scale(0.4) rotate(-18deg); opacity: 0; }
+  20%  { transform: translate(-50%, -40%)  scale(1.25) rotate(4deg);  opacity: 1; }
+  35%  { transform: translate(-50%, -40%)  scale(1.0)  rotate(-3deg); opacity: 1; }
+  85%  { transform: translate(-50%, -40%)  scale(1.0)  rotate(-3deg); opacity: 1; }
+  100% { transform: translate(-50%, -40%)  scale(1.6)  rotate(0deg);  opacity: 0; }
+}
+/* パチンコ風: 心拍ドキドキ（オーブ拡縮） */
+.gc-orb.gc-heartbeat {
+  animation: gcHeartbeat 0.6s ease-in-out 1;
+}
+@keyframes gcHeartbeat {
+  0%,100% { transform: scale(1.0); }
+  30%     { transform: scale(1.18); }
+  60%     { transform: scale(1.05); }
+}
+/* パチンコ風: 大当たり放射ライン */
+.gc-jackpot-rays {
+  position: absolute; inset: -200vw; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg,
+    rgba(255,216,74,0.0) 0deg, rgba(255,216,74,0.0) 8deg,
+    rgba(255,216,74,0.55) 9deg, rgba(255,216,74,0.0) 14deg);
+  animation: gcJackpotRays 1.4s linear forwards;
+  opacity: 0;
+}
+@keyframes gcJackpotRays {
+  0%   { transform: rotate(0deg)   scale(0.4); opacity: 0; }
+  15%  { opacity: 1; }
+  100% { transform: rotate(140deg) scale(1.2); opacity: 0; }
+}
+
 /* 天井ゲージ */
 .gc-pity-row { margin-bottom: 12px; }
 .gc-pity-head {
@@ -3619,6 +3677,90 @@ const Audio = (() => {
     melody.forEach((f, i) => osc(f, 'sine', 0.18, 0.35, seGain, t + i * 0.09));
     osc(1047, 'triangle', 0.4, 0.4, seGain, t + 0.4);
   }
+  // ---- パチンコ風ガチャ演出 SE ----
+  // スピン中の低音ドラムロール＋高音プリンプリン（0.9秒）
+  function seGachaSpin() {
+    const c = getCtx(); const t = c.currentTime;
+    for (let i = 0; i < 14; i++) {
+      const dt = i * 0.065;
+      // 低音キック
+      osc(70 + (i%2)*15, 'sine',   0.05, 0.32, seGain, t + dt);
+      // 高音プリン（ピン玉が落ちる音）
+      osc(1800 + (i%3)*350, 'square', 0.02, 0.12, seGain, t + dt + 0.025);
+    }
+  }
+  // リーチ予告チャイム（紫予兆: 上昇サイレン＋チーン）
+  function seGachaReach() {
+    const c = getCtx(); const t = c.currentTime;
+    // 上昇サイレン
+    for (let i = 0; i < 7; i++) {
+      osc(380 + i * 100, 'sawtooth', 0.09, 0.28, seGain, t + i * 0.055);
+      osc(760 + i * 200, 'sine',     0.09, 0.16, seGain, t + i * 0.055);
+    }
+    // 余韻のチーン（金属ベル）
+    osc(1568, 'sine',     0.55, 0.32, seGain, t + 0.42);
+    osc(2093, 'triangle', 0.50, 0.22, seGain, t + 0.44);
+    osc(3136, 'sine',     0.45, 0.14, seGain, t + 0.46);
+  }
+  // プレミア予告（金予兆: ジャラララ＋低音ドン＋鈴鐘）
+  function seGachaPremium() {
+    const c = getCtx(); const t = c.currentTime;
+    // ジャラララ（コインドロップ風の連打）
+    for (let i = 0; i < 14; i++) {
+      const f = 1200 + Math.sin(i * 0.8) * 450;
+      osc(f, 'square', 0.035, 0.16, seGain, t + i * 0.022);
+    }
+    // 低音ドンッ
+    osc(75,  'sine', 0.32, 0.55, seGain, t + 0.32);
+    osc(150, 'sine', 0.28, 0.40, seGain, t + 0.34);
+    // 鈴鐘の連打（高音減衰）
+    [0, 0.08, 0.16, 0.26].forEach((dt, i) => {
+      const f = 2637 - i * 120;
+      osc(f,         'triangle', 0.40, 0.24, seGain, t + 0.42 + dt);
+      osc(f * 1.5,   'sine',     0.30, 0.12, seGain, t + 0.42 + dt);
+    });
+  }
+  // 心拍ドキドキ（ウルトラのスローモーション中: ドクン・ドクン）
+  function seGachaHeartbeat() {
+    const c = getCtx(); const t = c.currentTime;
+    osc(65, 'sine', 0.08, 0.50, seGain, t);
+    osc(50, 'sine', 0.14, 0.40, seGain, t + 0.04);
+    osc(65, 'sine', 0.08, 0.55, seGain, t + 0.32);
+    osc(50, 'sine', 0.14, 0.45, seGain, t + 0.36);
+  }
+  // 大当たりベル＋ファンファーレ（ウルトラ/ハイのリビール）
+  function seGachaJackpot() {
+    const c = getCtx(); const t = c.currentTime;
+    // ジャ〜〜ン！金属の鐘
+    osc(1318, 'sine',     0.85, 0.55, seGain, t);
+    osc(2637, 'sine',     0.85, 0.40, seGain, t);
+    osc(1568, 'triangle', 0.85, 0.32, seGain, t + 0.02);
+    osc(3136, 'sine',     0.75, 0.22, seGain, t + 0.03);
+    // 低音ブースト（地響き）
+    osc(70,  'sine',     0.50, 0.55, seGain, t);
+    osc(140, 'sine',     0.45, 0.40, seGain, t);
+    osc(45,  'sine',     0.60, 0.45, seGain, t + 0.05);
+    // 続けて鐘の連打
+    [0.30, 0.46, 0.62, 0.78].forEach((dt, i) => {
+      osc(1568 + i*220, 'triangle', 0.32, 0.30, seGain, t + dt);
+      osc(2093 + i*220, 'sine',     0.28, 0.22, seGain, t + dt);
+    });
+    // 上昇ファンファーレ
+    [523, 659, 784, 1047, 1319, 1568, 2093, 2637].forEach((f, i) => {
+      osc(f,   'sine',     0.20, 0.32, seGain, t + 0.50 + i * 0.06);
+      osc(f*2, 'triangle', 0.10, 0.14, seGain, t + 0.50 + i * 0.06);
+    });
+  }
+  // 中当たりチャイム（ミッド/ハイのライト版）
+  function seGachaWin() {
+    const c = getCtx(); const t = c.currentTime;
+    // ピンポンパンポン
+    [880, 1047, 1319, 1568, 2093].forEach((f, i) => {
+      osc(f,   'sine',     0.22, 0.38, seGain, t + i * 0.07);
+      osc(f*2, 'triangle', 0.10, 0.14, seGain, t + i * 0.07);
+    });
+    osc(2637, 'sine', 0.50, 0.42, seGain, t + 0.34);
+  }
   function seUlt() {
     const c = getCtx(); const t = c.currentTime;
     osc(220,  'sawtooth', 0.05, 0.5, seGain, t);
@@ -3884,6 +4026,12 @@ const Audio = (() => {
     defeat:   () => { try { seDefeat(); }     catch(e){} },
     btn:      () => { try { seBtn(); }        catch(e){} },
     gacha:    () => { try { seGacha(); }      catch(e){} },
+    gachaSpin:      () => { try { seGachaSpin(); }      catch(e){} },
+    gachaReach:     () => { try { seGachaReach(); }     catch(e){} },
+    gachaPremium:   () => { try { seGachaPremium(); }   catch(e){} },
+    gachaHeartbeat: () => { try { seGachaHeartbeat(); } catch(e){} },
+    gachaJackpot:   () => { try { seGachaJackpot(); }   catch(e){} },
+    gachaWin:       () => { try { seGachaWin(); }       catch(e){} },
     ult:      () => { try { seUlt(); }        catch(e){} },
     victory:  () => { try { seVictory(); }    catch(e){} },
     opening:  () => { try { seOpeningSkill(); } catch(e){} },
@@ -18136,6 +18284,8 @@ function playGachaCinematic(results, kind, onDone) {
   const el = _ensureGachaCinematicEl();
   el._timers = [];
   el._onDone = onDone;
+  // 前回の残骸（フラッシュ/バナー/放射ライン）を掃除
+  el.querySelectorAll('.gc-flash,.gc-banner,.gc-jackpot-rays').forEach(n => n.remove());
   const stage = el.querySelector('#gc-stage');
 
   // 表示用の名前・アイコン
@@ -18171,8 +18321,40 @@ function playGachaCinematic(results, kind, onDone) {
   const clsEl     = stage.querySelector('#gc-cls');
   const _t = (ms, fn) => { el._timers.push(setTimeout(fn, ms)); };
 
+  // パチンコ風 SE/視覚演出ヘルパ
+  // 画面フラッシュ（短時間ぱっと光る）
+  const flash = (color) => {
+    const f = document.createElement('div');
+    f.className = 'gc-flash';
+    f.style.color = color;
+    el.appendChild(f);
+    setTimeout(() => f.remove(), 700);
+  };
+  // 予告バナー（リーチ!! / ★PREMIUM★ 等）
+  const banner = (text, color) => {
+    const b = document.createElement('div');
+    b.className = 'gc-banner';
+    b.style.color = color;
+    b.textContent = text;
+    el.appendChild(b);
+    setTimeout(() => b.remove(), 1300);
+  };
+  const playSE = (name) => {
+    try { if (typeof Audio !== 'undefined' && Audio[name]) Audio[name](); } catch(e) {}
+  };
+
+  // パチンコ風: スピン音をスタート（オーブ表示直後）
+  _t(120, () => playSE('gachaSpin'));
+  _t(660, () => playSE('gachaSpin')); // 2連でスピン感を継続
+
   // 予兆カラー段階: 青(0ms) → 紫(900ms) → 金(1700ms, high/ultra のみ)
-  _t(900, () => { orb.style.color = '#c47aff'; }); // 紫へ
+  _t(900, () => {
+    orb.style.color = '#c47aff'; // 紫へ
+    // リーチ予告: チャイム＋紫フラッシュ＋「リーチ!!」バナー
+    playSE('gachaReach');
+    flash('rgba(196,122,255,0.85)');
+    banner('リーチ!!', '#e2b8ff');
+  });
   _t(1700, () => {
     if (tier === 'high' || tier === 'ultra') {
       orb.style.color = '#ffd84a';
@@ -18180,6 +18362,10 @@ function playGachaCinematic(results, kind, onDone) {
       burst.className = 'gc-aura-burst';
       burst.style.color = '#ffd84a';
       orb.appendChild(burst);
+      // プレミア予告: ジャラララ＋金フラッシュ＋「★PREMIER★」バナー
+      playSE('gachaPremium');
+      flash('rgba(255,216,74,0.95)');
+      banner('★ PREMIER ★', '#fff5b8');
     }
   });
 
@@ -18187,6 +18373,19 @@ function playGachaCinematic(results, kind, onDone) {
   const finalCol = (tier==='mid') ? '#c47aff' : '#ffd84a';
   const revealMs = (tier==='ultra') ? 2900 : (tier==='high') ? 2200 : 1900;
   const totalMs  = (tier==='ultra') ? 5200 : (tier==='high') ? 3900 : 3100;
+
+  // ウルトラのみ: スロー中の心拍ドキドキ（2回）
+  if (tier === 'ultra') {
+    _t(2350, () => {
+      playSE('gachaHeartbeat');
+      orb.classList.remove('gc-heartbeat'); void orb.offsetWidth; orb.classList.add('gc-heartbeat');
+    });
+    _t(2700, () => {
+      playSE('gachaHeartbeat');
+      orb.classList.remove('gc-heartbeat'); void orb.offsetWidth; orb.classList.add('gc-heartbeat');
+    });
+  }
+
   _t(revealMs, () => {
     iconWrap.style.transition = 'opacity 0.5s';
     iconWrap.style.opacity = '1';
@@ -18195,6 +18394,18 @@ function playGachaCinematic(results, kind, onDone) {
     nameEl.style.textShadow = `0 0 22px ${finalCol}, 0 0 4px #000`;
     nameEl.textContent = name;
     clsEl.innerHTML = sub + (showNewBadge ? ' <span class="gc-newbadge">★ NEW ★</span>' : '');
+    // 大当たり SE＆放射ライン: ultra/high はジャックポット、mid は中当たり
+    if (tier === 'ultra' || tier === 'high') {
+      playSE('gachaJackpot');
+      flash('rgba(255,216,74,1)');
+      const rays = document.createElement('div');
+      rays.className = 'gc-jackpot-rays';
+      stage.appendChild(rays);
+      setTimeout(() => rays.remove(), 1500);
+    } else {
+      playSE('gachaWin');
+      flash('rgba(196,122,255,0.7)');
+    }
   });
   _t(totalMs, () => closeGachaCinematic());
 }
