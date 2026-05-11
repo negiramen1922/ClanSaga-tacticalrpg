@@ -2854,7 +2854,7 @@ img.item-icon {
           <span class="sec-icon">🗼</span>
           <div>
             <div class="sec-title">メインステージ</div>
-            <div class="sec-sub">メインコンテンツ — 5エリア×10ステージ</div>
+            <div class="sec-sub">メインとなるコンテンツ — 進めていくと他コンテンツが解放される</div>
           </div>
           <span class="sec-arrow">▶</span>
         </div>
@@ -9060,32 +9060,17 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_03', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第1章：戦闘の基本',
-    text:'メインステージ S3（灰色の森）をクリア → ヴァンガード獲得',
-    desc:'タンク役のヴァンガードが仲間になる！前衛に配置して壁を作ろう。',
+    text:'メインステージ S3（灰色の森）をクリア',
+    desc:'敵の数が増える初の本格戦。ATBの動きを見ながら前衛で受けて後衛で削るのが鉄則。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×200`,
     rewardIcon:'crystal', rewardAmt:200, rewardType:'starCrystal',
     cur:()=> gState.progress?.babel?.clearedStages?.['a1s3'] ? 1 : 0, req:1,
   },
   // ─── 第2章: 編成を学ぶ ───
   {
-    id:'bg_04', shortcut:()=>{ closeMissionModal(); switchTab('formation'); }, shortcutLabel:'🗂️ 編成へ', chapter:'第2章：編成を学ぶ',
-    text:'編成画面でヴァンガードを前衛に配置する',
-    desc:'ヴァンガードは高HP・高ヘイトのタンク。前衛に置くと敵の攻撃を引き受けてくれる。',
-    reward:`${itemIconHTML('gold','14px')} ゴールド ×300`,
-    rewardIcon:'gold', rewardAmt:300, rewardType:'gold',
-    cur:()=>{
-      const preset = gState.presets?.[gState.activePreset||0];
-      const slots = preset?.formation?.slots || [];
-      return slots.some(uid => {
-        const u = gState.ownedUnits?.find(u=>u.uid===uid);
-        return u?.classId === 'vanguard';
-      }) ? 1 : 0;
-    }, req:1,
-  },
-  {
     id:'bg_05', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第2章：編成を学ぶ',
     text:'メインステージ S5（ウルフの縄張り）をクリア',
-    desc:'2体の強敵。前衛のヴァンガードがいると安定する。',
+    desc:'2体の強敵。前衛にタンク役を置いた編成が活きるステージ。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×80`,
     rewardIcon:'crystal', rewardAmt:80, rewardType:'starCrystal',
     cur:()=> gState.progress?.babel?.clearedStages?.['a1s5'] ? 1 : 0, req:1,
@@ -9125,8 +9110,8 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_08', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第3章：ガチャで仲間を増やす',
-    text:'メインステージ S7（ゴブリンの見張り）をクリア → アーチャー獲得',
-    desc:'遠距離アタッカーのアーチャーが仲間に！後衛から高火力で支援してくれる。',
+    text:'メインステージ S7（ゴブリンの見張り）をクリア',
+    desc:'遠距離アタッカーがいると索敵が伸びて奇襲発生率も上がる。アーチャー編成が活きるステージ。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×600`,
     rewardIcon:'crystal', rewardAmt:600, rewardType:'starCrystal',
     cur:()=> gState.progress?.babel?.clearedStages?.['a1s7'] ? 1 : 0, req:1,
@@ -9142,15 +9127,15 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_10', shortcut:()=>{ closeMissionModal(); switchTab('formation'); }, shortcutLabel:'🗂️ 編成へ', chapter:'第4章：中ボスに挑む',
-    text:'3体でパーティを組む（ウォリアー+ヴァンガード+アーチャー）',
-    desc:'3クラスが揃った。前衛2体・後衛1体の基本編成を試してみよう。',
+    text:'3クラス3体で編成する',
+    desc:'異なるクラス3体でパーティを組もう。役割を分担すると安定する。',
     reward:`${itemIconHTML('gold','14px')} ゴールド ×500`,
     rewardIcon:'gold', rewardAmt:500, rewardType:'gold',
     cur:()=>{
       const preset = gState.presets?.[gState.activePreset||0];
       const allSlots = (preset?.formation?.slots||[]).filter(Boolean);
-      const classes = allSlots.map(uid => gState.ownedUnits?.find(u=>u.uid===uid)?.classId).filter(Boolean);
-      return classes.includes('warrior') && classes.includes('vanguard') && classes.includes('archer') ? 1 : 0;
+      const classes = new Set(allSlots.map(uid => gState.ownedUnits?.find(u=>u.uid===uid)?.classId).filter(Boolean));
+      return classes.size >= 3 ? 1 : 0;
     }, req:1,
   },
   {
@@ -9852,7 +9837,6 @@ function openItemsMenu() {
     ${section('育成素材', [
       [iH('expPot'), 'EXPポット', p.ether, ''],
       [iH('awakePot'), '覚醒ポット', p.awakePot||0, ''],
-      [`<span style="font-size:22px">⛏️</span>`, 'ミスリル', p.mithril||0, ''],
       [`<span style="font-size:22px">🔑</span>`, 'タレントキー', p.passiveKey||0, ''],
     ])}
     ${section('アクセサリー素材', [
@@ -11669,54 +11653,9 @@ function renderHomeTab() {
 function renderBeginnerMissions() { renderHomeBeginner(); } // 後方互換
 
 function renderBeginnerMissions() {
-  let el = document.getElementById('home-beginner-missions');
-  if (!el) {
-    // 親コンテナを探して追加
-    const parent = document.getElementById('home-daily-section')?.parentElement;
-    if (!parent) return;
-    el = document.createElement('div');
-    el.id = 'home-beginner-missions';
-    el.style.cssText = 'margin:10px 12px 0;padding:10px 12px;background:var(--panel);border-radius:10px;border:1px solid var(--border)';
-    parent.insertBefore(el, document.getElementById('home-daily-section'));
-  }
-
-  const cleared = gState.progress?.babel?.clearedStages || {};
-  const bm = gState.beginnerMissions || {};
-
-  // 全完了なら非表示
-  if (bm.vanguardGiven && bm.archerGiven) { el.style.display = 'none'; return; }
-  el.style.display = '';
-
-  const missions = [
-    {
-      label: 'ヴァンガードを獲得', icon: '🛡️',
-      desc: 'メインステージ S3（灰色の森）をクリア',
-      done: !!bm.vanguardGiven,
-      progress: !!cleared['a1s3'],
-    },
-    {
-      label: 'アーチャーを獲得', icon: '🏹',
-      desc: 'メインステージ S7（ゴブリンの見張り）をクリア',
-      done: !!bm.archerGiven,
-      progress: !!cleared['a1s7'],
-    },
-  ];
-
-  el.innerHTML = `
-    <div style="font-size:10px;color:var(--accent2);letter-spacing:2px;margin-bottom:8px">🎯 BEGINNER MISSIONS</div>
-    ${missions.map(m => `
-      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-        <div style="font-size:20px;opacity:${m.done?0.4:1}">${m.icon}</div>
-        <div style="flex:1">
-          <div style="font-size:12px;color:${m.done?'var(--text3)':'var(--text)'};text-decoration:${m.done?'line-through':'none'}">${m.label}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:1px">${m.desc}</div>
-        </div>
-        <div style="font-size:11px;font-weight:700;color:${m.done?'var(--text3)':m.progress?'var(--gold)':'var(--accent2)'}">
-          ${m.done ? '✓ 完了' : m.progress ? '🏆 獲得済' : '未クリア'}
-        </div>
-      </div>
-    `).join('')}
-  `;
+  // ステージクリアによるキャラ付与を廃止したため、旧ホーム用ヴァン/アーチャーパネルは表示しない
+  const el = document.getElementById('home-beginner-missions');
+  if (el) { el.innerHTML = ''; el.style.display = 'none'; }
 }
 
 function renderHomeNotices() {
@@ -19262,57 +19201,9 @@ function closeCharUnlock() {
 // ============================================================
 
 function checkBeginnerMissions() {
-  if (!gState.beginnerMissions) gState.beginnerMissions = { vanguardGiven:false, archerGiven:false, priestGiven:false };
-  const cleared = gState.progress?.babel?.clearedStages || {};
-
-  // S3クリアでヴァンガード獲得
-  if (!gState.beginnerMissions.vanguardGiven && cleared['a1s3']) {
-    gState.beginnerMissions.vanguardGiven = true;
-    const uid = 'u_' + Date.now() + '_v';
-    const vg = makeUnit('vanguard', uid);
-    gState.ownedUnits.push(vg);
-    gState.unitProgress[uid] = { level:1, exp:0 };
-    giveStarterCardsForClass('vanguard'); // ★1カード付与
-    saveState();
-    setTimeout(() => showCharUnlock('vanguard'), 400);
-  }
-
-  // S7クリアでアーチャー獲得
-  if (!gState.beginnerMissions.archerGiven && cleared['a1s7']) {
-    gState.beginnerMissions.archerGiven = true;
-    const uid = 'u_' + Date.now() + '_a';
-    const ar = makeUnit('archer', uid);
-    gState.ownedUnits.push(ar);
-    gState.unitProgress[uid] = { level:1, exp:0 };
-    giveStarterCardsForClass('archer'); // ★1カード付与
-    saveState();
-    const delay = gState.beginnerMissions.vanguardGiven ? 800 : 400;
-    setTimeout(() => showCharUnlock('archer'), delay);
-  }
-
-  // S10クリアでプリースト獲得
-  if (!gState.beginnerMissions.priestGiven && cleared['a2s1']) {
-    gState.beginnerMissions.priestGiven = true;
-    const uid = 'u_' + Date.now() + '_p';
-    const pr = makeUnit('priest', uid);
-    gState.ownedUnits.push(pr);
-    gState.unitProgress[uid] = { level:1, exp:0 };
-    giveStarterCardsForClass('priest'); // ★1カード付与
-    saveState();
-    setTimeout(() => showCharUnlock('priest'), 1200);
-  }
-
-  // エリア3クリアでアサシン獲得（a3s1 = エリア3ステージ1）
-  if (!gState.beginnerMissions.assassinGiven && cleared['a3s1']) {
-    gState.beginnerMissions.assassinGiven = true;
-    const uid = 'u_' + Date.now() + '_as';
-    const as = makeUnit('assassin', uid);
-    gState.ownedUnits.push(as);
-    gState.unitProgress[uid] = { level:1, exp:0 };
-    giveStarterCardsForClass('assassin'); // ★1カード付与
-    saveState();
-    setTimeout(() => showCharUnlock('assassin'), 1600);
-  }
+  // ステージクリアによるキャラ付与は廃止（初回ガチャのみがキャラの入手経路）
+  // 互換性のため関数は残すが何もしない
+  if (!gState.beginnerMissions) gState.beginnerMissions = {};
 }
 
 // ============================================================
@@ -21866,7 +21757,7 @@ function renderClanHall() {
 
   if (_clanHallTab === 'mine') {
     if (!isMineUnlocked()) {
-      body.innerHTML = '<div style="padding:32px 16px;text-align:center;color:var(--text3)">ストーリーS5クリアで解放</div>';
+      body.innerHTML = '<div style="padding:32px 16px;text-align:center;color:var(--text3)">メインステージ 1-5 クリアで解放</div>';
       return;
     }
     body.innerHTML = '<div class="mine-content" id="mine-content"></div>';
@@ -23957,7 +23848,6 @@ const SHOP_ITEMS = [
   { id:'passive_key3', icon:'passiveKey', name:'タレントキー×3',   desc:'リロール時にタレント1枠を固定（3個）',price:2000,currency:'crystal',gives:'passiveKey',amount:3 },
   { id:'ether_pack_s', icon:'expPot', name:'EXPポットパック(S)',  desc:'EXPポット×500',        price:300, currency:'crystal', gives:'ether', amount:500 },
   { id:'ether_pack_l', icon:'expPot', name:'EXPポットパック(L)',  desc:'EXPポット×2000',       price:1000,currency:'crystal', gives:'ether', amount:2000 },
-  { id:'mithril_s',    icon:'⛏️', name:'ミスリル×5',        desc:'鍛冶屋で使用',         price:800, currency:'crystal', gives:'mithril', amount:5 },
   { id:'starpoint_s',  icon:'⭐', name:'スターポイント×10', desc:'星図盤でノード解放',   price:600, currency:'crystal', gives:'starMapPoints', amount:10 },
   { id:'sweep_x5',     icon:'🎫', name:'周回チケット×5',    desc:'バベルステージを即時周回',price:200,currency:'crystal',gives:'sweepTicket',amount:5 },
   { id:'atom_stone_t1', icon:'atomT1',   name:'アトム秘石T1×10',  desc:'AF強化素材（Lv60未満）',    price:300,  currency:'crystal', gives:'atomStone_t1', amount:10 },
@@ -27259,10 +27149,13 @@ function clearFlowSpotlight() {
   if (sp) sp.style.display = 'none';
 }
 
+let _flowTutAdvanceLocked = false;
 function flowTutNext() {
   if (mineTutState.active)    { mineTutNext();    return; }
   if (abyssTutState.active)   { abyssTutNext();   return; }
   if (passiveTutState.active) { passiveTutNext(); return; }
+  // 連打による多重進行を防止（次のステップが描画されるまで再入をロック）
+  if (_flowTutAdvanceLocked) return;
   const step = FLOW_STEPS[flowTutState.stepIdx];
   if (!step) return;
   if (step.isLast) {
@@ -27272,6 +27165,7 @@ function flowTutNext() {
   }
   // AFガチャチュートリアル: 「次へ」タップでミスリル付与＋AFタブに切り替え
   if (step.id === 'ft_first_af_intro') {
+    _flowTutAdvanceLocked = true;
     if (gState?.player && !gState.tutorial?.firstAfGachaSetup) {
       gState.player.mithril = (gState.player.mithril||0) + 3000;
       if (!gState.tutorial) gState.tutorial = {};
@@ -27285,25 +27179,28 @@ function flowTutNext() {
     if (gm && !gm.classList.contains('open')) openGacha();
     else renderGachaPanel();
     flowTutState.stepIdx++;
-    setTimeout(() => renderFlowStep(), 200);
+    setTimeout(() => { renderFlowStep(); _flowTutAdvanceLocked = false; }, 200);
     return;
   }
   // 勝利画面が開いたまま次ステップに進まないよう、ft_victoryではバトルを閉じてから進む
   if (step.id === 'ft_victory') {
+    _flowTutAdvanceLocked = true;
     exitBattle();
     setTimeout(() => {
       // ステージ一覧が開いていれば閉じる
       if (document.getElementById('stage-list-modal')?.classList.contains('open')) closeStageList();
-      // 勝利のごほうびに星晶石 3000 をプレゼント（ガチャチュートリアル用）
-      if (gState?.player) {
+      // 勝利のごほうびに星晶石 3000 をプレゼント（チュートリアル初回のみ・連打/再走防止）
+      if (gState?.player && !gState.tutorial?.firstBattleRewardGranted) {
         gState.player.starCrystal = (gState.player.starCrystal || 0) + 3000;
+        if (!gState.tutorial) gState.tutorial = {};
+        gState.tutorial.firstBattleRewardGranted = true;
         updateTopBar();
         saveState();
         try { Audio.itemGet && Audio.itemGet(); } catch(_) {}
       }
       // 次ステップへ自然に進行（ft_first_gacha_intro）
       flowTutState.stepIdx++;
-      setTimeout(() => renderFlowStep(), 200);
+      setTimeout(() => { renderFlowStep(); _flowTutAdvanceLocked = false; }, 200);
     }, 400);
     return;
   }
@@ -27373,7 +27270,7 @@ const MINE_TUT_STEPS = [
   {
     id: 'mt_unlocked', type: 'info', icon: '⛏️',
     title: '鉱山が解放されました！',
-    getText: () => 'ステージ5クリアおめでとう！\n\n「鉱山」が解放されました。\n放置するだけで資源が自動で貯まります。\n\nゴールド・EXPポット・覚醒ポットを\n定期的に採取しましょう！',
+    getText: () => 'メインステージ 1-5 クリアおめでとう！\n\n「鉱山」が解放されました。\n放置するだけで資源が自動で貯まります。\n\nゴールド・EXPポット・覚醒ポットを\n定期的に採取しましょう！',
     btnText: '採取してみる！',
     spotlight: null,
   },
