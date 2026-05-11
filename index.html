@@ -2681,8 +2681,8 @@ img.item-icon {
         <div class="section-header" id="abyss-section-header" onclick="toggleSection(this,'abyss-panel')">
           <span class="sec-icon">🌀</span>
           <div>
-            <div class="sec-title">アビスダイブ</div>
-            <div class="sec-sub" id="abyss-sub">ローグライク — 40層攻略</div>
+            <div class="sec-title">アビスダイブ — 深淵の穴</div>
+            <div class="sec-sub" id="abyss-sub">深緑の森林の奥に開いた古代の縦穴 — 40層</div>
           </div>
           <span class="sec-arrow">▶</span>
         </div>
@@ -9174,8 +9174,8 @@ function normalizeState() {
     gState.tutorial.mineDone = !!(gState.progress?.babel?.clearedStages?.['a1s5']);
   }
   if (gState.tutorial.abyssDone === undefined) {
-    // 既存プレイヤーでa1s10クリア済みならアビスチュートリアルは不要
-    gState.tutorial.abyssDone = !!(gState.progress?.babel?.clearedStages?.['a1s10']);
+    // 既存プレイヤーで深緑の森林(a2bs10)クリア済みならアビスチュートリアルは不要
+    gState.tutorial.abyssDone = !!(gState.progress?.babel?.clearedStages?.['a2bs10']);
   }
   if (gState.tutorial.passiveDone === undefined) {
     // 既存プレイヤーでLv40以上のキャラがいればパッシブチュートリアルは不要
@@ -16209,10 +16209,10 @@ function endBattle(victory) {
       if (_isFirstClear) {
         // 鉱山アンロック (S5初クリア)
         if (battleContext.stageId === 'a1s5') setTimeout(() => triggerMineUnlock(), 1500);
-        // アビスアンロック (エリア1最終S10初クリア)
-        if (battleContext.stageId === 'a1s10') setTimeout(() => triggerAbyssUnlock(), 2000);
-        // ユグドラシルの試練アンロック (同じくエリア1最終S10初クリア)
-        if (battleContext.stageId === 'a1s10') setTimeout(() => triggerDailyDungeonUnlock(), 3500);
+        // ユグドラシルの試練アンロック (エリア1最終S10初クリア)
+        if (battleContext.stageId === 'a1s10') setTimeout(() => triggerDailyDungeonUnlock(), 2000);
+        // アビスダイブアンロック (深緑の森林 area2b 最終 a2bs10 初クリア)
+        if (battleContext.stageId === 'a2bs10') setTimeout(() => triggerAbyssUnlock(), 2000);
         const _crystal = getFirstClearCrystal(battleContext.stageId);
         if (_crystal > 0) {
           gState.player.starCrystal = (gState.player.starCrystal||0) + _crystal;
@@ -23611,7 +23611,10 @@ function renderAbyssContent() {
   const lv = gState.player.level;
 
   if (!isAbyssUnlocked()) {
-    el.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3)">🔒 エリア1（翠緑の草原）を全ステージクリアすると解放されます</div>`;
+    el.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3);font-size:12px;line-height:1.7">
+      🔒 エリア「深緑の森林」を全ステージクリアすると解放されます<br>
+      <span style="color:var(--text-dim)">森の奥には、まだ誰も覗いたことのない大穴が眠っているという——。</span>
+    </div>`;
     return;
   }
 
@@ -23622,6 +23625,12 @@ function renderAbyssContent() {
   const bestLayer = cleared.length > 0 ? Math.max(...cleared) : 0;
 
   el.innerHTML = '';
+
+  // ストーリー風のフレーバーバナー
+  const _abStory = document.createElement('div');
+  _abStory.style.cssText = 'padding:8px 12px;margin:8px 12px 0;background:rgba(155,107,222,0.10);border-left:3px solid var(--purple);font-size:11px;color:var(--text-dim);line-height:1.6';
+  _abStory.innerHTML = `🕳️ <b style="color:#b48cf0">深淵の穴</b> — 深緑の森林の奥で見つけた古代の縦穴。出てくるのは地上の魔物を写し取った<b>深淵の写し身</b>。深く潜るほど強敵が現れるが、眠る<span style="color:var(--gold)">古代遺物（星辰アクセサリー）</span>の格も上がっていく。`;
+  el.appendChild(_abStory);
 
   // ステータス行
   const stat = document.createElement('div');
@@ -24351,7 +24360,7 @@ function renderSortieTab() {
     const unlocked = isAbyssUnlocked();
     abyssSub.textContent = unlocked
       ? `クリア: ${cl.length}/15層 (最深 ${best||0}層)`
-      : '🔒 エリア1クリアで解放';
+      : '🔒 深緑の森林クリアで解放';
     if (abyssHdr) {
       abyssHdr.style.opacity = unlocked ? '' : '0.45';
       abyssHdr.style.pointerEvents = unlocked ? '' : 'none';
@@ -25676,7 +25685,7 @@ function endMineTutorial() {
 // ============================================================
 
 function isAbyssUnlocked() {
-  return !!(gState?.progress?.babel?.clearedStages?.['a1s10']);
+  return !!(gState?.progress?.babel?.clearedStages?.['a2bs10']);
 }
 
 // ユグドラシルの試練（デイリー）: エリア1「翠緑の草原」最終ステージ初クリアで解放
@@ -25698,31 +25707,31 @@ function triggerAbyssUnlock() {
 
 const ABYSS_TUT_STEPS = [
   {
-    id: 'ab_unlocked', type: 'info', icon: '🏔️',
-    title: 'アビスダイブ解放！',
-    getText: () => 'エリア1クリアおめでとう！🎉\n\n新コンテンツ「アビスダイブ」が\n解放されました！\n\nアビスはアクセサリーを集めるための\nローグライクダンジョンです。\nどんどん潜って装備を強化しよう！',
+    id: 'ab_unlocked', type: 'info', icon: '🌲',
+    title: '深淵の穴を発見！',
+    getText: () => '深緑の森林の奥で\n大地に開いた巨大な穴を発見した。🕳️\n\n古代の遺物が眠るとされる\n「深淵（アビス）」——\n潜るほど強力な装備が見つかる\nが、出てくる魔物は\n地上のモンスターを模した\n深淵の写し身だという…\n\n新コンテンツ「アビスダイブ」が\n解放されました！',
     btnText: '詳しく見る',
     spotlight: null,
   },
   {
     id: 'ab_system', type: 'info', icon: '🌀',
     title: 'アビスダイブの仕組み',
-    getText: () => 'アビスは40層まで続くダンジョンです。\n\n📌 ポイント：\n・1層から順番に攻略していく\n・クリアした層は次回から再挑戦可能\n・深い層ほど強い敵・レアな報酬\n\n途中で敗北しても\n次回は同じ層から再開できます！',
+    getText: () => '深淵は40層まで続くダンジョンです。\n\n📌 ポイント：\n・1層から順番に潜っていく\n・到達した層は次回から再挑戦可能\n・深く潜るほど強い写し身・古代遺物\n\n途中で敗北しても\n次回は同じ層から再開できます！',
     btnText: '次へ',
     spotlight: null,
   },
   {
     id: 'ab_accessory', type: 'info', icon: '💍',
-    title: 'アクセサリーとは？',
-    getText: () => 'アクセサリーはキャラに装備する\n強化アイテムです。\n\n💍 主な効果：\n・ATK・HP・SPDなどを底上げ\n・レアリティ★1〜★4がある\n・高レアほど強力なサブ効果付き\n\nアビスをクリアするとランダムで\nアクセサリーが手に入ります。\nより深い層ほど高レアが出やすい！',
+    title: '古代遺物のアクセサリー',
+    getText: () => '深淵に眠るのは\n古代文明が遺した\nアクセサリー（星辰）です。\n\n💍 主な効果：\n・ATK・HP・SPDなどを底上げ\n・レアリティ★1〜★4がある\n・高レアほど強力なサブ効果付き\n\n深淵を踏破するたび\nランダムで遺物が手に入ります。\nより深い層ほど高レアが出やすい！',
     btnText: '次へ',
     spotlight: null,
   },
   {
     id: 'ab_go', type: 'info', icon: '⚔️',
-    title: 'さっそく挑戦しよう！',
-    getText: () => '出撃タブの「アビスダイブ」から\nいつでも挑戦できます！\n\n初回クリアごとに星晶石がもらえるので\n積極的に攻略しましょう。\n\n育成が足りなければ\nまずメインステージを進めて\nキャラを強化してからでもOKよ！',
-    btnText: '挑戦する！',
+    title: 'さっそく潜ってみよう！',
+    getText: () => '出撃タブの「アビスダイブ」から\nいつでも挑戦できます！\n\n初回踏破ごとに星晶石がもらえるので\n積極的に潜りましょう。\n\n育成が足りなければ\nまずメインステージを進めて\nキャラを強化してからでもOKよ！',
+    btnText: '潜る！',
     spotlight: null,
     isLast: true,
   },
