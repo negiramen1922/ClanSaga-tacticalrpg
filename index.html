@@ -27259,10 +27259,13 @@ function clearFlowSpotlight() {
   if (sp) sp.style.display = 'none';
 }
 
+let _flowTutAdvanceLocked = false;
 function flowTutNext() {
   if (mineTutState.active)    { mineTutNext();    return; }
   if (abyssTutState.active)   { abyssTutNext();   return; }
   if (passiveTutState.active) { passiveTutNext(); return; }
+  // 連打による多重進行を防止（次のステップが描画されるまで再入をロック）
+  if (_flowTutAdvanceLocked) return;
   const step = FLOW_STEPS[flowTutState.stepIdx];
   if (!step) return;
   if (step.isLast) {
@@ -27272,6 +27275,7 @@ function flowTutNext() {
   }
   // AFガチャチュートリアル: 「次へ」タップでミスリル付与＋AFタブに切り替え
   if (step.id === 'ft_first_af_intro') {
+    _flowTutAdvanceLocked = true;
     if (gState?.player && !gState.tutorial?.firstAfGachaSetup) {
       gState.player.mithril = (gState.player.mithril||0) + 3000;
       if (!gState.tutorial) gState.tutorial = {};
@@ -27285,25 +27289,28 @@ function flowTutNext() {
     if (gm && !gm.classList.contains('open')) openGacha();
     else renderGachaPanel();
     flowTutState.stepIdx++;
-    setTimeout(() => renderFlowStep(), 200);
+    setTimeout(() => { renderFlowStep(); _flowTutAdvanceLocked = false; }, 200);
     return;
   }
   // 勝利画面が開いたまま次ステップに進まないよう、ft_victoryではバトルを閉じてから進む
   if (step.id === 'ft_victory') {
+    _flowTutAdvanceLocked = true;
     exitBattle();
     setTimeout(() => {
       // ステージ一覧が開いていれば閉じる
       if (document.getElementById('stage-list-modal')?.classList.contains('open')) closeStageList();
-      // 勝利のごほうびに星晶石 3000 をプレゼント（ガチャチュートリアル用）
-      if (gState?.player) {
+      // 勝利のごほうびに星晶石 3000 をプレゼント（チュートリアル初回のみ・連打/再走防止）
+      if (gState?.player && !gState.tutorial?.firstBattleRewardGranted) {
         gState.player.starCrystal = (gState.player.starCrystal || 0) + 3000;
+        if (!gState.tutorial) gState.tutorial = {};
+        gState.tutorial.firstBattleRewardGranted = true;
         updateTopBar();
         saveState();
         try { Audio.itemGet && Audio.itemGet(); } catch(_) {}
       }
       // 次ステップへ自然に進行（ft_first_gacha_intro）
       flowTutState.stepIdx++;
-      setTimeout(() => renderFlowStep(), 200);
+      setTimeout(() => { renderFlowStep(); _flowTutAdvanceLocked = false; }, 200);
     }, 400);
     return;
   }
