@@ -13873,6 +13873,9 @@ function startDailyDungeonBattle(stageId) {
     showBonusToast(`本日の挑戦回数上限に達しました（${maxRuns}回/日）`);
     return;
   }
+  // 戦闘開始時にカウントを消費（敗北・撤退でも消費する＝勝利のみカウントだとリトライで上限を越えられる）
+  dd.dailyRuns++;
+  saveState();
   battleContext = { type:'dailyDungeon', stageId, stageName: stage.name, waves: stage.enemies };
   initBattle(stage.enemies, stage.name);
 }
@@ -16161,10 +16164,33 @@ function endBattle(victory) {
     if (isAbyssRetreat && gState?.progress?.abyss?.currentRun) {
       gState.progress.abyss.currentRun = null;
     }
+    // 撤退時のリソース返却（アビスは対象外、消費した資源を戻す）
+    const _refundMsgs = [];
+    if (!isAbyssRetreat) {
+      if (battleContext?.type === 'babel') {
+        const _refundStam = 10;
+        const _maxStam = (typeof staminaMax === 'function') ? staminaMax() : 9999;
+        gState.player.stamina = Math.min(_maxStam, (gState.player.stamina||0) + _refundStam);
+        _refundMsgs.push(`${itemIconHTML('stamina','14px')} スタミナ +${_refundStam}（撤退返却）`);
+      } else if (battleContext?.type === 'dailyDungeon') {
+        const _dd = gState.progress.dailyDungeon;
+        if (_dd && (_dd.dailyRuns||0) > 0) {
+          _dd.dailyRuns = Math.max(0, (_dd.dailyRuns||0) - 1);
+          _refundMsgs.push('🌳 デイリーダンジョン挑戦回数 +1（撤退返却）');
+        }
+      } else if (battleContext?.type === 'colosseum') {
+        const _col = gState.progress.colosseum;
+        if (_col && (_col.dailyChallenges||0) > 0) {
+          _col.dailyChallenges = Math.max(0, (_col.dailyChallenges||0) - 1);
+          _refundMsgs.push('⚔️ 戦闘演習挑戦回数 +1（撤退返却）');
+        }
+      }
+    }
     // 撤退報酬：少量のゴールド（アビスは撤退報酬なし）
     const retreatGold = isAbyssRetreat ? 0 : Math.floor(Math.random()*50)+20;
     gState.player.gold += retreatGold;
     saveState();
+    updateTopBar();
     // 結果画面（撤退表示）
     document.getElementById('result-title').textContent = '🏳 RETREAT';
     document.getElementById('result-title').className = 'result-title defeat';
@@ -16175,7 +16201,9 @@ function endBattle(victory) {
     document.getElementById('result-chart').innerHTML = '';
     document.getElementById('result-drops').innerHTML = isAbyssRetreat
       ? `<div class="drop-item">🏳 アビス撤退 — 最初からやり直し</div>`
-      : `<div class="drop-item">🏳 撤退</div><div class="drop-item">${itemIconHTML('gold','14px')} ゴールド ×${retreatGold}（撤退報酬）</div>`;
+      : `<div class="drop-item">🏳 撤退</div>`
+        + `<div class="drop-item">${itemIconHTML('gold','14px')} ゴールド ×${retreatGold}（撤退報酬）</div>`
+        + _refundMsgs.map(m => `<div class="drop-item">${m}</div>`).join('');
     // result-btns を「一覧へ」「もう一度」のみで安全に再構築（next-stage-btn が消えていてもエラーにしない）
     const _retreatBtnsEl = document.getElementById('result-btns');
     if (_retreatBtnsEl) {
@@ -16451,9 +16479,7 @@ function endBattle(victory) {
       const _ddStage = DAILY_DUNGEON_STAGES.find(s=>s.id===battleContext.stageId);
       if (!gState.progress.dailyDungeon) gState.progress.dailyDungeon = { clearedStages:{}, clearedToday:{}, dailyRuns:0, lastRunDate:'' };
       const _dd = gState.progress.dailyDungeon;
-      const _today = new Date().toDateString();
-      if (_dd.lastRunDate !== _today) { _dd.dailyRuns = 0; _dd.lastRunDate = _today; }
-      _dd.dailyRuns++;
+      // dailyRuns は startDailyDungeonBattle で消費済み（敗北・撤退でもカウント）
       if (!_dd.clearedStages) _dd.clearedStages = {};
       _dd.clearedStages[battleContext.stageId] = true;
       _dd.clearedToday[battleContext.stageId] =
@@ -26034,10 +26060,24 @@ function renderFlowStep() {
   }
 }
 
-function spotlightFlowEl(id) {
+function spotlightFlowEl(id, _retry) {
   const sp = document.getElementById('tut-spotlight');
   const el = document.getElementById(id);
   if (!el) { sp.style.display = 'none'; return; }
+  // フローチュートリアルパネル（bottom 固定）がスポット対象を覆うのを防ぐ:
+  // 初回呼び出し時に対象が覆われていれば中央へスクロールしてから再描画する。
+  if (!_retry) {
+    const flowTut = document.getElementById('flow-tut');
+    const flowRect = flowTut && flowTut.style.display !== 'none' ? flowTut.getBoundingClientRect() : null;
+    const elRect = el.getBoundingClientRect();
+    const covered = flowRect && (elRect.bottom > flowRect.top - 12 || elRect.top < 60);
+    if (covered) {
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      setTimeout(() => spotlightFlowEl(id, true), 380);
+      sp.style.display = 'none';
+      return;
+    }
+  }
   const r = el.getBoundingClientRect();
   const pad = 6;
   sp.style.cssText =
