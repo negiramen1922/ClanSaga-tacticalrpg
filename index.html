@@ -2854,7 +2854,7 @@ img.item-icon {
           <span class="sec-icon">🗼</span>
           <div>
             <div class="sec-title">メインステージ</div>
-            <div class="sec-sub">メインコンテンツ — 全8エリア・77ステージ</div>
+            <div class="sec-sub">メインとなるコンテンツ — 進めていくと他コンテンツが解放される</div>
           </div>
           <span class="sec-arrow">▶</span>
         </div>
@@ -9068,24 +9068,9 @@ const BEGINNER_MISSIONS = [
   },
   // ─── 第2章: 編成を学ぶ ───
   {
-    id:'bg_04', shortcut:()=>{ closeMissionModal(); switchTab('formation'); }, shortcutLabel:'🗂️ 編成へ', chapter:'第2章：編成を学ぶ',
-    text:'編成画面でヴァンガードを前衛に配置する',
-    desc:'ヴァンガードは高HP・高ヘイトのタンク。前衛に置くと敵の攻撃を引き受けてくれる。',
-    reward:`${itemIconHTML('gold','14px')} ゴールド ×300`,
-    rewardIcon:'gold', rewardAmt:300, rewardType:'gold',
-    cur:()=>{
-      const preset = gState.presets?.[gState.activePreset||0];
-      const slots = preset?.formation?.slots || [];
-      return slots.some(uid => {
-        const u = gState.ownedUnits?.find(u=>u.uid===uid);
-        return u?.classId === 'vanguard';
-      }) ? 1 : 0;
-    }, req:1,
-  },
-  {
     id:'bg_05', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第2章：編成を学ぶ',
     text:'メインステージ S5（ウルフの縄張り）をクリア',
-    desc:'2体の強敵。前衛のヴァンガードがいると安定する。',
+    desc:'2体の強敵。前衛にタンク役を置いた編成が活きるステージ。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×80`,
     rewardIcon:'crystal', rewardAmt:80, rewardType:'starCrystal',
     cur:()=> gState.progress?.babel?.clearedStages?.['a1s5'] ? 1 : 0, req:1,
@@ -9142,15 +9127,15 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_10', shortcut:()=>{ closeMissionModal(); switchTab('formation'); }, shortcutLabel:'🗂️ 編成へ', chapter:'第4章：中ボスに挑む',
-    text:'3体でパーティを組む（ウォリアー+ヴァンガード+アーチャー）',
-    desc:'3クラスが揃った。前衛2体・後衛1体の基本編成を試してみよう。',
+    text:'3クラス3体で編成する',
+    desc:'異なるクラス3体でパーティを組もう。役割を分担すると安定する。',
     reward:`${itemIconHTML('gold','14px')} ゴールド ×500`,
     rewardIcon:'gold', rewardAmt:500, rewardType:'gold',
     cur:()=>{
       const preset = gState.presets?.[gState.activePreset||0];
       const allSlots = (preset?.formation?.slots||[]).filter(Boolean);
-      const classes = allSlots.map(uid => gState.ownedUnits?.find(u=>u.uid===uid)?.classId).filter(Boolean);
-      return classes.includes('warrior') && classes.includes('vanguard') && classes.includes('archer') ? 1 : 0;
+      const classes = new Set(allSlots.map(uid => gState.ownedUnits?.find(u=>u.uid===uid)?.classId).filter(Boolean));
+      return classes.size >= 3 ? 1 : 0;
     }, req:1,
   },
   {
