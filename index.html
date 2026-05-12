@@ -18439,7 +18439,7 @@ function renderCharGachaTab(el) {
     :`<div style="text-align:center;font-size:10px;color:var(--text3);padding:6px">マイレージ ${CHAR_MILEAGE_CAP-mileage} Pt 貯まるとピックアップキャラと交換できます</div>`}`;
 }
 function renderArtifactGachaTab(el) {
-  const mithril = gState.player.mithril || 0;
+  const crystal = gState.player.starCrystal || 0;
   const afMileage = gState.player.afMileage || 0;
   const ssrPool = ARTIFACT_POOL.filter(d => d.rarity === 'SSR');
 
@@ -18460,7 +18460,7 @@ function renderArtifactGachaTab(el) {
     <div style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px">
         <span>🎫 マイレージ ${afMileage} / ${AF_MILEAGE_CAP}</span>
-        <span>⛏️ ミスリル: <b style="color:var(--silver)">${mithril}</b></span>
+        <span>${itemIconHTML('crystal','12px')} 星晶石: <b style="color:#89e3ff">${crystal.toLocaleString()}</b></span>
       </div>
       <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
         <div style="height:100%;width:${Math.min(100,(afMileage/AF_MILEAGE_CAP*100)).toFixed(1)}%;background:linear-gradient(90deg,var(--silver),#c8d8f0);border-radius:3px;transition:width 0.3s"></div>
@@ -18468,11 +18468,11 @@ function renderArtifactGachaTab(el) {
     </div>
     ${pickupHtml}
     <div class="gacha-btns" style="margin-bottom:10px">
-      <button class="gacha-btn gacha-btn-1" onclick="doArtifactGachaFromPanel(1)" ${mithril<200?'disabled':''} style="flex:1;padding:10px;cursor:${mithril>=200?'pointer':'default'};opacity:${mithril>=200?1:0.4}">
-        1回ガチャ<br><span style="font-size:10px">⛏️ ミスリル×200</span>
+      <button class="gacha-btn gacha-btn-1" onclick="doArtifactGachaFromPanel(1)" ${crystal<200?'disabled':''} style="flex:1;padding:10px;cursor:${crystal>=200?'pointer':'default'};opacity:${crystal>=200?1:0.4}">
+        1回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 200</span>
       </button>
-      <button class="gacha-btn gacha-btn-10" id="ft-af-gacha-10-btn" onclick="doArtifactGachaFromPanel(10)" ${mithril<2000?'disabled':''} style="flex:2;padding:10px;cursor:${mithril>=2000?'pointer':'default'};opacity:${mithril>=2000?1:0.4}">
-        10回ガチャ<br><span style="font-size:10px">⛏️ ミスリル×2,000</span>
+      <button class="gacha-btn gacha-btn-10" id="ft-af-gacha-10-btn" onclick="doArtifactGachaFromPanel(10)" ${crystal<2000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=2000?'pointer':'default'};opacity:${crystal>=2000?1:0.4}">
+        10回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 2,000</span>
       </button>
     </div>
     ${afMileage >= AF_MILEAGE_CAP
@@ -18745,9 +18745,9 @@ function _closeCharGachaResult(btn) {
       return;
     }
     if (tutId === 'ft_first_af_intro' || tutId === 'ft_first_af_pull') {
-      // AFガチャチュートリアルへ: ミスリル付与＋AFタブに切り替えて再オープン
+      // AFガチャチュートリアルへ: 星晶石付与＋AFタブに切り替えて再オープン
       if (gState?.player && !gState.tutorial?.firstAfGachaSetup) {
-        gState.player.mithril = (gState.player.mithril||0) + 3000;
+        gState.player.starCrystal = (gState.player.starCrystal||0) + 2000;
         if (!gState.tutorial) gState.tutorial = {};
         gState.tutorial.firstAfGachaSetup = true;
         updateTopBar();
@@ -19097,8 +19097,8 @@ const AF_MILEAGE_CAP = 100;
 
 function doArtifactGachaFromPanel(count) {
   const cost = count * 200;
-  if ((gState.player.mithril||0) < cost) { toast('ミスリルが不足しています'); return; }
-  gState.player.mithril -= cost;
+  if ((gState.player.starCrystal||0) < cost) { toast('星晶石が不足しています'); return; }
+  gState.player.starCrystal -= cost;
 
   const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
   const results = [];
@@ -24562,7 +24562,7 @@ function openArtifactEquip(uid) {
     <h3 style="color:var(--text)">アーティファクト装備 — ${u.name}</h3>
   </div>`;
   if (!owned.length) {
-    html += `<div style="color:var(--text3);text-align:center;padding:40px">所持しているアーティファクトがありません<br><small>鍛冶屋でミスリル鋳造しましょう</small></div>`;
+    html += `<div style="color:var(--text3);text-align:center;padding:40px">所持しているアーティファクトがありません<br><small>アーティファクトガチャで入手しましょう</small></div>`;
   } else {
     html += `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">`;
     owned.forEach(inst => {
@@ -27353,14 +27353,14 @@ const FLOW_STEPS = [
   {
     id: 'ft_first_af_intro', type: 'info', icon: '🔩',
     title: 'アーティファクトも引いてみよう！',
-    getText: () => 'お疲れさま！次は\nアーティファクトガチャに挑戦しましょう。\n\nアーティファクトはキャラに装備すると\nステータスや特殊効果が上昇するわ。\n\nミスリル ×3,000 をプレゼント！⛏️',
+    getText: () => 'お疲れさま！次は\nアーティファクトガチャに挑戦しましょう。\n\nアーティファクトはキャラに装備すると\nステータスや特殊効果が上昇するわ。\n\n星晶石 ×2,000 をプレゼント！💎',
     btnText: 'アーティファクト10連へ',
     spotlight: null,
   },
   {
     id: 'ft_first_af_pull', type: 'action', icon: '🎰',
     title: 'アーティファクト10連！',
-    getText: () => '銀色の「10回ガチャ」ボタンをタップ！\n\nミスリル 2,000 で10個まとめて召喚。\nSSRが出るとアツいわよ💎',
+    getText: () => '銀色の「10回ガチャ」ボタンをタップ！\n\n星晶石 2,000 で10個まとめて召喚。\nSSRが出るとアツいわよ💎',
     spotlight: 'ft-af-gacha-10-btn',
     trigger: 'first_af_pulled',
     panelPos: 'top',
@@ -27517,11 +27517,11 @@ function flowTutNext() {
     setTimeout(() => openMissionModal(), 300);
     return;
   }
-  // AFガチャチュートリアル: 「次へ」タップでミスリル付与＋AFタブに切り替え
+  // AFガチャチュートリアル: 「次へ」タップで星晶石付与＋AFタブに切り替え
   if (step.id === 'ft_first_af_intro') {
     _flowTutAdvanceLocked = true;
     if (gState?.player && !gState.tutorial?.firstAfGachaSetup) {
-      gState.player.mithril = (gState.player.mithril||0) + 3000;
+      gState.player.starCrystal = (gState.player.starCrystal||0) + 2000;
       if (!gState.tutorial) gState.tutorial = {};
       gState.tutorial.firstAfGachaSetup = true;
       updateTopBar();
