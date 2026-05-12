@@ -892,19 +892,30 @@ img.item-icon {
   100% { transform: translate(-50%,-50%) scale(1.7); opacity: 0; }
 }
 
-/* 貫 — 鋭いひし形で貫く */
+/* 貫 — 十字（X）に貫く。4方向のレイが中心から外へ放射し、中心は穴があく */
 .atk-fx-pierce {
-  width: 22px; height: 70px;
-  background: linear-gradient(180deg, transparent 0%, currentColor 20%, #fff 50%, currentColor 80%, transparent 100%);
-  box-shadow: 0 0 14px currentColor;
-  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-  transform: translate(-50%,-50%) rotate(45deg) scaleY(0);
-  animation: fxPierce 0.32s ease-out forwards;
+  width: 100px; height: 100px;
+  transform: translate(-50%,-50%);
 }
-@keyframes fxPierce {
-  0%   { transform: translate(-50%,-50%) rotate(45deg) scaleY(0); opacity: 0.3; }
-  35%  { transform: translate(-50%,-50%) rotate(45deg) scaleY(1); opacity: 1; }
-  100% { transform: translate(-50%,-50%) rotate(45deg) scaleY(1.2); opacity: 0; }
+.atk-fx-pierce::before, .atk-fx-pierce::after {
+  content:''; position:absolute; left:50%; top:50%;
+  width: 100%; height: 6px;
+  background: linear-gradient(90deg, currentColor 0%, transparent 38%, transparent 62%, currentColor 100%);
+  box-shadow: 0 0 14px currentColor, 0 0 4px #fff;
+  border-radius: 3px;
+  opacity: 0;
+}
+.atk-fx-pierce::before { animation: fxPierceA 0.34s ease-out forwards; }
+.atk-fx-pierce::after  { animation: fxPierceB 0.34s ease-out forwards; }
+@keyframes fxPierceA {
+  0%   { transform: translate(-50%,-50%) rotate(45deg)  scaleX(0.2); opacity: 0; }
+  40%  { transform: translate(-50%,-50%) rotate(45deg)  scaleX(1);   opacity: 1; }
+  100% { transform: translate(-50%,-50%) rotate(45deg)  scaleX(1.15); opacity: 0; }
+}
+@keyframes fxPierceB {
+  0%   { transform: translate(-50%,-50%) rotate(-45deg) scaleX(0.2); opacity: 0; }
+  40%  { transform: translate(-50%,-50%) rotate(-45deg) scaleX(1);   opacity: 1; }
+  100% { transform: translate(-50%,-50%) rotate(-45deg) scaleX(1.15); opacity: 0; }
 }
 
 /* 爆 — 爆発 */
