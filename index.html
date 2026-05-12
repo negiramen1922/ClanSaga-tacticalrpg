@@ -1593,6 +1593,13 @@ img.item-icon {
   width: 100%; max-width: 480px;
   max-height: 92vh; display: flex; flex-direction: column;
 }
+/* ガチャはポップアップではなく全画面切替の見た目にする */
+#gacha-modal { padding: 0; background: var(--bg); align-items: stretch; justify-content: stretch; }
+#gacha-modal .modal-panel {
+  max-width: 100%; width: 100%;
+  height: 100vh; max-height: 100vh;
+  border: none;
+}
 .modal-header {
   padding: 10px 16px; border-bottom: 1px solid var(--border);
   display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
@@ -2763,7 +2770,6 @@ img.item-icon {
     <div class="currency-row">
       <div class="cur-item cur-gold"><span class="ico"><img src="assets/images/item-gold.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-gold">0</span></div>
       <div class="cur-item cur-crystal"><span class="ico"><img src="assets/images/starstone.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-crystal">0</span></div>
-      <div class="cur-item cur-mithril"><span class="ico" style="font-size:14px;vertical-align:middle;">⛏️</span><span id="disp-mithril">0</span></div>
       <div class="cur-item cur-stamina" onclick="openStaminaTooltip()" title="スタミナ" style="cursor:pointer">
         <span style="font-size:13px;vertical-align:middle;color:#7be8b0">⚡</span>
         <span id="disp-stamina" style="color:#7be8b0">100/100</span>
@@ -11602,7 +11608,8 @@ function updateTopBar() {
   document.getElementById('topbar-clanlv').textContent = 'Lv.' + p.level;
   document.getElementById('disp-gold').textContent    = fmt(p.gold);
   document.getElementById('disp-crystal').textContent = fmt(p.starCrystal || 0);
-  document.getElementById('disp-mithril').textContent = fmt(p.mithril || 0);
+  const _mithEl = document.getElementById('disp-mithril');
+  if (_mithEl) _mithEl.textContent = fmt(p.mithril || 0);
   const expNeed = clanExpNeed(p.level);
   const pct = Math.min(100, (p.clanExp / expNeed)*100);
   document.getElementById('clan-exp-fill').style.width = pct + '%';
@@ -18426,9 +18433,6 @@ function renderArtifactGachaTab(el) {
   });
   pickupHtml += `</div>`;
 
-  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
-  const owned = gState.artifacts || [];
-
   el.innerHTML = `
     <div style="background:linear-gradient(135deg,rgba(138,154,181,0.12),rgba(74,127,255,0.06));border:1px solid rgba(138,154,181,0.3);padding:12px;margin-bottom:12px;border-radius:6px">
       <div style="font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:4px">ARTIFACT GACHA</div>
@@ -18455,21 +18459,7 @@ function renderArtifactGachaTab(el) {
     ${afMileage >= AF_MILEAGE_CAP
       ? `<button onclick="openAfMileageExchange()" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(138,154,181,0.3),rgba(138,154,181,0.15));border:1px solid var(--silver);color:var(--silver);font-size:12px;font-weight:700;cursor:pointer;border-radius:4px;letter-spacing:1px;margin-bottom:10px">
           🎖️ マイレージ交換（${afMileage}Pt）</button>`
-      : `<div style="text-align:center;font-size:10px;color:var(--text3);padding:4px 0 10px">マイレージ ${AF_MILEAGE_CAP - afMileage} Pt 貯まるとSSRアーティファクトと交換できます</div>`}
-    <div style="font-size:11px;color:var(--text3);margin-bottom:6px">所持アーティファクト（${owned.length}個）</div>
-    ${!owned.length
-      ? `<div style="color:var(--text3);font-size:11px;padding:12px;text-align:center">まだ所持していません</div>`
-      : `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">${owned.map((inst,idx)=>{
-          const def = ARTIFACT_POOL.find(d=>d.id===inst.id); if(!def) return '';
-          const equippedBy = gState.ownedUnits.find(u=>u.equippedArtifact===inst.uid);
-          return `<div style="background:var(--bg3);border:1px solid ${rarColor[def.rarity]};padding:8px;font-size:11px;border-radius:4px">
-            <span style="color:${rarColor[def.rarity]};font-weight:700">${def.rarity}</span>
-            <span style="font-size:16px;margin:0 4px">${def.icon}</span>
-            <span style="font-weight:700">${def.name}</span>
-            ${equippedBy?`<span style="font-size:9px;color:var(--accent2);margin-left:4px">[${equippedBy.name}]</span>`:''}
-            <div style="color:var(--text3);margin-top:2px">Lv.${inst.level||0} / Rank${inst.rank||0}</div>
-          </div>`;
-        }).join('')}</div>`}`;
+      : `<div style="text-align:center;font-size:10px;color:var(--text3);padding:4px 0 10px">マイレージ ${AF_MILEAGE_CAP - afMileage} Pt 貯まるとSSRアーティファクトと交換できます</div>`}`;
 }
 
 // ============================================================
