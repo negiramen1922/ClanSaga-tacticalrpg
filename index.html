@@ -21390,6 +21390,15 @@ function closeSortieConfirm() {
   document.getElementById('sortie-confirm-modal').classList.remove('open');
 }
 
+// 出撃確認モーダルから別画面（編成 / キャラ）に遷移する共通ヘルパー。
+// Babelのステージ一覧モーダル経由で開いた場合、下層のモーダルも閉じておかないとタブ遷移先が見えないため両方クローズする。
+function navigateFromSortie(tab, openUnitUid) {
+  document.getElementById('sortie-confirm-modal')?.classList.remove('open');
+  document.getElementById('stage-list-modal')?.classList.remove('open');
+  switchTab(tab);
+  if (openUnitUid && typeof openUnitDetail === 'function') openUnitDetail(openUnitUid);
+}
+
 // ステージ情報フォーマッタ: タイプ別に表示用の構造体を返す
 function _getSortieStageInfo(payload) {
   if (!payload) return null;
@@ -21502,7 +21511,7 @@ function renderSortieConfirm() {
   const presetHtml = `<div style="padding:10px 12px;border-bottom:1px solid var(--border)">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span style="font-size:11px;color:var(--text2);font-weight:700;flex:1">📋 プリセット選択（現在 #${gState.activePreset+1}）</span>
-      <button class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:10px" onclick="closeSortieConfirm();switchTab('formation')">編成画面 →</button>
+      <button class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:10px" onclick="navigateFromSortie('formation')">編成画面 →</button>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap" id="sortie-preset-chips"></div>
   </div>`;
@@ -21558,9 +21567,9 @@ function renderSortieConfirm() {
       </div>
       <div style="font-size:10px;color:var(--gold)">装備 →</div>`;
     row.addEventListener('click', () => {
-      // 出撃確認モーダルは閉じずに、ユニット詳細を上に重ねて表示する
-      // （詳細を閉じれば直前の出撃確認画面に戻れる）
-      if (typeof openUnitDetail === 'function') openUnitDetail(uid);
+      // 出撃確認モーダルと（あれば）下層のステージ一覧モーダルを閉じてキャラタブへ遷移し、
+      // ユニット詳細を開いて装備変更できるようにする。
+      navigateFromSortie('chara', uid);
     });
     unitsWrap.appendChild(row);
   };
