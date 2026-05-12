@@ -605,10 +605,14 @@ img.item-icon {
 .combatant-zone {
   display: flex; flex-direction: column; gap: 4px; overflow-y: auto;
 }
-/* ally-zone は左寄せ・カードは全幅 */
-#ally-zone { align-items: stretch; }
+/* ally-zone / enemy-zone: 互い違い配置 */
+#ally-zone { align-items: flex-start; }
 /* enemy-zone は右寄せ・カードは全幅 */
-#enemy-zone { align-items: stretch; }
+#enemy-zone { align-items: flex-start; }
+/* 各カードはゾーン幅より少し狭く、互い違いに配置 */
+.combatant-zone .combatant-card { width: calc(100% - 18px); }
+#enemy-zone .combatant-card:nth-child(odd)  { align-self: flex-start; }
+#enemy-zone .combatant-card:nth-child(even) { align-self: flex-end; }
 
 .combatant-zone h4 {
   font-size: 10px; color: var(--text3); letter-spacing: 2px;
@@ -643,15 +647,15 @@ img.item-icon {
   display: flex; flex-direction: column; gap: 2px;
 }
 
-/* 前衛・後衛の視覚的奥行き（味方のみ） */
+/* 前衛・後衛の視覚的奥行き（味方のみ） — 前衛は左寄せ、後衛は右寄せで互い違いに */
 #ally-zone .card-front-row {
   border-left: 3px solid var(--orange);
+  align-self: flex-start;
 }
 #ally-zone .card-back-row {
-  margin-left: 18px;
-  width: calc(100% - 18px);
   border-left: 3px solid var(--accent2);
   opacity: 0.92;
+  align-self: flex-end;
 }
 .combatant-card .cc-name { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 1px; display: flex; align-items: center; gap: 3px; }
 .combatant-card .cc-name .cc-name-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -2692,18 +2696,16 @@ img.item-icon {
     text-align: center;
   }
 
-  /* コンバタントカード: 列の全幅 */
+  /* コンバタントカード: 互い違い配置のため少し縮める */
   .combatant-card {
-    width: 100% !important;
+    width: calc(100% - 12px) !important;
     min-width: 0 !important;
     max-width: none !important;
     flex-shrink: 0;
   }
-
-  /* 後衛インデントを復元（ただし幅は列幅に合わせる） */
+  /* 後衛は右寄せ（互い違い） */
   #ally-zone .card-back-row {
-    margin-left: 10px !important;
-    width: calc(100% - 10px) !important;
+    margin-left: 0 !important;
   }
 
   /* VS テキスト */
