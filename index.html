@@ -10624,6 +10624,24 @@ function normalizeState() {
     }
     gState.progress.abyssRetroReward = true;
   }
+  // バランス調整補填: キャラ天井引下げ (200Pt→100Pt) の差額を遡及配布
+  if (!gState.player.balanceRebateClaimed) {
+    const totalPulls    = gState.gacha?.charTotalPulls || 0;
+    const currentMileage = gState.gacha?.charMileage    || 0;
+    const pastExchanges = Math.max(0, Math.floor((totalPulls - currentMileage) / 200));
+    const rebate        = pastExchanges * 30000;
+    if (rebate > 0) {
+      gState.mailbox.push({
+        id: 'balance_rebate_char_v1',
+        title: 'バランス調整 星晶石補填',
+        desc: `キャラガチャ天井を 200Pt → 100Pt に引下げました。\n旧キャップで交換していた分の差額を補填します。\n（推定 ${pastExchanges} 回 × 30,000石）`,
+        items: [{ type:'starCrystal', amount: rebate }],
+        claimed: false,
+        date: '2026-05-12',
+      });
+    }
+    gState.player.balanceRebateClaimed = true;
+  }
   // mailboxがない旧セーブへの対応
   if (!gState.mailbox) gState.mailbox = [];
 
