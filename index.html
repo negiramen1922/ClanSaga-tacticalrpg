@@ -616,11 +616,32 @@ img.item-icon {
 }
 
 .combatant-card {
-  background: var(--bg3); border: 1px solid var(--border); padding: 6px;
+  background: var(--bg3); border: 1px solid var(--border); padding: 4px;
   transition: all 0.15s; position: relative; flex-shrink: 0; width: 100%; box-sizing: border-box;
+  display: flex; gap: 5px; align-items: stretch;
 }
 .combatant-card.is-acting { border-color: var(--gold); box-shadow: 0 0 8px rgba(201,168,76,0.3); }
 .combatant-card.dead { opacity: 0.3; filter: grayscale(1); }
+.combatant-card .cc-portrait {
+  width: 52px; height: 52px; flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.18), rgba(0,0,0,0.4));
+  border: 1px solid rgba(255,255,255,0.06); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.combatant-card .cc-portrait img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.combatant-card .cc-portrait .cc-portrait-emoji { font-size: 32px; line-height: 1; }
+.combatant-card .cc-portrait .leader-combatant-badge {
+  position: absolute; top: -1px; left: -1px;
+  font-size: 12px; line-height: 1; z-index: 2;
+  padding: 0; margin: 0; background: none; border-radius: 0;
+  filter: drop-shadow(0 0 2px rgba(0,0,0,0.9));
+}
+.combatant-card.is-boss .cc-portrait { width: 68px; height: 68px; }
+.combatant-card .cc-info {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 2px; justify-content: center;
+}
 
 /* 前衛・後衛の視覚的奥行き（味方のみ） */
 #ally-zone .card-front-row {
@@ -632,9 +653,8 @@ img.item-icon {
   border-left: 3px solid var(--accent2);
   opacity: 0.92;
 }
-.combatant-card .cc-name { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 3px; display: flex; align-items: center; gap: 3px; }
-.combatant-card .cc-name .cc-icon { font-size: 14px; line-height:1; display:flex;align-items:center; }
-.combatant-card .cc-name .cc-name-text { flex: 1; }
+.combatant-card .cc-name { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 1px; display: flex; align-items: center; gap: 3px; }
+.combatant-card .cc-name .cc-name-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cc-atk { font-family: 'Rajdhani', sans-serif; font-size: 9px; color: var(--orange); font-weight: 700; flex-shrink: 0; }
 .pos-badge { font-family: 'Rajdhani', sans-serif; font-size: 8px; font-weight: 700; padding: 1px 3px; border-radius: 2px; flex-shrink: 0; }
 .pos-front { background: rgba(224,122,58,0.2); color: var(--orange); border: 1px solid rgba(224,122,58,0.4); }
@@ -2786,8 +2806,12 @@ img.item-icon {
 @media (orientation: portrait) and (max-width: 480px) {
   .combatant-card {
     min-width: 110px;
-    padding: 4px !important;
+    padding: 3px !important;
+    gap: 4px !important;
   }
+  .combatant-card .cc-portrait { width: 44px !important; height: 44px !important; }
+  .combatant-card.is-boss .cc-portrait { width: 56px !important; height: 56px !important; }
+  .combatant-card .cc-portrait .cc-portrait-emoji { font-size: 26px !important; }
   .battle-log-wrap {
     max-height: 110px !important;
   }
@@ -5560,7 +5584,7 @@ const MONSTER_FLAVOR = {
   'マイコニド':         '二足で歩くキノコの魔物。胞子で仲間を呼び寄せる。',
   'ヴェノムマイコニド': '毒胞子を撒き散らすマイコニドの変異種。一帯を毒沼に変える。',
   'ピクシー':           '悪戯好きの妖精。魔法で敵を惑わせ、小さな悪戯を仕掛けてくる。',
-  'ブレインパラサイト': '宿主の脳を支配する寄生虫。倒れた仲間を操ることもある。',
+  'ブレインパラサイト': '触手で宿主の頭部に絡みつき、脳髄を蝕む寄生体。意識を奪われた者は同胞へ刃を向ける。',
 
   // --- 砂漠・蠍 ---
   'サンドワーム':       '砂中に潜み獲物を呑み込む巨大なワーム。砂漠を旅する者の天敵。',
@@ -5572,8 +5596,8 @@ const MONSTER_FLAVOR = {
   'サラマンダー':       '炎を吐く大きなトカゲ。火山の主とも言われる古い種族。',
   'イグニス':           '火を司る下級精霊。空気を焦がす赤い揺らめき。',
   'イフリート':         '業火を纏う精霊王の眷属。砂漠の伝説に名を残す。',
-  'マグナウム':         '灼熱の鎧を纏う巨人。歩むだけで地面を焦がす。',
-  'エンバリス':         '燃え盛る石の魔物。冷えれば動かないが、熱せられれば暴れ出す。',
+  'マグナウム':         '灼熱の波濤を従える深紅の竜。荒ぶる溶岩流の中から立ち上がり、その咆哮で大地を裂く。',
+  'エンバリス':         '炎の鱗粉を撒き散らす緋色の蝶。優雅な舞いに見惚れた者は、知らぬ間に灰へと変えられる。',
 
   // --- 岩・結晶系 ---
   'ロックゴーレム':     '岩で組まれた人型の魔物。命令を待ち続けて何十年も同じ場所に立つ個体もある。',
@@ -5583,7 +5607,7 @@ const MONSTER_FLAVOR = {
   'ロックイーター':     '岩を食らうワーム。坑道を勝手に掘り進める厄介者。',
   'クリフストーカー':   '崖から獲物を狙う捕食者。背後を取られたら逃げ場はない。',
   'オブシディアン':     '黒曜石の鎧を纏う精霊。鋭利な刃のような体表で触れた者を切り裂く。',
-  'ヴォルタイル':       '雷を放つ揮発性の精霊。空気の乾く季節に活発になる。',
+  'ヴォルタイル':       '黄金の鱗を持つ電気魚。砂塵の中を泳ぐように滑空し、触れる者すべてに痺れの一撃を放つ。',
 
   // --- 擬態 ---
   'ミミックチェスト':   '宝箱に擬態する捕食者。欲深い冒険者ほど餌食になる。',
@@ -5595,6 +5619,7 @@ const MONSTER_FLAVOR = {
   'ゲートガーディアン・右腕': '関門を守る三位一体の右腕。鈍重だが必殺の一撃を放つ。',
   'ゲートガーディアン・左腕': '関門を守る三位一体の左腕。素早い動きで敵を翻弄する。',
   'ゴブリンチャンピオン':     '集落の長たる選ばれしゴブリン。並のゴブリン百を束ねる強さを持つ。',
+  'テオナナカトル':           '紫の毒粘液を滴らせる古き菌神。胞子を吸い込んだ者は幻覚に囚われ、自ら糧となる。',
 };
 function getMonsterFlavor(name) {
   return MONSTER_FLAVOR[name] || 'まだ詳細が記録されていないモンスター。さらなる調査が必要だ。';
@@ -14554,28 +14579,35 @@ function combatantCardHTML(c) {
   const staggerClass = c.staggered ? ' staggered' : '';
   const rowClass = c.isEnemy ? '' : (c.isBackRow ? ' card-back-row' : ' card-front-row');
   const clickAttr = !c.isEnemy ? `onclick="handleAllyCardClick('${c.uid}')"` : '';
-  const iconContent = c.isEnemy
-    ? `<span class="cc-icon">${monsterIconHTML(c.name, c.icon, '18px', {style:'border-radius:3px;display:inline-block'})}</span>`
-    : `<span class="cc-icon">${classIconHTML(c.classId, '22px', 'border-radius:3px;vertical-align:middle;display:inline-block')}</span>`;
+  const isBoss = c.isEnemy && c.phases && c.phases.length > 1;
+  const bossClass = isBoss ? ' is-boss' : '';
+  const portraitInner = c.isEnemy
+    ? (MONSTER_ICONS[c.name]
+        ? `<img src="${MONSTER_ICONS[c.name]}" alt="">`
+        : `<span class="cc-portrait-emoji">${c.icon||'👹'}</span>`)
+    : (CLASS_ICONS[c.classId]
+        ? `<img src="${CLASS_ICONS[c.classId]}" alt="">`
+        : `<span class="cc-portrait-emoji">${c.icon||'⚔️'}</span>`);
   return `
-    <div class="combatant-card${staggerClass}${rowClass} ${c.dead?'dead':''}${c.isLeader?' leader-slot':''}${ultReadyManual?' ult-tap-ready':''}" id="cc-${c.uid}" ${clickAttr}>
-      <div class="cc-name">
-        ${leaderBadge}
-        ${iconContent}
-        <span class="cc-name-text">${c.name}</span>
-        ${atkInfo}
-      </div>
-      <div class="hp-bar-wrap">
-        <div class="hp-bar">
-          <div class="hp-fill ${hpPct<=50?'low':''} ${hpPct<=20?'critical':''}" style="width:${hpPct}%"></div>
+    <div class="combatant-card${staggerClass}${rowClass}${bossClass} ${c.dead?'dead':''}${c.isLeader?' leader-slot':''}${ultReadyManual?' ult-tap-ready':''}" id="cc-${c.uid}" ${clickAttr}>
+      <div class="cc-portrait">${leaderBadge}${portraitInner}</div>
+      <div class="cc-info">
+        <div class="cc-name">
+          <span class="cc-name-text">${c.name}</span>
+          ${atkInfo}
         </div>
-        ${shieldPct > 0 ? `<div class="shield-fill" style="width:${Math.min(100,shieldPct)}%"></div>` : ''}
+        <div class="hp-bar-wrap">
+          <div class="hp-bar">
+            <div class="hp-fill ${hpPct<=50?'low':''} ${hpPct<=20?'critical':''}" style="width:${hpPct}%"></div>
+          </div>
+          ${shieldPct > 0 ? `<div class="shield-fill" style="width:${Math.min(100,shieldPct)}%"></div>` : ''}
+        </div>
+        <div class="hp-text">${fmt(Math.max(0,c.hp))} / ${fmt(c.maxHp)}${c.shield>0?` <span style="color:#88aaff">🛡${fmt(c.shield)}</span>`:''}</div>
+        ${isBoss ? `<div class="boss-phase-dots">${c.phases.map((_,i)=>`<div class="phase-dot${i<(c.phaseIdx||0)?' cleared':i===(c.phaseIdx||0)?' active':''}"></div>`).join('')}</div>` : ''}
+        <div class="atb-bar"><div class="atb-fill" style="width:${atbPct}%"></div></div>
+        ${ultSection}
+        ${buffHtml ? `<div class="status-icons">${buffHtml}</div>` : ''}
       </div>
-      <div class="hp-text">${fmt(Math.max(0,c.hp))} / ${fmt(c.maxHp)}${c.shield>0?` <span style="color:#88aaff">🛡${fmt(c.shield)}</span>`:''}</div>
-      ${c.isEnemy && c.phases && c.phases.length > 1 ? `<div class="boss-phase-dots">${c.phases.map((_,i)=>`<div class="phase-dot${i<(c.phaseIdx||0)?' cleared':i===(c.phaseIdx||0)?' active':''}"></div>`).join('')}</div>` : ''}
-      <div class="atb-bar"><div class="atb-fill" style="width:${atbPct}%"></div></div>
-      ${ultSection}
-      ${buffHtml ? `<div class="status-icons">${buffHtml}</div>` : ''}
     </div>`;
 }
 
