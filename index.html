@@ -3558,14 +3558,16 @@ img.item-icon {
       <h3>📋 ミッション</h3>
       <button class="close-btn" onclick="closeMissionModal()">✕</button>
     </div>
-    <div style="display:flex;border-bottom:1px solid var(--border)">
-      <div class="smithy-tab" id="mtab-event" onclick="switchMissionTab('event')" style="color:var(--gold)">🎊 イベント</div>
-      <div class="smithy-tab active" id="mtab-beginner" onclick="switchMissionTab('beginner')">🎯 初心者</div>
-      <div class="smithy-tab" id="mtab-daily" onclick="switchMissionTab('daily')">デイリー</div>
-      <div class="smithy-tab" id="mtab-weekly" onclick="switchMissionTab('weekly')">ウィークリー</div>
+    <div style="display:flex;border-bottom:1px solid var(--border);overflow-x:auto">
+      <div class="smithy-tab" id="mtab-event" onclick="switchMissionTab('event')" style="color:var(--gold);white-space:nowrap">🎊 イベント</div>
+      <div class="smithy-tab" id="mtab-starter" onclick="switchMissionTab('starter')" style="color:var(--gold);white-space:nowrap">🌟 スタートダッシュ</div>
+      <div class="smithy-tab active" id="mtab-beginner" onclick="switchMissionTab('beginner')" style="white-space:nowrap">🎯 初心者</div>
+      <div class="smithy-tab" id="mtab-daily" onclick="switchMissionTab('daily')" style="white-space:nowrap">デイリー</div>
+      <div class="smithy-tab" id="mtab-weekly" onclick="switchMissionTab('weekly')" style="white-space:nowrap">ウィークリー</div>
     </div>
     <div class="modal-body">
       <div id="mission-event-panel" style="display:none"></div>
+      <div id="mission-starter-panel" style="display:none"></div>
       <div id="mission-beginner-panel"></div>
       <div id="mission-daily-panel" style="display:none"></div>
       <div id="mission-weekly-panel" style="display:none"></div>
@@ -9764,8 +9766,249 @@ const BEGINNER_MISSIONS = [
 
 
 // ============================================================
-//  スタートダッシュイベント（ver.1.00 リリース記念）
+//  スタートダッシュチャレンジ（5日間 / 新規プレイヤー向け）
 // ============================================================
+
+// アカウント作成からの経過日数（0始まり: 初日=0）
+function daysSinceAccountStart() {
+  if (!gState?.player?.accountStartDate) return 0;
+  const start = new Date(gState.player.accountStartDate);
+  const today = new Date();
+  start.setHours(0,0,0,0); today.setHours(0,0,0,0);
+  return Math.max(0, Math.floor((today - start) / 86400000));
+}
+
+// 各日のミッション一覧（5日×7ミッション=35件）。個別ミッション報酬は控えめ、各日All-Clearで星晶石1000、5日完走でSSR選択券
+const STARTER_CHALLENGE_MISSIONS = [
+  // Day 1 — 触ってみよう
+  [
+    { id:'sc_d1_01', text:'メインステージ S1 をクリア',         cur:()=> gState.progress?.babel?.clearedStages?.['a1s1']?1:0, req:1 },
+    { id:'sc_d1_02', text:'ガチャを1回引く',                    cur:()=> Math.min(gState.gacha?.charTotalPulls||0, 1), req:1 },
+    { id:'sc_d1_03', text:'ユニットを Lv.5 以上に強化する',     cur:()=> Object.values(gState.unitProgress||{}).some(p=>p.level>=5)?1:0, req:1 },
+    { id:'sc_d1_04', text:'鉱山から報酬を1回回収する',          cur:()=> Math.min(gState.progress?.stats?.mineCollects||0, 1), req:1 },
+    { id:'sc_d1_05', text:'クラスを1回強化する',                cur:()=> Math.min(gState.missions?.daily?.classUpgrade||0, 1), req:1 },
+    { id:'sc_d1_06', text:'アーティファクトかアクセサリを装着する', cur:()=> (gState.ownedUnits||[]).some(u => u.equippedArtifact || (u.equippedAccessories && Object.values(u.equippedAccessories).some(v=>v)))?1:0, req:1 },
+    { id:'sc_d1_07', text:'スキルを1回強化する',                cur:()=> Math.min(gState.missions?.weekly?.skillUpCount||0, 1), req:1 },
+  ],
+  // Day 2 — 戦力を整えよう
+  [
+    { id:'sc_d2_01', text:'メインステージ S3 をクリア',         cur:()=> gState.progress?.babel?.clearedStages?.['a1s3']?1:0, req:1 },
+    { id:'sc_d2_02', text:'メインステージ S5 をクリア',         cur:()=> gState.progress?.babel?.clearedStages?.['a1s5']?1:0, req:1 },
+    { id:'sc_d2_03', text:'ガチャを累計5回引く',                cur:()=> Math.min(gState.gacha?.charTotalPulls||0, 5), req:5 },
+    { id:'sc_d2_04', text:'ユニットを Lv.10 以上に強化する',    cur:()=> Object.values(gState.unitProgress||{}).some(p=>p.level>=10)?1:0, req:1 },
+    { id:'sc_d2_05', text:'鉱山から累計3回回収する',            cur:()=> Math.min(gState.progress?.stats?.mineCollects||0, 3), req:3 },
+    { id:'sc_d2_06', text:'アーティファクトを1回強化する',      cur:()=> Math.min(gState.missions?.weekly?.afEnhance||0, 1), req:1 },
+    { id:'sc_d2_07', text:'遠征を出発する',                     cur:()=> Math.min(gState.missions?.daily?.expeditionAction||0, 1), req:1 },
+  ],
+  // Day 3 — 第1層を制覇しよう
+  [
+    { id:'sc_d3_01', text:'メインステージ S10 をクリア',        cur:()=> gState.progress?.babel?.clearedStages?.['a1s10']?1:0, req:1 },
+    { id:'sc_d3_02', text:'Area2 を解放する',                   cur:()=> (typeof isAreaUnlocked==='function' && isAreaUnlocked('area2'))?1:0, req:1 },
+    { id:'sc_d3_03', text:'ボスを累計3体討伐する',              cur:()=> Math.min(gState.progress?.stats?.bossKills||0, 3), req:3 },
+    { id:'sc_d3_04', text:'遠征の報酬を受け取る',               cur:()=> Math.min(gState.missions?.daily?.expeditionAction||0, 2), req:2 },
+    { id:'sc_d3_05', text:'アビス1層をクリアする',              cur:()=> gState.progress?.abyssMilestone1?1:0, req:1 },
+    { id:'sc_d3_06', text:'ユニットを Lv.15 以上に強化する',    cur:()=> Object.values(gState.unitProgress||{}).some(p=>p.level>=15)?1:0, req:1 },
+    { id:'sc_d3_07', text:'アクセサリかアーティファクトを2人以上に装着',  cur:()=> (gState.ownedUnits||[]).filter(u => u.equippedArtifact || (u.equippedAccessories && Object.values(u.equippedAccessories).some(v=>v))).length>=2?1:0, req:1 },
+  ],
+  // Day 4 — 深層に挑もう
+  [
+    { id:'sc_d4_01', text:'Area2 のステージを3つクリアする',    cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).filter(s=>s.startsWith('a2s')).length, 3), req:3 },
+    { id:'sc_d4_02', text:'ボスを累計5体討伐する',              cur:()=> Math.min(gState.progress?.stats?.bossKills||0, 5), req:5 },
+    { id:'sc_d4_03', text:'ガチャを累計10回引く',               cur:()=> Math.min(gState.gacha?.charTotalPulls||0, 10), req:10 },
+    { id:'sc_d4_04', text:'アビス3層をクリアする',              cur:()=> gState.progress?.abyssMilestone3?1:0, req:1 },
+    { id:'sc_d4_05', text:'ユニットを Lv.20 以上に強化する',    cur:()=> Object.values(gState.unitProgress||{}).some(p=>p.level>=20)?1:0, req:1 },
+    { id:'sc_d4_06', text:'アーティファクトを累計3回強化する',  cur:()=> Math.min(gState.missions?.weekly?.afEnhance||0, 3), req:3 },
+    { id:'sc_d4_07', text:'鉱山から累計10回回収する',           cur:()=> Math.min(gState.progress?.stats?.mineCollects||0, 10), req:10 },
+  ],
+  // Day 5 — 真の冒険者へ
+  [
+    { id:'sc_d5_01', text:'ユニットを Lv.30 以上に強化する',    cur:()=> Object.values(gState.unitProgress||{}).some(p=>p.level>=30)?1:0, req:1 },
+    { id:'sc_d5_02', text:'アビス5層をクリアする',              cur:()=> gState.progress?.abyssMilestone5?1:0, req:1 },
+    { id:'sc_d5_03', text:'メインステージを累計15回クリアする', cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 15), req:15 },
+    { id:'sc_d5_04', text:'ボスを累計8体討伐する',              cur:()=> Math.min(gState.progress?.stats?.bossKills||0, 8), req:8 },
+    { id:'sc_d5_05', text:'ガチャを累計15回引く',               cur:()=> Math.min(gState.gacha?.charTotalPulls||0, 15), req:15 },
+    { id:'sc_d5_06', text:'★3 ユニットを1体所持する',          cur:()=> (gState.ownedUnits||[]).some(u => CHAR_POOL[3].includes(u.classId))?1:0, req:1 },
+    { id:'sc_d5_07', text:'累計5体のユニットを所持する',        cur:()=> Math.min((gState.ownedUnits||[]).length, 5), req:5 },
+  ],
+];
+
+const STARTER_CHALLENGE_DAY_BONUS    = 1000;   // 各日All-Clearで星晶石+1000
+const STARTER_CHALLENGE_DAYS         = STARTER_CHALLENGE_MISSIONS.length;
+const STARTER_CHALLENGE_MISSION_GOLD = 100;    // 個別ミッション報酬（ゴールド）
+
+// 個別ミッション報酬を受取
+function claimStarterMission(missionId) {
+  if (!gState.starterChallenge) gState.starterChallenge = { claimed:{}, dayBonusClaimed:{}, finalClaimed:false };
+  if (gState.starterChallenge.claimed[missionId]) return;
+  // dayを特定
+  let mission = null, dayIdx = -1;
+  for (let d = 0; d < STARTER_CHALLENGE_MISSIONS.length; d++) {
+    const m = STARTER_CHALLENGE_MISSIONS[d].find(x => x.id === missionId);
+    if (m) { mission = m; dayIdx = d; break; }
+  }
+  if (!mission) return;
+  if (dayIdx > daysSinceAccountStart()) { toast('まだ解放されていません'); return; }
+  if (mission.cur() < mission.req) return;
+  gState.starterChallenge.claimed[missionId] = true;
+  gState.player.gold = (gState.player.gold||0) + STARTER_CHALLENGE_MISSION_GOLD;
+  saveState();
+  toast(`✅ ${mission.text}達成！ 💰+${STARTER_CHALLENGE_MISSION_GOLD}`);
+  renderStarterChallengeTab();
+  if (typeof updateTopBar === 'function') updateTopBar();
+}
+
+// 各日All-Clear報酬を受取
+function claimStarterDayBonus(dayIdx) {
+  if (!gState.starterChallenge) gState.starterChallenge = { claimed:{}, dayBonusClaimed:{}, finalClaimed:false };
+  if (gState.starterChallenge.dayBonusClaimed[dayIdx]) return;
+  if (dayIdx > daysSinceAccountStart()) return;
+  const allDone = STARTER_CHALLENGE_MISSIONS[dayIdx].every(m => gState.starterChallenge.claimed[m.id]);
+  if (!allDone) { toast('まだ全ミッションを受け取っていません'); return; }
+  gState.starterChallenge.dayBonusClaimed[dayIdx] = true;
+  gState.player.starCrystal = (gState.player.starCrystal||0) + STARTER_CHALLENGE_DAY_BONUS;
+  saveState();
+  toast(`🎉 Day${dayIdx+1} 全達成！ 💎+${STARTER_CHALLENGE_DAY_BONUS}`, true);
+  renderStarterChallengeTab();
+  if (typeof updateTopBar === 'function') updateTopBar();
+}
+
+// 5日完走報酬（SSR選択券）受取
+function claimStarterFinalBonus() {
+  if (!gState.starterChallenge) gState.starterChallenge = { claimed:{}, dayBonusClaimed:{}, finalClaimed:false };
+  if (gState.starterChallenge.finalClaimed) return;
+  const allDays = STARTER_CHALLENGE_MISSIONS.every((_, idx) => gState.starterChallenge.dayBonusClaimed[idx]);
+  if (!allDays) { toast('まだ全Dayをクリアしていません'); return; }
+  gState.starterChallenge.finalClaimed = true;
+  gState.player.ssrSelectTicket = (gState.player.ssrSelectTicket||0) + 1;
+  saveState();
+  toast(`🌟 Starter Challenge 完走！ SSR選択券 ×1 を獲得`, true);
+  renderStarterChallengeTab();
+}
+
+// SSR選択券を消費してキャラを獲得
+function useSsrSelectTicket(classId) {
+  if (!gState.player.ssrSelectTicket || gState.player.ssrSelectTicket <= 0) { toast('SSR選択券がありません'); return; }
+  if (!CHAR_POOL[3].includes(classId)) { toast('対象外のクラスです'); return; }
+  gState.player.ssrSelectTicket--;
+  const already = gState.ownedUnits.find(u => u.classId === classId);
+  if (!already) {
+    const unit = makeUnit(classId);
+    gState.ownedUnits.push(unit);
+    gState.unitProgress[unit.uid] = { level:1, exp:0 };
+    if (typeof giveStarterCardsForClass === 'function') giveStarterCardsForClass(classId);
+    toast(`🌟 ${CLASS_DATA[classId]?.name||classId} を獲得しました！`, true);
+  } else {
+    // 重複時はフラグメント
+    if (!gState.player.unitFragments) gState.player.unitFragments = {};
+    gState.player.unitFragments[classId] = (gState.player.unitFragments[classId]||0) + 80;
+    toast(`重複: ${CLASS_DATA[classId]?.name||classId} フラグメント +80`);
+  }
+  saveState();
+  const ov = document.getElementById('ssr-select-modal');
+  if (ov) ov.remove();
+  if (typeof updateTopBar === 'function') updateTopBar();
+  renderStarterChallengeTab();
+}
+
+// スタートダッシュチャレンジパネルを描画
+function renderStarterChallengeTab() {
+  const el = document.getElementById('mission-starter-panel');
+  if (!el) return;
+  if (!gState?.starterChallenge) gState.starterChallenge = { claimed:{}, dayBonusClaimed:{}, finalClaimed:false };
+  const sc = gState.starterChallenge;
+  const dayAvail = daysSinceAccountStart(); // 0=Day1解放, 1=Day2解放...
+  const allDays = STARTER_CHALLENGE_MISSIONS.every((_, idx) => sc.dayBonusClaimed[idx]);
+  const ticketCount = gState.player.ssrSelectTicket || 0;
+
+  let html = `
+    <div style="background:linear-gradient(135deg,rgba(201,168,76,0.18),rgba(74,127,255,0.10));border:1px solid rgba(201,168,76,0.45);border-radius:8px;padding:12px;margin-bottom:14px">
+      <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--gold);text-align:center;margin-bottom:4px">🌟 スタートダッシュチャレンジ</div>
+      <div style="font-size:11px;color:var(--text3);text-align:center;line-height:1.5">5日間の毎日チャレンジ。各日All-Clearで <b style="color:var(--gold)">星晶石+${STARTER_CHALLENGE_DAY_BONUS}</b>、5日完走で <b style="color:var(--gold)">SSR選択券 ×1</b></div>
+    </div>`;
+
+  // 完走報酬カード
+  const finalReady = allDays && !sc.finalClaimed;
+  html += `
+    <div style="background:${finalReady?'linear-gradient(135deg,rgba(255,215,0,0.18),rgba(201,168,76,0.12))':'var(--bg2)'};border:1px solid ${finalReady?'var(--gold)':'var(--border)'};border-radius:8px;padding:12px;margin-bottom:14px;text-align:center">
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);margin-bottom:4px">🏆 5日完走報酬</div>
+      <div style="font-size:11px;margin-bottom:8px">SSR選択券 ×1（★3キャラクター1人を自由選択）</div>
+      ${sc.finalClaimed
+        ? `<div style="color:var(--text3);font-size:11px">受取済み（所持券: ×${ticketCount}）</div>`
+        : finalReady
+          ? `<button class="btn btn-gold btn-sm" onclick="claimStarterFinalBonus()">🌟 受け取る</button>`
+          : `<div style="color:var(--text3);font-size:11px">5日All-Clearで解放</div>`}
+      ${ticketCount > 0 ? `<div style="margin-top:8px"><button class="btn btn-outline btn-sm" onclick="openSsrSelectModal()">所持 SSR選択券 ×${ticketCount} を使う</button></div>` : ''}
+    </div>`;
+
+  // 各Day
+  STARTER_CHALLENGE_MISSIONS.forEach((missions, dayIdx) => {
+    const unlocked = dayIdx <= dayAvail;
+    const allDone = missions.every(m => sc.claimed[m.id]);
+    const dayBonusClaimed = sc.dayBonusClaimed[dayIdx];
+    const dayLabel = `Day ${dayIdx+1}`;
+    html += `<div style="background:var(--bg2);border:1px solid ${unlocked?'var(--border)':'rgba(120,120,120,0.3)'};border-radius:6px;margin-bottom:10px;opacity:${unlocked?1:0.5}">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);background:${unlocked?'rgba(201,168,76,0.06)':'transparent'}">
+        <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:13px">${dayLabel}${unlocked?'':' 🔒'}</div>
+        ${unlocked
+          ? (dayBonusClaimed
+              ? `<div style="font-size:10px;color:var(--text3)">完了 ✓</div>`
+              : allDone
+                ? `<button class="btn btn-gold btn-sm" onclick="claimStarterDayBonus(${dayIdx})">🎁 ${STARTER_CHALLENGE_DAY_BONUS}石を受取</button>`
+                : `<div style="font-size:10px;color:var(--text3)">All-Clear で 星晶石 ×${STARTER_CHALLENGE_DAY_BONUS}</div>`)
+          : `<div style="font-size:10px;color:var(--text3)">${dayIdx-dayAvail}日後に解放</div>`}
+      </div>`;
+    missions.forEach(m => {
+      const cur = m.cur();
+      const done = cur >= m.req;
+      const claimed = !!sc.claimed[m.id];
+      const reqLabel = m.req > 1 ? ` (${Math.min(cur, m.req)}/${m.req})` : '';
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px">
+        <div style="flex:1">${claimed?'<span style="color:var(--text3);text-decoration:line-through">':'<span>'}${m.text}${reqLabel}</span></div>
+        ${unlocked
+          ? (claimed
+              ? `<span style="color:var(--text3);font-size:10px">受取済</span>`
+              : done
+                ? `<button class="btn btn-gold btn-xs" onclick="claimStarterMission('${m.id}')" style="font-size:10px;padding:2px 8px">💰 受取</button>`
+                : `<span style="color:var(--text3);font-size:10px">未達成</span>`)
+          : `<span style="color:var(--text3);font-size:10px">🔒</span>`}
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  el.innerHTML = html;
+}
+
+// SSR選択モーダルを開く
+function openSsrSelectModal() {
+  if (!gState.player.ssrSelectTicket || gState.player.ssrSelectTicket <= 0) { toast('SSR選択券がありません'); return; }
+  const existing = document.getElementById('ssr-select-modal');
+  if (existing) existing.remove();
+  const ov = document.createElement('div');
+  ov.id = 'ssr-select-modal';
+  ov.className = 'modal-overlay';
+  ov.style.cssText = 'z-index:800;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85)';
+  const cards = CHAR_POOL[3].map(cls => {
+    const data = CLASS_DATA[cls];
+    if (!data) return '';
+    const owned = gState.ownedUnits.some(u => u.classId === cls);
+    return `<div onclick="useSsrSelectTicket('${cls}')" style="cursor:pointer;padding:10px;border:1px solid var(--gold);border-radius:6px;background:rgba(201,168,76,0.08);text-align:center;transition:transform 0.15s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+      ${typeof classIconHTML==='function'?classIconHTML(cls,'48px'):'<div style="font-size:36px">'+(data.icon||'👤')+'</div>'}
+      <div style="font-family:'Cinzel',serif;color:var(--gold);margin-top:6px;font-size:12px">${data.name||cls}</div>
+      <div style="font-size:9px;color:var(--text3);margin-top:2px">${data.role||''}</div>
+      ${owned?'<div style="font-size:9px;color:var(--text3);margin-top:2px">所持中（フラグメント+80）</div>':'<div style="font-size:9px;color:var(--gold);margin-top:2px">未所持</div>'}
+    </div>`;
+  }).join('');
+  ov.innerHTML = `
+    <div style="background:var(--bg1);border:2px solid var(--gold);border-radius:10px;max-width:560px;width:92%;max-height:88vh;overflow-y:auto;padding:18px">
+      <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold);text-align:center;margin-bottom:8px">🌟 SSR選択券</div>
+      <div style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:14px">獲得したい ★3 キャラクターを選択してください（保有中の場合はフラグメント+80）</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px">${cards}</div>
+      <div style="text-align:center;margin-top:14px">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('ssr-select-modal').remove()">キャンセル</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
 
 const EVENT_END_DATE = '2026-05-14';
 function isEventActive() {
@@ -9891,6 +10134,8 @@ function defaultState(clanName) {
       ether:       500,  // ユニット強化数回分（v1.00: 増量）
       clanCoin:      0,
       starCrystal: 300,  // 初期星晶石（v1.00: ガチャ1回分）
+      ssrSelectTicket: 0, // SSR選択券（Starter Challenge全達成で付与）
+      accountStartDate: new Date().toDateString(), // アカウント作成日（Starter Challenge解放判定）
       mithril:       0,
       rankStones:  0,
       rerollStones: 1,  // 初回パッシブリロール1回
@@ -9948,6 +10193,11 @@ function defaultState(clanName) {
       event:{ loginBonus:0, babelClears:0, gachaPulls:0 },
       dailyClaimed:{}, weeklyClaimed:{}, eventClaimed:{},
       lastDaily:'', lastWeekly:'',
+    },
+    starterChallenge:{
+      claimed:{},          // 個別ミッション受取記録 (id -> true)
+      dayBonusClaimed:{},  // 各日All-Clear報酬受取 (dayN -> true)
+      finalClaimed:false,  // 5日完走報酬（SSR選択券）受取
     },
   };
 }
@@ -10035,6 +10285,9 @@ function normalizeState() {
   if (!p.premiumCoin)   p.premiumCoin = 0; // プレミアム通貨（課金向け）
   if (!p.lastLoginDate) p.lastLoginDate = '';
   if (!p.loginStreak)   p.loginStreak = 0;
+  if (!p.ssrSelectTicket) p.ssrSelectTicket = 0;
+  if (!p.accountStartDate) p.accountStartDate = new Date().toDateString();
+  if (!gState.starterChallenge) gState.starterChallenge = { claimed:{}, dayBonusClaimed:{}, finalClaimed:false };
   // アーティファクト強化素材
   if (!p.atomStone)  p.atomStone  = { t1:0, t2:0, t3:0 };
   if (!p.runeStone)  p.runeStone  = { t1:0, t2:0, t3:0 };   // 神刻ルーン
@@ -21621,14 +21874,19 @@ function switchMissionTab(tab) {
   missionActiveTab = tab;
   const evTab = document.getElementById('mtab-event');
   if (evTab) evTab.className = 'smithy-tab' + (tab==='event'?' active':'');
+  const stTab = document.getElementById('mtab-starter');
+  if (stTab) stTab.className = 'smithy-tab' + (tab==='starter'?' active':'');
   document.getElementById('mtab-beginner').className = 'smithy-tab' + (tab==='beginner'?' active':'');
   document.getElementById('mtab-daily').className    = 'smithy-tab' + (tab==='daily'?' active':'');
   document.getElementById('mtab-weekly').className   = 'smithy-tab' + (tab==='weekly'?' active':'');
   const evPanel = document.getElementById('mission-event-panel');
   if (evPanel) evPanel.style.display = tab==='event'?'':'none';
+  const stPanel = document.getElementById('mission-starter-panel');
+  if (stPanel) stPanel.style.display = tab==='starter'?'':'none';
   document.getElementById('mission-beginner-panel').style.display = tab==='beginner'?'':'none';
   document.getElementById('mission-daily-panel').style.display    = tab==='daily'?'':'none';
   document.getElementById('mission-weekly-panel').style.display   = tab==='weekly'?'':'none';
+  if (tab === 'starter') renderStarterChallengeTab();
 }
 
 function openMissionModal() {
@@ -21646,6 +21904,7 @@ function closeMissionModal() {
 
 function renderMissions() {
   renderEventMissionPanel();
+  renderStarterChallengeTab();
   renderBeginnerMissionPanel();
   renderMissionPanel('daily',  DAILY_MISSIONS,  'mission-daily-panel',  'dailyClaimed');
   renderMissionPanel('weekly', WEEKLY_MISSIONS, 'mission-weekly-panel', 'weeklyClaimed');
