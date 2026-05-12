@@ -607,12 +607,12 @@ img.item-icon {
 }
 /* ally-zone / enemy-zone: 互い違い配置 */
 #ally-zone { align-items: flex-start; }
-/* enemy-zone は右寄せ・カードは全幅 */
 #enemy-zone { align-items: flex-start; }
-/* 各カードはゾーン幅より少し狭く、互い違いに配置 */
+/* 各カードはゾーン幅より少し狭く、互い違いに配置（スロット番号基準） */
 .combatant-zone .combatant-card { width: calc(100% - 18px); }
-#enemy-zone .combatant-card:nth-child(odd)  { align-self: flex-start; }
-#enemy-zone .combatant-card:nth-child(even) { align-self: flex-end; }
+/* 敵: スロット1=左、2=右、3=左（中央=味方側へ寄せる） */
+#enemy-zone .combatant-card:nth-of-type(odd)  { align-self: flex-start; }
+#enemy-zone .combatant-card:nth-of-type(even) { align-self: flex-end; }
 
 .combatant-zone h4 {
   font-size: 10px; color: var(--text3); letter-spacing: 2px;
@@ -647,16 +647,17 @@ img.item-icon {
   display: flex; flex-direction: column; gap: 2px;
 }
 
-/* 前衛・後衛の視覚的奥行き（味方のみ） — 前衛は左寄せ、後衛は右寄せで互い違いに */
+/* 前衛・後衛の視覚的奥行き（味方のみ） — 色のみ。配置はスロット番号で互い違いに */
 #ally-zone .card-front-row {
   border-left: 3px solid var(--orange);
-  align-self: flex-start;
 }
 #ally-zone .card-back-row {
   border-left: 3px solid var(--accent2);
   opacity: 0.92;
-  align-self: flex-end;
 }
+/* 味方: スロット1=右、2=左、3=右… */
+#ally-zone .combatant-card:nth-of-type(odd)  { align-self: flex-end;   }
+#ally-zone .combatant-card:nth-of-type(even) { align-self: flex-start; }
 .combatant-card .cc-name { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 1px; display: flex; align-items: center; gap: 3px; }
 .combatant-card .cc-name .cc-name-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cc-atk { font-family: 'Rajdhani', sans-serif; font-size: 9px; color: var(--orange); font-weight: 700; flex-shrink: 0; }
