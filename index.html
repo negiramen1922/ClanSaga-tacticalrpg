@@ -141,6 +141,18 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   50% { text-shadow: 0 0 60px rgba(201,168,76,0.8), 0 0 120px rgba(201,168,76,0.4); }
 }
 #overlay .subtitle { font-family: 'Rajdhani', sans-serif; color: var(--silver); letter-spacing: 8px; font-size: 13px; }
+
+/* 新規ユーザーパネル: ログイン後にクラン名入力画面が出てきたことを明確に示す */
+#auth-newuser-panel.fade-in { animation: newuserFadeIn 0.55s cubic-bezier(0.2,1.2,0.3,1); }
+@keyframes newuserFadeIn {
+  0%   { opacity: 0; transform: translateY(20px) scale(0.92); }
+  60%  { opacity: 1; transform: translateY(0)    scale(1.04); }
+  100% { opacity: 1; transform: translateY(0)    scale(1.0);  }
+}
+#newuser-clanname:focus {
+  border-color: var(--gold2);
+  box-shadow: 0 0 24px rgba(255,220,120,0.6), 0 0 0 3px rgba(201,168,76,0.25);
+}
 #clan-name-box { display: flex; flex-direction: column; gap: 12px; align-items: center; }
 #clan-name-box label { color: var(--text2); font-size: 13px; }
 #clan-name-input {
@@ -320,8 +332,9 @@ img.item-icon {
 .passive-dot.gray { background: var(--text3); }
 
 /* UNIT DETAIL MODAL */
+/* z-index は .modal-overlay (2500) より高くして、出撃確認モーダルの上に重ねて表示する */
 #unit-detail-modal {
-  display: none; position: fixed; inset: 0; z-index: 1000;
+  display: none; position: fixed; inset: 0; z-index: 2700;
   background: rgba(5,6,8,0.92); align-items: center; justify-content: center; padding: 8px;
 }
 #unit-detail-modal.open { display: flex; }
@@ -590,12 +603,16 @@ img.item-icon {
 }
 
 .combatant-zone {
-  display: flex; flex-direction: column; gap: 4px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 3px; overflow-y: auto;
 }
-/* ally-zone は左寄せ・カードは全幅 */
-#ally-zone { align-items: stretch; }
-/* enemy-zone は右寄せ・カードは全幅 */
-#enemy-zone { align-items: stretch; }
+/* ally-zone / enemy-zone: 互い違い配置 */
+#ally-zone { align-items: flex-start; }
+#enemy-zone { align-items: flex-start; }
+/* 各カードはゾーン幅より少し狭く、互い違いに配置（スロット番号基準） */
+.combatant-zone .combatant-card { width: calc(100% - 18px); }
+/* 敵: スロット1=左、2=右、3=左（中央=味方側へ寄せる） */
+#enemy-zone .combatant-card:nth-of-type(odd)  { align-self: flex-start; }
+#enemy-zone .combatant-card:nth-of-type(even) { align-self: flex-end; }
 
 .combatant-zone h4 {
   font-size: 10px; color: var(--text3); letter-spacing: 2px;
@@ -603,25 +620,46 @@ img.item-icon {
 }
 
 .combatant-card {
-  background: var(--bg3); border: 1px solid var(--border); padding: 6px;
+  background: var(--bg3); border: 1px solid var(--border); padding: 3px;
   transition: all 0.15s; position: relative; flex-shrink: 0; width: 100%; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 2px;
 }
 .combatant-card.is-acting { border-color: var(--gold); box-shadow: 0 0 8px rgba(201,168,76,0.3); }
 .combatant-card.dead { opacity: 0.3; filter: grayscale(1); }
+.combatant-card .cc-portrait {
+  width: 100%; height: 54px;
+  background: linear-gradient(135deg, rgba(0,0,0,0.18), rgba(0,0,0,0.42));
+  border: 1px solid rgba(255,255,255,0.06); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.combatant-card .cc-portrait img { max-width: 96%; max-height: 96%; object-fit: contain; display: block; }
+.combatant-card .cc-portrait .cc-portrait-emoji { font-size: 30px; line-height: 1; }
+.combatant-card .cc-portrait .leader-combatant-badge {
+  position: absolute; top: 1px; left: 1px;
+  font-size: 11px; line-height: 1; z-index: 2;
+  padding: 0; margin: 0; background: none; border-radius: 0;
+  filter: drop-shadow(0 0 2px rgba(0,0,0,0.9));
+}
+.combatant-card.is-boss .cc-portrait { height: 72px; }
+.combatant-card.is-boss .cc-portrait .cc-portrait-emoji { font-size: 40px; }
+.combatant-card .cc-info {
+  display: flex; flex-direction: column; gap: 2px;
+}
 
-/* 前衛・後衛の視覚的奥行き（味方のみ） */
+/* 前衛・後衛の視覚的奥行き（味方のみ） — 色のみ。配置はスロット番号で互い違いに */
 #ally-zone .card-front-row {
   border-left: 3px solid var(--orange);
 }
 #ally-zone .card-back-row {
-  margin-left: 18px;
-  width: calc(100% - 18px);
   border-left: 3px solid var(--accent2);
   opacity: 0.92;
 }
-.combatant-card .cc-name { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 3px; display: flex; align-items: center; gap: 3px; }
-.combatant-card .cc-name .cc-icon { font-size: 14px; line-height:1; display:flex;align-items:center; }
-.combatant-card .cc-name .cc-name-text { flex: 1; }
+/* 味方: スロット1=右、2=左、3=右… */
+#ally-zone .combatant-card:nth-of-type(odd)  { align-self: flex-end;   }
+#ally-zone .combatant-card:nth-of-type(even) { align-self: flex-start; }
+.combatant-card .cc-name { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 1px; display: flex; align-items: center; gap: 3px; }
+.combatant-card .cc-name .cc-name-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cc-atk { font-family: 'Rajdhani', sans-serif; font-size: 9px; color: var(--orange); font-weight: 700; flex-shrink: 0; }
 .pos-badge { font-family: 'Rajdhani', sans-serif; font-size: 8px; font-weight: 700; padding: 1px 3px; border-radius: 2px; flex-shrink: 0; }
 .pos-front { background: rgba(224,122,58,0.2); color: var(--orange); border: 1px solid rgba(224,122,58,0.4); }
@@ -838,6 +876,157 @@ img.item-icon {
   100% { outline: none; background: none; }
 }
 .combatant-card.ult-flash { animation: ultFlash 0.6s ease-out; }
+
+/* ATTRIBUTE EFFECTS — 攻撃属性ごとの演出 */
+.atk-fx {
+  position: absolute; pointer-events: none; z-index: 215;
+  left: 0; top: 0;
+}
+.atk-fx-slash, .atk-fx-blunt, .atk-fx-pierce, .atk-fx-explode,
+.atk-fx-magic, .atk-fx-curse, .atk-fx-rend, .atk-fx-holy {
+  position: absolute; pointer-events: none; z-index: 215;
+}
+
+/* 斬 — 左上から右下への斜め切り */
+.atk-fx-slash {
+  width: 96px; height: 5px;
+  background: linear-gradient(90deg, transparent 0%, currentColor 20%, #fff 50%, currentColor 80%, transparent 100%);
+  box-shadow: 0 0 12px currentColor, 0 0 4px #fff;
+  transform: translate(-50%,-50%) rotate(35deg) scaleX(0);
+  animation: fxSlash 0.32s ease-out forwards;
+  border-radius: 3px;
+}
+@keyframes fxSlash {
+  0%   { transform: translate(-50%,-50%) rotate(35deg) scaleX(0); opacity: 0.4; }
+  35%  { transform: translate(-50%,-50%) rotate(35deg) scaleX(1.05); opacity: 1; }
+  100% { transform: translate(-50%,-50%) rotate(35deg) scaleX(1.05); opacity: 0; }
+}
+
+/* 打 — バンと叩く（衝撃波リング） */
+.atk-fx-blunt {
+  width: 60px; height: 60px;
+  border: 4px solid currentColor;
+  border-radius: 50%;
+  box-shadow: 0 0 18px currentColor, inset 0 0 12px currentColor;
+  transform: translate(-50%,-50%) scale(0.2);
+  animation: fxBlunt 0.35s ease-out forwards;
+}
+@keyframes fxBlunt {
+  0%   { transform: translate(-50%,-50%) scale(0.2); opacity: 0; }
+  35%  { transform: translate(-50%,-50%) scale(1.1); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(1.7); opacity: 0; }
+}
+
+/* 貫 — 十字（X）に貫く。4方向のレイが中心から外へ放射し、中心は穴があく */
+.atk-fx-pierce {
+  width: 100px; height: 100px;
+  transform: translate(-50%,-50%);
+}
+.atk-fx-pierce::before, .atk-fx-pierce::after {
+  content:''; position:absolute; left:50%; top:50%;
+  width: 100%; height: 6px;
+  background: linear-gradient(90deg, currentColor 0%, transparent 38%, transparent 62%, currentColor 100%);
+  box-shadow: 0 0 14px currentColor, 0 0 4px #fff;
+  border-radius: 3px;
+  opacity: 0;
+}
+.atk-fx-pierce::before { animation: fxPierceA 0.34s ease-out forwards; }
+.atk-fx-pierce::after  { animation: fxPierceB 0.34s ease-out forwards; }
+@keyframes fxPierceA {
+  0%   { transform: translate(-50%,-50%) rotate(45deg)  scaleX(0.2); opacity: 0; }
+  40%  { transform: translate(-50%,-50%) rotate(45deg)  scaleX(1);   opacity: 1; }
+  100% { transform: translate(-50%,-50%) rotate(45deg)  scaleX(1.15); opacity: 0; }
+}
+@keyframes fxPierceB {
+  0%   { transform: translate(-50%,-50%) rotate(-45deg) scaleX(0.2); opacity: 0; }
+  40%  { transform: translate(-50%,-50%) rotate(-45deg) scaleX(1);   opacity: 1; }
+  100% { transform: translate(-50%,-50%) rotate(-45deg) scaleX(1.15); opacity: 0; }
+}
+
+/* 爆 — 爆発 */
+.atk-fx-explode {
+  width: 70px; height: 70px;
+  background: radial-gradient(circle, #fff 0%, currentColor 40%, transparent 75%);
+  box-shadow: 0 0 28px currentColor;
+  transform: translate(-50%,-50%) scale(0.1);
+  animation: fxExplode 0.45s ease-out forwards;
+  border-radius: 50%;
+}
+@keyframes fxExplode {
+  0%   { transform: translate(-50%,-50%) scale(0.1); opacity: 0; filter: brightness(1.5); }
+  25%  { transform: translate(-50%,-50%) scale(1.4); opacity: 1; filter: brightness(2); }
+  100% { transform: translate(-50%,-50%) scale(2.3); opacity: 0; filter: brightness(1); }
+}
+
+/* 魔 — マルが霧散 */
+.atk-fx-magic {
+  width: 44px; height: 44px;
+  border: 3px solid currentColor;
+  border-radius: 50%;
+  box-shadow: 0 0 14px currentColor, inset 0 0 8px currentColor;
+  transform: translate(-50%,-50%) scale(0.3);
+  animation: fxMagic 0.45s ease-out forwards;
+}
+@keyframes fxMagic {
+  0%   { transform: translate(-50%,-50%) scale(0.3); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(2.2); opacity: 0; }
+}
+
+/* 呪 — 周囲から凝縮 */
+.atk-fx-curse {
+  width: 90px; height: 90px;
+  border: 2px dashed currentColor;
+  border-radius: 50%;
+  box-shadow: inset 0 0 14px currentColor, 0 0 10px currentColor;
+  transform: translate(-50%,-50%) scale(2);
+  animation: fxCurse 0.5s ease-in forwards;
+}
+@keyframes fxCurse {
+  0%   { transform: translate(-50%,-50%) scale(2) rotate(0deg); opacity: 0; }
+  40%  { transform: translate(-50%,-50%) scale(1) rotate(80deg); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(0.3) rotate(200deg); opacity: 0; }
+}
+
+/* 裂 — 3本の爪痕で引っかく */
+.atk-fx-rend {
+  width: 110px; height: 80px;
+  transform: translate(-50%,-50%);
+}
+.atk-fx-rend .rend-claw {
+  position: absolute; left: 0;
+  height: 4px; width: 100%;
+  background: linear-gradient(90deg, transparent 0%, currentColor 15%, #fff 50%, currentColor 85%, transparent 100%);
+  box-shadow: 0 0 8px currentColor;
+  border-radius: 2px;
+  transform-origin: center center;
+  opacity: 0;
+  animation: fxRendClaw 0.42s ease-out forwards;
+}
+@keyframes fxRendClaw {
+  0%   { transform: translateX(-40px) rotate(-18deg) scaleX(0.3); opacity: 0; }
+  30%  { transform: translateX(0)     rotate(-18deg) scaleX(1);   opacity: 1; }
+  100% { transform: translateX(40px)  rotate(-18deg) scaleX(1);   opacity: 0; }
+}
+
+/* 聖 — 小さな淡い光の粒が浮かび上がる */
+.atk-fx-holy {
+  width: 70px; height: 70px;
+  transform: translate(-50%,-50%);
+}
+.atk-fx-holy .holy-particle {
+  position: absolute;
+  width: 5px; height: 5px;
+  background: #fffff0;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #fff8c8, 0 0 16px rgba(255,248,200,0.7);
+  opacity: 0;
+  animation: fxHolyParticle 1s ease-out forwards;
+}
+@keyframes fxHolyParticle {
+  0%   { transform: translate(0, 22px) scale(0.4); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translate(var(--hx,0), -36px) scale(0.85); opacity: 0; }
+}
 
 .battle-controls {
   display: flex; align-items: center; gap: 8px; padding: 10px 16px;
@@ -1216,6 +1405,64 @@ img.item-icon {
 }
 .gc-skip:hover { color: var(--gold); }
 
+/* パチンコ風: 画面フラッシュ */
+.gc-flash {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, currentColor 0%, transparent 70%);
+  opacity: 0; mix-blend-mode: screen;
+  animation: gcFlash 0.55s ease-out forwards;
+}
+@keyframes gcFlash {
+  0%   { opacity: 0; }
+  18%  { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+/* パチンコ風: リーチ/プレミア告知バナー */
+.gc-banner {
+  position: absolute; left: 50%; top: 18%;
+  transform: translate(-50%, -40%) scale(0.6) rotate(-6deg);
+  font-family: 'Cinzel', serif; font-weight: 900;
+  font-size: 48px; letter-spacing: 8px;
+  color: currentColor;
+  text-shadow:
+    0 0 12px currentColor,
+    0 0 28px currentColor,
+    0 4px 0 rgba(0,0,0,0.5);
+  pointer-events: none;
+  animation: gcBannerIn 1.2s cubic-bezier(0.2,1.4,0.3,1) forwards;
+  white-space: nowrap;
+}
+@keyframes gcBannerIn {
+  0%   { transform: translate(-50%, -120%) scale(0.4) rotate(-18deg); opacity: 0; }
+  20%  { transform: translate(-50%, -40%)  scale(1.25) rotate(4deg);  opacity: 1; }
+  35%  { transform: translate(-50%, -40%)  scale(1.0)  rotate(-3deg); opacity: 1; }
+  85%  { transform: translate(-50%, -40%)  scale(1.0)  rotate(-3deg); opacity: 1; }
+  100% { transform: translate(-50%, -40%)  scale(1.6)  rotate(0deg);  opacity: 0; }
+}
+/* パチンコ風: 心拍ドキドキ（オーブ拡縮） */
+.gc-orb.gc-heartbeat {
+  animation: gcHeartbeat 0.6s ease-in-out 1;
+}
+@keyframes gcHeartbeat {
+  0%,100% { transform: scale(1.0); }
+  30%     { transform: scale(1.18); }
+  60%     { transform: scale(1.05); }
+}
+/* パチンコ風: 大当たり放射ライン */
+.gc-jackpot-rays {
+  position: absolute; inset: -200vw; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg,
+    rgba(255,216,74,0.0) 0deg, rgba(255,216,74,0.0) 8deg,
+    rgba(255,216,74,0.55) 9deg, rgba(255,216,74,0.0) 14deg);
+  animation: gcJackpotRays 1.4s linear forwards;
+  opacity: 0;
+}
+@keyframes gcJackpotRays {
+  0%   { transform: rotate(0deg)   scale(0.4); opacity: 0; }
+  15%  { opacity: 1; }
+  100% { transform: rotate(140deg) scale(1.2); opacity: 0; }
+}
+
 /* 天井ゲージ */
 .gc-pity-row { margin-bottom: 12px; }
 .gc-pity-head {
@@ -1239,6 +1486,194 @@ img.item-icon {
   0% { transform: translateX(-100%); }
   100%{ transform: translateX(100%); }
 }
+
+/* ===== 召喚契約書（キャラガチャ） ===== */
+#contract-overlay {
+  position: fixed; inset: 0; z-index: 9995;
+  background: radial-gradient(ellipse at center, rgba(20,12,4,0.55) 0%, rgba(0,0,0,0.92) 80%);
+  display: none; align-items: center; justify-content: center;
+  padding: 16px; overflow: hidden;
+}
+#contract-overlay.open { display: flex; animation: contractFadeIn 0.4s ease-out; }
+#contract-overlay.closing { animation: contractFadeOut 0.5s ease-in forwards; }
+@keyframes contractFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes contractFadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.92); } }
+
+/* 羊皮紙 */
+.contract-paper {
+  position: relative; max-width: 420px; width: 100%;
+  padding: 28px 24px 22px;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(120,80,40,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 90%, rgba(60,40,20,0.20) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, #f4e2b8 0%, #e2c890 55%, #c9a865 100%);
+  color: #3a2510;
+  font-family: 'Cinzel', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  border: 3px double #6b4a1f;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.35) inset,
+    0 0 18px rgba(0,0,0,0.45) inset,
+    0 10px 40px rgba(0,0,0,0.7),
+    0 0 80px rgba(255,180,80,0.18);
+  border-radius: 4px;
+  transform-origin: center top;
+  animation: contractPaperIn 0.55s cubic-bezier(0.2,1.3,0.3,1);
+}
+@keyframes contractPaperIn {
+  0%   { transform: translateY(-30px) rotate(-2deg) scale(0.85); opacity: 0; }
+  100% { transform: translateY(0)    rotate(0deg)  scale(1.0);  opacity: 1; }
+}
+.contract-paper.shake { animation: contractPaperShake 0.45s ease-out; }
+@keyframes contractPaperShake {
+  0%,100% { transform: translateX(0)    rotate(0deg); }
+  20%     { transform: translateX(-10px) rotate(-1deg); }
+  40%     { transform: translateX(8px)   rotate(0.6deg); }
+  60%     { transform: translateX(-5px)  rotate(-0.4deg); }
+  80%     { transform: translateX(3px)   rotate(0.2deg); }
+}
+.contract-edge {
+  position: absolute; inset: 6px; pointer-events: none;
+  border: 1px solid rgba(75,45,15,0.35);
+  border-radius: 2px;
+}
+.contract-title {
+  font-size: 22px; letter-spacing: 8px; text-align: center;
+  font-weight: 900; margin-bottom: 4px;
+  color: #4a2f10;
+  text-shadow: 0 1px 0 rgba(255,240,200,0.6);
+}
+.contract-flourish {
+  text-align: center; color: #6b4a1f; font-size: 14px;
+  margin-bottom: 14px; letter-spacing: 6px;
+}
+.contract-body {
+  font-size: 13px; line-height: 1.7; text-align: center;
+  margin-bottom: 14px; color: #4a2f10;
+  letter-spacing: 0.5px;
+}
+.contract-terms {
+  border-top: 1px dashed rgba(75,45,15,0.5);
+  border-bottom: 1px dashed rgba(75,45,15,0.5);
+  padding: 10px 4px; margin-bottom: 14px;
+}
+.contract-term-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; margin-bottom: 4px;
+  font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+}
+.contract-term-row:last-child { margin-bottom: 0; }
+.contract-term-row .term-label {
+  color: #6b4a1f; letter-spacing: 4px; font-weight: 700;
+}
+.contract-term-row .term-value {
+  color: #2a1808; font-weight: 700;
+}
+.contract-instruction {
+  text-align: center; font-size: 11px; color: #6b4a1f;
+  letter-spacing: 4px; margin-bottom: 10px;
+  animation: contractBlink 1.4s ease-in-out infinite;
+}
+@keyframes contractBlink {
+  0%,100% { opacity: 0.55; }
+  50%     { opacity: 1.0; }
+}
+
+/* 押印スポット */
+.contract-stamp-area {
+  position: relative; margin: 0 auto;
+  width: 130px; height: 130px; border-radius: 50%;
+  border: 2px dashed #8b3a1a;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; user-select: none;
+  background: radial-gradient(circle, rgba(139,58,26,0.06) 0%, transparent 70%);
+  transition: transform 0.15s, background 0.15s;
+}
+.contract-stamp-area:hover {
+  background: radial-gradient(circle, rgba(139,58,26,0.15) 0%, transparent 70%);
+  transform: scale(1.04);
+}
+.contract-stamp-area:active { transform: scale(0.96); }
+.contract-stamp-area .stamp-hint {
+  font-family: 'Hiragino Mincho ProN','Yu Mincho',serif;
+  font-size: 13px; color: #8b3a1a; letter-spacing: 4px; font-weight: 700;
+}
+.contract-stamp-area.stamped {
+  border-color: transparent;
+  pointer-events: none;
+}
+.contract-stamp-area.stamped .stamp-hint { display: none; }
+
+/* 赤い封蝋ハンコ（押された後に表示される本体） */
+.contract-seal {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, #d8453a 0%, #a52818 45%, #6b1408 100%);
+  box-shadow:
+    inset 0 0 14px rgba(0,0,0,0.5),
+    inset 0 4px 8px rgba(255,180,160,0.35),
+    0 4px 12px rgba(0,0,0,0.55),
+    0 0 26px rgba(220,60,40,0.55);
+  display: flex; align-items: center; justify-content: center;
+  transform: scale(3.6) rotate(-22deg); opacity: 0;
+  animation: contractStampSlam 0.55s cubic-bezier(0.5,0.1,0.6,1.4) forwards;
+}
+.contract-seal::before {
+  /* 内側の十字星マーク */
+  content: '✦'; color: rgba(255,220,200,0.85);
+  font-size: 56px; line-height: 1;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  transform: rotate(0deg);
+}
+.contract-seal::after {
+  /* 外周ラテン風文字 */
+  content: ''; position: absolute; inset: 8px;
+  border: 1px solid rgba(255,200,170,0.35);
+  border-radius: 50%;
+}
+@keyframes contractStampSlam {
+  0%   { transform: scale(3.6) rotate(-22deg); opacity: 0; }
+  60%  { transform: scale(1.0) rotate(-8deg);  opacity: 1; }
+  75%  { transform: scale(1.12) rotate(-5deg); opacity: 1; }
+  100% { transform: scale(1.0) rotate(-6deg);  opacity: 1; }
+}
+/* インクの飛沫 */
+.contract-ink-splash {
+  position: absolute; pointer-events: none;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: radial-gradient(circle, #6b1408 0%, transparent 70%);
+  opacity: 0;
+  animation: contractInkSplash 0.7s ease-out forwards;
+}
+@keyframes contractInkSplash {
+  0%   { transform: scale(0.2) translate(0,0); opacity: 0; }
+  20%  { opacity: 0.8; }
+  100% { transform: scale(1.6) translate(var(--dx,30px), var(--dy,-20px)); opacity: 0; }
+}
+/* 契約成立テキスト */
+.contract-sealed-text {
+  position: absolute; left: 0; right: 0; bottom: -42px;
+  text-align: center; font-family: 'Cinzel', serif;
+  font-size: 18px; font-weight: 900; letter-spacing: 6px;
+  color: #c93a28;
+  text-shadow: 0 0 12px rgba(255,80,40,0.6), 0 1px 0 rgba(255,230,200,0.4);
+  opacity: 0;
+  animation: contractSealedIn 0.6s cubic-bezier(0.2,1.4,0.3,1) 0.2s forwards;
+}
+@keyframes contractSealedIn {
+  0%   { transform: translateY(10px) scale(0.6); opacity: 0; }
+  60%  { transform: translateY(0)    scale(1.15); opacity: 1; }
+  100% { transform: translateY(0)    scale(1.0);  opacity: 1; }
+}
+/* キャンセル/×ボタン */
+.contract-close {
+  position: absolute; top: 6px; right: 8px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: none; border: 1px solid rgba(75,45,15,0.5);
+  color: #6b4a1f; font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.contract-close:hover { background: rgba(75,45,15,0.12); }
 
 /* ===== BASE TAB ===== */
 .base-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -1366,6 +1801,13 @@ img.item-icon {
   background: var(--panel); border: 1px solid var(--border);
   width: 100%; max-width: 480px;
   max-height: 92vh; display: flex; flex-direction: column;
+}
+/* ガチャはポップアップではなく全画面切替の見た目にする */
+#gacha-modal { padding: 0; background: var(--bg); align-items: stretch; justify-content: stretch; }
+#gacha-modal .modal-panel {
+  max-width: 100%; width: 100%;
+  height: 100vh; max-height: 100vh;
+  border: none;
 }
 .modal-header {
   padding: 10px 16px; border-bottom: 1px solid var(--border);
@@ -1681,9 +2123,15 @@ img.item-icon {
   100% { transform: translateY(-44px) scale(0.8); opacity: 0; }
 }
 .float-dmg-phys  { font-size:20px; color:#e07a3a !important; }
-.float-dmg-phys.crit { font-size:26px; }
+.float-dmg-phys.crit { font-size:28px; color:var(--gold2) !important; text-shadow: 0 0 6px rgba(240,204,110,0.7), 0 1px 4px rgba(0,0,0,0.8); }
 .float-dmg-spec  { font-size:20px; color:#7ab4ff !important; animation: specPop 0.9s ease-out forwards; }
-.float-dmg-spec.crit { font-size:26px; }
+.float-dmg-spec.crit { font-size:28px; color:var(--gold2) !important; text-shadow: 0 0 6px rgba(240,204,110,0.7), 0 1px 4px rgba(0,0,0,0.8); }
+.float-num .crit-label {
+  display: block; margin-top: -2px;
+  font-size: 10px; font-weight: 800; letter-spacing: 1.5px;
+  color: var(--gold2); font-family: 'Cinzel', 'Rajdhani', sans-serif;
+  text-shadow: 0 0 4px rgba(240,204,110,0.7), 0 1px 2px rgba(0,0,0,0.8);
+}
 .float-dmg-red   { color:#ff7755 !important; }
 .float-dmg-white { color:#88bbff !important; }
 .float-dmg-black { color:#ff7755 !important; }
@@ -2249,18 +2697,16 @@ img.item-icon {
     text-align: center;
   }
 
-  /* コンバタントカード: 列の全幅 */
+  /* コンバタントカード: 互い違い配置のため少し縮める */
   .combatant-card {
-    width: 100% !important;
+    width: calc(100% - 12px) !important;
     min-width: 0 !important;
     max-width: none !important;
     flex-shrink: 0;
   }
-
-  /* 後衛インデントを復元（ただし幅は列幅に合わせる） */
+  /* 後衛は右寄せ（互い違い） */
   #ally-zone .card-back-row {
-    margin-left: 10px !important;
-    width: calc(100% - 10px) !important;
+    margin-left: 0 !important;
   }
 
   /* VS テキスト */
@@ -2362,9 +2808,13 @@ img.item-icon {
 /* スマホ縦画面かつ幅が狭い場合の追加調整 */
 @media (orientation: portrait) and (max-width: 480px) {
   .combatant-card {
-    min-width: 110px;
-    padding: 4px !important;
+    min-width: 90px;
+    padding: 2px !important;
+    gap: 1px !important;
   }
+  .combatant-card .cc-portrait { height: 44px !important; }
+  .combatant-card.is-boss .cc-portrait { height: 60px !important; }
+  .combatant-card .cc-portrait .cc-portrait-emoji { font-size: 24px !important; }
   .battle-log-wrap {
     max-height: 110px !important;
   }
@@ -2495,13 +2945,19 @@ img.item-icon {
 
   <!-- ログイン済みの場合: クラン名入力（新規ユーザーのみ） -->
   <div id="auth-newuser-panel" style="display:none;flex-direction:column;align-items:center;gap:14px;width:300px;">
-    <div style="color:var(--text2);font-size:13px;text-align:center;line-height:1.8;">
-      アカウント作成完了！<br>クラン名を入力してゲームを始めましょう。
+    <div style="text-align:center;width:100%;">
+      <div style="font-family:'Cinzel',serif;font-size:22px;font-weight:900;color:var(--gold);letter-spacing:4px;text-shadow:0 0 18px rgba(201,168,76,0.45);margin-bottom:6px;">CLAN NAME</div>
+      <div style="color:var(--text2);font-size:13px;line-height:1.7;">
+        アカウント作成完了！<br>あなたのクラン名を決めましょう。
+      </div>
     </div>
-    <input id="newuser-clanname" type="text" maxlength="16" placeholder="クラン名（1〜16文字）" autocomplete="off"
-      style="width:100%;background:var(--bg3);border:1px solid var(--gold);color:var(--gold2);padding:10px 12px;font-size:18px;font-family:'Cinzel',serif;text-align:center;letter-spacing:3px;outline:none;">
+    <div style="position:relative;width:100%;">
+      <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-family:'Cinzel',serif;font-size:9px;color:var(--gold);letter-spacing:3px;background:var(--bg);padding:0 6px;">▼ CLAN NAME ▼</div>
+      <input id="newuser-clanname" type="text" maxlength="16" placeholder="クラン名（1〜16文字）" autocomplete="off"
+        style="width:100%;background:var(--bg3);border:2px solid var(--gold);color:var(--gold2);padding:14px 12px;font-size:20px;font-family:'Cinzel',serif;text-align:center;letter-spacing:3px;outline:none;box-shadow:0 0 16px rgba(201,168,76,0.35);">
+    </div>
     <button onclick="authNewUserStart()"
-      style="width:100%;padding:12px;background:linear-gradient(135deg,#8b6a1f,#c9a84c,#8b6a1f);color:#0a0b0f;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:15px;font-weight:700;letter-spacing:4px;">
+      style="width:100%;padding:14px;background:linear-gradient(135deg,#8b6a1f,#c9a84c,#8b6a1f);color:#0a0b0f;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:16px;font-weight:700;letter-spacing:5px;box-shadow:0 4px 16px rgba(201,168,76,0.35);">
       ゲーム開始
     </button>
     <div id="newuser-error" style="display:none;color:#ff6666;font-size:12px;text-align:center;"></div>
@@ -2531,7 +2987,6 @@ img.item-icon {
     <div class="currency-row">
       <div class="cur-item cur-gold"><span class="ico"><img src="assets/images/item-gold.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-gold">0</span></div>
       <div class="cur-item cur-crystal"><span class="ico"><img src="assets/images/starstone.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;"></span><span id="disp-crystal">0</span></div>
-      <div class="cur-item cur-mithril"><span class="ico" style="font-size:14px;vertical-align:middle;">⛏️</span><span id="disp-mithril">0</span></div>
       <div class="cur-item cur-stamina" onclick="openStaminaTooltip()" title="スタミナ" style="cursor:pointer">
         <span style="font-size:13px;vertical-align:middle;color:#7be8b0">⚡</span>
         <span id="disp-stamina" style="color:#7be8b0">100/100</span>
@@ -2777,7 +3232,7 @@ img.item-icon {
           <span class="sec-icon">🗼</span>
           <div>
             <div class="sec-title">メインステージ</div>
-            <div class="sec-sub">メインコンテンツ — 5エリア×10ステージ</div>
+            <div class="sec-sub">メインとなるコンテンツ — 進めていくと他コンテンツが解放される</div>
           </div>
           <span class="sec-arrow">▶</span>
         </div>
@@ -3618,6 +4073,145 @@ const Audio = (() => {
     melody.forEach((f, i) => osc(f, 'sine', 0.18, 0.35, seGain, t + i * 0.09));
     osc(1047, 'triangle', 0.4, 0.4, seGain, t + 0.4);
   }
+  // ---- パチンコ風ガチャ演出 SE ----
+  // スピン中の低音ドラムロール＋高音プリンプリン（0.9秒）
+  function seGachaSpin() {
+    const c = getCtx(); const t = c.currentTime;
+    for (let i = 0; i < 14; i++) {
+      const dt = i * 0.065;
+      // 低音キック
+      osc(70 + (i%2)*15, 'sine',   0.05, 0.32, seGain, t + dt);
+      // 高音プリン（ピン玉が落ちる音）
+      osc(1800 + (i%3)*350, 'square', 0.02, 0.12, seGain, t + dt + 0.025);
+    }
+  }
+  // リーチ予告チャイム（紫予兆: 上昇サイレン＋チーン）
+  function seGachaReach() {
+    const c = getCtx(); const t = c.currentTime;
+    // 上昇サイレン
+    for (let i = 0; i < 7; i++) {
+      osc(380 + i * 100, 'sawtooth', 0.09, 0.28, seGain, t + i * 0.055);
+      osc(760 + i * 200, 'sine',     0.09, 0.16, seGain, t + i * 0.055);
+    }
+    // 余韻のチーン（金属ベル）
+    osc(1568, 'sine',     0.55, 0.32, seGain, t + 0.42);
+    osc(2093, 'triangle', 0.50, 0.22, seGain, t + 0.44);
+    osc(3136, 'sine',     0.45, 0.14, seGain, t + 0.46);
+  }
+  // プレミア予告（金予兆: ジャラララ＋低音ドン＋鈴鐘）
+  function seGachaPremium() {
+    const c = getCtx(); const t = c.currentTime;
+    // ジャラララ（コインドロップ風の連打）
+    for (let i = 0; i < 14; i++) {
+      const f = 1200 + Math.sin(i * 0.8) * 450;
+      osc(f, 'square', 0.035, 0.16, seGain, t + i * 0.022);
+    }
+    // 低音ドンッ
+    osc(75,  'sine', 0.32, 0.55, seGain, t + 0.32);
+    osc(150, 'sine', 0.28, 0.40, seGain, t + 0.34);
+    // 鈴鐘の連打（高音減衰）
+    [0, 0.08, 0.16, 0.26].forEach((dt, i) => {
+      const f = 2637 - i * 120;
+      osc(f,         'triangle', 0.40, 0.24, seGain, t + 0.42 + dt);
+      osc(f * 1.5,   'sine',     0.30, 0.12, seGain, t + 0.42 + dt);
+    });
+  }
+  // 心拍ドキドキ（ウルトラのスローモーション中: ドクン・ドクン）
+  function seGachaHeartbeat() {
+    const c = getCtx(); const t = c.currentTime;
+    osc(65, 'sine', 0.08, 0.50, seGain, t);
+    osc(50, 'sine', 0.14, 0.40, seGain, t + 0.04);
+    osc(65, 'sine', 0.08, 0.55, seGain, t + 0.32);
+    osc(50, 'sine', 0.14, 0.45, seGain, t + 0.36);
+  }
+  // 大当たりベル＋ファンファーレ（ウルトラ/ハイのリビール）
+  function seGachaJackpot() {
+    const c = getCtx(); const t = c.currentTime;
+    // ジャ〜〜ン！金属の鐘
+    osc(1318, 'sine',     0.85, 0.55, seGain, t);
+    osc(2637, 'sine',     0.85, 0.40, seGain, t);
+    osc(1568, 'triangle', 0.85, 0.32, seGain, t + 0.02);
+    osc(3136, 'sine',     0.75, 0.22, seGain, t + 0.03);
+    // 低音ブースト（地響き）
+    osc(70,  'sine',     0.50, 0.55, seGain, t);
+    osc(140, 'sine',     0.45, 0.40, seGain, t);
+    osc(45,  'sine',     0.60, 0.45, seGain, t + 0.05);
+    // 続けて鐘の連打
+    [0.30, 0.46, 0.62, 0.78].forEach((dt, i) => {
+      osc(1568 + i*220, 'triangle', 0.32, 0.30, seGain, t + dt);
+      osc(2093 + i*220, 'sine',     0.28, 0.22, seGain, t + dt);
+    });
+    // 上昇ファンファーレ
+    [523, 659, 784, 1047, 1319, 1568, 2093, 2637].forEach((f, i) => {
+      osc(f,   'sine',     0.20, 0.32, seGain, t + 0.50 + i * 0.06);
+      osc(f*2, 'triangle', 0.10, 0.14, seGain, t + 0.50 + i * 0.06);
+    });
+  }
+  // 契約書を広げる音（紙のサワサワ＋低音ウーン）
+  function seContractOpen() {
+    const c = getCtx(); const t = c.currentTime;
+    // ノイズで紙のサワサワ
+    const bufLen = c.sampleRate * 0.35;
+    const buf = c.createBuffer(1, bufLen, c.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      const env = Math.min(i / (c.sampleRate * 0.05), 1 - i / bufLen);
+      data[i] = (Math.random() * 2 - 1) * 0.32 * Math.max(0, env);
+    }
+    const src = c.createBufferSource(); src.buffer = buf;
+    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 3200; bp.Q.value = 1.4;
+    src.connect(bp); bp.connect(seGain);
+    src.start(t);
+    // 低音ウーン（厳かさ）
+    osc(110, 'sine', 0.50, 0.30, seGain, t);
+    osc(220, 'sine', 0.45, 0.18, seGain, t + 0.05);
+    // 神秘的なチャイム
+    osc(880, 'triangle', 0.60, 0.18, seGain, t + 0.20);
+    osc(1318,'sine',     0.55, 0.14, seGain, t + 0.24);
+  }
+  // ハンコをドンッと押す音（重い衝撃＋木のコッ＋ベル）
+  function seContractStamp() {
+    const c = getCtx(); const t = c.currentTime;
+    // 重い衝撃: 低音キック
+    const o = c.createOscillator(); const g = c.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(180, t);
+    o.frequency.exponentialRampToValueAtTime(40, t + 0.18);
+    o.connect(g); g.connect(seGain);
+    g.gain.setValueAtTime(0.85, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+    o.start(t); o.stop(t + 0.26);
+    // ノイズの「ザッ」（インク飛沫）
+    const bufLen = c.sampleRate * 0.10;
+    const buf = c.createBuffer(1, bufLen, c.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      const env = 1 - i / bufLen;
+      data[i] = (Math.random() * 2 - 1) * 0.55 * env;
+    }
+    const src = c.createBufferSource(); src.buffer = buf;
+    const bp = c.createBiquadFilter(); bp.type = 'highpass'; bp.frequency.value = 1800;
+    src.connect(bp); bp.connect(seGain);
+    src.start(t + 0.02);
+    // 木製コッ（高音）
+    osc(2400, 'square', 0.04, 0.30, seGain, t + 0.015);
+    osc(1800, 'square', 0.05, 0.22, seGain, t + 0.020);
+    // 余韻の魔法ベル
+    osc(1568, 'triangle', 0.55, 0.30, seGain, t + 0.18);
+    osc(2093, 'sine',     0.50, 0.22, seGain, t + 0.20);
+    osc(2637, 'sine',     0.45, 0.16, seGain, t + 0.24);
+    osc(3136, 'sine',     0.40, 0.10, seGain, t + 0.28);
+  }
+  // 中当たりチャイム（ミッド/ハイのライト版）
+  function seGachaWin() {
+    const c = getCtx(); const t = c.currentTime;
+    // ピンポンパンポン
+    [880, 1047, 1319, 1568, 2093].forEach((f, i) => {
+      osc(f,   'sine',     0.22, 0.38, seGain, t + i * 0.07);
+      osc(f*2, 'triangle', 0.10, 0.14, seGain, t + i * 0.07);
+    });
+    osc(2637, 'sine', 0.50, 0.42, seGain, t + 0.34);
+  }
   function seUlt() {
     const c = getCtx(); const t = c.currentTime;
     osc(220,  'sawtooth', 0.05, 0.5, seGain, t);
@@ -3883,6 +4477,14 @@ const Audio = (() => {
     defeat:   () => { try { seDefeat(); }     catch(e){} },
     btn:      () => { try { seBtn(); }        catch(e){} },
     gacha:    () => { try { seGacha(); }      catch(e){} },
+    gachaSpin:      () => { try { seGachaSpin(); }      catch(e){} },
+    gachaReach:     () => { try { seGachaReach(); }     catch(e){} },
+    gachaPremium:   () => { try { seGachaPremium(); }   catch(e){} },
+    gachaHeartbeat: () => { try { seGachaHeartbeat(); } catch(e){} },
+    gachaJackpot:   () => { try { seGachaJackpot(); }   catch(e){} },
+    gachaWin:       () => { try { seGachaWin(); }       catch(e){} },
+    contractOpen:   () => { try { seContractOpen(); }   catch(e){} },
+    contractStamp:  () => { try { seContractStamp(); }  catch(e){} },
     ult:      () => { try { seUlt(); }        catch(e){} },
     victory:  () => { try { seVictory(); }    catch(e){} },
     opening:  () => { try { seOpeningSkill(); } catch(e){} },
@@ -4069,6 +4671,94 @@ const CLASS_ICONS = {
   'professor': 'assets/images/class-professor.png',
 };
 
+// モンスター名 → アイコン画像パス。未登録のモンスターは絵文字フォールバック
+const MONSTER_ICONS = {
+  // スライム系
+  'スライム':             'assets/images/monster-elem-slime.png',
+  'グリーンスライム':     'assets/images/monster-elem-slime-green.png',
+  '砂スライム':           'assets/images/monster-elem-slime-sand.png',
+  'アシッドスライム':     'assets/images/monster-elem-slime-acid.png',
+  'マグマスライム':       'assets/images/monster-elem-slime-magma.png',
+  // ビースト系
+  'ホーンラビット':       'assets/images/monster-beast-rabbit-horn.png',
+  'グレイウルフ':         'assets/images/monster-beast-wolf-gray.png',
+  'ヴェノムウルフ':       'assets/images/monster-beast-wolf-venom.png',
+  'デザートウルフ':       'assets/images/monster-beast-wolf-desert.png',
+  'ヘルハウンド':         'assets/images/monster-beast-hellhound.png',
+  'ワイルドボア':         'assets/images/monster-beast-boar-wild.png',
+  'アイアンホーン':       'assets/images/monster-beast-boar-iron.png',
+  'モスボア':             'assets/images/monster-beast-boar-moss.png',
+  'スカーボア':           'assets/images/monster-beast-boar-scar.png',
+  'ヴェノムボア':         'assets/images/monster-beast-boar-venom.png',
+  'スパインラット':       'assets/images/monster-beast-rat-spine.png',
+  'クラッグゴート':       'assets/images/monster-beast-goat-crag.png',
+  'サンドバジリスク':     'assets/images/monster-beast-basilisk-sand.png',
+  'レッサーベヒモス':     'assets/images/monster-beast-behemoth-lesser.png',
+  // 虫系
+  'ビートル':             'assets/images/monster-bug-beetle.png',
+  'キラービー':           'assets/images/monster-bug-killerbee.png',
+  'スコーピオン':         'assets/images/monster-bug-scorpion.png',
+  'デザートスコーピオン': 'assets/images/monster-bug-scorpion-desert.png',
+  'サンドワーム':         'assets/images/monster-bug-sandworm.png',
+  'グラベルワーム':       'assets/images/monster-bug-gravelworm.png',
+  // 鳥・飛竜
+  'ヴァルチャー':         'assets/images/monster-dragon-vulture.png',
+  'スカイラプター':       'assets/images/monster-dragon-raptor-sky.png',
+  'フォレストラプター':   'assets/images/monster-dragon-raptor-forest.png',
+  'ハイランドハーピー':   'assets/images/monster-dragon-harpy-highland.png',
+  'ロックバード':         'assets/images/monster-dragon-rockbird.png',
+  'レッサーワイバーン':   'assets/images/monster-dragon-wyvern-lesser.png',
+  'グリフォン・ロード':   'assets/images/monster-dragon-griffon-lord.png',
+  // 亜人
+  'ゴブリン':             'assets/images/monster-hume-goblin.png',
+  'ゴブリンアーチャー':   'assets/images/monster-hume-goblin-archer.png',
+  'ゴブリンライダー':     'assets/images/monster-hume-goblin-rider.png',
+  'ゴブリンチャンピオン': 'assets/images/monster-hume-goblin-champion.png',
+  'ホブゴブリン':         'assets/images/monster-hume-hobgoblin.png',
+  'オーク':               'assets/images/monster-hume-orc.png',
+  'コボルト戦士':         'assets/images/monster-hume-kobold-warrior.png',
+  'コボルトアーチャー':   'assets/images/monster-hume-kobold-archer.png',
+  // 不死・霊体
+  'スケルトン':           'assets/images/monster-spec-skeleton.png',
+  'スケルトンドラゴン':   'assets/images/monster-spec-skeleton-dragon.png',
+  'リビングアーマー':     'assets/images/monster-spec-livingarmor.png',
+  'ガーゴイル':           'assets/images/monster-spec-gargoyle.png',
+  // 植物・菌類・妖精
+  'マンドラゴラ':         'assets/images/monster-plant-mandragora.png',
+  'スリープフラワー':     'assets/images/monster-plant-flower-sleep.png',
+  'トレント':             'assets/images/monster-plant-treant.png',
+  'ヒカリダケ':           'assets/images/monster-plant-mushroom-light.png',
+  'マイコニド':           'assets/images/monster-plant-myconid.png',
+  'ヴェノムマイコニド':   'assets/images/monster-plant-myconid-venom.png',
+  'ピクシー':             'assets/images/monster-plant-pixie.png',
+  // 炎・精霊
+  'サラマンダー':         'assets/images/monster-elem-salamander.png',
+  'イグニス':             'assets/images/monster-elem-ignis.png',
+  'イフリート':           'assets/images/monster-elem-ifrit.png',
+  'マグナウム':           'assets/images/monster-dragon-magnum.png',
+  'エンバリス':           'assets/images/monster-bug-embaris.png',
+  'ヴォルタイル':         'assets/images/monster-beast-volatile.png',
+  // ゴーレム・鉱物
+  'ロックゴーレム':       'assets/images/monster-golem-rock.png',
+  'クリスタルゴーレム':   'assets/images/monster-golem-crystal.png',
+  'ロックシェル':         'assets/images/monster-golem-shell-rock.png',
+  'クリスタルタートル':   'assets/images/monster-golem-turtle-crystal.png',
+  'ロックイーター':       'assets/images/monster-golem-eater.png',
+  'クリフストーカー':     'assets/images/monster-golem-cliffstalker.png',
+  'オブシディアン':       'assets/images/monster-golem-obsidian.png',
+  'テオナナカトル':       'assets/images/monster-plant-teonanacatl.png',
+  // ミミック
+  'ミミックチェスト':     'assets/images/monster-mimic-chest.png',
+  'ミミックロック':       'assets/images/monster-mimic-rock.png',
+  // ブレインパラサイト
+  'ブレインパラサイト':   'assets/images/monster-bug-parasite-brain.png',
+  // ボス
+  'エンシェントゴーレム':     'assets/images/monster-boss-ancient-golem.png',
+  'ゲートガーディアン・頭部': 'assets/images/monster-boss-gateguardian-head.png',
+  'ゲートガーディアン・右腕': 'assets/images/monster-boss-gateguardian-armR.png',
+  'ゲートガーディアン・左腕': 'assets/images/monster-boss-gateguardian-armL.png',
+};
+
 const CLASS_DATA = {
   warrior: {
     name: 'ウォリアー',
@@ -4087,9 +4777,9 @@ const CLASS_DATA = {
       effect:{ type:'atk_up', val:20, turns:3 }
     },
     activeSkills: [
-      { id:'ws_sword_strike', name:'ソードストライク', type:'phys', target:'single',
+      { id:'ws_sword_strike', name:'ソードストライク', type:'phys', attr:'斬', target:'single',
         power:0.7, hits:3, cd:3, desc:'単体×3回 ⚔️ Pw:0.7' },
-      { id:'ws_titan_smash', name:'タイタンスマッシュ', type:'phys', target:'single',
+      { id:'ws_titan_smash', name:'タイタンスマッシュ', type:'phys', attr:'打', target:'single',
         power:2.0, cd:5, desc:'単体 ✨ Pw:2.0（HP50%以上+Pw:1.0）',
         conditionalPower:{ condition:'self_hp_above_50pct', bonusPower:1.0 } },
     ],
@@ -4105,7 +4795,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'wu_ragnarok', name:'ラグナロクスラッシュ',
         effect:'前衛⚔️全体 Pw:3.5 強制会心（前衛なし→後衛）+ 自身ATK+50%・CRI+30% 2T',
-        power:3.5, type:'phys', target:'front_row', forceCrit:true,
+        power:3.5, type:'phys', attr:'斬', target:'front_row', forceCrit:true,
         selfBuff:{ atk_up:50, cri_up:30, turns:2 } },
     ],
   },
@@ -4139,7 +4829,7 @@ const CLASS_DATA = {
           { type:'mdef_up', val:35, turns:3 },
         ]}
       },
-      { id:'vg_shield_bash', name:'シールドバッシュ', type:'phys', target:'single',
+      { id:'vg_shield_bash', name:'シールドバッシュ', type:'phys', attr:'打', target:'single',
         power:0.8, cd:4, desc:'単体 ⚔️ Pw:0.8 + 恐怖（ATK-10%）',
         debuff:{ type:'atk_down', val:-10, turns:3 }
       },
@@ -4212,17 +4902,17 @@ const CLASS_DATA = {
     baseStealth: 45,
     baseHate:    150,
     openingSkill: {
-      id:'as_open_shadow', name:'影潜り', type:'opening', target:'single',
+      id:'as_open_shadow', name:'影潜り', type:'phys', attr:'裂', target:'single',
       desc:'ATK+25%・CRI+15% + 奇襲時⚔️Pw:3.0（通常時Pw:1.0） 3T',
       power:3.0,
       effect:{ type:'surprise_burst', normalPw:1.0, surprisePw:3.0 },
       surpriseBuff:[ { type:'atk_up', val:25, turns:3 }, { type:'cri_up', val:15, turns:3 } ]
     },
     activeSkills: [
-      { id:'as_poison_blade', name:'毒刃', type:'phys', target:'single',
+      { id:'as_poison_blade', name:'毒刃', type:'phys', attr:'裂', target:'single',
         power:1.6, cd:4, desc:'単体 ✨ Pw:1.6 + 猛毒3T（ATK×10%/T）',
         debuff:{ type:'lethal_poison', val:10, turns:3 } },
-      { id:'as_backstab', name:'バックスタブ', type:'phys', target:'single',
+      { id:'as_backstab', name:'バックスタブ', type:'phys', attr:'斬', target:'single',
         power:2.0, cd:5, desc:'単体 ✨ Pw:2.0（CC中強制会心+Pw:1.0）',
         ccBonus:1.0, ccForceCrit:true },
     ],
@@ -4238,7 +4928,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'asu_hunt', name:'影狩り（シャドウハント）',
         effect:'最もHPの低い敵に⚔️Pw4.0(強制会心)+✨Pw2.0。撃破時即再行動(次の最低HP敵を自動追跡)。連続撃破でATK+10%スタック。夜戦中⚔️Pw+2.0追加',
-        power:4.0, type:'phys', target:'lowest_hp', forceCrit:true,
+        power:4.0, type:'phys', attr:'裂', target:'lowest_hp', forceCrit:true,
         blackPw:2.0, reattackOnKill:true, killAtkStack:10, nightRedBonus:2.0 },
     ],
   },
@@ -4255,14 +4945,14 @@ const CLASS_DATA = {
     baseStealth: 10,
     baseHate:   300,
     openingSkill: {
-      id:'ar_open_preemptive', name:'先制射撃', type:'phys', target:'random_multi',
+      id:'ar_open_preemptive', name:'先制射撃', type:'phys', attr:'貫', target:'random_multi',
       power:0.5, hits:6, cd:0,
       desc:'ランダム敵×6連射 ⚔️ Pw:0.5'
     },
     activeSkills: [
-      { id:'ar_pierce', name:'ピアシングアロー', type:'phys', target:'single',
+      { id:'ar_pierce', name:'ピアシングアロー', type:'phys', attr:'貫', target:'single',
         power:2.0, cd:4, desc:'単体 ⚔️ Pw:2.0 貫通矢' },
-      { id:'ar_rain', name:'アローレイン', type:'phys', target:'all',
+      { id:'ar_rain', name:'アローレイン', type:'phys', attr:'貫', target:'all',
         power:0.7, cd:6, desc:'全体 ⚔️ Pw:0.7 矢の雨' },
     ],
     passiveSkills: [
@@ -4275,7 +4965,7 @@ const CLASS_DATA = {
     ],
     skillPool: [],
     ultimates: [
-      { id:'au_stormcross', name:'ストームクロス',
+      { id:'au_stormcross', name:'ストームクロス', attr:'貫',
         effect:'ランダムな敵に✨×10連射（1発：現在HPの4%）',
         power:0.04, type:'spec', target:'random_multi', hits:10 },
     ],
@@ -4288,16 +4978,16 @@ const CLASS_DATA = {
     baseStats: { atk:850, hp:2400, mp:2200, pres:5, mres:15, bres:3, lres:0, spd:78, cri:10, cridam:155 },
     baseSearch: 20, baseStealth: 5, baseHate: 250,
     openingSkill: {
-      id:'wz_open_arcane', name:'古代魔法陣', type:'red', target:'all',
+      id:'wz_open_arcane', name:'古代魔法陣', type:'spec', attr:'魔', target:'all',
       desc:'全体 ⚔️（魔法）Pw:2.5＋特殊耐性-20%（3T）。奇襲時Pw×1.3',
       power:2.5, powerOnSurprise:3.25,
       debuff:{ type:'mres_down', val:-20, turns:3 }
     },
     activeSkills: [
-      { id:'wz_silence', name:'サイレンス', type:'white', target:'single',
+      { id:'wz_silence', name:'サイレンス', type:'spec', attr:'呪', target:'single',
         power:2.5, cd:7, desc:'単体 🔵 Pw:2.5＋沈黙（次スキル封印）',
         debuff:{ type:'silence', val:1, turns:1 } },
-      { id:'wz_meteor', name:'メテオストライク', type:'red', target:'all',
+      { id:'wz_meteor', name:'メテオストライク', type:'spec', attr:'爆', target:'all',
         power:2.0, cd:12, desc:'全体 ⚔️（魔法）Pw:2.0' },
     ],
     passiveSkills: [
@@ -4309,7 +4999,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'wu_starcurse', name:'星天の呪詛',
         effect:'単体✨Pw:3.0＋特殊耐性-25%・特殊耐性-20%（永続）→全体⚔️Pw:2.0＋特殊耐性-20%（3T）。奇襲強制会心',
-        target:'single', power:3.0, type:'black',
+        target:'single', power:3.0, type:'spec', attr:'呪',
         debuff:{ type:'multi_res_down', wres:-25, bres:-20, turns:5 } },
     ],
   },
@@ -4326,7 +5016,7 @@ const CLASS_DATA = {
       effect:{ type:'shield_and_res', shieldRatio:0.20, resType:'wres', resVal:15, turns:3 }
     },
     activeSkills: [
-      { id:'pd_holy_strike', name:'聖光撃', type:'red', target:'single',
+      { id:'pd_holy_strike', name:'聖光撃', type:'spec', attr:'聖', target:'single',
         power:2.0, cd:5, desc:'単体 ⚔️（聖）Pw:2.0＋対象特殊耐性-15%（2T）',
         debuff:{ type:'wres_down', val:-15, turns:2 } },
       { id:'pd_miracle', name:'奇跡の光', type:'buff', target:'all_ally',
@@ -4342,7 +5032,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'pu_divine', name:'天罰の審判',
         effect:'単体⚔️（聖）Pw:6.0強制会心＋全体HP回復×1.5＋全体全耐性+20%（3T）',
-        target:'single', power:6.0, type:'red', forceCrit:true,
+        target:'single', power:6.0, type:'spec', attr:'聖', forceCrit:true,
         allyHeal:{ healRatio:1.5 },
         allyBuff:{ type:'all_res_up', val:20, turns:3 } },
     ],
@@ -4363,10 +5053,10 @@ const CLASS_DATA = {
       ]}
     },
     activeSkills: [
-      { id:'sh_poison_mist', name:'毒霧散布', type:'black', target:'all',
+      { id:'sh_poison_mist', name:'毒霧散布', type:'spec', attr:'呪', target:'all',
         power:0.8, cd:7, desc:'全体 ✨ Pw:0.8＋猛毒（3T・ATK×0.15/行動）',
         debuff:{ type:'lethal_poison', val:15, turns:3 } },
-      { id:'sh_curse', name:'弱体の呪い', type:'black', target:'single',
+      { id:'sh_curse', name:'弱体の呪い', type:'spec', attr:'呪', target:'single',
         power:0.4, cd:5, desc:'単体 ✨ Pw:0.4＋全耐性-20%・ATK-15%（3T）',
         effect:{ type:'multi_debuff', debuffs:[
           { type:'all_res_down', val:-20, turns:3 },
@@ -4382,7 +5072,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'su_grand_curse', name:'大呪詛陣',
         effect:'全体✨Pw:1.5＋全ステータス-20%・全耐性-20%（3T）＋猛毒（5T）',
-        target:'all', power:1.5, type:'black',
+        target:'all', power:1.5, type:'spec', attr:'呪',
         debuff:{ type:'lethal_poison', val:15, turns:5 },
         extraDebuff:{ type:'grand_debuff', val:-20, turns:3 } },
     ],
@@ -4400,10 +5090,10 @@ const CLASS_DATA = {
       effect:{ type:'atk_up_self_dmg', atkVal:30, selfHpCost:10, turns:3, surpriseAtk:50 }
     },
     activeSkills: [
-      { id:'bk_frenzy', name:'狂乱の一撃', type:'red', target:'single',
+      { id:'bk_frenzy', name:'狂乱の一撃', type:'phys', attr:'裂', target:'single',
         power:2.5, cd:5, desc:'単体 ⚔️ Pw:2.5（残HP%が低いほどPw+最大+1.5）',
         scaledByMissingHp:{ maxBonus:1.5 } },
-      { id:'bk_rampage', name:'乱舞斬り', type:'red', target:'random_multi',
+      { id:'bk_rampage', name:'乱舞斬り', type:'phys', attr:'斬', target:'random_multi',
         power:0.9, hits:4, cd:6, desc:'ランダム敵×4 ⚔️ Pw:0.9（低HP時CRI率+20%）',
         lowHpCriBonus:20 },
     ],
@@ -4419,7 +5109,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'bku_bloodstorm', name:'血嵐乱舞',
         effect:'自身HP30%消費→ランダム敵×10 ⚔️ Pw:1.2 強制会心。撃破ごとにATK+8%スタック',
-        power:1.2, type:'red', target:'random_multi', hits:10, forceCrit:true,
+        power:1.2, type:'phys', attr:'裂', target:'random_multi', hits:10, forceCrit:true,
         selfHpCost:30, killAtkStack:8 },
     ],
   },
@@ -4439,7 +5129,7 @@ const CLASS_DATA = {
       { id:'sn_counter_guard', name:'カウンターガード', type:'buff', target:'self',
         power:0, cd:7, desc:'防御姿勢3T（被ダメ-30%・被攻撃時反撃 Pw:0.8）',
         effect:{ type:'counter_stance', dmgReduction:30, counterPower:0.8, turns:3 } },
-      { id:'sn_shield_bash2', name:'大盾突き', type:'red', target:'single',
+      { id:'sn_shield_bash2', name:'大盾突き', type:'phys', attr:'打', target:'single',
         power:1.5, cd:5, desc:'単体 ⚔️ Pw:1.5 ＋ スタン1T',
         debuff:{ type:'stun', val:1, turns:1 } },
     ],
@@ -4475,10 +5165,10 @@ const CLASS_DATA = {
       ]}
     },
     activeSkills: [
-      { id:'sr_snipe', name:'スナイプ', type:'red', target:'single',
+      { id:'sr_snipe', name:'スナイプ', type:'phys', attr:'貫', target:'single',
         power:3.5, cd:7, desc:'単体 ⚔️ Pw:3.5（強制会心）',
         forceCrit:true },
-      { id:'sr_burst', name:'バースト射撃', type:'red', target:'random_multi',
+      { id:'sr_burst', name:'バースト射撃', type:'phys', attr:'貫', target:'random_multi',
         power:0.8, hits:5, cd:5, desc:'ランダム敵×5 ⚔️ Pw:0.8' },
     ],
     passiveSkills: [
@@ -4493,7 +5183,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'sru_deadshot', name:'デッドショット',
         effect:'単体 ⚔️ Pw:8.0 強制会心（CC中+Pw:4.0追加）',
-        power:8.0, type:'red', target:'single', forceCrit:true,
+        power:8.0, type:'phys', attr:'貫', target:'single', forceCrit:true,
         ccBonus:4.0 },
     ],
   },
@@ -4510,10 +5200,10 @@ const CLASS_DATA = {
       effect:{ type:'mp_regen_and_pw_boost', mpRatio:30, pwBoost:50, turns:1 }
     },
     activeSkills: [
-      { id:'cs_chain', name:'チェインマジック', type:'red', target:'all',
+      { id:'cs_chain', name:'チェインマジック', type:'spec', attr:'魔', target:'all',
         power:1.5, cd:8, desc:'全体 ⚔️（魔法）Pw:1.5 ＋ チェイン追撃Pw:0.8',
         chainHit:{ power:0.8 } },
-      { id:'cs_burst', name:'エレメントバースト', type:'black', target:'single',
+      { id:'cs_burst', name:'エレメントバースト', type:'spec', attr:'爆', target:'single',
         power:3.0, cd:6, desc:'単体 ✨ Pw:3.0 ＋ 属性耐性-25% 3T',
         debuff:{ type:'all_res_down', val:-25, turns:3 } },
     ],
@@ -4529,7 +5219,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'csu_catastrophe', name:'カタストロフィ',
         effect:'全体 ⚔️（魔法）Pw:4.0 ＋ 全耐性-30% 3T。奇襲時強制会心',
-        power:4.0, type:'red', target:'all',
+        power:4.0, type:'spec', attr:'爆', target:'all',
         debuff:{ type:'all_res_down', val:-30, turns:3 },
         surpriseForceCrit:true },
     ],
@@ -4547,10 +5237,10 @@ const CLASS_DATA = {
       effect:{ type:'atk_and_next_pw', atkVal:25, nextPwBonus:1.0, turns:2 }
     },
     activeSkills: [
-      { id:'lc_dragon_pierce', name:'竜貫き', type:'red', target:'single',
+      { id:'lc_dragon_pierce', name:'竜貫き', type:'phys', attr:'貫', target:'single',
         power:3.0, cd:5, desc:'単体 ⚔️ Pw:3.0（後列にも50%貫通ダメージ）',
         pierceHit:{ ratio:0.5 } },
-      { id:'lc_moon_slash', name:'円月槍', type:'red', target:'all',
+      { id:'lc_moon_slash', name:'円月槍', type:'phys', attr:'斬', target:'all',
         power:1.2, cd:7, desc:'全体 ⚔️ Pw:1.2 ＋ ATK-15% 2T',
         debuff:{ type:'atk_down', val:-15, turns:2 } },
     ],
@@ -4566,7 +5256,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'lcu_heaven_thrust', name:'皇槍天衝',
         effect:'前衛全体 ⚔️ Pw:4.5（後列に50%貫通）＋ 自身ATK+40%・SPD+20 3T',
-        power:4.5, type:'red', target:'front_row',
+        power:4.5, type:'phys', attr:'貫', target:'front_row',
         pierceHit:{ ratio:0.5 },
         selfBuff:{ atk_up:40, spd_up:20, turns:3 } },
     ],
@@ -4624,13 +5314,13 @@ const CLASS_DATA = {
       effect:{ type:'all_res_down_all', val:-15, turns:3, surpriseVal:-25 }
     },
     activeSkills: [
-      { id:'pf_gravity', name:'重力魔法', type:'black', target:'all',
+      { id:'pf_gravity', name:'重力魔法', type:'spec', attr:'呪', target:'all',
         power:1.0, cd:7, desc:'全体 ✨ Pw:1.0 ＋ SPD-20・ATK-20% 3T',
         effect:{ type:'multi_debuff', debuffs:[
           { type:'spd_down', val:-20, turns:3 },
           { type:'atk_down', val:-20, turns:3 },
         ]}},
-      { id:'pf_amplify', name:'弱体強化', type:'black', target:'single',
+      { id:'pf_amplify', name:'弱体強化', type:'spec', attr:'呪', target:'single',
         power:0, cd:6, desc:'単体のデバフを強化（効果2倍・期間+2T）',
         effect:{ type:'debuff_amplify', multiplier:2, extraTurns:2 } },
     ],
@@ -4646,9 +5336,9 @@ const CLASS_DATA = {
     ultimates: [
       { id:'pfu_forbidden', name:'禁断の理論',
         effect:'単体 ✨ Pw:2.0 ＋ 全ステータス-25%・全耐性-25%（永続）→ 全体 ⚔️ Pw:1.5',
-        power:2.0, type:'black', target:'single',
+        power:2.0, type:'spec', attr:'呪', target:'single',
         debuff:{ type:'grand_debuff_permanent', statVal:-25, resVal:-25, turns:8 },
-        followUp:{ type:'red', target:'all', power:1.5 } },
+        followUp:{ type:'spec', attr:'魔', target:'all', power:1.5 } },
     ],
   },
 
@@ -4683,7 +5373,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'acu_transmutation', name:'完全変成',
         effect:'敵全体のバフを全解除しバフ数×Pw:0.5ダメージ ＋ 味方全体HP完全回復',
-        power:0.5, type:'black', target:'all',
+        power:0.5, type:'spec', attr:'爆', target:'all',
         dispelAndDamage:true, allyFullHeal:true },
     ],
   },
@@ -4701,7 +5391,7 @@ const CLASS_DATA = {
       guaranteeSurprise:true
     },
     activeSkills: [
-      { id:'th_steal', name:'盗む', type:'black', target:'single',
+      { id:'th_steal', name:'盗む', type:'phys', attr:'裂', target:'single',
         power:0.8, cd:5, desc:'単体 ✨ Pw:0.8 ＋ 対象バフを1つ奪取（自身に付与）',
         effect:{ type:'steal_buff', count:1 } },
       { id:'th_decoy', name:'陽動作戦', type:'buff', target:'all_enemy',
@@ -4723,7 +5413,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'thu_grand_thief', name:'大盗賊の舞い',
         effect:'ランダム敵×8 ✨ Pw:1.0（各攻撃時バフ奪取）＋ 奪ったバフを全て自身に付与',
-        power:1.0, type:'black', target:'random_multi', hits:8,
+        power:1.0, type:'phys', attr:'裂', target:'random_multi', hits:8,
         stealBuff:true, applyStolen:true },
     ],
   },
@@ -4897,7 +5587,7 @@ const MONSTER_FLAVOR = {
   'マイコニド':         '二足で歩くキノコの魔物。胞子で仲間を呼び寄せる。',
   'ヴェノムマイコニド': '毒胞子を撒き散らすマイコニドの変異種。一帯を毒沼に変える。',
   'ピクシー':           '悪戯好きの妖精。魔法で敵を惑わせ、小さな悪戯を仕掛けてくる。',
-  'ブレインパラサイト': '宿主の脳を支配する寄生虫。倒れた仲間を操ることもある。',
+  'ブレインパラサイト': '触手で宿主の頭部に絡みつき、脳髄を蝕む寄生体。意識を奪われた者は同胞へ刃を向ける。',
 
   // --- 砂漠・蠍 ---
   'サンドワーム':       '砂中に潜み獲物を呑み込む巨大なワーム。砂漠を旅する者の天敵。',
@@ -4909,8 +5599,8 @@ const MONSTER_FLAVOR = {
   'サラマンダー':       '炎を吐く大きなトカゲ。火山の主とも言われる古い種族。',
   'イグニス':           '火を司る下級精霊。空気を焦がす赤い揺らめき。',
   'イフリート':         '業火を纏う精霊王の眷属。砂漠の伝説に名を残す。',
-  'マグナウム':         '灼熱の鎧を纏う巨人。歩むだけで地面を焦がす。',
-  'エンバリス':         '燃え盛る石の魔物。冷えれば動かないが、熱せられれば暴れ出す。',
+  'マグナウム':         '灼熱の波濤を従える深紅の竜。荒ぶる溶岩流の中から立ち上がり、その咆哮で大地を裂く。',
+  'エンバリス':         '炎の鱗粉を撒き散らす緋色の蝶。優雅な舞いに見惚れた者は、知らぬ間に灰へと変えられる。',
 
   // --- 岩・結晶系 ---
   'ロックゴーレム':     '岩で組まれた人型の魔物。命令を待ち続けて何十年も同じ場所に立つ個体もある。',
@@ -4920,7 +5610,7 @@ const MONSTER_FLAVOR = {
   'ロックイーター':     '岩を食らうワーム。坑道を勝手に掘り進める厄介者。',
   'クリフストーカー':   '崖から獲物を狙う捕食者。背後を取られたら逃げ場はない。',
   'オブシディアン':     '黒曜石の鎧を纏う精霊。鋭利な刃のような体表で触れた者を切り裂く。',
-  'ヴォルタイル':       '雷を放つ揮発性の精霊。空気の乾く季節に活発になる。',
+  'ヴォルタイル':       '黄金の鱗を持つ電気魚。砂塵の中を泳ぐように滑空し、触れる者すべてに痺れの一撃を放つ。',
 
   // --- 擬態 ---
   'ミミックチェスト':   '宝箱に擬態する捕食者。欲深い冒険者ほど餌食になる。',
@@ -4932,6 +5622,7 @@ const MONSTER_FLAVOR = {
   'ゲートガーディアン・右腕': '関門を守る三位一体の右腕。鈍重だが必殺の一撃を放つ。',
   'ゲートガーディアン・左腕': '関門を守る三位一体の左腕。素早い動きで敵を翻弄する。',
   'ゴブリンチャンピオン':     '集落の長たる選ばれしゴブリン。並のゴブリン百を束ねる強さを持つ。',
+  'テオナナカトル':           '紫の毒粘液を滴らせる古き菌神。胞子を吸い込んだ者は幻覚に囚われ、自ら糧となる。',
 };
 function getMonsterFlavor(name) {
   return MONSTER_FLAVOR[name] || 'まだ詳細が記録されていないモンスター。さらなる調査が必要だ。';
@@ -5990,7 +6681,7 @@ const PASSIVE_POOL = [
   { id:'drain',   name:'吸血',        stats:['DRAIN'],  levels:[{val:8,desc:'吸血8%'},{val:14,desc:'吸血14%'},{val:20,desc:'吸血20%'}] },
 ];
 
-const GAME_VERSION = '1.25';
+const GAME_VERSION = '1.26';
 
 const BABEL_AREAS = [
   {
@@ -8849,6 +9540,18 @@ function classIconHTML(classId, size='48px', style='') {
   return `<span style="font-size:${size};line-height:1;${style}">${cls?.icon||'⚔️'}</span>`;
 }
 
+// モンスター名から画像アイコンを生成。ボスは少し大きく表示。
+function monsterIconHTML(name, fallbackEmoji='❓', size='28px', opts={}) {
+  const path = MONSTER_ICONS[name];
+  if (path) {
+    const isBoss = !opts.noBossScale && typeof _getBossMonsterNames === 'function' && _getBossMonsterNames().has(name);
+    const finalSize = isBoss ? `calc(${size} * 1.3)` : size;
+    const extra = opts.style || '';
+    return `<img src="${path}" style="width:${finalSize};height:${finalSize};object-fit:contain;vertical-align:middle;${extra}" alt="">`;
+  }
+  return `<span style="font-size:${size};line-height:1;${opts.style||''}">${fallbackEmoji||'❓'}</span>`;
+}
+
 const GACHA_POOL = ['warrior','vanguard','archer','priest','assassin','sentinel','shooter','lancer'];
 
 // ── キャラガチャプール ──
@@ -8893,32 +9596,17 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_03', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第1章：戦闘の基本',
-    text:'メインステージ S3（灰色の森）をクリア → ヴァンガード獲得',
-    desc:'タンク役のヴァンガードが仲間になる！前衛に配置して壁を作ろう。',
+    text:'メインステージ S3（灰色の森）をクリア',
+    desc:'敵の数が増える初の本格戦。ATBの動きを見ながら前衛で受けて後衛で削るのが鉄則。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×200`,
     rewardIcon:'crystal', rewardAmt:200, rewardType:'starCrystal',
     cur:()=> gState.progress?.babel?.clearedStages?.['a1s3'] ? 1 : 0, req:1,
   },
   // ─── 第2章: 編成を学ぶ ───
   {
-    id:'bg_04', shortcut:()=>{ closeMissionModal(); switchTab('formation'); }, shortcutLabel:'🗂️ 編成へ', chapter:'第2章：編成を学ぶ',
-    text:'編成画面でヴァンガードを前衛に配置する',
-    desc:'ヴァンガードは高HP・高ヘイトのタンク。前衛に置くと敵の攻撃を引き受けてくれる。',
-    reward:`${itemIconHTML('gold','14px')} ゴールド ×300`,
-    rewardIcon:'gold', rewardAmt:300, rewardType:'gold',
-    cur:()=>{
-      const preset = gState.presets?.[gState.activePreset||0];
-      const slots = preset?.formation?.slots || [];
-      return slots.some(uid => {
-        const u = gState.ownedUnits?.find(u=>u.uid===uid);
-        return u?.classId === 'vanguard';
-      }) ? 1 : 0;
-    }, req:1,
-  },
-  {
     id:'bg_05', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第2章：編成を学ぶ',
     text:'メインステージ S5（ウルフの縄張り）をクリア',
-    desc:'2体の強敵。前衛のヴァンガードがいると安定する。',
+    desc:'2体の強敵。前衛にタンク役を置いた編成が活きるステージ。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×80`,
     rewardIcon:'crystal', rewardAmt:80, rewardType:'starCrystal',
     cur:()=> gState.progress?.babel?.clearedStages?.['a1s5'] ? 1 : 0, req:1,
@@ -8958,8 +9646,8 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_08', shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ', chapter:'第3章：ガチャで仲間を増やす',
-    text:'メインステージ S7（ゴブリンの見張り）をクリア → アーチャー獲得',
-    desc:'遠距離アタッカーのアーチャーが仲間に！後衛から高火力で支援してくれる。',
+    text:'メインステージ S7（ゴブリンの見張り）をクリア',
+    desc:'遠距離アタッカーがいると索敵が伸びて奇襲発生率も上がる。アーチャー編成が活きるステージ。',
     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×600`,
     rewardIcon:'crystal', rewardAmt:600, rewardType:'starCrystal',
     cur:()=> gState.progress?.babel?.clearedStages?.['a1s7'] ? 1 : 0, req:1,
@@ -8975,15 +9663,15 @@ const BEGINNER_MISSIONS = [
   },
   {
     id:'bg_10', shortcut:()=>{ closeMissionModal(); switchTab('formation'); }, shortcutLabel:'🗂️ 編成へ', chapter:'第4章：中ボスに挑む',
-    text:'3体でパーティを組む（ウォリアー+ヴァンガード+アーチャー）',
-    desc:'3クラスが揃った。前衛2体・後衛1体の基本編成を試してみよう。',
+    text:'3クラス3体で編成する',
+    desc:'異なるクラス3体でパーティを組もう。役割を分担すると安定する。',
     reward:`${itemIconHTML('gold','14px')} ゴールド ×500`,
     rewardIcon:'gold', rewardAmt:500, rewardType:'gold',
     cur:()=>{
       const preset = gState.presets?.[gState.activePreset||0];
       const allSlots = (preset?.formation?.slots||[]).filter(Boolean);
-      const classes = allSlots.map(uid => gState.ownedUnits?.find(u=>u.uid===uid)?.classId).filter(Boolean);
-      return classes.includes('warrior') && classes.includes('vanguard') && classes.includes('archer') ? 1 : 0;
+      const classes = new Set(allSlots.map(uid => gState.ownedUnits?.find(u=>u.uid===uid)?.classId).filter(Boolean));
+      return classes.size >= 3 ? 1 : 0;
     }, req:1,
   },
   {
@@ -9685,7 +10373,6 @@ function openItemsMenu() {
     ${section('育成素材', [
       [iH('expPot'), 'EXPポット', p.ether, ''],
       [iH('awakePot'), '覚醒ポット', p.awakePot||0, ''],
-      [`<span style="font-size:22px">⛏️</span>`, 'ミスリル', p.mithril||0, ''],
       [`<span style="font-size:22px">🔑</span>`, 'タレントキー', p.passiveKey||0, ''],
     ])}
     ${section('アクセサリー素材', [
@@ -10093,6 +10780,70 @@ function claimAchievement(id) {
 
 // お知らせデータ
 const NEWS_DATA = [
+  {
+    id: 'news_024',
+    type: 'update',
+    title: '⚙️ バージョン1.26 アップデート',
+    date: '2026-05-12',
+    summary: '戦闘エフェクトを攻撃属性ごとに刷新（8種類）。キャラ詳細レイアウト再構成、ガチャ全面改修（召喚契約書演出・全画面表示・星晶石統一）など多数のUI改善を実施しました。',
+    body: `<h4>⚔️ 攻撃属性ごとの戦闘エフェクト（8種類）</h4>
+<p>通常攻撃・スキル・必殺技ごとに「攻撃属性」を持つようになり、属性ごとに異なるインパクト演出を再生します。</p>
+<ul>
+  <li><b>斬</b>: 斜めの斬撃ライン / <b>打</b>: リング状の衝撃波 / <b>貫</b>: 4方向に放射する十字（X字）の鋭いレイ</li>
+  <li><b>爆</b>: 中心からの放射状爆発 / <b>魔</b>: 円が外へ霧散 / <b>呪</b>: 外周から中心へ凝縮しながら回転</li>
+  <li><b>裂</b>: 獣の爪痕のような3本の斜めストローク / <b>聖</b>: 淡い光の粒が浮かび上がる演出</li>
+  <li>物理（phys）= オレンジ系、特殊（spec）= 青系の色分け（聖のみ淡白色固定）</li>
+  <li>同一ユニットに対するエフェクトの多重再生を防止（前のエフェクトが終わる前に新規発動した場合は上書き）</li>
+  <li>廃止された red / white / black / blue のダメージタイプを phys / spec に整理</li>
+</ul>
+
+<h4>✨ クリティカル表示の刷新</h4>
+<ul>
+  <li>クリティカル時のダメージ数値を<b>金色＋発光シャドウ</b>で強調</li>
+  <li>数値の下に「<b>CRITICAL</b>」ラベルを表示</li>
+  <li>従来の ⚡ プレフィックスを廃止し、視認性を向上</li>
+</ul>
+
+<h4>🎯 アーチャー「弱点狙い」をデバフアイコン化</h4>
+<ul>
+  <li>従来の 🔴 フローティング表示を廃止</li>
+  <li>対象（敵カード含む）に「<b>⬇物耐</b>」アイコンを常設表示し、攻撃ごとに ×N でスタック数が増加</li>
+</ul>
+
+<h4>👤 キャラ詳細レイアウトを全面再構成</h4>
+<p>セクション順を以下の順序に統一し、視認性を改善しました。</p>
+<ul>
+  <li>キャラ名ヘッダー → レベル/覚醒コントロール → <b>レベル進捗バー</b> → ★ <b>凸セクション</b>（凸数・素材・凸ボタン）</li>
+  <li>ステータス（索敵・隠密・基礎ヘイトを統合）→ クラススキル → 必殺技 → アーティファクト → アクセサリー → タレント</li>
+  <li><b>覚醒条件を厳格化</b>: 現在の上限レベルに到達してから覚醒ボタンが押せるように変更</li>
+</ul>
+
+<h4>📜 召喚契約書 — キャラガチャ演出</h4>
+<p>キャラガチャを引くと、羊皮紙の「召喚契約書」が広がり、ハンコ（封蝋）を押すドラマチックな演出が再生されます。</p>
+<ul>
+  <li>契約書には対価・召喚数・立会人クラン名を記載（レア度はサプライズ温存のため伏せ）</li>
+  <li>押印後に「契約成立」テキストとインク飛沫が散り、既存の結果モーダルへ繋がる</li>
+  <li>スキップボタン（✕）で演出を飛ばすことも可能</li>
+</ul>
+
+<h4>🔩 アーティファクトガチャを全面改修</h4>
+<ul>
+  <li>消費通貨を<b>ミスリル → 星晶石</b>に統一（1回 200 / 10連 2,000）</li>
+  <li>ガチャ画面をポップアップから<b>全画面切替</b>に変更し、没入感を向上</li>
+  <li>ガチャ画面下部の「所持アーティファクト一覧」を削除（重複表示を解消）</li>
+  <li>初回チュートリアル付与も「ミスリル ×3,000」→「星晶石 ×2,000」に変更</li>
+</ul>
+
+<h4>🪶 ヘッダーをスリム化</h4>
+<ul>
+  <li>ヘッダーから ⛏️ ミスリル表示を削除（鍛冶屋・鉱山などゲーム内の他のミスリル用途は維持）</li>
+</ul>
+
+<h4>🔧 不具合修正</h4>
+<ul>
+  <li>出撃確認モーダルから「編成画面 →」ボタン・ユニット詳細行をタップしても遷移先が見えなかった問題を修正（下層の stage-list-modal を同時クローズする処理を追加）</li>
+</ul>`,
+  },
   {
     id: 'news_023',
     type: 'update',
@@ -11296,7 +12047,8 @@ function updateTopBar() {
   document.getElementById('topbar-clanlv').textContent = 'Lv.' + p.level;
   document.getElementById('disp-gold').textContent    = fmt(p.gold);
   document.getElementById('disp-crystal').textContent = fmt(p.starCrystal || 0);
-  document.getElementById('disp-mithril').textContent = fmt(p.mithril || 0);
+  const _mithEl = document.getElementById('disp-mithril');
+  if (_mithEl) _mithEl.textContent = fmt(p.mithril || 0);
   const expNeed = clanExpNeed(p.level);
   const pct = Math.min(100, (p.clanExp / expNeed)*100);
   document.getElementById('clan-exp-fill').style.width = pct + '%';
@@ -11502,54 +12254,9 @@ function renderHomeTab() {
 function renderBeginnerMissions() { renderHomeBeginner(); } // 後方互換
 
 function renderBeginnerMissions() {
-  let el = document.getElementById('home-beginner-missions');
-  if (!el) {
-    // 親コンテナを探して追加
-    const parent = document.getElementById('home-daily-section')?.parentElement;
-    if (!parent) return;
-    el = document.createElement('div');
-    el.id = 'home-beginner-missions';
-    el.style.cssText = 'margin:10px 12px 0;padding:10px 12px;background:var(--panel);border-radius:10px;border:1px solid var(--border)';
-    parent.insertBefore(el, document.getElementById('home-daily-section'));
-  }
-
-  const cleared = gState.progress?.babel?.clearedStages || {};
-  const bm = gState.beginnerMissions || {};
-
-  // 全完了なら非表示
-  if (bm.vanguardGiven && bm.archerGiven) { el.style.display = 'none'; return; }
-  el.style.display = '';
-
-  const missions = [
-    {
-      label: 'ヴァンガードを獲得', icon: '🛡️',
-      desc: 'メインステージ S3（灰色の森）をクリア',
-      done: !!bm.vanguardGiven,
-      progress: !!cleared['a1s3'],
-    },
-    {
-      label: 'アーチャーを獲得', icon: '🏹',
-      desc: 'メインステージ S7（ゴブリンの見張り）をクリア',
-      done: !!bm.archerGiven,
-      progress: !!cleared['a1s7'],
-    },
-  ];
-
-  el.innerHTML = `
-    <div style="font-size:10px;color:var(--accent2);letter-spacing:2px;margin-bottom:8px">🎯 BEGINNER MISSIONS</div>
-    ${missions.map(m => `
-      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-        <div style="font-size:20px;opacity:${m.done?0.4:1}">${m.icon}</div>
-        <div style="flex:1">
-          <div style="font-size:12px;color:${m.done?'var(--text3)':'var(--text)'};text-decoration:${m.done?'line-through':'none'}">${m.label}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:1px">${m.desc}</div>
-        </div>
-        <div style="font-size:11px;font-weight:700;color:${m.done?'var(--text3)':m.progress?'var(--gold)':'var(--accent2)'}">
-          ${m.done ? '✓ 完了' : m.progress ? '🏆 獲得済' : '未クリア'}
-        </div>
-      </div>
-    `).join('')}
-  `;
+  // ステージクリアによるキャラ付与を廃止したため、旧ホーム用ヴァン/アーチャーパネルは表示しない
+  const el = document.getElementById('home-beginner-missions');
+  if (el) { el.innerHTML = ''; el.style.display = 'none'; }
 }
 
 function renderHomeNotices() {
@@ -11765,7 +12472,7 @@ function openUnitDetail(uid) {
   const stats = calcStats(u);
   const ult = cls.ultimates.find(x=>x.id===u.ultimateId) || cls.ultimates[0];
 
-  // Stats HTML（Lv100時の目標値も表示）
+  // Stats HTML（Lv100時の目標値も表示 + 索敵/隠密/ヘイトも統合）
   const base = cls.baseStats;
   const scale100 = 1 + 99*9/99; // = 10
   const atk100 = Math.floor(base.atk * scale100);
@@ -11801,6 +12508,18 @@ function openUnitDetail(uid) {
       <div class="stat-item">
         <div class="stat-name">CRIDAM <span style="font-size:8px;color:var(--text3)">固定</span></div>
         <div class="stat-val">${stats.cridam}<span style="font-size:11px">%</span></div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-name">索敵 <span style="font-size:8px;color:var(--text3)">固定</span></div>
+        <div class="stat-val">${cls.baseSearch ?? 10}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-name">隠密 <span style="font-size:8px;color:var(--text3)">固定</span></div>
+        <div class="stat-val">${cls.baseStealth ?? 5}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-name">基礎ヘイト <span style="font-size:8px;color:var(--text3)">固定</span></div>
+        <div class="stat-val">${cls.baseHate ?? 400}</div>
       </div>
     </div>
     <div style="font-size:10px;color:var(--text3);margin-top:6px;padding:4px 6px;background:var(--bg2);">
@@ -11931,14 +12650,79 @@ function openUnitDetail(uid) {
   const atWall = prog.level >= awakeLimit && awakeLimit < 100;
   const canLvUp = gState.player.ether >= expNeed && prog.level < awakeLimit;
   const awakeCost = awakePotCost(prog.awakeCount||0);
-  const canAwake = gState.player.awakePot >= awakeCost && awakeLimit < 100;
+  // 覚醒は現上限レベルに到達してから（atWall）かつ覚醒ポットが足りる場合のみ押下可
+  const canAwake = atWall && gState.player.awakePot >= awakeCost;
   const awakeInfo = awakeLimit < 100
     ? `<div style="font-size:9px;margin-top:2px;color:${atWall?'var(--red)':'var(--text3)'}">
-        ${atWall ? `⚠️ 上限Lv.${awakeLimit} 覚醒ポット×${awakeCost}で解放` : `上限 Lv.${awakeLimit}`}
+        ${atWall ? `⚠️ 上限Lv.${awakeLimit} 覚醒ポット×${awakeCost}で解放` : `上限 Lv.${awakeLimit}（覚醒は上限到達後に解放）`}
        </div>`
     : `<div style="font-size:9px;margin-top:2px;color:var(--green)">✓ 最大覚醒済み</div>`;
 
+  // レベル進捗バー（現上限までの進捗）
+  const lvProgressPct = Math.min(100, Math.max(0, (prog.level / awakeLimit) * 100));
+  const lvProgressColor = atWall ? 'linear-gradient(90deg,#ff8a8a,#ff5252)' : 'linear-gradient(90deg,var(--gold),var(--accent,#ffb347))';
+  const lvProgressHTML = `
+    <div style="margin-top:8px">
+      <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+        <div style="height:100%;background:${lvProgressColor};width:${lvProgressPct.toFixed(1)}%;transition:width 0.3s"></div>
+      </div>
+      <div style="font-size:9px;color:var(--text3);margin-top:2px;display:flex;justify-content:space-between">
+        <span>Lv.${prog.level}</span>
+        <span>${atWall ? '⚠️ 上限到達' : '上限 Lv.' + awakeLimit}</span>
+      </div>
+    </div>`;
+
+  // 凸セクション
+  const _conste = prog.conste || 0;
+  const _atConsteMax = _conste >= 6;
+  const _consteCost = charConsteCost(u.classId);
+  const _specHave = (gState.player.unitFragments || {})[u.classId] || 0;
+  const _genHave  = gState.player.genericFragments || 0;
+  const _canConste = !_atConsteMax && _specHave >= _consteCost.spec && _genHave >= _consteCost.gen;
+  const _rarityLbl = getCharRarity(u.classId) === 3 ? 'SSR' : 'SR';
+  const _consteDots = Array.from({length:6}, (_,i) =>
+    `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 2px;background:${i<_conste?'var(--gold)':'var(--border)'}"></span>`
+  ).join('');
+  const _costStr = _consteCost.gen > 0
+    ? `専用素材×${_consteCost.spec} + 汎用×${_consteCost.gen}`
+    : `専用素材×${_consteCost.spec}`;
+  const _haveStr = _consteCost.gen > 0
+    ? `所持: 専用 ${_specHave} / 汎用 ${_genHave}`
+    : `所持: 専用 ${_specHave}`;
+  const _consteBtn = _atConsteMax
+    ? `<span style="font-size:11px;color:var(--gold);font-weight:700">★MAX</span>`
+    : `<button onclick="constellateChar('${uid}')" style="font-size:11px;padding:4px 10px;background:${_canConste?'rgba(240,180,50,0.2)':'rgba(60,60,60,0.2)'};color:${_canConste?'var(--gold)':'var(--text3)'};border:1px solid ${_canConste?'rgba(240,180,50,0.5)':'var(--border)'};border-radius:4px;cursor:${_canConste?'pointer':'default'}" ${_canConste?'':'disabled'}>★${_conste+1}凸へ</button>`;
+  const consteHTML = `
+    <div class="udp-section">
+      <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>★ 凸（${_conste} / 6）</span>
+        <span style="font-size:10px;color:var(--text3)">${_rarityLbl} ・ ATK/HP +${_conste*5}%</span>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(240,180,50,0.08),rgba(240,120,50,0.06));border:1px solid rgba(240,180,50,0.3);border-left:3px solid var(--gold);padding:8px 10px">
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">${_consteDots}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+          <div style="font-size:10px;color:var(--text2);line-height:1.4">
+            <div>${_costStr}</div>
+            <div style="color:var(--text3)">${_haveStr}</div>
+          </div>
+          ${_consteBtn}
+        </div>
+      </div>
+    </div>`;
+
+  // 必殺技セクション
+  const ultimateHTML = `
+    <div class="ultimate-card">
+      <div class="ultimate-card-header">
+        <img src="assets/images/card-type-ultimate.png" style="width:28px;height:28px;object-fit:contain;">
+        <div class="ultimate-name">【${ult.name}】</div>
+        <span class="tac-badge" style="margin-left:auto;background:rgba(180,125,255,0.15);color:var(--purple);border:1px solid rgba(180,125,255,0.4);">ゲージ100%</span>
+      </div>
+      <div class="ultimate-effect">${ult.effect}</div>
+    </div>`;
+
   inner.innerHTML = `
+    <!-- 1. キャラ名 ヘッダー -->
     <div class="udp-header">
       <div class="udp-icon" style="position:relative">
         ${classIconHTML(u.classId,"52px")}
@@ -11950,26 +12734,31 @@ function openUnitDetail(uid) {
         </div>
         <div class="class" style="display:flex;align-items:center;gap:6px">${roleIconHTML(u.classId,'18px')} <span>${cls.role} / ${cls.name}</span></div>
         <div style="display:flex;align-items:center;gap:4px;margin-top:3px">${speciesBadgeHTML(cls.species,'large')} ${attackTypesBadgeHTML(cls.attackTypes)}</div>
-        <div class="lv-badge">Lv.${prog.level} / ${awakeLimit}</div>
-      </div>
-      <div style="margin-left:auto;text-align:right">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">
-          ${itemIconHTML('expPot','13px')} EXPポット: ${fmt(gState.player.ether)}
-        </div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">
-          ${itemIconHTML('awakePot','13px')} 覚醒ポット: ${gState.player.awakePot}個
-        </div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;">
-          <button id="udp-lvup-btn" class="btn ${canLvUp?'btn-gold':'btn-outline'} btn-sm" ${canLvUp?'':'disabled'} style="font-size:11px;padding:4px 8px;">
-            +1<br><span style="font-size:9px;font-weight:400">${itemIconHTML('expPot','10px')}${expNeed}</span>
-          </button>
-          <button id="udp-lvup5-btn" class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 8px;">+5</button>
-          <button id="udp-lvup10-btn" class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 8px;">+10</button>
-          ${awakeLimit < 100 ? `<button id="udp-awake-btn" class="btn btn-sm" style="font-size:10px;padding:4px 6px;background:${canAwake?'rgba(255,80,80,0.2)':'rgba(80,80,80,0.2)'};color:${canAwake?'#ff8888':'var(--text3)'};border:1px solid ${canAwake?'rgba(255,80,80,0.5)':'var(--border)'};" ${canAwake?'':''}>${itemIconHTML('awakePot','12px')} 覚醒</button>` : ''}
-        </div>
-        ${awakeInfo}
       </div>
     </div>
+    <!-- 2. レベル / 覚醒コントロール + 3. レベル進捗バー -->
+    <div class="udp-section">
+      <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>LEVEL</span>
+        <span style="font-family:'Rajdhani';font-size:14px;color:var(--gold)">Lv.${prog.level} / ${awakeLimit}</span>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+        <button id="udp-lvup-btn" class="btn ${canLvUp?'btn-gold':'btn-outline'} btn-sm" ${canLvUp?'':'disabled'} style="font-size:11px;padding:4px 8px;">
+          +1<br><span style="font-size:9px;font-weight:400">${itemIconHTML('expPot','10px')}${expNeed}</span>
+        </button>
+        <button id="udp-lvup5-btn" class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 8px;">+5</button>
+        <button id="udp-lvup10-btn" class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 8px;">+10</button>
+        ${awakeLimit < 100 ? `<button id="udp-awake-btn" class="btn btn-sm" ${canAwake?'':'disabled'} style="font-size:10px;padding:4px 6px;background:${canAwake?'rgba(255,80,80,0.2)':'rgba(80,80,80,0.2)'};color:${canAwake?'#ff8888':'var(--text3)'};border:1px solid ${canAwake?'rgba(255,80,80,0.5)':'var(--border)'};cursor:${canAwake?'pointer':'not-allowed'};">${itemIconHTML('awakePot','12px')} 覚醒</button>` : ''}
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:6px">
+        所持: ${itemIconHTML('expPot','11px')} EXPポット ${fmt(gState.player.ether)} / ${itemIconHTML('awakePot','11px')} 覚醒ポット ${gState.player.awakePot}個
+      </div>
+      ${awakeInfo}
+      ${lvProgressHTML}
+    </div>
+    <!-- 4. 凸セクション -->
+    ${consteHTML}
+    <!-- 5. ステータス（索敵・隠密・ヘイトを統合） -->
     <div class="udp-section">
       <div class="udp-section-title" style="display:flex;justify-content:space-between;align-items:center;">
         <span>STATS</span>
@@ -11977,55 +12766,33 @@ function openUnitDetail(uid) {
       </div>
       ${statsHTML}
     </div>
-    <div class="udp-section">
-      <div class="udp-section-title">ACCESSORIES</div>
-      <div id="udp-acc-slots">${renderUnitAccessorySlots(u)}</div>
-    </div>
-    <div class="udp-section">
-      <div class="udp-section-title">ARTIFACT</div>
-      <div id="udp-artifact-slot">${renderUnitArtifactSlot(u)}</div>
-    </div>
+    <!-- 6. スキル -->
     <div class="udp-section">
       <div class="udp-section-title">CLASS SKILLS</div>
       ${openingSkillHTML}
       ${activeSkillsHTML}
       ${passiveSkillsHTML}
     </div>
+    <!-- 7. 必殺技 -->
+    <div class="udp-section">
+      <div class="udp-section-title">ULTIMATE</div>
+      ${ultimateHTML}
+    </div>
+    <!-- 8. アーティファクト -->
+    <div class="udp-section">
+      <div class="udp-section-title">ARTIFACT</div>
+      <div id="udp-artifact-slot">${renderUnitArtifactSlot(u)}</div>
+    </div>
+    <!-- 9. アクセサリー -->
+    <div class="udp-section">
+      <div class="udp-section-title">ACCESSORIES</div>
+      <div id="udp-acc-slots">${renderUnitAccessorySlots(u)}</div>
+    </div>
+    <!-- 10. タレント -->
     <div class="udp-section">
       <div class="udp-section-title">TALENTS</div>
       <div class="passive-list">${passiveHTML}</div>
       ${passivesUnlocked ? `<button id="udp-reroll-btn" class="btn btn-outline btn-sm" style="margin-top:8px">${buildRerollLabel(u)}</button>` : ''}
-    </div>
-    <div class="udp-section">
-      <div class="udp-section-title">ULTIMATE</div>
-      <div class="ultimate-card">
-        <div class="ultimate-card-header">
-          <img src="assets/images/card-type-ultimate.png" style="width:28px;height:28px;object-fit:contain;">
-          <div class="ultimate-name">【${ult.name}】</div>
-          <span class="tac-badge" style="margin-left:auto;background:rgba(180,125,255,0.15);color:var(--purple);border:1px solid rgba(180,125,255,0.4);">ゲージ100%</span>
-        </div>
-        <div class="ultimate-effect">${ult.effect}</div>
-      </div>
-    </div>
-    <div class="udp-section">
-      <div class="udp-section-title">BATTLE TRAITS</div>
-      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
-        <div class="stat-item">
-          <div class="stat-name">索敵</div>
-          <div class="stat-val" style="font-size:16px">${cls.baseSearch ?? 10}</div>
-          <div style="font-size:9px;color:var(--text3)">SEARCH</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-name">隠密</div>
-          <div class="stat-val" style="font-size:16px">${cls.baseStealth ?? 5}</div>
-          <div style="font-size:9px;color:var(--text3)">STEALTH</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-name">基礎ヘイト</div>
-          <div class="stat-val" style="font-size:16px">${cls.baseHate ?? 400}</div>
-          <div style="font-size:9px;color:var(--text3)">HATE</div>
-        </div>
-      </div>
     </div>
     <div style="padding:12px;display:flex;gap:8px">
       <button id="udp-add-party-btn" class="btn btn-blue" style="flex:1">＋ 編成に追加</button>
@@ -12236,6 +13003,10 @@ function awakenUnit(uid) {
   if (!prog.awakeCount) prog.awakeCount = 0;
   const limit = getAwakeLimit(uid);
   if (limit >= 100) { alert('すでに最大レベルまで覚醒済みです。'); return; }
+  if (prog.level < limit) {
+    alert(`Lv.${limit} に到達してから覚醒できます。\n現在 Lv.${prog.level} → 上限 Lv.${limit}`);
+    return;
+  }
   const cost = awakePotCost(prog.awakeCount);
   if (gState.player.awakePot < cost) {
     alert(`覚醒ポットが不足しています。\n必要: ${cost}個 / 所持: ${gState.player.awakePot}個\n\n覚醒ポットは鉱山や討伐報酬で入手できます。`);
@@ -13380,8 +14151,8 @@ function triggerShieldBreakPassive(unit, attacker) {
       const dmg  = Math.max(1, Math.floor(unit.atk * pw));
       attacker.hp = Math.max(0, attacker.hp - dmg);
       if (attacker.hp <= 0) attacker.dead = true;
-      spawnBall(unit.uid, attacker.uid, 'red');
-      setTimeout(() => spawnFloatNum(attacker.uid, String(dmg), 'float-dmg-red'), 200);
+      spawnBall(unit.uid, attacker.uid, 'phys');
+      setTimeout(() => spawnFloatNum(attacker.uid, String(dmg), 'float-dmg-phys'), 200);
       addLog(`${unit.name}: [${pe.name}] シールドブレイク反撃 → ${attacker.name}: ${dmg}`, 'trigger');
     }
   });
@@ -13686,7 +14457,9 @@ function renderATBTimeline() {
     const nextCls = i === 0 ? ' atb-tl-next' : '';
     const label = `${c.name}${i === 0 ? ' ─ 次に行動' : ''}`;
     const inner = c.isEnemy
-      ? c.icon
+      ? (MONSTER_ICONS[c.name]
+          ? `<img src="${MONSTER_ICONS[c.name]}" style="width:100%;height:100%;object-fit:contain;border-radius:50%;display:block" alt="">`
+          : c.icon)
       : (CLASS_ICONS[c.classId]
           ? `<img src="${CLASS_ICONS[c.classId]}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" alt="">`
           : c.icon);
@@ -13801,28 +14574,35 @@ function combatantCardHTML(c) {
   const staggerClass = c.staggered ? ' staggered' : '';
   const rowClass = c.isEnemy ? '' : (c.isBackRow ? ' card-back-row' : ' card-front-row');
   const clickAttr = !c.isEnemy ? `onclick="handleAllyCardClick('${c.uid}')"` : '';
-  const iconContent = c.isEnemy
-    ? `<span class="cc-icon">${c.icon}</span>`
-    : `<span class="cc-icon">${classIconHTML(c.classId, '22px', 'border-radius:3px;vertical-align:middle;display:inline-block')}</span>`;
+  const isBoss = c.isEnemy && c.phases && c.phases.length > 1;
+  const bossClass = isBoss ? ' is-boss' : '';
+  const portraitInner = c.isEnemy
+    ? (MONSTER_ICONS[c.name]
+        ? `<img src="${MONSTER_ICONS[c.name]}" alt="">`
+        : `<span class="cc-portrait-emoji">${c.icon||'👹'}</span>`)
+    : (CLASS_ICONS[c.classId]
+        ? `<img src="${CLASS_ICONS[c.classId]}" alt="">`
+        : `<span class="cc-portrait-emoji">${c.icon||'⚔️'}</span>`);
   return `
-    <div class="combatant-card${staggerClass}${rowClass} ${c.dead?'dead':''}${c.isLeader?' leader-slot':''}${ultReadyManual?' ult-tap-ready':''}" id="cc-${c.uid}" ${clickAttr}>
-      <div class="cc-name">
-        ${leaderBadge}
-        ${iconContent}
-        <span class="cc-name-text">${c.name}</span>
-        ${atkInfo}
-      </div>
-      <div class="hp-bar-wrap">
-        <div class="hp-bar">
-          <div class="hp-fill ${hpPct<=50?'low':''} ${hpPct<=20?'critical':''}" style="width:${hpPct}%"></div>
+    <div class="combatant-card${staggerClass}${rowClass}${bossClass} ${c.dead?'dead':''}${c.isLeader?' leader-slot':''}${ultReadyManual?' ult-tap-ready':''}" id="cc-${c.uid}" ${clickAttr}>
+      <div class="cc-portrait">${leaderBadge}${portraitInner}</div>
+      <div class="cc-info">
+        <div class="cc-name">
+          <span class="cc-name-text">${c.name}</span>
+          ${atkInfo}
         </div>
-        ${shieldPct > 0 ? `<div class="shield-fill" style="width:${Math.min(100,shieldPct)}%"></div>` : ''}
+        <div class="hp-bar-wrap">
+          <div class="hp-bar">
+            <div class="hp-fill ${hpPct<=50?'low':''} ${hpPct<=20?'critical':''}" style="width:${hpPct}%"></div>
+          </div>
+          ${shieldPct > 0 ? `<div class="shield-fill" style="width:${Math.min(100,shieldPct)}%"></div>` : ''}
+        </div>
+        <div class="hp-text">${fmt(Math.max(0,c.hp))} / ${fmt(c.maxHp)}${c.shield>0?` <span style="color:#88aaff">🛡${fmt(c.shield)}</span>`:''}</div>
+        ${isBoss ? `<div class="boss-phase-dots">${c.phases.map((_,i)=>`<div class="phase-dot${i<(c.phaseIdx||0)?' cleared':i===(c.phaseIdx||0)?' active':''}"></div>`).join('')}</div>` : ''}
+        <div class="atb-bar"><div class="atb-fill" style="width:${atbPct}%"></div></div>
+        ${ultSection}
+        ${buffHtml ? `<div class="status-icons">${buffHtml}</div>` : ''}
       </div>
-      <div class="hp-text">${fmt(Math.max(0,c.hp))} / ${fmt(c.maxHp)}${c.shield>0?` <span style="color:#88aaff">🛡${fmt(c.shield)}</span>`:''}</div>
-      ${c.isEnemy && c.phases && c.phases.length > 1 ? `<div class="boss-phase-dots">${c.phases.map((_,i)=>`<div class="phase-dot${i<(c.phaseIdx||0)?' cleared':i===(c.phaseIdx||0)?' active':''}"></div>`).join('')}</div>` : ''}
-      <div class="atb-bar"><div class="atb-fill" style="width:${atbPct}%"></div></div>
-      ${ultSection}
-      ${buffHtml ? `<div class="status-icons">${buffHtml}</div>` : ''}
     </div>`;
 }
 
@@ -13916,7 +14696,8 @@ function executeManualSkill(uid, skillId) {
   }
   if (skillId === '__normal') {
     const equipBonus = getEquipCardBonus(c);
-    doAttack(c, enemies, { id:'normal', name:'通常攻撃', type:'phys', target:'single', power:1.0 + (equipBonus.powerBonus||0) });
+    const _na = getNormalAttackInfo(c);
+    doAttack(c, enemies, { id:'normal', name:'通常攻撃', type:_na.type, attr:_na.attr, target:'single', power:1.0 + (equipBonus.powerBonus||0) });
     gainUltGauge(c, 5);
     renderBattle(); return;
   }
@@ -14460,7 +15241,7 @@ function tickBattle() {
   const all = [...bs.allies, ...bs.enemies].filter(c=>!c.dead);
   all.forEach(c => {
     const atbMult = getAtbMult(c);
-    c.atb += c.spd * 0.02 * atbMult;
+    c.atb += c.spd * 0.014 * atbMult;
     if (c.atb >= 100) {
       c.atb = 0;
       // スタッガー: 1ターンスキップ → 解除
@@ -14718,7 +15499,7 @@ function combatantAct(c, bs) {
         if (tgt) {
           addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${tgt.name}`, 'trigger');
           (sk.effect.debuffs||[]).forEach(db => applyDebuffDirect(tgt, db));
-          spawnSkillNamePop(c.uid, sk.name, 'white'); spawnBall(c.uid, tgt.uid, 'white');
+          spawnSkillNamePop(c.uid, sk.name, 'spec'); spawnBall(c.uid, tgt.uid, 'spec');
         }
         gainUltGauge(c, 8);
       }
@@ -14773,8 +15554,9 @@ function combatantAct(c, bs) {
         return;
       }
     }
+    const _na = getNormalAttackInfo(c);
     const normalSkill = {
-      id:'normal', name:'通常攻撃', type:'phys', target:'single',
+      id:'normal', name:'通常攻撃', type:_na.type, attr:_na.attr, target:'single',
       power: 1.0 + equipBonus.powerBonus,
     };
     if (equipBonus.powerBonus > 0) {
@@ -14869,7 +15651,8 @@ function combatantAct(c, bs) {
   // ===== 味方 tacticsなし / 旧来フォールバックAI =====
   const available = (c.skills||[]).filter(sk => !(c.skillCDs[sk.id] > 0));
   if (!available.length) {
-    doAttack(c, enemies, { id:'normal', name:'通常攻撃', type:'phys', target:'single', power:1.0 });
+    const _na = getNormalAttackInfo(c);
+    doAttack(c, enemies, { id:'normal', name:'通常攻撃', type:_na.type, attr:_na.attr, target:'single', power:1.0 });
     return;
   }
   const hpRatio   = c.hp / c.maxHp;
@@ -14930,7 +15713,7 @@ function showActionBanner(actor, skillName, targetIcon, isUlt, isBuff) {
   const cls = isUlt ? 'is-ult' : isBuff ? 'is-buff' : '';
   banner.innerHTML = `
     <div class="action-banner-inner">
-      <div class="ab-actor">${actor.isEnemy ? actor.icon : classIconHTML(actor.classId,'28px')}</div>
+      <div class="ab-actor">${actor.isEnemy ? monsterIconHTML(actor.name, actor.icon, '28px') : classIconHTML(actor.classId,'28px')}</div>
       <div class="ab-skill ${cls}">${skillName}</div>
       ${targetIcon ? `<div class="ab-arrow">▼</div><div class="ab-target">${targetIcon}</div>` : ''}
     </div>`;
@@ -14946,7 +15729,8 @@ function spawnFloatNum(uid, text, cssClass, offsetX) {
   const elRect = el.getBoundingClientRect();
   const span = document.createElement('div');
   span.className = 'float-num ' + cssClass;
-  span.textContent = text;
+  // crit などで <br> や子要素を埋め込むため innerHTML を許可
+  span.innerHTML = String(text);
   const jitter = (Math.random() - 0.5) * 24;
   span.style.left = (elRect.left - arenaRect.left + elRect.width/2 - 20 + jitter + (offsetX||0)) + 'px';
   span.style.top  = (elRect.top  - arenaRect.top  + 8) + 'px';
@@ -14964,12 +15748,8 @@ function spawnBall(fromUid, toUid, type) {
   const colorMap = {
     phys:  { color:'#ff9944', shadow:'rgba(255,153,68,0.7)',   size:10 },
     spec:  { color:'#88aaff', shadow:'rgba(136,170,255,0.8)',  size:10 },
-    red:   { color:'#ff9944', shadow:'rgba(255,153,68,0.7)',   size:10 },
-    white: { color:'#88aaff', shadow:'rgba(136,170,255,0.8)',  size:10 },
-    black: { color:'#ff9944', shadow:'rgba(255,153,68,0.7)',   size:10 },
-    blue:  { color:'#88aaff', shadow:'rgba(136,170,255,0.8)',  size:10 },
-    magic: { color:'#88aaff', shadow:'rgba(136,170,255,0.8)',  size:10 },
     buff:  { color:'#4caf6e', shadow:'rgba(76,175,110,0.7)',   size:8  },
+    heal:  { color:'#4caf6e', shadow:'rgba(76,175,110,0.7)',   size:8  },
     ult:   { color:'#f0cc6e', shadow:'rgba(240,204,110,0.9)',  size:14 },
   };
   const cfg = colorMap[type] || colorMap.phys;
@@ -15033,6 +15813,139 @@ function flashCard(uid, type) {
   void el.offsetWidth;
   el.classList.add(type + '-flash');
   setTimeout(() => el.classList.remove(type + '-flash'), 500);
+}
+
+// 通常攻撃の type/attr マップ（クラスごと）
+const NORMAL_ATTACK_MAP = {
+  warrior:   { type:'phys', attr:'斬' },
+  vanguard:  { type:'phys', attr:'打' },
+  priest:    { type:'spec', attr:'魔' },
+  assassin:  { type:'phys', attr:'斬' },
+  archer:    { type:'phys', attr:'貫' },
+  wizard:    { type:'spec', attr:'魔' },
+  paladin:   { type:'phys', attr:'打' },
+  shaman:    { type:'spec', attr:'呪' },
+  berserker: { type:'phys', attr:'斬' },
+  sentinel:  { type:'phys', attr:'打' },
+  shooter:   { type:'phys', attr:'貫' },
+  caster:    { type:'spec', attr:'魔' },
+  lancer:    { type:'phys', attr:'貫' },
+  minstrel:  { type:'spec', attr:'魔' },
+  professor: { type:'spec', attr:'魔' },
+  alchemist: { type:'spec', attr:'魔' },
+  thief:     { type:'phys', attr:'斬' },
+};
+function getNormalAttackInfo(c) {
+  return NORMAL_ATTACK_MAP[c.classId] || { type:'phys', attr:'打' };
+}
+
+// スキルから attr を推定（enemy スキル等で attr 未指定時のフォールバック）
+function inferSkillAttr(skill, attacker) {
+  if (skill.attr) return skill.attr;
+  const name = skill.name || '';
+  if (/斬|斬撃|切|薙|スラッシュ/.test(name))          return '斬';
+  if (/突|貫|刺|矢|射|スナイプ|アロー|ピアス/.test(name)) return '貫';
+  if (/爆|バースト|メテオ|破裂/.test(name))            return '爆';
+  if (/呪|呪詛|サイレンス|重力/.test(name))            return '呪';
+  if (/裂|裂傷|引き裂|毒刃/.test(name))                return '裂';
+  if (/聖|光|ホーリー/.test(name))                     return '聖';
+  if (skill.type === 'spec') return '魔';
+  return '打';
+}
+
+// 属性ごとのインパクトエフェクトを target カード上に描画
+const _attrFxByUid = {};
+function cancelAttrFx(uid) {
+  if (!uid) return;
+  const rec = _attrFxByUid[uid];
+  if (!rec) return;
+  rec.timers.forEach(t => clearTimeout(t));
+  rec.elements.forEach(el => { try { el.remove(); } catch(_){} });
+  delete _attrFxByUid[uid];
+}
+function registerAttrFx(uid, timer, el) {
+  if (!_attrFxByUid[uid]) _attrFxByUid[uid] = { timers:[], elements:[] };
+  if (timer) _attrFxByUid[uid].timers.push(timer);
+  if (el)    _attrFxByUid[uid].elements.push(el);
+}
+
+function spawnImpactFx(uid, attr, type) {
+  const el = document.getElementById('cc-' + uid);
+  if (!el) return;
+  const arena = document.getElementById('battle-arena');
+  if (!arena) return;
+  const arenaRect = arena.getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
+  const cx = elRect.left - arenaRect.left + elRect.width/2;
+  const cy = elRect.top  - arenaRect.top  + elRect.height/2;
+
+  const fxClassMap = {
+    '斬':'atk-fx-slash', '打':'atk-fx-blunt', '貫':'atk-fx-pierce',
+    '爆':'atk-fx-explode', '魔':'atk-fx-magic', '呪':'atk-fx-curse',
+    '裂':'atk-fx-rend', '聖':'atk-fx-holy',
+  };
+  const fxClass = fxClassMap[attr] || 'atk-fx-blunt';
+  const cssColor = type === 'spec' ? '#88aaff' : '#ff9944';
+
+  if (attr === '聖') {
+    const container = document.createElement('div');
+    container.className = fxClass;
+    container.style.left = cx + 'px';
+    container.style.top  = cy + 'px';
+    for (let i = 0; i < 7; i++) {
+      const p = document.createElement('div');
+      p.className = 'holy-particle';
+      const offX = (Math.random() - 0.5) * 50;
+      const offY = (Math.random() - 0.5) * 30 + 18;
+      p.style.left = (offX + 32) + 'px';
+      p.style.top  = (offY + 32) + 'px';
+      p.style.setProperty('--hx', (Math.random()-0.5)*18 + 'px');
+      p.style.animationDelay = (Math.random() * 0.2) + 's';
+      container.appendChild(p);
+    }
+    arena.appendChild(container);
+    const tid = setTimeout(() => { try { container.remove(); } catch(_){} }, 1100);
+    registerAttrFx(uid, tid, container);
+  } else if (attr === '裂') {
+    const container = document.createElement('div');
+    container.className = fxClass;
+    container.style.left = cx + 'px';
+    container.style.top  = cy + 'px';
+    container.style.color = cssColor;
+    for (let i = 0; i < 3; i++) {
+      const c = document.createElement('div');
+      c.className = 'rend-claw';
+      c.style.top = (22 + i * 18) + 'px';
+      c.style.animationDelay = (i * 0.05) + 's';
+      container.appendChild(c);
+    }
+    arena.appendChild(container);
+    const tid = setTimeout(() => { try { container.remove(); } catch(_){} }, 600);
+    registerAttrFx(uid, tid, container);
+  } else {
+    const fx = document.createElement('div');
+    fx.className = fxClass;
+    fx.style.left = cx + 'px';
+    fx.style.top  = cy + 'px';
+    fx.style.color = cssColor;
+    arena.appendChild(fx);
+    const tid = setTimeout(() => { try { fx.remove(); } catch(_){} }, 550);
+    registerAttrFx(uid, tid, fx);
+  }
+}
+
+// 攻撃エフェクト（属性別）の総合再生:
+// - attacker と target の既存エフェクトはキャンセル
+// - 飛び道具（ボール）を attacker → target で再生
+// - 到達タイミングで属性インパクトを target に描画
+function playAttrEffect(attacker, target, skill) {
+  const attr = inferSkillAttr(skill, attacker);
+  const type = skill.type === 'buff' ? 'buff' : (skill.type || 'phys');
+  cancelAttrFx(attacker.uid);
+  cancelAttrFx(target.uid);
+  spawnBall(attacker.uid, target.uid, type);
+  const tid = setTimeout(() => spawnImpactFx(target.uid, attr, type), 220);
+  registerAttrFx(target.uid, tid, null);
 }
 
 function doAttack(attacker, targets, skill) {
@@ -15100,7 +16013,7 @@ function doAttack(attacker, targets, skill) {
 
     // Step7a: ブロック判定（物理のみ）
     if (skill.type === 'phys' && rollBlock(target)) {
-      spawnBall(attacker.uid, target.uid, ballType);
+      playAttrEffect(attacker, target, skill);
       setTimeout(() => {
         flashCard(target.uid, 'hit');
         spawnFloatNum(target.uid, 'BLOCK', 'float-buff');
@@ -15112,7 +16025,7 @@ function doAttack(attacker, targets, skill) {
 
     // Step7b: レジスト判定（魔法のみ）
     if (rollResist(target, skill)) {
-      spawnBall(attacker.uid, target.uid, ballType);
+      playAttrEffect(attacker, target, skill);
       setTimeout(() => {
         spawnFloatNum(target.uid, 'RESIST', 'float-debuff');
       }, 200);
@@ -15220,8 +16133,7 @@ function doAttack(attacker, targets, skill) {
         if (target._weakSpotStacks < maxSt) {
           target._weakSpotStacks++;
           target.debuffs = target.debuffs||[];
-          target.debuffs.push({ type:'pdef_down', val:-(weakPass.effect.val||5), turns:9999 });
-          setTimeout(() => spawnFloatNum(target.uid, `🔴耐-${weakPass.effect.val||5}%`, 'float-debuff'), 200);
+          target.debuffs.push({ type:'pdef_down', val:-(weakPass.effect.val||5), turns:9999, icon:'⬇物耐', cssClass:'pdef-down' });
         }
       }
     }
@@ -15229,11 +16141,11 @@ function doAttack(attacker, targets, skill) {
     // ダメージカラーマップ
     const dmgColorClass = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
 
-    spawnBall(attacker.uid, target.uid, dmgType);
+    playAttrEffect(attacker, target, skill);
     const hitDelay = 200;
     setTimeout(() => {
       flashCard(target.uid, 'hit');
-      if (mainHpDmg > 0) spawnFloatNum(target.uid, isCrit ? '⚡'+mainHpDmg : String(mainHpDmg), isCrit ? dmgColorClass+' crit' : dmgColorClass);
+      if (mainHpDmg > 0) spawnFloatNum(target.uid, isCrit ? `${mainHpDmg}<span class="crit-label">CRITICAL</span>` : String(mainHpDmg), isCrit ? dmgColorClass+' crit' : dmgColorClass);
       if (isCrit) Audio.crit();
       else        Audio.hit();
     }, hitDelay);
@@ -15379,7 +16291,7 @@ function performUlt(c, enemies, allies) {
       spawnBall(c.uid, t.uid, 'ult');
       setTimeout(() => {
         flashCard(t.uid, 'hit');
-        if (hpDmg > 0) spawnFloatNum(t.uid, '⚡'+hpDmg, _ultFrontClr+' crit');
+        if (hpDmg > 0) spawnFloatNum(t.uid, `${hpDmg}<span class="crit-label">CRITICAL</span>`, _ultFrontClr+' crit');
       }, 300);
       if (t.hp <= 0) {
         t.hp = 0; t.dead = true;
@@ -15516,7 +16428,7 @@ function performUlt(c, enemies, allies) {
     spawnBall(c.uid, t.uid, 'ult');
     setTimeout(() => {
       flashCard(t.uid, 'hit');
-      spawnFloatNum(t.uid, isCrit ? '⚡'+dmg : String(dmg), isCrit ? _ultClr+' crit' : _ultClr);
+      spawnFloatNum(t.uid, isCrit ? `${dmg}<span class="crit-label">CRITICAL</span>` : String(dmg), isCrit ? _ultClr+' crit' : _ultClr);
     }, 300);
     if (t.hp <= 0) {
       t.hp = 0; t.dead = true;
@@ -16109,14 +17021,14 @@ function computeDmg(attacker, target, skill) {
     return Math.min(90, Math.max(0, res));
   };
 
-  const isSpec = ['spec','white','blue'].includes(dmgType);
+  const isSpec = dmgType === 'spec';
   if (isSpec) {
-    // 特殊ダメージ（spec/white/blue）: mdef耐性
+    // 特殊ダメージ（spec）: mdef耐性
     const mdef = getRes(target.mdef||0, ['mdef_up'], ['mdef_down']);
     const hpDmg = Math.max(minDmg, Math.floor(base * (1 - mdef/100) * staggerMult * nightMult));
     return { hpDmg, dmgType: 'spec' };
   } else {
-    // 物理ダメージ（phys/red/black）: pdef耐性
+    // 物理ダメージ（phys）: pdef耐性
     const pdef = getRes(target.pdef||0, ['pdef_up','rampart','aegis'], ['pdef_down']);
     const hpDmg = Math.max(minDmg, Math.floor(base * (1 - pdef/100) * staggerMult * nightMult));
     return { hpDmg, dmgType: 'phys' };
@@ -16139,7 +17051,7 @@ function rollBlock(target) {
 
 function rollResist(target, skill) {
   // レジスト（特殊スキルのみ）
-  if (!['spec','white','blue'].includes(skill.type)) return false;
+  if (skill.type !== 'spec') return false;
   const resistChance = Math.max(0, ((target.mdef||0) - 20) * 0.3);
   return Math.random() * 100 < resistChance;
 }
@@ -16270,7 +17182,7 @@ function openBattleLogModal() {
     `<button class="blm-char-btn" data-char="${esc(p.name)}" onclick="setBLMCharFilterBtn(this)">${p.icon} ${p.name}</button>`
   ).join('');
   const enemyBtns = lastBattleParticipants.filter(p=>p.isEnemy).map(p=>
-    `<button class="blm-char-btn enemy" data-char="${esc(p.name)}" onclick="setBLMCharFilterBtn(this)">${p.icon} ${p.name}</button>`
+    `<button class="blm-char-btn enemy" data-char="${esc(p.name)}" onclick="setBLMCharFilterBtn(this)">${monsterIconHTML(p.name, p.icon, '16px', {noBossScale:true})} ${p.name}</button>`
   ).join('');
   const sep = allyBtns && enemyBtns ? `<div style="width:1px;height:20px;background:var(--border);flex-shrink:0;margin:0 2px"></div>` : '';
   cf.innerHTML = allBtn + allyBtns + sep + enemyBtns;
@@ -16811,7 +17723,8 @@ function endBattle(victory) {
   // Result screen
   if (victory && battleContext?.type === 'babel' && battleContext?.stageId === 'a1s1') {
     flowTutAdvance('battle_victory');
-    if (!gState.tutorial.firstBattleGachaDone) {
+    // チュートリアル進行中はチュートリアル側でガチャ画面に誘導するので自動ガチャはスキップ
+    if (!gState.tutorial.firstBattleGachaDone && gState.tutorial?.flowDone) {
       setTimeout(doFirstBattleGacha, 1200);
     }
   }
@@ -17206,12 +18119,16 @@ function showBossPhaseTransition(bossName, bossIcon, phaseNum, totalPhases, call
       transition:background 0.3s;"></div>`
   ).join('');
 
+  const bossIconImg = MONSTER_ICONS[bossName];
+  const iconInner = bossIconImg
+    ? `<img src="${bossIconImg}" style="width:120px;height:120px;object-fit:contain;display:block" alt="">`
+    : bossIcon;
   ov.innerHTML = `
     <div id="bpo-icon" style="
       font-size:52px; opacity:0; transform:scale(0.4);
       transition:opacity 0.35s, transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
       filter:drop-shadow(0 0 24px ${color});
-    ">${bossIcon}</div>
+    ">${iconInner}</div>
     <div id="bpo-name" style="
       font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:700;
       color:rgba(255,255,255,0.45); letter-spacing:6px; text-transform:uppercase;
@@ -17662,7 +18579,7 @@ function playOneOpeningSkill(action, callback) {
         battleStats.totalDmg += totalDmg;
         battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + totalDmg;
 
-        spawnBall(c.uid, t.uid, dmgType);
+        playAttrEffect(c, t, { type: dmgType, attr: card.attr, name: card.name });
         setTimeout(() => {
           flashCard(t.uid, 'hit');
           const dmgTag = dmgType === 'spec' ? 'tag-dmg-spec' : 'tag-dmg-phys';
@@ -17842,6 +18759,17 @@ function playOneOpeningSkill(action, callback) {
 let gachaActiveTab = 'char';
 function openGacha() {
   document.getElementById('gacha-modal').classList.add('open');
+  // チュートリアル: ガチャ画面を開いたタイミングで進行
+  flowTutAdvance('open_gacha');
+  // チュートリアル中はステップに応じてタブを強制（スポットライト対象を確実に表示）
+  if (flowTutState.active) {
+    const tutId = FLOW_STEPS[flowTutState.stepIdx]?.id;
+    if (tutId === 'ft_first_gacha_open' || tutId === 'ft_first_gacha_pull') {
+      gachaActiveTab = 'char';
+    } else if (tutId === 'ft_first_af_intro' || tutId === 'ft_first_af_pull') {
+      gachaActiveTab = 'artifact';
+    }
+  }
   renderGachaPanel();
 }
 function renderGachaPanel() {
@@ -17927,10 +18855,10 @@ function renderCharGachaTab(el) {
     </div>
     <div class="gacha-btns" style="margin-bottom:10px">
       <button class="gacha-btn gacha-btn-1" onclick="drawCharGacha(1)" ${crystal<300?'disabled':''} style="flex:1;padding:10px;cursor:${crystal>=300?'pointer':'default'};opacity:${crystal>=300?1:0.4}">
-        1回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 300</span>
+        📜 単発契約<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 300</span>
       </button>
-      <button class="gacha-btn gacha-btn-10" onclick="drawCharGacha(10)" ${crystal<3000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=3000?'pointer':'default'};opacity:${crystal>=3000?1:0.4}">
-        10回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 3,000</span>
+      <button class="gacha-btn gacha-btn-10" id="ft-char-gacha-10-btn" onclick="drawCharGacha(10)" ${crystal<3000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=3000?'pointer':'default'};opacity:${crystal>=3000?1:0.4}">
+        📜 10連契約<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 3,000</span>
       </button>
     </div>
     ${canMile?`<button onclick="openMileageExchange()" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(201,168,76,0.3),rgba(201,168,76,0.15));border:1px solid var(--gold);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;border-radius:4px;letter-spacing:1px">
@@ -17938,7 +18866,7 @@ function renderCharGachaTab(el) {
     :`<div style="text-align:center;font-size:10px;color:var(--text3);padding:6px">マイレージ ${CHAR_MILEAGE_CAP-mileage} Pt 貯まるとピックアップキャラと交換できます</div>`}`;
 }
 function renderArtifactGachaTab(el) {
-  const mithril = gState.player.mithril || 0;
+  const crystal = gState.player.starCrystal || 0;
   const afMileage = gState.player.afMileage || 0;
   const ssrPool = ARTIFACT_POOL.filter(d => d.rarity === 'SSR');
 
@@ -17951,9 +18879,6 @@ function renderArtifactGachaTab(el) {
   });
   pickupHtml += `</div>`;
 
-  const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
-  const owned = gState.artifacts || [];
-
   el.innerHTML = `
     <div style="background:linear-gradient(135deg,rgba(138,154,181,0.12),rgba(74,127,255,0.06));border:1px solid rgba(138,154,181,0.3);padding:12px;margin-bottom:12px;border-radius:6px">
       <div style="font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:4px">ARTIFACT GACHA</div>
@@ -17962,7 +18887,7 @@ function renderArtifactGachaTab(el) {
     <div style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px">
         <span>🎫 マイレージ ${afMileage} / ${AF_MILEAGE_CAP}</span>
-        <span>⛏️ ミスリル: <b style="color:var(--silver)">${mithril}</b></span>
+        <span>${itemIconHTML('crystal','12px')} 星晶石: <b style="color:#89e3ff">${crystal.toLocaleString()}</b></span>
       </div>
       <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
         <div style="height:100%;width:${Math.min(100,(afMileage/AF_MILEAGE_CAP*100)).toFixed(1)}%;background:linear-gradient(90deg,var(--silver),#c8d8f0);border-radius:3px;transition:width 0.3s"></div>
@@ -17970,31 +18895,17 @@ function renderArtifactGachaTab(el) {
     </div>
     ${pickupHtml}
     <div class="gacha-btns" style="margin-bottom:10px">
-      <button class="gacha-btn gacha-btn-1" onclick="doArtifactGachaFromPanel(1)" ${mithril<200?'disabled':''} style="flex:1;padding:10px;cursor:${mithril>=200?'pointer':'default'};opacity:${mithril>=200?1:0.4}">
-        1回ガチャ<br><span style="font-size:10px">⛏️ ミスリル×200</span>
+      <button class="gacha-btn gacha-btn-1" onclick="doArtifactGachaFromPanel(1)" ${crystal<200?'disabled':''} style="flex:1;padding:10px;cursor:${crystal>=200?'pointer':'default'};opacity:${crystal>=200?1:0.4}">
+        1回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 200</span>
       </button>
-      <button class="gacha-btn gacha-btn-10" onclick="doArtifactGachaFromPanel(10)" ${mithril<2000?'disabled':''} style="flex:2;padding:10px;cursor:${mithril>=2000?'pointer':'default'};opacity:${mithril>=2000?1:0.4}">
-        10回ガチャ<br><span style="font-size:10px">⛏️ ミスリル×2,000</span>
+      <button class="gacha-btn gacha-btn-10" id="ft-af-gacha-10-btn" onclick="doArtifactGachaFromPanel(10)" ${crystal<2000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=2000?'pointer':'default'};opacity:${crystal>=2000?1:0.4}">
+        10回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 2,000</span>
       </button>
     </div>
     ${afMileage >= AF_MILEAGE_CAP
       ? `<button onclick="openAfMileageExchange()" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(138,154,181,0.3),rgba(138,154,181,0.15));border:1px solid var(--silver);color:var(--silver);font-size:12px;font-weight:700;cursor:pointer;border-radius:4px;letter-spacing:1px;margin-bottom:10px">
           🎖️ マイレージ交換（${afMileage}Pt）</button>`
-      : `<div style="text-align:center;font-size:10px;color:var(--text3);padding:4px 0 10px">マイレージ ${AF_MILEAGE_CAP - afMileage} Pt 貯まるとSSRアーティファクトと交換できます</div>`}
-    <div style="font-size:11px;color:var(--text3);margin-bottom:6px">所持アーティファクト（${owned.length}個）</div>
-    ${!owned.length
-      ? `<div style="color:var(--text3);font-size:11px;padding:12px;text-align:center">まだ所持していません</div>`
-      : `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">${owned.map((inst,idx)=>{
-          const def = ARTIFACT_POOL.find(d=>d.id===inst.id); if(!def) return '';
-          const equippedBy = gState.ownedUnits.find(u=>u.equippedArtifact===inst.uid);
-          return `<div style="background:var(--bg3);border:1px solid ${rarColor[def.rarity]};padding:8px;font-size:11px;border-radius:4px">
-            <span style="color:${rarColor[def.rarity]};font-weight:700">${def.rarity}</span>
-            <span style="font-size:16px;margin:0 4px">${def.icon}</span>
-            <span style="font-weight:700">${def.name}</span>
-            ${equippedBy?`<span style="font-size:9px;color:var(--accent2);margin-left:4px">[${equippedBy.name}]</span>`:''}
-            <div style="color:var(--text3);margin-top:2px">Lv.${inst.level||0} / Rank${inst.rank||0}</div>
-          </div>`;
-        }).join('')}</div>`}`;
+      : `<div style="text-align:center;font-size:10px;color:var(--text3);padding:4px 0 10px">マイレージ ${AF_MILEAGE_CAP - afMileage} Pt 貯まるとSSRアーティファクトと交換できます</div>`}`;
 }
 
 // ============================================================
@@ -18055,8 +18966,125 @@ function drawCharGacha(count) {
     }
   });
   saveState(); updateTopBar(); setTimeout(checkAchievements,100);
-  closeGacha(); Audio.gacha();
-  showCharGachaResult(results);
+  closeGacha();
+  // 初回ガチャチュートリアル: 10連を引いたら自動ガチャマーカーを完了扱いにし、次ステップへ
+  if (count === 10) {
+    flowTutAdvance('first_gacha_pulled');
+    if (gState.tutorial && !gState.tutorial.firstBattleGachaDone) {
+      gState.tutorial.firstBattleGachaDone = true;
+      saveState();
+    }
+  }
+  // 契約書演出 → ハンコ後に既存のガチャ演出・結果モーダルへ
+  showCharGachaContract(results, cost, count);
+}
+// ============================================================
+//  クラスガチャ = 召喚契約書: ハンコでドン → 結果公開
+// ============================================================
+function showCharGachaContract(results, cost, count, onComplete) {
+  // 既存があれば破棄
+  document.getElementById('contract-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'contract-overlay';
+  const clanName = gState.player?.clanName || 'クラン';
+  // 対価表示: 0 ならば「初代特典（無償）」、それ以外は星晶石コスト
+  const costStr = cost > 0
+    ? `星晶石 ${cost.toLocaleString()}`
+    : '初代特典（無 償）';
+  const countSuffix = count === 10
+    ? (cost > 0 ? '（10連保証付）' : '（クラス1体以上確定）')
+    : '';
+  // 契約内容（レア度は伏せ、合計口数のみ提示してサプライズを残す）
+  const termsHTML = `
+    <div class="contract-term-row">
+      <span class="term-label">対  価</span>
+      <span class="term-value">${costStr}</span>
+    </div>
+    <div class="contract-term-row">
+      <span class="term-label">召喚数</span>
+      <span class="term-value">${count}口${countSuffix}</span>
+    </div>
+    <div class="contract-term-row">
+      <span class="term-label">立会人</span>
+      <span class="term-value">${clanName}</span>
+    </div>`;
+  ov.innerHTML = `
+    <div class="contract-paper" id="contract-paper">
+      <div class="contract-edge"></div>
+      <button class="contract-close" onclick="skipCharGachaContract()" title="スキップ">✕</button>
+      <div class="contract-title">召 喚 契 約 書</div>
+      <div class="contract-flourish">— ✦ —</div>
+      <div class="contract-body">
+        本契約の対価をもって、異界より<br>
+        英霊及び支援素材を貴卿の元へ譬渡する。<br>
+        本印を以て、契約は直ちに発効する。
+      </div>
+      <div class="contract-terms">${termsHTML}</div>
+      <div class="contract-instruction" id="contract-inst">▼ ここに本印を押せ ▼</div>
+      <div class="contract-stamp-area" id="contract-stamp-area">
+        <span class="stamp-hint">タップ</span>
+      </div>
+    </div>`;
+  // 押印完了後に実行する処理。未指定なら通常のキャラガチャ結果表示
+  const _done = onComplete || (() => { Audio.gacha && Audio.gacha(); showCharGachaResult(results); });
+  ov._pendingResults = results;
+  ov._onContractDone = _done;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('open'));
+  Audio.contractOpen && Audio.contractOpen();
+
+  // 押印
+  let stamped = false;
+  const stampArea = ov.querySelector('#contract-stamp-area');
+  const paper = ov.querySelector('#contract-paper');
+  const onStamp = () => {
+    if (stamped) return;
+    stamped = true;
+    stampArea.classList.add('stamped');
+    // 封蝋ハンコを表示
+    const seal = document.createElement('div');
+    seal.className = 'contract-seal';
+    stampArea.appendChild(seal);
+    // インク飛沫を周囲に散らす
+    for (let i = 0; i < 10; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'contract-ink-splash';
+      const ang = (i / 10) * Math.PI * 2 + Math.random() * 0.6;
+      const dist = 28 + Math.random() * 22;
+      dot.style.setProperty('--dx', `${Math.cos(ang) * dist}px`);
+      dot.style.setProperty('--dy', `${Math.sin(ang) * dist}px`);
+      dot.style.left = '50%'; dot.style.top = '50%';
+      dot.style.animationDelay = `${i * 0.012}s`;
+      stampArea.appendChild(dot);
+    }
+    // 「契約成立」テキスト
+    const sealedText = document.createElement('div');
+    sealedText.className = 'contract-sealed-text';
+    sealedText.textContent = '契 約 成 立';
+    paper.appendChild(sealedText);
+    // 紙の振動
+    paper.classList.remove('shake'); void paper.offsetWidth; paper.classList.add('shake');
+    // 効果音
+    Audio.contractStamp && Audio.contractStamp();
+    // 指示文を非表示
+    const inst = ov.querySelector('#contract-inst');
+    if (inst) inst.style.opacity = '0';
+    // 1.2秒後に契約書を閉じて既存ガチャ演出へ
+    setTimeout(() => {
+      ov.classList.add('closing');
+      setTimeout(() => { ov.remove(); _done(); }, 480);
+    }, 1100);
+  };
+  stampArea.addEventListener('click', onStamp);
+}
+
+// 契約演出をスキップして結果へ（既に契約は確定済み）
+function skipCharGachaContract() {
+  const ov = document.getElementById('contract-overlay');
+  if (!ov) return;
+  const done = ov._onContractDone;
+  ov.classList.add('closing');
+  setTimeout(() => { ov.remove(); if (done) done(); }, 280);
 }
 // ============================================================
 //  ガチャ強化演出: 予兆カラー & スロー演出
@@ -18114,6 +19142,8 @@ function playGachaCinematic(results, kind, onDone) {
   const el = _ensureGachaCinematicEl();
   el._timers = [];
   el._onDone = onDone;
+  // 前回の残骸（フラッシュ/バナー/放射ライン）を掃除
+  el.querySelectorAll('.gc-flash,.gc-banner,.gc-jackpot-rays').forEach(n => n.remove());
   const stage = el.querySelector('#gc-stage');
 
   // 表示用の名前・アイコン
@@ -18149,8 +19179,40 @@ function playGachaCinematic(results, kind, onDone) {
   const clsEl     = stage.querySelector('#gc-cls');
   const _t = (ms, fn) => { el._timers.push(setTimeout(fn, ms)); };
 
+  // パチンコ風 SE/視覚演出ヘルパ
+  // 画面フラッシュ（短時間ぱっと光る）
+  const flash = (color) => {
+    const f = document.createElement('div');
+    f.className = 'gc-flash';
+    f.style.color = color;
+    el.appendChild(f);
+    setTimeout(() => f.remove(), 700);
+  };
+  // 予告バナー（リーチ!! / ★PREMIUM★ 等）
+  const banner = (text, color) => {
+    const b = document.createElement('div');
+    b.className = 'gc-banner';
+    b.style.color = color;
+    b.textContent = text;
+    el.appendChild(b);
+    setTimeout(() => b.remove(), 1300);
+  };
+  const playSE = (name) => {
+    try { if (typeof Audio !== 'undefined' && Audio[name]) Audio[name](); } catch(e) {}
+  };
+
+  // パチンコ風: スピン音をスタート（オーブ表示直後）
+  _t(120, () => playSE('gachaSpin'));
+  _t(660, () => playSE('gachaSpin')); // 2連でスピン感を継続
+
   // 予兆カラー段階: 青(0ms) → 紫(900ms) → 金(1700ms, high/ultra のみ)
-  _t(900, () => { orb.style.color = '#c47aff'; }); // 紫へ
+  _t(900, () => {
+    orb.style.color = '#c47aff'; // 紫へ
+    // リーチ予告: チャイム＋紫フラッシュ＋「リーチ!!」バナー
+    playSE('gachaReach');
+    flash('rgba(196,122,255,0.85)');
+    banner('リーチ!!', '#e2b8ff');
+  });
   _t(1700, () => {
     if (tier === 'high' || tier === 'ultra') {
       orb.style.color = '#ffd84a';
@@ -18158,6 +19220,10 @@ function playGachaCinematic(results, kind, onDone) {
       burst.className = 'gc-aura-burst';
       burst.style.color = '#ffd84a';
       orb.appendChild(burst);
+      // プレミア予告: ジャラララ＋金フラッシュ＋「★PREMIER★」バナー
+      playSE('gachaPremium');
+      flash('rgba(255,216,74,0.95)');
+      banner('★ PREMIER ★', '#fff5b8');
     }
   });
 
@@ -18165,6 +19231,19 @@ function playGachaCinematic(results, kind, onDone) {
   const finalCol = (tier==='mid') ? '#c47aff' : '#ffd84a';
   const revealMs = (tier==='ultra') ? 2900 : (tier==='high') ? 2200 : 1900;
   const totalMs  = (tier==='ultra') ? 5200 : (tier==='high') ? 3900 : 3100;
+
+  // ウルトラのみ: スロー中の心拍ドキドキ（2回）
+  if (tier === 'ultra') {
+    _t(2350, () => {
+      playSE('gachaHeartbeat');
+      orb.classList.remove('gc-heartbeat'); void orb.offsetWidth; orb.classList.add('gc-heartbeat');
+    });
+    _t(2700, () => {
+      playSE('gachaHeartbeat');
+      orb.classList.remove('gc-heartbeat'); void orb.offsetWidth; orb.classList.add('gc-heartbeat');
+    });
+  }
+
   _t(revealMs, () => {
     iconWrap.style.transition = 'opacity 0.5s';
     iconWrap.style.opacity = '1';
@@ -18173,12 +19252,59 @@ function playGachaCinematic(results, kind, onDone) {
     nameEl.style.textShadow = `0 0 22px ${finalCol}, 0 0 4px #000`;
     nameEl.textContent = name;
     clsEl.innerHTML = sub + (showNewBadge ? ' <span class="gc-newbadge">★ NEW ★</span>' : '');
+    // 大当たり SE＆放射ライン: ultra/high はジャックポット、mid は中当たり
+    if (tier === 'ultra' || tier === 'high') {
+      playSE('gachaJackpot');
+      flash('rgba(255,216,74,1)');
+      const rays = document.createElement('div');
+      rays.className = 'gc-jackpot-rays';
+      stage.appendChild(rays);
+      setTimeout(() => rays.remove(), 1500);
+    } else {
+      playSE('gachaWin');
+      flash('rgba(196,122,255,0.7)');
+    }
   });
   _t(totalMs, () => closeGachaCinematic());
 }
 
 function showCharGachaResult(results) {
   playGachaCinematic(results, 'char', () => _renderCharGachaResultModal(results));
+}
+// チュートリアル中はステップに応じてガチャモーダルの挙動を切り替える
+function _closeCharGachaResult(btn) {
+  btn.closest('.modal-overlay').remove();
+  if (flowTutState?.active) {
+    const tutId = FLOW_STEPS[flowTutState.stepIdx]?.id;
+    if (tutId === 'ft_goto_chara') {
+      // キャラタブへの誘導を妨げないためガチャを再オープンしない
+      return;
+    }
+    if (tutId === 'ft_first_af_intro' || tutId === 'ft_first_af_pull') {
+      // AFガチャチュートリアルへ: 星晶石付与＋AFタブに切り替えて再オープン
+      if (gState?.player && !gState.tutorial?.firstAfGachaSetup) {
+        gState.player.starCrystal = (gState.player.starCrystal||0) + 2000;
+        if (!gState.tutorial) gState.tutorial = {};
+        gState.tutorial.firstAfGachaSetup = true;
+        updateTopBar();
+        saveState();
+        try { Audio.itemGet && Audio.itemGet(); } catch(_) {}
+      }
+      gachaActiveTab = 'artifact';
+      openGacha();
+      return;
+    }
+  }
+  openGacha();
+}
+// AFガチャ結果モーダルの閉鎖: チュートリアル中はガチャモーダル自体も閉じてキャラタブ誘導を可能にする
+function _closeArtifactGachaResult(btn) {
+  btn.closest('.modal-overlay').remove();
+  if (flowTutState?.active && FLOW_STEPS[flowTutState.stepIdx]?.id === 'ft_goto_chara') {
+    closeGacha();
+    return;
+  }
+  renderArtifactGachaTab(document.getElementById('gacha-tab-content'));
 }
 function _renderCharGachaResultModal(results) {
   const ov = document.createElement('div');
@@ -18215,7 +19341,7 @@ function _renderCharGachaResultModal(results) {
   ov.innerHTML = `<div class="modal-panel" style="max-width:420px">
     <div class="modal-header">
       <h3>✨ キャラガチャ結果</h3>
-      <button class="close-btn" onclick="this.closest('.modal-overlay').remove();openGacha()">✕</button>
+      <button class="close-btn" onclick="_closeCharGachaResult(this)">✕</button>
     </div>
     <div class="modal-body">
       <div style="display:flex;gap:10px;justify-content:center;padding:6px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px">
@@ -18315,7 +19441,12 @@ function doFirstBattleGacha() {
 }
 
 function _showFirstBattleCharResult(results) {
-  playGachaCinematic(results, 'char', () => _renderFirstBattleCharResultModal(results));
+  // 通常のキャラガチャと同じく契約書 → 押印 → 既存演出 → 結果モーダルへ
+  // 初回は無償なので cost=0 を渡し、結果モーダルは初回専用版を使う
+  showCharGachaContract(results, 0, 10, () => {
+    Audio.gacha && Audio.gacha();
+    playGachaCinematic(results, 'char', () => _renderFirstBattleCharResultModal(results));
+  });
 }
 function _renderFirstBattleCharResultModal(results) {
   const ov = document.createElement('div');
@@ -18507,8 +19638,8 @@ const AF_MILEAGE_CAP = 100;
 
 function doArtifactGachaFromPanel(count) {
   const cost = count * 200;
-  if ((gState.player.mithril||0) < cost) { toast('ミスリルが不足しています'); return; }
-  gState.player.mithril -= cost;
+  if ((gState.player.starCrystal||0) < cost) { toast('星晶石が不足しています'); return; }
+  gState.player.starCrystal -= cost;
 
   const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
   const results = [];
@@ -18547,6 +19678,9 @@ function doArtifactGachaFromPanel(count) {
   gState.player.afMileage = (gState.player.afMileage||0) + count;
   saveState(); updateTopBar();
 
+  // 初回AFガチャチュートリアル: 10連を引いたら進行
+  if (count === 10) flowTutAdvance('first_af_pulled');
+
   // 結果モーダル表示（演出後）
   playGachaCinematic(results, 'artifact', () => _renderArtifactGachaResultModal(results, rarColor));
 }
@@ -18569,7 +19703,7 @@ function _renderArtifactGachaResultModal(results, rarColor) {
   ov.innerHTML = `<div class="modal-panel" style="max-width:380px">
     <div class="modal-header">
       <h3>🔩 アーティファクトガチャ結果</h3>
-      <button class="close-btn" onclick="this.closest('.modal-overlay').remove();renderArtifactGachaTab(document.getElementById('gacha-tab-content'))">✕</button>
+      <button class="close-btn" onclick="_closeArtifactGachaResult(this)">✕</button>
     </div>
     <div class="modal-body">
       <div style="display:flex;gap:10px;justify-content:center;padding:6px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px">
@@ -18953,57 +20087,9 @@ function closeCharUnlock() {
 // ============================================================
 
 function checkBeginnerMissions() {
-  if (!gState.beginnerMissions) gState.beginnerMissions = { vanguardGiven:false, archerGiven:false, priestGiven:false };
-  const cleared = gState.progress?.babel?.clearedStages || {};
-
-  // S3クリアでヴァンガード獲得
-  if (!gState.beginnerMissions.vanguardGiven && cleared['a1s3']) {
-    gState.beginnerMissions.vanguardGiven = true;
-    const uid = 'u_' + Date.now() + '_v';
-    const vg = makeUnit('vanguard', uid);
-    gState.ownedUnits.push(vg);
-    gState.unitProgress[uid] = { level:1, exp:0 };
-    giveStarterCardsForClass('vanguard'); // ★1カード付与
-    saveState();
-    setTimeout(() => showCharUnlock('vanguard'), 400);
-  }
-
-  // S7クリアでアーチャー獲得
-  if (!gState.beginnerMissions.archerGiven && cleared['a1s7']) {
-    gState.beginnerMissions.archerGiven = true;
-    const uid = 'u_' + Date.now() + '_a';
-    const ar = makeUnit('archer', uid);
-    gState.ownedUnits.push(ar);
-    gState.unitProgress[uid] = { level:1, exp:0 };
-    giveStarterCardsForClass('archer'); // ★1カード付与
-    saveState();
-    const delay = gState.beginnerMissions.vanguardGiven ? 800 : 400;
-    setTimeout(() => showCharUnlock('archer'), delay);
-  }
-
-  // S10クリアでプリースト獲得
-  if (!gState.beginnerMissions.priestGiven && cleared['a2s1']) {
-    gState.beginnerMissions.priestGiven = true;
-    const uid = 'u_' + Date.now() + '_p';
-    const pr = makeUnit('priest', uid);
-    gState.ownedUnits.push(pr);
-    gState.unitProgress[uid] = { level:1, exp:0 };
-    giveStarterCardsForClass('priest'); // ★1カード付与
-    saveState();
-    setTimeout(() => showCharUnlock('priest'), 1200);
-  }
-
-  // エリア3クリアでアサシン獲得（a3s1 = エリア3ステージ1）
-  if (!gState.beginnerMissions.assassinGiven && cleared['a3s1']) {
-    gState.beginnerMissions.assassinGiven = true;
-    const uid = 'u_' + Date.now() + '_as';
-    const as = makeUnit('assassin', uid);
-    gState.ownedUnits.push(as);
-    gState.unitProgress[uid] = { level:1, exp:0 };
-    giveStarterCardsForClass('assassin'); // ★1カード付与
-    saveState();
-    setTimeout(() => showCharUnlock('assassin'), 1600);
-  }
+  // ステージクリアによるキャラ付与は廃止（初回ガチャのみがキャラの入手経路）
+  // 互換性のため関数は残すが何もしない
+  if (!gState.beginnerMissions) gState.beginnerMissions = {};
 }
 
 // ============================================================
@@ -20918,10 +22004,23 @@ function openSortieConfirm(payload) {
   _sortiePayload = payload;
   renderSortieConfirm();
   document.getElementById('sortie-confirm-modal').classList.add('open');
+  // 初回バトルチュートリアル: 出撃確認モーダルが開いたタイミングで誘導
+  if (payload?.type === 'babel' && payload.stageId === 'a1s1') {
+    flowTutAdvance('open_sortie_confirm');
+  }
 }
 
 function closeSortieConfirm() {
   document.getElementById('sortie-confirm-modal').classList.remove('open');
+}
+
+// 出撃確認モーダルから別画面（編成 / キャラ）に遷移する共通ヘルパー。
+// Babelのステージ一覧モーダル経由で開いた場合、下層のモーダルも閉じておかないとタブ遷移先が見えないため両方クローズする。
+function navigateFromSortie(tab, openUnitUid) {
+  document.getElementById('sortie-confirm-modal')?.classList.remove('open');
+  document.getElementById('stage-list-modal')?.classList.remove('open');
+  switchTab(tab);
+  if (openUnitUid && typeof openUnitDetail === 'function') openUnitDetail(openUnitUid);
 }
 
 // ステージ情報フォーマッタ: タイプ別に表示用の構造体を返す
@@ -21036,7 +22135,7 @@ function renderSortieConfirm() {
   const presetHtml = `<div style="padding:10px 12px;border-bottom:1px solid var(--border)">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span style="font-size:11px;color:var(--text2);font-weight:700;flex:1">📋 プリセット選択（現在 #${gState.activePreset+1}）</span>
-      <button class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:10px" onclick="closeSortieConfirm();switchTab('formation')">編成画面 →</button>
+      <button class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:10px" onclick="navigateFromSortie('formation')">編成画面 →</button>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap" id="sortie-preset-chips"></div>
   </div>`;
@@ -21092,8 +22191,9 @@ function renderSortieConfirm() {
       </div>
       <div style="font-size:10px;color:var(--gold)">装備 →</div>`;
     row.addEventListener('click', () => {
-      closeSortieConfirm();
-      if (typeof openUnitDetail === 'function') openUnitDetail(uid);
+      // 出撃確認モーダルと（あれば）下層のステージ一覧モーダルを閉じてキャラタブへ遷移し、
+      // ユニット詳細を開いて装備変更できるようにする。
+      navigateFromSortie('chara', uid);
     });
     unitsWrap.appendChild(row);
   };
@@ -21552,7 +22652,7 @@ function renderClanHall() {
 
   if (_clanHallTab === 'mine') {
     if (!isMineUnlocked()) {
-      body.innerHTML = '<div style="padding:32px 16px;text-align:center;color:var(--text3)">ストーリーS5クリアで解放</div>';
+      body.innerHTML = '<div style="padding:32px 16px;text-align:center;color:var(--text3)">メインステージ 1-5 クリアで解放</div>';
       return;
     }
     body.innerHTML = '<div class="mine-content" id="mine-content"></div>';
@@ -23424,7 +24524,7 @@ function renderLibraryMonsters(el) {
     if (isFound) {
       return `
       <div class="lib-monster-card" onclick="openMonsterDetail(${i})">
-        <div style="font-size:28px">${m.icon||'❓'}</div>
+        <div style="height:60px;display:flex;align-items:center;justify-content:center">${monsterIconHTML(m.name, m.icon, '40px')}</div>
         <div style="font-size:11px;font-weight:700;color:var(--text);margin:4px 0 2px">${m.name}</div>
         ${sp ? `<div style="margin:2px 0">${speciesBadgeHTML(sp)}</div>` : ''}
         <div style="font-size:10px;color:var(--text3)">HP ${fmt(m.hp)}</div>
@@ -23433,7 +24533,7 @@ function renderLibraryMonsters(el) {
     } else {
       return `
       <div class="lib-monster-card" style="opacity:0.35;cursor:default;filter:grayscale(1)">
-        <div style="font-size:28px">❓</div>
+        <div style="height:60px;display:flex;align-items:center;justify-content:center;font-size:28px">❓</div>
         <div style="font-size:11px;font-weight:700;color:var(--text3);margin:4px 0 2px">???</div>
         <div style="font-size:10px;color:var(--text3)">未発見</div>
       </div>`;
@@ -23460,7 +24560,7 @@ function openMonsterDetail(idx) {
   el.innerHTML = `
     <button class="btn btn-outline btn-sm" onclick="renderLibraryMonsters(document.getElementById('library-content'))" style="margin-bottom:12px">← 図鑑に戻る</button>
     <div style="text-align:center;padding:16px 0 12px">
-      <div style="font-size:52px">${m.icon||'❓'}</div>
+      <div style="display:flex;align-items:center;justify-content:center;min-height:96px">${monsterIconHTML(m.name, m.icon, '80px')}</div>
       <div style="font-size:18px;font-weight:700;color:var(--text);margin:8px 0 4px">${m.name}</div>
       ${mSpecies ? `<div style="margin-top:4px">${speciesBadgeHTML(mSpecies,'large')}</div>` : ''}
     </div>
@@ -23643,7 +24743,6 @@ const SHOP_ITEMS = [
   { id:'passive_key3', icon:'passiveKey', name:'タレントキー×3',   desc:'リロール時にタレント1枠を固定（3個）',price:2000,currency:'crystal',gives:'passiveKey',amount:3 },
   { id:'ether_pack_s', icon:'expPot', name:'EXPポットパック(S)',  desc:'EXPポット×500',        price:300, currency:'crystal', gives:'ether', amount:500 },
   { id:'ether_pack_l', icon:'expPot', name:'EXPポットパック(L)',  desc:'EXPポット×2000',       price:1000,currency:'crystal', gives:'ether', amount:2000 },
-  { id:'mithril_s',    icon:'⛏️', name:'ミスリル×5',        desc:'鍛冶屋で使用',         price:800, currency:'crystal', gives:'mithril', amount:5 },
   { id:'starpoint_s',  icon:'⭐', name:'スターポイント×10', desc:'星図盤でノード解放',   price:600, currency:'crystal', gives:'starMapPoints', amount:10 },
   { id:'sweep_x5',     icon:'🎫', name:'周回チケット×5',    desc:'バベルステージを即時周回',price:200,currency:'crystal',gives:'sweepTicket',amount:5 },
   { id:'atom_stone_t1', icon:'atomT1',   name:'アトム秘石T1×10',  desc:'AF強化素材（Lv60未満）',    price:300,  currency:'crystal', gives:'atomStone_t1', amount:10 },
@@ -24004,7 +25103,7 @@ function openArtifactEquip(uid) {
     <h3 style="color:var(--text)">アーティファクト装備 — ${u.name}</h3>
   </div>`;
   if (!owned.length) {
-    html += `<div style="color:var(--text3);text-align:center;padding:40px">所持しているアーティファクトがありません<br><small>鍛冶屋でミスリル鋳造しましょう</small></div>`;
+    html += `<div style="color:var(--text3);text-align:center;padding:40px">所持しているアーティファクトがありません<br><small>アーティファクトガチャで入手しましょう</small></div>`;
   } else {
     html += `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">`;
     owned.forEach(inst => {
@@ -26023,6 +27122,12 @@ async function authWithGoogle() {
   }
   try {
     await auth.signInWithPopup(window._fbGProvider);
+    // ポップアップが閉じた瞬間にローディングを出し、_onFirebaseSignIn の遷移までを橋渡し
+    const panel = document.getElementById('auth-panel');
+    if (panel) panel.style.display = 'none';
+    const loadingEl = document.getElementById('auth-loading');
+    if (loadingEl) loadingEl.style.display = '';
+    _setLoadingStatus('Googleアカウントを確認中...', 30);
     // onAuthStateChanged → _onFirebaseSignIn が呼ばれる
   } catch(e) {
     console.error(e);
@@ -26398,8 +27503,25 @@ function _resetLoadingUI() {
 }
 
 // ── Firebase Auth コールバック ──
+function _showNewUserPanel() {
+  document.getElementById('auth-loading').style.display = 'none';
+  document.getElementById('auth-panel').style.display   = 'none';
+  const newPanel = document.getElementById('auth-newuser-panel');
+  if (!newPanel) return;
+  newPanel.style.display = 'flex';
+  // 入場アニメーションをかける（再表示時に確実に再生されるよう reflow を挟む）
+  newPanel.classList.remove('fade-in');
+  void newPanel.offsetWidth;
+  newPanel.classList.add('fade-in');
+  // 入力欄にフォーカス（モバイルでもキーボードが立ち上がる）
+  const input = document.getElementById('newuser-clanname');
+  if (input) setTimeout(() => { try { input.focus(); } catch(_){} }, 100);
+}
 window._onFirebaseSignIn = async function(user) {
   console.log('[Boot] Firebase SignIn:', user.uid);
+  // Googleログイン直後にここに来ることもあるので、ローディング表示を強制する
+  document.getElementById('auth-panel').style.display   = 'none';
+  document.getElementById('auth-loading').style.display = '';
   _setLoadingStatus('アカウント確認中...', 60);
   try {
     // クラウドからセーブデータ読み込み試行
@@ -26409,13 +27531,8 @@ window._onFirebaseSignIn = async function(user) {
       setTimeout(() => launchApp(), 300);
     } else {
       // クラウドにデータなし → 新規ユーザーパネル表示
-      _setLoadingStatus('完了！', 100);
-      setTimeout(() => {
-        document.getElementById('auth-loading').style.display = 'none';
-        document.getElementById('auth-panel').style.display   = 'none';
-        const newPanel = document.getElementById('auth-newuser-panel');
-        if (newPanel) newPanel.style.display = 'flex';
-      }, 300);
+      _setLoadingStatus('クラン名を決めましょう', 100);
+      setTimeout(_showNewUserPanel, 400);
     }
   } catch(e) {
     console.error('[Boot] cloudLoad error:', e);
@@ -26423,9 +27540,7 @@ window._onFirebaseSignIn = async function(user) {
     if (loadState()) {
       launchApp();
     } else {
-      const newPanel = document.getElementById('auth-newuser-panel');
-      if (newPanel) newPanel.style.display = 'flex';
-      document.getElementById('auth-loading').style.display = 'none';
+      _showNewUserPanel();
     }
   }
 };
@@ -26720,6 +27835,14 @@ const FLOW_STEPS = [
     title: '最初のバトルへ！',
     getText: () => 'ステージ一覧が開きました。\n\nS1「はじまりの平原」の\n「出撃」ボタンをタップしよう！\n\n初めてのバトルに挑戦よ🔥',
     spotlight: 'ft-s1-btn',
+    trigger: 'open_sortie_confirm',
+  },
+  {
+    id: 'ft_sortie_confirm', type: 'action', icon: '⚔️',
+    title: '出撃を確定しよう',
+    getText: () => '出撃確認画面が開きました！\n\n編成を確認したら金色の\n「⚔️ 出撃」ボタンをタップして\nバトル準備に進もう。',
+    spotlight: 'sortie-confirm-start-btn',
+    panelPos: 'top',
     trigger: 'battle_start',
   },
   {
@@ -26741,9 +27864,47 @@ const FLOW_STEPS = [
   {
     id: 'ft_victory', type: 'info', icon: '🏆',
     title: '初勝利おめでとう！',
-    getText: () => '🎉 素晴らしい！バトル勝利！\n\nバトルに勝つと\n・ゴールド（通貨）\n・EXPポット（経験値アイテム）\n・装備アイテム\nなどが手に入るわ。\n\n次はキャラを強化してみましょう！',
-    btnText: '次へ',
+    getText: () => '🎉 素晴らしい！バトル勝利！\n\nバトルに勝つと\n・ゴールド（通貨）\n・EXPポット（経験値アイテム）\n・装備アイテム\nなどが手に入るわ。\n\n勝利のごほうびに\n星晶石 ×3,000 をプレゼント！⭐',
+    btnText: '星晶石を受け取る',
     spotlight: null,
+  },
+  {
+    id: 'ft_first_gacha_intro', type: 'info', icon: '✨',
+    title: 'ガチャで仲間を増やそう！',
+    getText: () => '星晶石 ×3,000 を獲得！\n（画面上部の💎マークで確認できるよ）\n\n星晶石を使えば「ガチャ」で\n新しい仲間（クラス）を召喚できるわ。\n\nさっそく試してみましょう！',
+    btnText: 'ガチャ画面を開く',
+    spotlight: null,
+  },
+  {
+    id: 'ft_first_gacha_open', type: 'action', icon: '✨',
+    title: 'ガチャ画面を開こう',
+    getText: () => 'ナビゲーションバーの\n「✨ ガチャ」ボタンをタップしてください。',
+    spotlight: 'nav-gacha',
+    trigger: 'open_gacha',
+    panelPos: 'top',
+  },
+  {
+    id: 'ft_first_gacha_pull', type: 'action', icon: '🎰',
+    title: '10連ガチャを引こう！',
+    getText: () => '金色の「10回ガチャ」ボタンをタップ！\n\n星晶石 3,000 で10体まとめて召喚できるわ。\n★3クラスが出るかもしれない…ドキドキ💫',
+    spotlight: 'ft-char-gacha-10-btn',
+    trigger: 'first_gacha_pulled',
+    panelPos: 'top',
+  },
+  {
+    id: 'ft_first_af_intro', type: 'info', icon: '🔩',
+    title: 'アーティファクトも引いてみよう！',
+    getText: () => 'お疲れさま！次は\nアーティファクトガチャに挑戦しましょう。\n\nアーティファクトはキャラに装備すると\nステータスや特殊効果が上昇するわ。\n\n星晶石 ×2,000 をプレゼント！💎',
+    btnText: 'アーティファクト10連へ',
+    spotlight: null,
+  },
+  {
+    id: 'ft_first_af_pull', type: 'action', icon: '🎰',
+    title: 'アーティファクト10連！',
+    getText: () => '銀色の「10回ガチャ」ボタンをタップ！\n\n星晶石 2,000 で10個まとめて召喚。\nSSRが出るとアツいわよ💎',
+    spotlight: 'ft-af-gacha-10-btn',
+    trigger: 'first_af_pulled',
+    panelPos: 'top',
   },
   {
     id: 'ft_goto_chara', type: 'action', icon: '👤',
@@ -26883,10 +28044,13 @@ function clearFlowSpotlight() {
   if (sp) sp.style.display = 'none';
 }
 
+let _flowTutAdvanceLocked = false;
 function flowTutNext() {
   if (mineTutState.active)    { mineTutNext();    return; }
   if (abyssTutState.active)   { abyssTutNext();   return; }
   if (passiveTutState.active) { passiveTutNext(); return; }
+  // 連打による多重進行を防止（次のステップが描画されるまで再入をロック）
+  if (_flowTutAdvanceLocked) return;
   const step = FLOW_STEPS[flowTutState.stepIdx];
   if (!step) return;
   if (step.isLast) {
@@ -26894,17 +28058,44 @@ function flowTutNext() {
     setTimeout(() => openMissionModal(), 300);
     return;
   }
+  // AFガチャチュートリアル: 「次へ」タップで星晶石付与＋AFタブに切り替え
+  if (step.id === 'ft_first_af_intro') {
+    _flowTutAdvanceLocked = true;
+    if (gState?.player && !gState.tutorial?.firstAfGachaSetup) {
+      gState.player.starCrystal = (gState.player.starCrystal||0) + 2000;
+      if (!gState.tutorial) gState.tutorial = {};
+      gState.tutorial.firstAfGachaSetup = true;
+      updateTopBar();
+      saveState();
+      try { Audio.itemGet && Audio.itemGet(); } catch(_) {}
+    }
+    gachaActiveTab = 'artifact';
+    const gm = document.getElementById('gacha-modal');
+    if (gm && !gm.classList.contains('open')) openGacha();
+    else renderGachaPanel();
+    flowTutState.stepIdx++;
+    setTimeout(() => { renderFlowStep(); _flowTutAdvanceLocked = false; }, 200);
+    return;
+  }
   // 勝利画面が開いたまま次ステップに進まないよう、ft_victoryではバトルを閉じてから進む
   if (step.id === 'ft_victory') {
+    _flowTutAdvanceLocked = true;
     exitBattle();
     setTimeout(() => {
       // ステージ一覧が開いていれば閉じる
       if (document.getElementById('stage-list-modal')?.classList.contains('open')) closeStageList();
-      // キャラタブへ自動移動
-      switchTab('chara');
-      // ft_goto_charaをスキップしてft_open_unitへ直接進む
-      flowTutState.stepIdx = FLOW_STEPS.findIndex(s => s.id === 'ft_open_unit');
-      setTimeout(() => renderFlowStep(), 200);
+      // 勝利のごほうびに星晶石 3000 をプレゼント（チュートリアル初回のみ・連打/再走防止）
+      if (gState?.player && !gState.tutorial?.firstBattleRewardGranted) {
+        gState.player.starCrystal = (gState.player.starCrystal || 0) + 3000;
+        if (!gState.tutorial) gState.tutorial = {};
+        gState.tutorial.firstBattleRewardGranted = true;
+        updateTopBar();
+        saveState();
+        try { Audio.itemGet && Audio.itemGet(); } catch(_) {}
+      }
+      // 次ステップへ自然に進行（ft_first_gacha_intro）
+      flowTutState.stepIdx++;
+      setTimeout(() => { renderFlowStep(); _flowTutAdvanceLocked = false; }, 200);
     }, 400);
     return;
   }
@@ -26974,7 +28165,7 @@ const MINE_TUT_STEPS = [
   {
     id: 'mt_unlocked', type: 'info', icon: '⛏️',
     title: '鉱山が解放されました！',
-    getText: () => 'ステージ5クリアおめでとう！\n\n「鉱山」が解放されました。\n放置するだけで資源が自動で貯まります。\n\nゴールド・EXPポット・覚醒ポットを\n定期的に採取しましょう！',
+    getText: () => 'メインステージ 1-5 クリアおめでとう！\n\n「鉱山」が解放されました。\n放置するだけで資源が自動で貯まります。\n\nゴールド・EXPポット・覚醒ポットを\n定期的に採取しましょう！',
     btnText: '採取してみる！',
     spotlight: null,
   },
