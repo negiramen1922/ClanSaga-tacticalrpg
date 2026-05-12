@@ -1675,6 +1675,160 @@ img.item-icon {
 }
 .contract-close:hover { background: rgba(75,45,15,0.12); }
 
+/* ===== 黒石板演出（アーティファクトガチャ）===== */
+#af-slab-overlay {
+  position: fixed; inset: 0; z-index: 11000;
+  display: none; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(20,18,28,0.85) 0%, rgba(0,0,0,0.96) 70%);
+  user-select: none; -webkit-user-select: none;
+}
+#af-slab-overlay.open { display: flex; animation: afSlabFadeIn 0.4s ease-out; }
+#af-slab-overlay.closing { animation: afSlabFadeOut 0.5s ease-in forwards; }
+@keyframes afSlabFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes afSlabFadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.94); } }
+
+.af-slab-stage {
+  position: relative;
+  width: min(86vw, 340px); height: min(86vw, 340px); max-height: 56vh;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.af-slab {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 25%, rgba(80,70,90,0.55) 0%, rgba(20,18,25,0.95) 55%, #08070b 100%);
+  border: 2px solid #2a242e;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.04) inset,
+    0 0 30px rgba(0,0,0,0.9),
+    0 0 60px rgba(120,90,200,0.18);
+  overflow: hidden;
+  animation: afSlabIn 0.55s cubic-bezier(0.2,1.3,0.3,1);
+}
+@keyframes afSlabIn {
+  from { transform: scale(0.6) rotate(-3deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0); opacity: 1; }
+}
+.af-slab::before {
+  content: '🔩';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 96px; opacity: 0.14; filter: blur(0.5px);
+}
+/* 内部の影（深み演出） */
+.af-slab::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 70% 80%, rgba(0,0,0,0.55) 0%, transparent 60%),
+    radial-gradient(ellipse at 20% 15%, rgba(120,100,150,0.18) 0%, transparent 50%);
+  pointer-events: none;
+}
+.af-slab.shake { animation: afSlabShake 0.35s ease-out; }
+@keyframes afSlabShake {
+  0%,100% { transform: translate(0,0); }
+  20% { transform: translate(-4px, 2px) rotate(-0.8deg); }
+  40% { transform: translate(5px, -2px) rotate(0.8deg); }
+  60% { transform: translate(-3px, 3px) rotate(-0.5deg); }
+  80% { transform: translate(3px, -1px) rotate(0.3deg); }
+}
+
+/* ヒビ（SVGポリラインベース） */
+.af-slab-cracks {
+  position: absolute; inset: 0; pointer-events: none;
+  opacity: 0; transition: opacity 0.25s ease-out;
+}
+.af-slab-cracks.lv1 { opacity: 1; }
+.af-slab-cracks.lv2 { opacity: 1; filter: drop-shadow(0 0 4px rgba(255,210,140,0.5)); }
+.af-slab-cracks .crack {
+  fill: none; stroke: #f5e6b8; stroke-width: 2.2; stroke-linecap: round;
+  stroke-dasharray: 1000; stroke-dashoffset: 1000;
+  animation: afCrackDraw 0.45s ease-out forwards;
+  filter: drop-shadow(0 0 3px rgba(255,220,140,0.7));
+}
+.af-slab-cracks.lv2 .crack { stroke-width: 3; stroke: #fff0c4; }
+@keyframes afCrackDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* タップ指示 */
+.af-slab-instruction {
+  position: absolute; left: 0; right: 0; bottom: -42px;
+  text-align: center;
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; letter-spacing: 2px;
+  color: #c9a84c;
+  animation: afInstBlink 1.2s ease-in-out infinite;
+  text-shadow: 0 0 8px rgba(201,168,76,0.4);
+}
+@keyframes afInstBlink {
+  0%,100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.af-slab-tapcount {
+  position: absolute; top: -34px; left: 50%; transform: translateX(-50%);
+  font-family: 'Cinzel', serif; color: #c9a84c; font-size: 14px; letter-spacing: 3px;
+  text-shadow: 0 0 8px rgba(201,168,76,0.5);
+}
+
+/* 破砕時の破片 */
+.af-shard {
+  position: absolute;
+  background: linear-gradient(135deg, #2a242e 0%, #08070b 70%);
+  border: 1px solid #3a3340;
+  box-shadow: 0 0 6px rgba(0,0,0,0.7);
+  animation: afShardFly 0.9s cubic-bezier(0.3,0.7,0.6,1) forwards;
+  opacity: 1;
+}
+@keyframes afShardFly {
+  0%   { transform: translate(0,0) rotate(0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--sx), var(--sy)) rotate(var(--sr)) scale(0.4); opacity: 0; }
+}
+
+/* 内部の輝き（破砕後に露出） */
+.af-slab-core {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+}
+.af-slab-core.show { opacity: 1; }
+.af-slab-core .core-glow {
+  position: absolute; width: 70%; height: 70%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,230,140,0.95) 0%, rgba(255,180,80,0.6) 40%, transparent 70%);
+  animation: afCoreGlow 0.8s ease-out;
+  filter: blur(2px);
+}
+@keyframes afCoreGlow {
+  from { transform: scale(0.2); opacity: 0; }
+  60%  { transform: scale(1.2); opacity: 1; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.af-slab-core .core-rays {
+  position: absolute; width: 200%; height: 200%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(255,230,140,0.35) 6deg, transparent 18deg,
+    transparent 60deg, rgba(255,230,140,0.35) 66deg, transparent 78deg,
+    transparent 120deg, rgba(255,230,140,0.35) 126deg, transparent 138deg,
+    transparent 180deg, rgba(255,230,140,0.35) 186deg, transparent 198deg,
+    transparent 240deg, rgba(255,230,140,0.35) 246deg, transparent 258deg,
+    transparent 300deg, rgba(255,230,140,0.35) 306deg, transparent 318deg);
+  animation: afCoreRays 2.4s linear infinite;
+  mix-blend-mode: screen;
+}
+@keyframes afCoreRays {
+  to { transform: rotate(360deg); }
+}
+
+.af-slab-close {
+  position: absolute; top: 14px; right: 16px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.18);
+  color: #d8d3c4; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 5;
+}
+.af-slab-close:hover { background: rgba(0,0,0,0.8); }
+
 /* ===== BASE TAB ===== */
 .base-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .base-card {
@@ -18979,6 +19133,145 @@ function drawCharGacha(count) {
   showCharGachaContract(results, cost, count);
 }
 // ============================================================
+//  アーティファクトガチャ = 黒石板: 3回タップで粉砕 → 中身公開
+// ============================================================
+function showArtifactGachaSlab(results, onComplete) {
+  document.getElementById('af-slab-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'af-slab-overlay';
+  ov.innerHTML = `
+    <button class="af-slab-close" onclick="skipArtifactGachaSlab()" title="スキップ">✕</button>
+    <div class="af-slab-stage" id="af-slab-stage">
+      <div class="af-slab-tapcount" id="af-slab-tapcount">▼ TAP 0 / 3 ▼</div>
+      <div class="af-slab" id="af-slab">
+        <svg class="af-slab-cracks" id="af-slab-cracks" viewBox="0 0 200 200" preserveAspectRatio="none"></svg>
+        <div class="af-slab-core" id="af-slab-core">
+          <div class="core-rays"></div>
+          <div class="core-glow"></div>
+        </div>
+      </div>
+      <div class="af-slab-instruction" id="af-slab-inst">▼ 石板をタップせよ ▼</div>
+    </div>`;
+
+  const _done = onComplete || (() => {});
+  ov._onSlabDone = _done;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('open'));
+  try { Audio.contractOpen && Audio.contractOpen(); } catch(_) {}
+
+  const slab    = ov.querySelector('#af-slab');
+  const cracks  = ov.querySelector('#af-slab-cracks');
+  const stage   = ov.querySelector('#af-slab-stage');
+  const inst    = ov.querySelector('#af-slab-inst');
+  const counter = ov.querySelector('#af-slab-tapcount');
+  const core    = ov.querySelector('#af-slab-core');
+
+  // ヒビのSVGパス（段階ごと）
+  // lv1: 中心に1本だけ
+  // lv2: 蜘蛛の巣状に枝分かれ
+  const CRACK_PATHS = {
+    1: ['M 100 100 L 60 30', 'M 100 100 L 150 50', 'M 100 100 L 90 170'],
+    2: [
+      'M 100 100 L 20 20', 'M 100 100 L 180 30', 'M 100 100 L 30 170', 'M 100 100 L 175 175',
+      'M 100 100 L 100 5', 'M 100 100 L 5 100', 'M 100 100 L 195 100', 'M 100 100 L 100 195',
+      'M 60 30 L 35 10', 'M 60 30 L 80 15', 'M 150 50 L 180 65', 'M 150 50 L 165 25',
+    ],
+  };
+  function _drawCracks(lv) {
+    cracks.innerHTML = '';
+    cracks.classList.remove('lv1','lv2');
+    cracks.classList.add('lv' + lv);
+    const paths = [...(CRACK_PATHS[1]||[]), ...(lv >= 2 ? CRACK_PATHS[2] : [])];
+    paths.forEach((d, i) => {
+      const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+      p.setAttribute('class', 'crack');
+      p.setAttribute('d', d);
+      p.style.animationDelay = `${i * 0.03}s`;
+      cracks.appendChild(p);
+    });
+  }
+  function _shake() {
+    slab.classList.remove('shake');
+    void slab.offsetWidth;
+    slab.classList.add('shake');
+  }
+  function _shatter() {
+    // 破片を飛ばす
+    const cols = 5, rows = 5;
+    const w = slab.clientWidth, h = slab.clientHeight;
+    const sw = w / cols, sh = h / rows;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const shard = document.createElement('div');
+        shard.className = 'af-shard';
+        shard.style.left   = (c * sw) + 'px';
+        shard.style.top    = (r * sh) + 'px';
+        shard.style.width  = sw + 'px';
+        shard.style.height = sh + 'px';
+        const ang = Math.atan2((r + 0.5) - rows/2, (c + 0.5) - cols/2);
+        const dist = 140 + Math.random() * 140;
+        shard.style.setProperty('--sx', `${Math.cos(ang) * dist}px`);
+        shard.style.setProperty('--sy', `${Math.sin(ang) * dist + 100}px`);
+        shard.style.setProperty('--sr', `${(Math.random() - 0.5) * 720}deg`);
+        shard.style.animationDelay = `${Math.random() * 0.12}s`;
+        slab.appendChild(shard);
+      }
+    }
+    // 元の石板の背景・ヒビ・🔩シンボルを隠す
+    slab.style.background = 'transparent';
+    slab.style.border = 'none';
+    slab.style.boxShadow = 'none';
+    cracks.style.display = 'none';
+    const styleHide = document.createElement('style');
+    styleHide.textContent = `#af-slab.cleared::before, #af-slab.cleared::after { display: none !important; }`;
+    document.head.appendChild(styleHide);
+    slab.classList.add('cleared');
+    // 中身の輝きを出す
+    core.classList.add('show');
+  }
+
+  let tapCount = 0;
+  let busy = false;
+  const onTap = () => {
+    if (busy) return;
+    if (tapCount >= 3) return;
+    busy = true;
+    tapCount++;
+    counter.textContent = `▼ TAP ${tapCount} / 3 ▼`;
+    _shake();
+    try { Audio.contractStamp && Audio.contractStamp(); } catch(_) {}
+    if (tapCount === 1) {
+      _drawCracks(1);
+      busy = false;
+    } else if (tapCount === 2) {
+      _drawCracks(2);
+      busy = false;
+    } else {
+      // 3回目: 粉砕
+      inst.style.opacity = '0';
+      counter.style.opacity = '0';
+      _shatter();
+      try { Audio.gachaJackpot && Audio.gachaJackpot(); } catch(_) {}
+      // 1.0秒輝きを見せてから次の演出へ
+      setTimeout(() => {
+        ov.classList.add('closing');
+        setTimeout(() => { ov.remove(); _done(); }, 480);
+      }, 1000);
+    }
+  };
+  stage.addEventListener('click', onTap);
+}
+
+// 石板演出をスキップ（即終了して次へ）
+function skipArtifactGachaSlab() {
+  const ov = document.getElementById('af-slab-overlay');
+  if (!ov) return;
+  const done = ov._onSlabDone;
+  ov.classList.add('closing');
+  setTimeout(() => { ov.remove(); if (done) done(); }, 280);
+}
+
+// ============================================================
 //  クラスガチャ = 召喚契約書: ハンコでドン → 結果公開
 // ============================================================
 function showCharGachaContract(results, cost, count, onComplete) {
@@ -19125,11 +19418,12 @@ function _gachaCinematicTier(results, kind) {
     if (sr)     return { tier:'mid',   target:sr };
     return { tier:'low', target:null };
   } else {
-    const newSsr = (results||[]).find(r => r.rarity==='SSR' && !r.isDupe);
+    const afs = (results||[]).filter(r => r.type === 'af' || (r.type === undefined && r.def));
+    const newSsr = afs.find(r => r.rarity==='SSR' && !r.isDupe);
     if (newSsr) return { tier:'ultra', target:newSsr };
-    const dupSsr = (results||[]).find(r => r.rarity==='SSR');
+    const dupSsr = afs.find(r => r.rarity==='SSR');
     if (dupSsr) return { tier:'high',  target:dupSsr };
-    const sr     = (results||[]).find(r => r.rarity==='SR');
+    const sr     = afs.find(r => r.rarity==='SR');
     if (sr)     return { tier:'mid',   target:sr };
     return { tier:'low', target:null };
   }
@@ -19636,6 +19930,23 @@ function _showArtifactEquipTutorial() {
 // ============================================================
 const AF_MILEAGE_CAP = 100;
 
+// AFガチャ素材ドロップテーブル（N枠の半分が素材に置換される）
+const AF_GACHA_MAT_TABLE = [
+  { w:30, give:(p)=>{ const n = 1 + Math.floor(Math.random()*2); (p.atomStone = p.atomStone || {t1:0,t2:0,t3:0}).t1 += n; return { label:`アトム秘石T1 ×${n}`, icon:'atomT1' }; } },
+  { w:18, give:(p)=>{ const n = 1; (p.atomStone = p.atomStone || {t1:0,t2:0,t3:0}).t2 += n; return { label:`アトム秘石T2 ×${n}`, icon:'atomT2' }; } },
+  { w: 6, give:(p)=>{ const n = 1; (p.atomStone = p.atomStone || {t1:0,t2:0,t3:0}).t3 += n; return { label:`アトム秘石T3 ×${n}`, icon:'atomT3' }; } },
+  { w:20, give:(p)=>{ const n = 1 + Math.floor(Math.random()*2); (p.atomCore = p.atomCore || {t1:0,t2:0,t3:0}).t1 += n; return { label:`アトミックコアT1 ×${n}`, icon:'atomCore' }; } },
+  { w: 8, give:(p)=>{ const n = 1; (p.atomCore = p.atomCore || {t1:0,t2:0,t3:0}).t2 += n; return { label:`アトミックコアT2 ×${n}`, icon:'atomCore' }; } },
+  { w: 3, give:(p)=>{ const n = 1; (p.atomCore = p.atomCore || {t1:0,t2:0,t3:0}).t3 += n; return { label:`アトミックコアT3 ×${n}`, icon:'atomCore' }; } },
+  { w:15, give:(p)=>{ const n = 3 + Math.floor(Math.random()*3); p.stardust = (p.stardust||0) + n; return { label:`星屑の砂 ×${n}`, icon:'stardust' }; } },
+];
+function _rollAFGachaMat() {
+  const total = AF_GACHA_MAT_TABLE.reduce((s,e)=>s+e.w, 0);
+  let r = Math.random() * total;
+  for (const entry of AF_GACHA_MAT_TABLE) { r -= entry.w; if (r <= 0) return entry; }
+  return AF_GACHA_MAT_TABLE[0];
+}
+
 function doArtifactGachaFromPanel(count) {
   const cost = count * 200;
   if ((gState.player.starCrystal||0) < cost) { toast('星晶石が不足しています'); return; }
@@ -19644,11 +19955,20 @@ function doArtifactGachaFromPanel(count) {
   const rarColor = { N:'var(--text3)', SR:'var(--purple)', SSR:'var(--gold)' };
   const results = [];
   for (let i = 0; i < count; i++) {
+    // 確率: SSR 5% / SR 25% / 素材 35% / N 35%
     const roll = Math.random() * 100;
     let rarity;
     if (roll < 5) rarity = 'SSR';
     else if (roll < 30) rarity = 'SR';
+    else if (roll < 65) rarity = 'MAT';
     else rarity = 'N';
+
+    if (rarity === 'MAT') {
+      const entry = _rollAFGachaMat();
+      const mat = entry.give(gState.player);
+      results.push({ type:'mat', rarity:'MAT', label: mat.label, icon: mat.icon });
+      continue;
+    }
 
     let pool;
     if (rarity === 'SSR' && af2Pickup) {
@@ -19665,12 +19985,12 @@ function doArtifactGachaFromPanel(count) {
     if (already) {
       if (!gState.player.afDuplicates) gState.player.afDuplicates = {};
       gState.player.afDuplicates[def.id] = (gState.player.afDuplicates[def.id] || 0) + 1;
-      results.push({ def, rarity, isDupe: true });
+      results.push({ type:'af', def, rarity, isDupe: true });
     } else {
       const uid = 'af_' + Date.now() + '_' + Math.floor(Math.random()*10000) + '_' + i;
       gState.artifacts.push({ id: def.id, uid, level: 0, rank: 0, conste: 0 });
       if (typeof _markArtifactDiscovered === 'function') _markArtifactDiscovered(def.id);
-      results.push({ def, rarity, isDupe: false });
+      results.push({ type:'af', def, rarity, isDupe: false });
     }
   }
 
@@ -19681,34 +20001,53 @@ function doArtifactGachaFromPanel(count) {
   // 初回AFガチャチュートリアル: 10連を引いたら進行
   if (count === 10) flowTutAdvance('first_af_pulled');
 
-  // 結果モーダル表示（演出後）
-  playGachaCinematic(results, 'artifact', () => _renderArtifactGachaResultModal(results, rarColor));
+  // 黒石板演出 → ガチャシネマ → 結果モーダル
+  showArtifactGachaSlab(results, () => {
+    playGachaCinematic(results, 'artifact', () => _renderArtifactGachaResultModal(results, rarColor));
+  });
 }
 
 function _renderArtifactGachaResultModal(results, rarColor) {
   const ov = document.createElement('div');
   ov.className = 'modal-overlay open';
   ov.style.zIndex = '9998';
-  const rowsHTML = results.map(({def, rarity, isDupe}) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+  // レア順ソート: SSR → SR → N → 素材
+  const rarOrder = { SSR:4, SR:3, N:2, MAT:1 };
+  const sorted = [...results].sort((a,b) => (rarOrder[b.rarity]||0) - (rarOrder[a.rarity]||0));
+  const rowsHTML = sorted.map(r => {
+    if (r.type === 'mat') {
+      return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+        ${itemIconHTML(r.icon || 'stardust','24px')}
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--text2)">${r.label}</div>
+          <div style="font-size:10px;color:var(--text3)">強化素材</div>
+        </div>
+        <span style="font-size:10px;color:var(--text3);font-weight:700">素材</span>
+      </div>`;
+    }
+    const { def, rarity, isDupe } = r;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
       <span style="font-size:24px">${def.icon}</span>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:700;color:${rarColor[rarity]}">${def.name}</div>
         <div style="font-size:10px;color:${isDupe?'var(--gold)':'var(--text3)'}">${rarity}${isDupe?' ✦ 凸素材+1':''}</div>
       </div>
       <span style="font-size:11px;color:${rarColor[rarity]};font-weight:700">${rarity}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   const ssrCount = results.filter(r=>r.rarity==='SSR').length;
   const srCount  = results.filter(r=>r.rarity==='SR').length;
+  const matCount = results.filter(r=>r.type==='mat').length;
   ov.innerHTML = `<div class="modal-panel" style="max-width:380px">
     <div class="modal-header">
       <h3>🔩 アーティファクトガチャ結果</h3>
       <button class="close-btn" onclick="_closeArtifactGachaResult(this)">✕</button>
     </div>
     <div class="modal-body">
-      <div style="display:flex;gap:10px;justify-content:center;padding:6px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px">
+      <div style="display:flex;gap:10px;justify-content:center;padding:6px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px;flex-wrap:wrap">
         ${ssrCount?`<span style="color:var(--gold);font-family:Rajdhani;font-size:14px;font-weight:700">SSR ×${ssrCount}</span>`:''}
         ${srCount?`<span style="color:var(--purple);font-family:Rajdhani;font-size:14px;font-weight:700">SR ×${srCount}</span>`:''}
+        ${matCount?`<span style="color:var(--text2);font-family:Rajdhani;font-size:14px;font-weight:700">素材 ×${matCount}</span>`:''}
         <span style="color:var(--text3);font-size:11px;margin-left:auto">マイレージ: ${gState.player.afMileage||0}/${AF_MILEAGE_CAP}</span>
       </div>
       <div style="max-height:55vh;overflow-y:auto">${rowsHTML}</div>
