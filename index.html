@@ -9560,7 +9560,7 @@ const CHAR_POOL = {
   2: ['warrior','vanguard','archer','sentinel','shooter','lancer'],
 };
 const CHAR_GACHA_PICKUP   = 'wizard'; // 現在のピックアップ対象
-const CHAR_MILEAGE_CAP    = 200;      // 交換必要マイレージ
+const CHAR_MILEAGE_CAP    = 100;      // 交換必要マイレージ
 const CHAR_GACHA_ROLES    = ['warrior','vanguard','ranger','support','trickster','scout'];
 // ★1枠：素材ドロップテーブル（weightで重み付け抽選）
 const CHAR_GACHA_MAT_TABLE = [
@@ -9817,6 +9817,32 @@ const EVENT_MISSIONS = [
     cur:()=>gState.progress?.babel?.clearedStages?.['a1s10']?1:0, req:1,
     shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ',
   },
+  {
+    id:'ev_06',
+    text:'期間中ボスを10体討伐する',
+    desc:'ボスステージ（S5/S10/S15/S20）を周回しよう',
+    reward:`${itemIconHTML('crystal','14px')} 星晶石 ×600`,
+    rewardType:'starCrystal', rewardAmt:600,
+    cur:()=>Math.min(gState.missions.event?.bossKills||0, 10), req:10,
+    shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ',
+  },
+  {
+    id:'ev_07',
+    text:'期間中ステージクリア累計20回',
+    desc:'メインステージを繰り返しクリアしよう',
+    reward:`${itemIconHTML('crystal','14px')} 星晶石 ×800`,
+    rewardType:'starCrystal', rewardAmt:800,
+    cur:()=>Math.min(gState.missions.event?.babelClears||0, 20), req:20,
+    shortcut:()=>{ closeMissionModal(); switchTab('sortie'); }, shortcutLabel:'⚔️ 出撃へ',
+  },
+  {
+    id:'ev_08',
+    text:'期間中に7日連続でログイン',
+    desc:'毎日ログインして報酬を受け取ろう',
+    reward:`${itemIconHTML('crystal','14px')} 星晶石 ×1000`,
+    rewardType:'starCrystal', rewardAmt:1000,
+    cur:()=>Math.min(gState.missions.event?.loginBonus||0, 7), req:7,
+  },
 ];
 const EVENT_ALL_BONUS = {
   starCrystal:1000, ether:1000,
@@ -9824,21 +9850,27 @@ const EVENT_ALL_BONUS = {
 };
 
 const DAILY_MISSIONS = [
-  { id:'d_login',  text:'ログインボーナスを受け取る',       reward:`${itemIconHTML('crystal','14px')} 星晶石 ×100`,  key:'loginBonus',  req:1, cur:()=>gState.missions.daily.loginBonus||0 },
-  { id:'d_babel1', text:'メインステージを1回クリア',           reward:`${itemIconHTML('crystal','14px')} 星晶石 ×100`,  key:'babelClears', req:1, cur:()=>gState.missions.daily.babelClears||0 },
-  { id:'d_babel3', text:'メインステージを3回クリア',           reward:`${itemIconHTML('crystal','14px')} 星晶石 ×150`, key:'babelClears', req:3, cur:()=>gState.missions.daily.babelClears||0 },
-  { id:'d_class',  text:'クラスをどれかひとつ強化する',     reward:`${itemIconHTML('expPot','14px')} EXPポット ×200`,  key:'classUpgrade', req:1, cur:()=>gState.missions.daily.classUpgrade||0 },
-  { id:'d_mine',   text:'鉱山から報酬を回収',               reward:`${itemIconHTML('gold','14px')} ゴールド ×500`,   key:'mineCollect', req:1, cur:()=>gState.missions.daily.mineCollect||0 },
+  { id:'d_login',     text:'ログインボーナスを受け取る',         reward:`${itemIconHTML('crystal','14px')} 星晶石 ×100`,    key:'loginBonus',      req:1, cur:()=>gState.missions.daily.loginBonus||0 },
+  { id:'d_babel1',    text:'メインステージを1回クリア',          reward:`${itemIconHTML('crystal','14px')} 星晶石 ×100`,    key:'babelClears',     req:1, cur:()=>gState.missions.daily.babelClears||0 },
+  { id:'d_babel3',    text:'メインステージを3回クリア',          reward:`${itemIconHTML('crystal','14px')} 星晶石 ×150`,    key:'babelClears',     req:3, cur:()=>gState.missions.daily.babelClears||0 },
+  { id:'d_class',     text:'クラスをどれかひとつ強化する',        reward:`${itemIconHTML('expPot','14px')} EXPポット ×200`,  key:'classUpgrade',    req:1, cur:()=>gState.missions.daily.classUpgrade||0 },
+  { id:'d_mine',      text:'鉱山から報酬を回収',                reward:`${itemIconHTML('gold','14px')} ゴールド ×500`,     key:'mineCollect',     req:1, cur:()=>gState.missions.daily.mineCollect||0 },
+  { id:'d_skillUp',   text:'スキルを1回強化する',                reward:`${itemIconHTML('expPot','14px')} EXPポット ×100`,  key:'skillUpCount',    req:1, cur:()=>gState.missions.daily.skillUpCount||0 },
+  { id:'d_equip',     text:'アーティファクトかアクセサリを装着する', reward:`${itemIconHTML('gold','14px')} ゴールド ×800`,     key:'itemEquipped',    req:1, cur:()=>gState.missions.daily.itemEquipped||0 },
+  { id:'d_expedition',text:'遠征を出発または受け取る',           reward:`${itemIconHTML('gold','14px')} ゴールド ×800`,     key:'expeditionAction',req:1, cur:()=>gState.missions.daily.expeditionAction||0 },
 ];
 // デイリー全達成ボーナス
-const DAILY_ALL_BONUS = { starCrystal:300, label:`${itemIconHTML('crystal','14px')} 星晶石 ×300` };
+const DAILY_ALL_BONUS = { starCrystal:400, label:`${itemIconHTML('crystal','14px')} 星晶石 ×400` };
 
 const WEEKLY_MISSIONS = [
-  { id:'w_login5',   text:'5回ログインする',             reward:`${itemIconHTML('crystal','14px')} 星晶石 ×300`,  key:'loginCount',    req:5,  cur:()=>gState.missions.weekly.loginCount||0 },
-  { id:'w_babel10',  text:'メインステージを10回クリア',    reward:`${itemIconHTML('crystal','14px')} 星晶石 ×500`,  key:'babelClears',   req:10, cur:()=>gState.missions.weekly.babelClears||0 },
-  { id:'w_gacha5',   text:'ガチャを5回引く',             reward:`${itemIconHTML('expPot','14px')} EXPポット ×300`,    key:'gachaPulls',    req:5,  cur:()=>gState.missions.weekly.gachaPulls||0 },
-  { id:'w_daily20',  text:'デイリーミッションを20回クリアする', reward:`${itemIconHTML('crystal','14px')} 星晶石 ×400`, key:'dailyClears', req:20, cur:()=>gState.missions.weekly.dailyClears||0 },
-  { id:'w_skillUp',  text:'スキルを1回強化する',          reward:`${itemIconHTML('expPot','14px')} EXPポット ×500`,    key:'skillUpCount',  req:1,  cur:()=>gState.missions.weekly.skillUpCount||0 },
+  { id:'w_login5',     text:'5回ログインする',                 reward:`${itemIconHTML('crystal','14px')} 星晶石 ×300`,    key:'loginCount',    req:5,  cur:()=>gState.missions.weekly.loginCount||0 },
+  { id:'w_babel10',    text:'メインステージを10回クリア',        reward:`${itemIconHTML('crystal','14px')} 星晶石 ×500`,    key:'babelClears',   req:10, cur:()=>gState.missions.weekly.babelClears||0 },
+  { id:'w_gacha5',     text:'ガチャを5回引く',                 reward:`${itemIconHTML('expPot','14px')} EXPポット ×300`,  key:'gachaPulls',    req:5,  cur:()=>gState.missions.weekly.gachaPulls||0 },
+  { id:'w_daily20',    text:'デイリーミッションを20回クリアする', reward:`${itemIconHTML('crystal','14px')} 星晶石 ×400`,    key:'dailyClears',   req:20, cur:()=>gState.missions.weekly.dailyClears||0 },
+  { id:'w_skillUp',    text:'スキルを1回強化する',              reward:`${itemIconHTML('expPot','14px')} EXPポット ×500`,  key:'skillUpCount',  req:1,  cur:()=>gState.missions.weekly.skillUpCount||0 },
+  { id:'w_afEnhance',  text:'アーティファクトを3回強化する',     reward:`${itemIconHTML('crystal','14px')} 星晶石 ×300`,    key:'afEnhance',     req:3,  cur:()=>gState.missions.weekly.afEnhance||0 },
+  { id:'w_boss3',      text:'ボスを3回討伐する',                reward:`${itemIconHTML('crystal','14px')} 星晶石 ×400`,    key:'bossKills',     req:3,  cur:()=>gState.missions.weekly.bossKills||0 },
+  { id:'w_mine20',     text:'鉱山から20回報酬を回収',           reward:`${itemIconHTML('gold','14px')} ゴールド ×5000`,    key:'mineCollect',   req:20, cur:()=>gState.missions.weekly.mineCollect||0 },
 ];
 // ウィークリー全達成ボーナス
 const WEEKLY_ALL_BONUS = { starCrystal:1000, ether:2000, label:`${itemIconHTML('crystal','14px')} 星晶石 ×1000 + ${itemIconHTML('expPot','14px')} EXPポット ×2000` };
@@ -10512,25 +10544,25 @@ function startGame() {
 
 const ACHIEVEMENTS = [
   // ─── カテゴリ: クラン・ユニット ───
-  { id:'a_unit1',  cat:'clan',    icon:'👤', name:'はじまりの戦士',    desc:'ユニットを1体入手する',          reward:`${itemIconHTML('crystal','14px')}×50`,   rCoin:50,  rEther:0,   cur:()=> Math.min(gState.ownedUnits?.length||0, 1),   req:1   },
-  { id:'a_unit3',  cat:'clan',    icon:'👥', name:'小さなクラン',       desc:'ユニットを3体入手する',          reward:`${itemIconHTML('crystal','14px')}×100`,  rCoin:100, rEther:0,   cur:()=> Math.min(gState.ownedUnits?.length||0, 3),   req:3   },
+  { id:'a_unit1',  cat:'clan',    icon:'👤', name:'はじまりの戦士',    desc:'ユニットを1体入手する',          reward:`${itemIconHTML('crystal','14px')}×20`,   rCoin:20,  rEther:0,   cur:()=> Math.min(gState.ownedUnits?.length||0, 1),   req:1   },
+  { id:'a_unit3',  cat:'clan',    icon:'👥', name:'小さなクラン',       desc:'ユニットを3体入手する',          reward:`${itemIconHTML('crystal','14px')}×50`,   rCoin:50,  rEther:0,   cur:()=> Math.min(gState.ownedUnits?.length||0, 3),   req:3   },
   { id:'a_unit5',  cat:'clan',    icon:'⚔️', name:'精鋭部隊',           desc:'ユニットを5体入手する',          reward:`${itemIconHTML('crystal','14px')}×200`,  rCoin:200, rEther:0,   cur:()=> Math.min(gState.ownedUnits?.length||0, 5),   req:5   },
   { id:'a_unit10', cat:'clan',    icon:'🏰', name:'大クラン',           desc:'ユニットを10体入手する',         reward:`${itemIconHTML('crystal','14px')}×500`,  rCoin:500, rEther:0,   cur:()=> Math.min(gState.ownedUnits?.length||0, 10),  req:10  },
-  { id:'a_cls2',   cat:'clan',    icon:'🔀', name:'二刀流',             desc:'異なるクラスを2種類保有する',    reward:`${itemIconHTML('crystal','14px')}×100`,  rCoin:100, rEther:0,   cur:()=> new Set(gState.ownedUnits?.map(u=>u.classId)||[]).size >= 2 ? 2 : new Set(gState.ownedUnits?.map(u=>u.classId)||[]).size, req:2 },
+  { id:'a_cls2',   cat:'clan',    icon:'🔀', name:'二刀流',             desc:'異なるクラスを2種類保有する',    reward:`${itemIconHTML('crystal','14px')}×50`,   rCoin:50,  rEther:0,   cur:()=> new Set(gState.ownedUnits?.map(u=>u.classId)||[]).size >= 2 ? 2 : new Set(gState.ownedUnits?.map(u=>u.classId)||[]).size, req:2 },
   { id:'a_cls3',   cat:'clan',    icon:'🌟', name:'三柱の守護',         desc:'異なるクラスを3種類保有する',    reward:`${itemIconHTML('crystal','14px')}×300`,  rCoin:300, rEther:0,   cur:()=> Math.min(new Set(gState.ownedUnits?.map(u=>u.classId)||[]).size, 3), req:3 },
   { id:'a_lv10',   cat:'clan',    icon:'📈', name:'練達の戦士',         desc:'ユニットを1体Lv.10にする',       reward:`${itemIconHTML('expPot','14px')}×200`,  rCoin:0,   rEther:200, cur:()=> Object.values(gState.unitProgress||{}).some(p=>p.level>=10)?1:0, req:1 },
   { id:'a_lv30',   cat:'clan',    icon:'💪', name:'歴戦の勇者',         desc:'ユニットを1体Lv.30にする',       reward:`${itemIconHTML('expPot','14px')}×500`,  rCoin:0,   rEther:500, cur:()=> Object.values(gState.unitProgress||{}).some(p=>p.level>=30)?1:0, req:1 },
   { id:'a_lv50',   cat:'clan',    icon:'👑', name:'伝説の英雄',         desc:'ユニットを1体Lv.50にする',       reward:`${itemIconHTML('crystal','14px')}×1000`, rCoin:1000,rEther:0,  cur:()=> Object.values(gState.unitProgress||{}).some(p=>p.level>=50)?1:0, req:1 },
 
   // ─── カテゴリ: ガチャ ───
-  { id:'a_gacha1',   cat:'gacha', icon:'✨', name:'初召喚',             desc:'ガチャを初めて引く',             reward:`${itemIconHTML('crystal','14px')}×50`,   rCoin:50,  rEther:0,   cur:()=> Math.min((gState.gacha?.totalPulls||0)+(gState.gacha?.cardTotalPulls||0)+(gState.gacha?.charTotalPulls||0), 1),  req:1   },
+  { id:'a_gacha1',   cat:'gacha', icon:'✨', name:'初召喚',             desc:'ガチャを初めて引く',             reward:`${itemIconHTML('crystal','14px')}×20`,   rCoin:20,  rEther:0,   cur:()=> Math.min((gState.gacha?.totalPulls||0)+(gState.gacha?.cardTotalPulls||0)+(gState.gacha?.charTotalPulls||0), 1),  req:1   },
   { id:'a_gacha10',  cat:'gacha', icon:'🌠', name:'召喚師見習い',       desc:'ガチャを合計10回引く',           reward:`${itemIconHTML('crystal','14px')}×100`,  rCoin:100, rEther:0,   cur:()=> Math.min((gState.gacha?.totalPulls||0)+(gState.gacha?.cardTotalPulls||0)+(gState.gacha?.charTotalPulls||0), 10), req:10  },
   { id:'a_gacha50',  cat:'gacha', icon:'💫', name:'召喚師',             desc:'ガチャを合計50回引く',           reward:`${itemIconHTML('crystal','14px')}×300`,  rCoin:300, rEther:0,   cur:()=> Math.min((gState.gacha?.totalPulls||0)+(gState.gacha?.cardTotalPulls||0)+(gState.gacha?.charTotalPulls||0), 50), req:50  },
   { id:'a_gacha100', cat:'gacha', icon:'🌟', name:'召喚の達人',         desc:'ガチャを合計100回引く',          reward:`${itemIconHTML('crystal','14px')}×500`,  rCoin:500, rEther:0,   cur:()=> Math.min((gState.gacha?.totalPulls||0)+(gState.gacha?.cardTotalPulls||0)+(gState.gacha?.charTotalPulls||0),100), req:100 },
   { id:'a_gacha300', cat:'gacha', icon:'⭐', name:'召喚の覇者',         desc:'ガチャを合計300回引く',          reward:`${itemIconHTML('crystal','14px')}×1000`, rCoin:1000,rEther:0,  cur:()=> Math.min((gState.gacha?.totalPulls||0)+(gState.gacha?.cardTotalPulls||0)+(gState.gacha?.charTotalPulls||0),300), req:300 },
 
   // ─── カテゴリ: バトル・討伐 ───
-  { id:'a_bat1',     cat:'battle', icon:'🗡️', name:'はじめての戦闘',   desc:'メインステージを1回クリアする',     reward:`${itemIconHTML('crystal','14px')}×50`,            rCoin:50,   rEther:0, rCrystal:0,   cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 1),    req:1    },
+  { id:'a_bat1',     cat:'battle', icon:'🗡️', name:'はじめての戦闘',   desc:'メインステージを1回クリアする',     reward:`${itemIconHTML('crystal','14px')}×20`,            rCoin:20,   rEther:0, rCrystal:0,   cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 1),    req:1    },
   { id:'a_bat10',    cat:'battle', icon:'⚔️', name:'歴戦の冒険者',     desc:'メインステージを10回クリアする',    reward:`${itemIconHTML('crystal','14px')}×200 + 💠×50`,   rCoin:200,  rEther:0, rCrystal:50,  cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 10),   req:10   },
   { id:'a_bat50',    cat:'battle', icon:'🏆', name:'バベルの覇者',     desc:'メインステージを50回クリアする',    reward:`${itemIconHTML('crystal','14px')}×500 + 💠×100`,  rCoin:500,  rEther:0, rCrystal:100, cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 50),   req:50   },
   { id:'a_bat100',   cat:'battle', icon:'🌋', name:'無双の剣豪',       desc:'メインステージを100回クリアする',   reward:`${itemIconHTML('crystal','14px')}×1000 + 💠×200`, rCoin:1000, rEther:0, rCrystal:200, cur:()=> Math.min(gState.progress?.stats?.totalBabelClears||0, 100),  req:100  },
@@ -10548,7 +10580,7 @@ const ACHIEVEMENTS = [
   { id:'a_dmg10m',   cat:'battle', icon:'☄️', name:'億越えの破壊神',   desc:'累計ダメージ1000万を突破する',       reward:`${itemIconHTML('crystal','14px')}×1000`,rCoin:1000,rEther:0, cur:()=> Math.min(gState.progress?.stats?.totalDamageDealt||0,10000000), req:10000000 },
 
   // ─── カテゴリ: 探索・拠点 ───
-  { id:'a_stage5',   cat:'explore',icon:'🗺️', name:'探索者',           desc:'ステージを5ステージクリアする',   reward:`${itemIconHTML('crystal','14px')}×100 + 💠×50`,   rCoin:100, rEther:0, rCrystal:50,  cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 5),  req:5  },
+  { id:'a_stage5',   cat:'explore',icon:'🗺️', name:'探索者',           desc:'ステージを5ステージクリアする',   reward:`${itemIconHTML('crystal','14px')}×50 + 💠×30`,    rCoin:50,  rEther:0, rCrystal:30,  cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 5),  req:5  },
   { id:'a_stage20',  cat:'explore',icon:'🧭', name:'熟練の探索者',     desc:'ステージを20ステージクリアする',  reward:`${itemIconHTML('crystal','14px')}×300 + 💠×100`,  rCoin:300, rEther:0, rCrystal:100, cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 20), req:20 },
   { id:'a_stage50',  cat:'explore',icon:'🌍', name:'世界を巡る者',     desc:'ステージを50ステージクリアする',  reward:`${itemIconHTML('crystal','14px')}×800 + 💠×200`,  rCoin:800, rEther:0, rCrystal:200, cur:()=> Math.min(Object.keys(gState.progress?.babel?.clearedStages||{}).length, 50), req:50 },
   { id:'a_area2',    cat:'explore',icon:'🌿', name:'草原を越えて',     desc:'Area2を解放する',                 reward:`${itemIconHTML('crystal','14px')}×200`,  rCoin:200, rEther:0,   cur:()=> isAreaUnlocked('area2')?1:0, req:1 },
@@ -10618,6 +10650,9 @@ function trackBabelClear(stageId) {
   // ボスステージ判定（s10, s5末尾）
   if (stageId && (stageId.endsWith('s10') || stageId.endsWith('s5') || stageId.endsWith('s15') || stageId.endsWith('s20'))) {
     s.bossKills = (s.bossKills||0) + 1;
+    if (!gState.missions.weekly) gState.missions.weekly = {};
+    gState.missions.weekly.bossKills = (gState.missions.weekly.bossKills||0) + 1;
+    if (gState.missions.event) gState.missions.event.bossKills = (gState.missions.event.bossKills||0) + 1;
   }
 }
 
@@ -12891,7 +12926,9 @@ function skillUpChar(uid, skillId) {
     prog.skillLevels[cls.openingSkill.id] = Math.max(1, Math.floor((_lv1 + _lv2) / 2));
   }
   gState.unitProgress[uid] = prog;
+  if (!gState.missions.daily)  gState.missions.daily  = {};
   if (!gState.missions.weekly) gState.missions.weekly = {};
+  gState.missions.daily.skillUpCount  = (gState.missions.daily.skillUpCount||0)  + 1;
   gState.missions.weekly.skillUpCount = (gState.missions.weekly.skillUpCount||0) + 1;
   const sk = (cls.activeSkills||[]).find(s => s.id === skillId);
   saveState();
@@ -19634,7 +19671,7 @@ function _showArtifactEquipTutorial() {
 // ============================================================
 //  アーティファクト GACHA（ガチャパネル用）
 // ============================================================
-const AF_MILEAGE_CAP = 100;
+const AF_MILEAGE_CAP = 70;
 
 function doArtifactGachaFromPanel(count) {
   const cost = count * 200;
@@ -22598,7 +22635,8 @@ function collectMine() {
   gState.player.mithril   = (gState.player.mithril||0) + y.mithril;
   gState.player.awakePot  = (gState.player.awakePot||0) + y.awakePot;
   gState.mine.lastCollected = Date.now();
-  gState.missions.daily.mineCollect = (gState.missions.daily.mineCollect||0)+1;
+  gState.missions.daily.mineCollect  = (gState.missions.daily.mineCollect||0)+1;
+  gState.missions.weekly.mineCollect = (gState.missions.weekly.mineCollect||0)+1;
   // 実績: 鉱山回収統計
   trackMineCollect();
   checkAchievements();
@@ -23100,6 +23138,8 @@ function expeditionStart(slotIdx) {
   slot.regionId = slot.pendingRegionId;
   slot.startedAt = Date.now();
   slot.pendingRegionId = null;
+  if (!gState.missions.daily) gState.missions.daily = {};
+  gState.missions.daily.expeditionAction = (gState.missions.daily.expeditionAction||0) + 1;
   saveState();
   renderClanHall();
 }
@@ -23123,6 +23163,8 @@ function expeditionCollect(slotIdx) {
   });
   const aptPct = Math.round(aptRate * 100);
   gState.expeditions.slots[slotIdx] = { regionId:null, startedAt:null, memberUids:[], pendingRegionId:null };
+  if (!gState.missions.daily) gState.missions.daily = {};
+  gState.missions.daily.expeditionAction = (gState.missions.daily.expeditionAction||0) + 1;
   saveState();
   toast(`${region.icon} 遠征帰還！ 適性率${aptPct}%（×${mult.toFixed(1)}） ${got.join(' ')}`, true);
   renderClanHall();
@@ -24096,6 +24138,8 @@ function enhanceArtifact(idx) {
   stone.t1 -= cost.t1 || 0;
   gState.player.atomStone = stone;
   af.level = lv + 1;
+  if (!gState.missions.weekly) gState.missions.weekly = {};
+  gState.missions.weekly.afEnhance = (gState.missions.weekly.afEnhance||0) + 1;
   saveState();
   Audio.buff();
   renderSmithyContent();
@@ -25134,6 +25178,8 @@ function equipArtifact(uid, afUid) {
   const u = gState.ownedUnits.find(x => x.uid === uid);
   if (!u) return;
   u.equippedArtifact = afUid;
+  if (!gState.missions.daily) gState.missions.daily = {};
+  gState.missions.daily.itemEquipped = (gState.missions.daily.itemEquipped||0) + 1;
   saveState();
   Audio.equip();
   const slot = document.getElementById('udp-artifact-slot');
@@ -25393,6 +25439,8 @@ function equipAccessory(uid, slot, accUid) {
   if (!u) return;
   if (!u.equippedAccessories) u.equippedAccessories={A:null,B:null,C:null,D:null,E:null,F:null};
   u.equippedAccessories[slot]=accUid;
+  if (!gState.missions.daily) gState.missions.daily = {};
+  gState.missions.daily.itemEquipped = (gState.missions.daily.itemEquipped||0) + 1;
   saveState();
   Audio.equip();
   document.querySelectorAll('.modal-overlay[style*="z-index: 700"], .modal-overlay[style*="z-index:700"]').forEach(el=>el.remove());
