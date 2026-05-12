@@ -1299,6 +1299,194 @@ img.item-icon {
   100%{ transform: translateX(100%); }
 }
 
+/* ===== 召喚契約書（キャラガチャ） ===== */
+#contract-overlay {
+  position: fixed; inset: 0; z-index: 9995;
+  background: radial-gradient(ellipse at center, rgba(20,12,4,0.55) 0%, rgba(0,0,0,0.92) 80%);
+  display: none; align-items: center; justify-content: center;
+  padding: 16px; overflow: hidden;
+}
+#contract-overlay.open { display: flex; animation: contractFadeIn 0.4s ease-out; }
+#contract-overlay.closing { animation: contractFadeOut 0.5s ease-in forwards; }
+@keyframes contractFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes contractFadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.92); } }
+
+/* 羊皮紙 */
+.contract-paper {
+  position: relative; max-width: 420px; width: 100%;
+  padding: 28px 24px 22px;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(120,80,40,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 90%, rgba(60,40,20,0.20) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, #f4e2b8 0%, #e2c890 55%, #c9a865 100%);
+  color: #3a2510;
+  font-family: 'Cinzel', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  border: 3px double #6b4a1f;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.35) inset,
+    0 0 18px rgba(0,0,0,0.45) inset,
+    0 10px 40px rgba(0,0,0,0.7),
+    0 0 80px rgba(255,180,80,0.18);
+  border-radius: 4px;
+  transform-origin: center top;
+  animation: contractPaperIn 0.55s cubic-bezier(0.2,1.3,0.3,1);
+}
+@keyframes contractPaperIn {
+  0%   { transform: translateY(-30px) rotate(-2deg) scale(0.85); opacity: 0; }
+  100% { transform: translateY(0)    rotate(0deg)  scale(1.0);  opacity: 1; }
+}
+.contract-paper.shake { animation: contractPaperShake 0.45s ease-out; }
+@keyframes contractPaperShake {
+  0%,100% { transform: translateX(0)    rotate(0deg); }
+  20%     { transform: translateX(-10px) rotate(-1deg); }
+  40%     { transform: translateX(8px)   rotate(0.6deg); }
+  60%     { transform: translateX(-5px)  rotate(-0.4deg); }
+  80%     { transform: translateX(3px)   rotate(0.2deg); }
+}
+.contract-edge {
+  position: absolute; inset: 6px; pointer-events: none;
+  border: 1px solid rgba(75,45,15,0.35);
+  border-radius: 2px;
+}
+.contract-title {
+  font-size: 22px; letter-spacing: 8px; text-align: center;
+  font-weight: 900; margin-bottom: 4px;
+  color: #4a2f10;
+  text-shadow: 0 1px 0 rgba(255,240,200,0.6);
+}
+.contract-flourish {
+  text-align: center; color: #6b4a1f; font-size: 14px;
+  margin-bottom: 14px; letter-spacing: 6px;
+}
+.contract-body {
+  font-size: 13px; line-height: 1.7; text-align: center;
+  margin-bottom: 14px; color: #4a2f10;
+  letter-spacing: 0.5px;
+}
+.contract-terms {
+  border-top: 1px dashed rgba(75,45,15,0.5);
+  border-bottom: 1px dashed rgba(75,45,15,0.5);
+  padding: 10px 4px; margin-bottom: 14px;
+}
+.contract-term-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; margin-bottom: 4px;
+  font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+}
+.contract-term-row:last-child { margin-bottom: 0; }
+.contract-term-row .term-label {
+  color: #6b4a1f; letter-spacing: 4px; font-weight: 700;
+}
+.contract-term-row .term-value {
+  color: #2a1808; font-weight: 700;
+}
+.contract-instruction {
+  text-align: center; font-size: 11px; color: #6b4a1f;
+  letter-spacing: 4px; margin-bottom: 10px;
+  animation: contractBlink 1.4s ease-in-out infinite;
+}
+@keyframes contractBlink {
+  0%,100% { opacity: 0.55; }
+  50%     { opacity: 1.0; }
+}
+
+/* 押印スポット */
+.contract-stamp-area {
+  position: relative; margin: 0 auto;
+  width: 130px; height: 130px; border-radius: 50%;
+  border: 2px dashed #8b3a1a;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; user-select: none;
+  background: radial-gradient(circle, rgba(139,58,26,0.06) 0%, transparent 70%);
+  transition: transform 0.15s, background 0.15s;
+}
+.contract-stamp-area:hover {
+  background: radial-gradient(circle, rgba(139,58,26,0.15) 0%, transparent 70%);
+  transform: scale(1.04);
+}
+.contract-stamp-area:active { transform: scale(0.96); }
+.contract-stamp-area .stamp-hint {
+  font-family: 'Hiragino Mincho ProN','Yu Mincho',serif;
+  font-size: 13px; color: #8b3a1a; letter-spacing: 4px; font-weight: 700;
+}
+.contract-stamp-area.stamped {
+  border-color: transparent;
+  pointer-events: none;
+}
+.contract-stamp-area.stamped .stamp-hint { display: none; }
+
+/* 赤い封蝋ハンコ（押された後に表示される本体） */
+.contract-seal {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, #d8453a 0%, #a52818 45%, #6b1408 100%);
+  box-shadow:
+    inset 0 0 14px rgba(0,0,0,0.5),
+    inset 0 4px 8px rgba(255,180,160,0.35),
+    0 4px 12px rgba(0,0,0,0.55),
+    0 0 26px rgba(220,60,40,0.55);
+  display: flex; align-items: center; justify-content: center;
+  transform: scale(3.6) rotate(-22deg); opacity: 0;
+  animation: contractStampSlam 0.55s cubic-bezier(0.5,0.1,0.6,1.4) forwards;
+}
+.contract-seal::before {
+  /* 内側の十字星マーク */
+  content: '✦'; color: rgba(255,220,200,0.85);
+  font-size: 56px; line-height: 1;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  transform: rotate(0deg);
+}
+.contract-seal::after {
+  /* 外周ラテン風文字 */
+  content: ''; position: absolute; inset: 8px;
+  border: 1px solid rgba(255,200,170,0.35);
+  border-radius: 50%;
+}
+@keyframes contractStampSlam {
+  0%   { transform: scale(3.6) rotate(-22deg); opacity: 0; }
+  60%  { transform: scale(1.0) rotate(-8deg);  opacity: 1; }
+  75%  { transform: scale(1.12) rotate(-5deg); opacity: 1; }
+  100% { transform: scale(1.0) rotate(-6deg);  opacity: 1; }
+}
+/* インクの飛沫 */
+.contract-ink-splash {
+  position: absolute; pointer-events: none;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: radial-gradient(circle, #6b1408 0%, transparent 70%);
+  opacity: 0;
+  animation: contractInkSplash 0.7s ease-out forwards;
+}
+@keyframes contractInkSplash {
+  0%   { transform: scale(0.2) translate(0,0); opacity: 0; }
+  20%  { opacity: 0.8; }
+  100% { transform: scale(1.6) translate(var(--dx,30px), var(--dy,-20px)); opacity: 0; }
+}
+/* 契約成立テキスト */
+.contract-sealed-text {
+  position: absolute; left: 0; right: 0; bottom: -42px;
+  text-align: center; font-family: 'Cinzel', serif;
+  font-size: 18px; font-weight: 900; letter-spacing: 6px;
+  color: #c93a28;
+  text-shadow: 0 0 12px rgba(255,80,40,0.6), 0 1px 0 rgba(255,230,200,0.4);
+  opacity: 0;
+  animation: contractSealedIn 0.6s cubic-bezier(0.2,1.4,0.3,1) 0.2s forwards;
+}
+@keyframes contractSealedIn {
+  0%   { transform: translateY(10px) scale(0.6); opacity: 0; }
+  60%  { transform: translateY(0)    scale(1.15); opacity: 1; }
+  100% { transform: translateY(0)    scale(1.0);  opacity: 1; }
+}
+/* キャンセル/×ボタン */
+.contract-close {
+  position: absolute; top: 6px; right: 8px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: none; border: 1px solid rgba(75,45,15,0.5);
+  color: #6b4a1f; font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.contract-close:hover { background: rgba(75,45,15,0.12); }
+
 /* ===== BASE TAB ===== */
 .base-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .base-card {
@@ -3751,6 +3939,61 @@ const Audio = (() => {
       osc(f*2, 'triangle', 0.10, 0.14, seGain, t + 0.50 + i * 0.06);
     });
   }
+  // 契約書を広げる音（紙のサワサワ＋低音ウーン）
+  function seContractOpen() {
+    const c = getCtx(); const t = c.currentTime;
+    // ノイズで紙のサワサワ
+    const bufLen = c.sampleRate * 0.35;
+    const buf = c.createBuffer(1, bufLen, c.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      const env = Math.min(i / (c.sampleRate * 0.05), 1 - i / bufLen);
+      data[i] = (Math.random() * 2 - 1) * 0.32 * Math.max(0, env);
+    }
+    const src = c.createBufferSource(); src.buffer = buf;
+    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 3200; bp.Q.value = 1.4;
+    src.connect(bp); bp.connect(seGain);
+    src.start(t);
+    // 低音ウーン（厳かさ）
+    osc(110, 'sine', 0.50, 0.30, seGain, t);
+    osc(220, 'sine', 0.45, 0.18, seGain, t + 0.05);
+    // 神秘的なチャイム
+    osc(880, 'triangle', 0.60, 0.18, seGain, t + 0.20);
+    osc(1318,'sine',     0.55, 0.14, seGain, t + 0.24);
+  }
+  // ハンコをドンッと押す音（重い衝撃＋木のコッ＋ベル）
+  function seContractStamp() {
+    const c = getCtx(); const t = c.currentTime;
+    // 重い衝撃: 低音キック
+    const o = c.createOscillator(); const g = c.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(180, t);
+    o.frequency.exponentialRampToValueAtTime(40, t + 0.18);
+    o.connect(g); g.connect(seGain);
+    g.gain.setValueAtTime(0.85, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+    o.start(t); o.stop(t + 0.26);
+    // ノイズの「ザッ」（インク飛沫）
+    const bufLen = c.sampleRate * 0.10;
+    const buf = c.createBuffer(1, bufLen, c.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      const env = 1 - i / bufLen;
+      data[i] = (Math.random() * 2 - 1) * 0.55 * env;
+    }
+    const src = c.createBufferSource(); src.buffer = buf;
+    const bp = c.createBiquadFilter(); bp.type = 'highpass'; bp.frequency.value = 1800;
+    src.connect(bp); bp.connect(seGain);
+    src.start(t + 0.02);
+    // 木製コッ（高音）
+    osc(2400, 'square', 0.04, 0.30, seGain, t + 0.015);
+    osc(1800, 'square', 0.05, 0.22, seGain, t + 0.020);
+    // 余韻の魔法ベル
+    osc(1568, 'triangle', 0.55, 0.30, seGain, t + 0.18);
+    osc(2093, 'sine',     0.50, 0.22, seGain, t + 0.20);
+    osc(2637, 'sine',     0.45, 0.16, seGain, t + 0.24);
+    osc(3136, 'sine',     0.40, 0.10, seGain, t + 0.28);
+  }
   // 中当たりチャイム（ミッド/ハイのライト版）
   function seGachaWin() {
     const c = getCtx(); const t = c.currentTime;
@@ -4032,6 +4275,8 @@ const Audio = (() => {
     gachaHeartbeat: () => { try { seGachaHeartbeat(); } catch(e){} },
     gachaJackpot:   () => { try { seGachaJackpot(); }   catch(e){} },
     gachaWin:       () => { try { seGachaWin(); }       catch(e){} },
+    contractOpen:   () => { try { seContractOpen(); }   catch(e){} },
+    contractStamp:  () => { try { seContractStamp(); }  catch(e){} },
     ult:      () => { try { seUlt(); }        catch(e){} },
     victory:  () => { try { seVictory(); }    catch(e){} },
     opening:  () => { try { seOpeningSkill(); } catch(e){} },
@@ -18097,10 +18342,10 @@ function renderCharGachaTab(el) {
     </div>
     <div class="gacha-btns" style="margin-bottom:10px">
       <button class="gacha-btn gacha-btn-1" onclick="drawCharGacha(1)" ${crystal<300?'disabled':''} style="flex:1;padding:10px;cursor:${crystal>=300?'pointer':'default'};opacity:${crystal>=300?1:0.4}">
-        1回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 300</span>
+        📜 単発契約<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 300</span>
       </button>
       <button class="gacha-btn gacha-btn-10" onclick="drawCharGacha(10)" ${crystal<3000?'disabled':''} style="flex:2;padding:10px;cursor:${crystal>=3000?'pointer':'default'};opacity:${crystal>=3000?1:0.4}">
-        10回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 3,000</span>
+        📜 10連契約<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 3,000</span>
       </button>
     </div>
     ${canMile?`<button onclick="openMileageExchange()" style="width:100%;padding:10px;background:linear-gradient(135deg,rgba(201,168,76,0.3),rgba(201,168,76,0.15));border:1px solid var(--gold);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;border-radius:4px;letter-spacing:1px">
@@ -18225,8 +18470,117 @@ function drawCharGacha(count) {
     }
   });
   saveState(); updateTopBar(); setTimeout(checkAchievements,100);
-  closeGacha(); Audio.gacha();
-  showCharGachaResult(results);
+  closeGacha();
+  // 契約書演出 → ハンコ後に既存のガチャ演出・結果モーダルへ
+  showCharGachaContract(results, cost, count);
+}
+// ============================================================
+//  クラスガチャ = 召喚契約書: ハンコでドン → 結果公開
+// ============================================================
+function showCharGachaContract(results, cost, count, onComplete) {
+  // 既存があれば破棄
+  document.getElementById('contract-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'contract-overlay';
+  const clanName = gState.player?.clanName || 'クラン';
+  // 対価表示: 0 ならば「初代特典（無償）」、それ以外は星晶石コスト
+  const costStr = cost > 0
+    ? `星晶石 ${cost.toLocaleString()}`
+    : '初代特典（無 償）';
+  const countSuffix = count === 10
+    ? (cost > 0 ? '（10連保証付）' : '（クラス1体以上確定）')
+    : '';
+  // 契約内容（レア度は伏せ、合計口数のみ提示してサプライズを残す）
+  const termsHTML = `
+    <div class="contract-term-row">
+      <span class="term-label">対  価</span>
+      <span class="term-value">${costStr}</span>
+    </div>
+    <div class="contract-term-row">
+      <span class="term-label">召喚数</span>
+      <span class="term-value">${count}口${countSuffix}</span>
+    </div>
+    <div class="contract-term-row">
+      <span class="term-label">立会人</span>
+      <span class="term-value">${clanName}</span>
+    </div>`;
+  ov.innerHTML = `
+    <div class="contract-paper" id="contract-paper">
+      <div class="contract-edge"></div>
+      <button class="contract-close" onclick="skipCharGachaContract()" title="スキップ">✕</button>
+      <div class="contract-title">召 喚 契 約 書</div>
+      <div class="contract-flourish">— ✦ —</div>
+      <div class="contract-body">
+        本契約の対価をもって、異界より<br>
+        英霊及び支援素材を貴卿の元へ譬渡する。<br>
+        本印を以て、契約は直ちに発効する。
+      </div>
+      <div class="contract-terms">${termsHTML}</div>
+      <div class="contract-instruction" id="contract-inst">▼ ここに本印を押せ ▼</div>
+      <div class="contract-stamp-area" id="contract-stamp-area">
+        <span class="stamp-hint">タップ</span>
+      </div>
+    </div>`;
+  // 押印完了後に実行する処理。未指定なら通常のキャラガチャ結果表示
+  const _done = onComplete || (() => { Audio.gacha && Audio.gacha(); showCharGachaResult(results); });
+  ov._pendingResults = results;
+  ov._onContractDone = _done;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('open'));
+  Audio.contractOpen && Audio.contractOpen();
+
+  // 押印
+  let stamped = false;
+  const stampArea = ov.querySelector('#contract-stamp-area');
+  const paper = ov.querySelector('#contract-paper');
+  const onStamp = () => {
+    if (stamped) return;
+    stamped = true;
+    stampArea.classList.add('stamped');
+    // 封蝋ハンコを表示
+    const seal = document.createElement('div');
+    seal.className = 'contract-seal';
+    stampArea.appendChild(seal);
+    // インク飛沫を周囲に散らす
+    for (let i = 0; i < 10; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'contract-ink-splash';
+      const ang = (i / 10) * Math.PI * 2 + Math.random() * 0.6;
+      const dist = 28 + Math.random() * 22;
+      dot.style.setProperty('--dx', `${Math.cos(ang) * dist}px`);
+      dot.style.setProperty('--dy', `${Math.sin(ang) * dist}px`);
+      dot.style.left = '50%'; dot.style.top = '50%';
+      dot.style.animationDelay = `${i * 0.012}s`;
+      stampArea.appendChild(dot);
+    }
+    // 「契約成立」テキスト
+    const sealedText = document.createElement('div');
+    sealedText.className = 'contract-sealed-text';
+    sealedText.textContent = '契 約 成 立';
+    paper.appendChild(sealedText);
+    // 紙の振動
+    paper.classList.remove('shake'); void paper.offsetWidth; paper.classList.add('shake');
+    // 効果音
+    Audio.contractStamp && Audio.contractStamp();
+    // 指示文を非表示
+    const inst = ov.querySelector('#contract-inst');
+    if (inst) inst.style.opacity = '0';
+    // 1.2秒後に契約書を閉じて既存ガチャ演出へ
+    setTimeout(() => {
+      ov.classList.add('closing');
+      setTimeout(() => { ov.remove(); _done(); }, 480);
+    }, 1100);
+  };
+  stampArea.addEventListener('click', onStamp);
+}
+
+// 契約演出をスキップして結果へ（既に契約は確定済み）
+function skipCharGachaContract() {
+  const ov = document.getElementById('contract-overlay');
+  if (!ov) return;
+  const done = ov._onContractDone;
+  ov.classList.add('closing');
+  setTimeout(() => { ov.remove(); if (done) done(); }, 280);
 }
 // ============================================================
 //  ガチャ強化演出: 予兆カラー & スロー演出
@@ -18548,7 +18902,12 @@ function doFirstBattleGacha() {
 }
 
 function _showFirstBattleCharResult(results) {
-  playGachaCinematic(results, 'char', () => _renderFirstBattleCharResultModal(results));
+  // 通常のキャラガチャと同じく契約書 → 押印 → 既存演出 → 結果モーダルへ
+  // 初回は無償なので cost=0 を渡し、結果モーダルは初回専用版を使う
+  showCharGachaContract(results, 0, 10, () => {
+    Audio.gacha && Audio.gacha();
+    playGachaCinematic(results, 'char', () => _renderFirstBattleCharResultModal(results));
+  });
 }
 function _renderFirstBattleCharResultModal(results) {
   const ov = document.createElement('div');
