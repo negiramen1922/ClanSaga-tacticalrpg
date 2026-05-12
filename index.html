@@ -852,6 +852,150 @@ img.item-icon {
 }
 .combatant-card.ult-flash { animation: ultFlash 0.6s ease-out; }
 
+/* ATTRIBUTE EFFECTS — 攻撃属性ごとの演出 */
+.atk-fx {
+  position: absolute; pointer-events: none; z-index: 215;
+  left: 0; top: 0;
+}
+.atk-fx-slash, .atk-fx-blunt, .atk-fx-pierce, .atk-fx-explode,
+.atk-fx-magic, .atk-fx-curse, .atk-fx-rend, .atk-fx-holy {
+  position: absolute; pointer-events: none; z-index: 215;
+}
+
+/* 斬 — 左上から右下への斜め切り */
+.atk-fx-slash {
+  width: 96px; height: 5px;
+  background: linear-gradient(90deg, transparent 0%, currentColor 20%, #fff 50%, currentColor 80%, transparent 100%);
+  box-shadow: 0 0 12px currentColor, 0 0 4px #fff;
+  transform: translate(-50%,-50%) rotate(35deg) scaleX(0);
+  animation: fxSlash 0.32s ease-out forwards;
+  border-radius: 3px;
+}
+@keyframes fxSlash {
+  0%   { transform: translate(-50%,-50%) rotate(35deg) scaleX(0); opacity: 0.4; }
+  35%  { transform: translate(-50%,-50%) rotate(35deg) scaleX(1.05); opacity: 1; }
+  100% { transform: translate(-50%,-50%) rotate(35deg) scaleX(1.05); opacity: 0; }
+}
+
+/* 打 — バンと叩く（衝撃波リング） */
+.atk-fx-blunt {
+  width: 60px; height: 60px;
+  border: 4px solid currentColor;
+  border-radius: 50%;
+  box-shadow: 0 0 18px currentColor, inset 0 0 12px currentColor;
+  transform: translate(-50%,-50%) scale(0.2);
+  animation: fxBlunt 0.35s ease-out forwards;
+}
+@keyframes fxBlunt {
+  0%   { transform: translate(-50%,-50%) scale(0.2); opacity: 0; }
+  35%  { transform: translate(-50%,-50%) scale(1.1); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(1.7); opacity: 0; }
+}
+
+/* 貫 — 鋭いひし形で貫く */
+.atk-fx-pierce {
+  width: 22px; height: 70px;
+  background: linear-gradient(180deg, transparent 0%, currentColor 20%, #fff 50%, currentColor 80%, transparent 100%);
+  box-shadow: 0 0 14px currentColor;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  transform: translate(-50%,-50%) rotate(45deg) scaleY(0);
+  animation: fxPierce 0.32s ease-out forwards;
+}
+@keyframes fxPierce {
+  0%   { transform: translate(-50%,-50%) rotate(45deg) scaleY(0); opacity: 0.3; }
+  35%  { transform: translate(-50%,-50%) rotate(45deg) scaleY(1); opacity: 1; }
+  100% { transform: translate(-50%,-50%) rotate(45deg) scaleY(1.2); opacity: 0; }
+}
+
+/* 爆 — 爆発 */
+.atk-fx-explode {
+  width: 70px; height: 70px;
+  background: radial-gradient(circle, #fff 0%, currentColor 40%, transparent 75%);
+  box-shadow: 0 0 28px currentColor;
+  transform: translate(-50%,-50%) scale(0.1);
+  animation: fxExplode 0.45s ease-out forwards;
+  border-radius: 50%;
+}
+@keyframes fxExplode {
+  0%   { transform: translate(-50%,-50%) scale(0.1); opacity: 0; filter: brightness(1.5); }
+  25%  { transform: translate(-50%,-50%) scale(1.4); opacity: 1; filter: brightness(2); }
+  100% { transform: translate(-50%,-50%) scale(2.3); opacity: 0; filter: brightness(1); }
+}
+
+/* 魔 — マルが霧散 */
+.atk-fx-magic {
+  width: 44px; height: 44px;
+  border: 3px solid currentColor;
+  border-radius: 50%;
+  box-shadow: 0 0 14px currentColor, inset 0 0 8px currentColor;
+  transform: translate(-50%,-50%) scale(0.3);
+  animation: fxMagic 0.45s ease-out forwards;
+}
+@keyframes fxMagic {
+  0%   { transform: translate(-50%,-50%) scale(0.3); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(2.2); opacity: 0; }
+}
+
+/* 呪 — 周囲から凝縮 */
+.atk-fx-curse {
+  width: 90px; height: 90px;
+  border: 2px dashed currentColor;
+  border-radius: 50%;
+  box-shadow: inset 0 0 14px currentColor, 0 0 10px currentColor;
+  transform: translate(-50%,-50%) scale(2);
+  animation: fxCurse 0.5s ease-in forwards;
+}
+@keyframes fxCurse {
+  0%   { transform: translate(-50%,-50%) scale(2) rotate(0deg); opacity: 0; }
+  40%  { transform: translate(-50%,-50%) scale(1) rotate(80deg); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(0.3) rotate(200deg); opacity: 0; }
+}
+
+/* 裂 — 左右に引き裂く */
+.atk-fx-rend {
+  width: 90px; height: 6px;
+  transform: translate(-50%,-50%);
+}
+.atk-fx-rend::before, .atk-fx-rend::after {
+  content: ''; position: absolute; top: 0;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, currentColor 50%, transparent);
+  box-shadow: 0 0 10px currentColor;
+  opacity: 0;
+}
+.atk-fx-rend::before { left: 0; animation: fxRendLeft 0.38s ease-out forwards; }
+.atk-fx-rend::after  { right: 0; animation: fxRendRight 0.38s ease-out forwards; }
+@keyframes fxRendLeft {
+  0%   { transform: translateX(20px); opacity: 0; }
+  30%  { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(-32px); opacity: 0; }
+}
+@keyframes fxRendRight {
+  0%   { transform: translateX(-20px); opacity: 0; }
+  30%  { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(32px); opacity: 0; }
+}
+
+/* 聖 — 小さな淡い光の粒が浮かび上がる */
+.atk-fx-holy {
+  width: 70px; height: 70px;
+  transform: translate(-50%,-50%);
+}
+.atk-fx-holy .holy-particle {
+  position: absolute;
+  width: 5px; height: 5px;
+  background: #fffff0;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #fff8c8, 0 0 16px rgba(255,248,200,0.7);
+  opacity: 0;
+  animation: fxHolyParticle 1s ease-out forwards;
+}
+@keyframes fxHolyParticle {
+  0%   { transform: translate(0, 22px) scale(0.4); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translate(var(--hx,0), -36px) scale(0.85); opacity: 0; }
+}
+
 .battle-controls {
   display: flex; align-items: center; gap: 8px; padding: 10px 16px;
   background: var(--panel); border-top: 1px solid var(--border); flex-shrink: 0;
@@ -4254,9 +4398,9 @@ const CLASS_DATA = {
       effect:{ type:'atk_up', val:20, turns:3 }
     },
     activeSkills: [
-      { id:'ws_sword_strike', name:'ソードストライク', type:'phys', target:'single',
+      { id:'ws_sword_strike', name:'ソードストライク', type:'phys', attr:'斬', target:'single',
         power:0.7, hits:3, cd:3, desc:'単体×3回 ⚔️ Pw:0.7' },
-      { id:'ws_titan_smash', name:'タイタンスマッシュ', type:'phys', target:'single',
+      { id:'ws_titan_smash', name:'タイタンスマッシュ', type:'phys', attr:'打', target:'single',
         power:2.0, cd:5, desc:'単体 ✨ Pw:2.0（HP50%以上+Pw:1.0）',
         conditionalPower:{ condition:'self_hp_above_50pct', bonusPower:1.0 } },
     ],
@@ -4272,7 +4416,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'wu_ragnarok', name:'ラグナロクスラッシュ',
         effect:'前衛⚔️全体 Pw:3.5 強制会心（前衛なし→後衛）+ 自身ATK+50%・CRI+30% 2T',
-        power:3.5, type:'phys', target:'front_row', forceCrit:true,
+        power:3.5, type:'phys', attr:'斬', target:'front_row', forceCrit:true,
         selfBuff:{ atk_up:50, cri_up:30, turns:2 } },
     ],
   },
@@ -4306,7 +4450,7 @@ const CLASS_DATA = {
           { type:'mdef_up', val:25, turns:3 },
         ]}
       },
-      { id:'vg_shield_bash', name:'シールドバッシュ', type:'phys', target:'single',
+      { id:'vg_shield_bash', name:'シールドバッシュ', type:'phys', attr:'打', target:'single',
         power:0.8, cd:4, desc:'単体 ⚔️ Pw:0.8 + 恐怖（ATK-10%）',
         debuff:{ type:'atk_down', val:-10, turns:3 }
       },
@@ -4379,17 +4523,17 @@ const CLASS_DATA = {
     baseStealth: 45,
     baseHate:    150,
     openingSkill: {
-      id:'as_open_shadow', name:'影潜り', type:'opening', target:'single',
+      id:'as_open_shadow', name:'影潜り', type:'phys', attr:'裂', target:'single',
       desc:'ATK+25%・CRI+15% + 奇襲時⚔️Pw:3.0（通常時Pw:1.0） 3T',
       power:3.0,
       effect:{ type:'surprise_burst', normalPw:1.0, surprisePw:3.0 },
       surpriseBuff:[ { type:'atk_up', val:25, turns:3 }, { type:'cri_up', val:15, turns:3 } ]
     },
     activeSkills: [
-      { id:'as_poison_blade', name:'毒刃', type:'phys', target:'single',
+      { id:'as_poison_blade', name:'毒刃', type:'phys', attr:'裂', target:'single',
         power:1.6, cd:4, desc:'単体 ✨ Pw:1.6 + 猛毒3T（ATK×10%/T）',
         debuff:{ type:'lethal_poison', val:10, turns:3 } },
-      { id:'as_backstab', name:'バックスタブ', type:'phys', target:'single',
+      { id:'as_backstab', name:'バックスタブ', type:'phys', attr:'斬', target:'single',
         power:2.0, cd:5, desc:'単体 ✨ Pw:2.0（CC中強制会心+Pw:1.0）',
         ccBonus:1.0, ccForceCrit:true },
     ],
@@ -4405,7 +4549,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'asu_hunt', name:'影狩り（シャドウハント）',
         effect:'最もHPの低い敵に⚔️Pw4.0(強制会心)+✨Pw2.0。撃破時即再行動(次の最低HP敵を自動追跡)。連続撃破でATK+10%スタック。夜戦中⚔️Pw+2.0追加',
-        power:4.0, type:'phys', target:'lowest_hp', forceCrit:true,
+        power:4.0, type:'phys', attr:'裂', target:'lowest_hp', forceCrit:true,
         blackPw:2.0, reattackOnKill:true, killAtkStack:10, nightRedBonus:2.0 },
     ],
   },
@@ -4422,14 +4566,14 @@ const CLASS_DATA = {
     baseStealth: 10,
     baseHate:   300,
     openingSkill: {
-      id:'ar_open_preemptive', name:'先制射撃', type:'phys', target:'random_multi',
+      id:'ar_open_preemptive', name:'先制射撃', type:'phys', attr:'貫', target:'random_multi',
       power:0.5, hits:6, cd:0,
       desc:'ランダム敵×6連射 ⚔️ Pw:0.5'
     },
     activeSkills: [
-      { id:'ar_pierce', name:'ピアシングアロー', type:'phys', target:'single',
+      { id:'ar_pierce', name:'ピアシングアロー', type:'phys', attr:'貫', target:'single',
         power:2.0, cd:4, desc:'単体 ⚔️ Pw:2.0 貫通矢' },
-      { id:'ar_rain', name:'アローレイン', type:'phys', target:'all',
+      { id:'ar_rain', name:'アローレイン', type:'phys', attr:'貫', target:'all',
         power:0.7, cd:6, desc:'全体 ⚔️ Pw:0.7 矢の雨' },
     ],
     passiveSkills: [
@@ -4442,7 +4586,7 @@ const CLASS_DATA = {
     ],
     skillPool: [],
     ultimates: [
-      { id:'au_stormcross', name:'ストームクロス',
+      { id:'au_stormcross', name:'ストームクロス', attr:'貫',
         effect:'ランダムな敵に✨×10連射（1発：現在HPの4%）',
         power:0.04, type:'spec', target:'random_multi', hits:10 },
     ],
@@ -4455,16 +4599,16 @@ const CLASS_DATA = {
     baseStats: { atk:850, hp:2400, mp:2200, pres:5, mres:15, bres:3, lres:0, spd:78, cri:10, cridam:155 },
     baseSearch: 20, baseStealth: 5, baseHate: 250,
     openingSkill: {
-      id:'wz_open_arcane', name:'古代魔法陣', type:'red', target:'all',
+      id:'wz_open_arcane', name:'古代魔法陣', type:'spec', attr:'魔', target:'all',
       desc:'全体 ⚔️（魔法）Pw:2.5＋特殊耐性-20%（3T）。奇襲時Pw×1.3',
       power:2.5, powerOnSurprise:3.25,
       debuff:{ type:'mres_down', val:-20, turns:3 }
     },
     activeSkills: [
-      { id:'wz_silence', name:'サイレンス', type:'white', target:'single',
+      { id:'wz_silence', name:'サイレンス', type:'spec', attr:'呪', target:'single',
         power:2.5, cd:7, desc:'単体 🔵 Pw:2.5＋沈黙（次スキル封印）',
         debuff:{ type:'silence', val:1, turns:1 } },
-      { id:'wz_meteor', name:'メテオストライク', type:'red', target:'all',
+      { id:'wz_meteor', name:'メテオストライク', type:'spec', attr:'爆', target:'all',
         power:2.0, cd:12, desc:'全体 ⚔️（魔法）Pw:2.0' },
     ],
     passiveSkills: [
@@ -4476,7 +4620,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'wu_starcurse', name:'星天の呪詛',
         effect:'単体✨Pw:3.0＋特殊耐性-25%・特殊耐性-20%（永続）→全体⚔️Pw:2.0＋特殊耐性-20%（3T）。奇襲強制会心',
-        target:'single', power:3.0, type:'black',
+        target:'single', power:3.0, type:'spec', attr:'呪',
         debuff:{ type:'multi_res_down', wres:-25, bres:-20, turns:999 } },
     ],
   },
@@ -4493,7 +4637,7 @@ const CLASS_DATA = {
       effect:{ type:'shield_and_res', shieldRatio:0.20, resType:'wres', resVal:15, turns:3 }
     },
     activeSkills: [
-      { id:'pd_holy_strike', name:'聖光撃', type:'red', target:'single',
+      { id:'pd_holy_strike', name:'聖光撃', type:'spec', attr:'聖', target:'single',
         power:2.0, cd:5, desc:'単体 ⚔️（聖）Pw:2.0＋対象特殊耐性-15%（2T）',
         debuff:{ type:'wres_down', val:-15, turns:2 } },
       { id:'pd_miracle', name:'奇跡の光', type:'buff', target:'all_ally',
@@ -4509,7 +4653,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'pu_divine', name:'天罰の審判',
         effect:'単体⚔️（聖）Pw:6.0強制会心＋全体HP回復×1.5＋全体全耐性+20%（3T）',
-        target:'single', power:6.0, type:'red', forceCrit:true,
+        target:'single', power:6.0, type:'spec', attr:'聖', forceCrit:true,
         allyHeal:{ healRatio:1.5 },
         allyBuff:{ type:'all_res_up', val:20, turns:3 } },
     ],
@@ -4530,10 +4674,10 @@ const CLASS_DATA = {
       ]}
     },
     activeSkills: [
-      { id:'sh_poison_mist', name:'毒霧散布', type:'black', target:'all',
+      { id:'sh_poison_mist', name:'毒霧散布', type:'spec', attr:'呪', target:'all',
         power:0.8, cd:7, desc:'全体 ✨ Pw:0.8＋猛毒（3T・ATK×0.15/行動）',
         debuff:{ type:'lethal_poison', val:15, turns:3 } },
-      { id:'sh_curse', name:'弱体の呪い', type:'black', target:'single',
+      { id:'sh_curse', name:'弱体の呪い', type:'spec', attr:'呪', target:'single',
         power:0.4, cd:5, desc:'単体 ✨ Pw:0.4＋全耐性-20%・ATK-15%（3T）',
         effect:{ type:'multi_debuff', debuffs:[
           { type:'all_res_down', val:-20, turns:3 },
@@ -4549,7 +4693,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'su_grand_curse', name:'大呪詛陣',
         effect:'全体✨Pw:1.5＋全ステータス-20%・全耐性-20%（3T）＋猛毒（5T）',
-        target:'all', power:1.5, type:'black',
+        target:'all', power:1.5, type:'spec', attr:'呪',
         debuff:{ type:'lethal_poison', val:15, turns:5 },
         extraDebuff:{ type:'grand_debuff', val:-20, turns:3 } },
     ],
@@ -4567,10 +4711,10 @@ const CLASS_DATA = {
       effect:{ type:'atk_up_self_dmg', atkVal:30, selfHpCost:10, turns:3, surpriseAtk:50 }
     },
     activeSkills: [
-      { id:'bk_frenzy', name:'狂乱の一撃', type:'red', target:'single',
+      { id:'bk_frenzy', name:'狂乱の一撃', type:'phys', attr:'裂', target:'single',
         power:2.5, cd:5, desc:'単体 ⚔️ Pw:2.5（残HP%が低いほどPw+最大+1.5）',
         scaledByMissingHp:{ maxBonus:1.5 } },
-      { id:'bk_rampage', name:'乱舞斬り', type:'red', target:'random_multi',
+      { id:'bk_rampage', name:'乱舞斬り', type:'phys', attr:'斬', target:'random_multi',
         power:0.9, hits:4, cd:6, desc:'ランダム敵×4 ⚔️ Pw:0.9（低HP時CRI率+20%）',
         lowHpCriBonus:20 },
     ],
@@ -4586,7 +4730,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'bku_bloodstorm', name:'血嵐乱舞',
         effect:'自身HP30%消費→ランダム敵×10 ⚔️ Pw:1.2 強制会心。撃破ごとにATK+8%スタック',
-        power:1.2, type:'red', target:'random_multi', hits:10, forceCrit:true,
+        power:1.2, type:'phys', attr:'裂', target:'random_multi', hits:10, forceCrit:true,
         selfHpCost:30, killAtkStack:8 },
     ],
   },
@@ -4606,7 +4750,7 @@ const CLASS_DATA = {
       { id:'sn_counter_guard', name:'カウンターガード', type:'buff', target:'self',
         power:0, cd:7, desc:'防御姿勢3T（被ダメ-30%・被攻撃時反撃 Pw:0.8）',
         effect:{ type:'counter_stance', dmgReduction:30, counterPower:0.8, turns:3 } },
-      { id:'sn_shield_bash2', name:'大盾突き', type:'red', target:'single',
+      { id:'sn_shield_bash2', name:'大盾突き', type:'phys', attr:'打', target:'single',
         power:1.5, cd:5, desc:'単体 ⚔️ Pw:1.5 ＋ スタン1T',
         debuff:{ type:'stun', val:1, turns:1 } },
     ],
@@ -4642,10 +4786,10 @@ const CLASS_DATA = {
       ]}
     },
     activeSkills: [
-      { id:'sr_snipe', name:'スナイプ', type:'red', target:'single',
+      { id:'sr_snipe', name:'スナイプ', type:'phys', attr:'貫', target:'single',
         power:3.5, cd:7, desc:'単体 ⚔️ Pw:3.5（強制会心）',
         forceCrit:true },
-      { id:'sr_burst', name:'バースト射撃', type:'red', target:'random_multi',
+      { id:'sr_burst', name:'バースト射撃', type:'phys', attr:'貫', target:'random_multi',
         power:0.8, hits:5, cd:5, desc:'ランダム敵×5 ⚔️ Pw:0.8' },
     ],
     passiveSkills: [
@@ -4660,7 +4804,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'sru_deadshot', name:'デッドショット',
         effect:'単体 ⚔️ Pw:8.0 強制会心（CC中+Pw:4.0追加）',
-        power:8.0, type:'red', target:'single', forceCrit:true,
+        power:8.0, type:'phys', attr:'貫', target:'single', forceCrit:true,
         ccBonus:4.0 },
     ],
   },
@@ -4677,10 +4821,10 @@ const CLASS_DATA = {
       effect:{ type:'mp_regen_and_pw_boost', mpRatio:30, pwBoost:50, turns:1 }
     },
     activeSkills: [
-      { id:'cs_chain', name:'チェインマジック', type:'red', target:'all',
+      { id:'cs_chain', name:'チェインマジック', type:'spec', attr:'魔', target:'all',
         power:1.5, cd:8, desc:'全体 ⚔️（魔法）Pw:1.5 ＋ チェイン追撃Pw:0.8',
         chainHit:{ power:0.8 } },
-      { id:'cs_burst', name:'エレメントバースト', type:'black', target:'single',
+      { id:'cs_burst', name:'エレメントバースト', type:'spec', attr:'爆', target:'single',
         power:3.0, cd:6, desc:'単体 ✨ Pw:3.0 ＋ 属性耐性-25% 3T',
         debuff:{ type:'all_res_down', val:-25, turns:3 } },
     ],
@@ -4696,7 +4840,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'csu_catastrophe', name:'カタストロフィ',
         effect:'全体 ⚔️（魔法）Pw:4.0 ＋ 全耐性-30% 3T。奇襲時強制会心',
-        power:4.0, type:'red', target:'all',
+        power:4.0, type:'spec', attr:'爆', target:'all',
         debuff:{ type:'all_res_down', val:-30, turns:3 },
         surpriseForceCrit:true },
     ],
@@ -4714,10 +4858,10 @@ const CLASS_DATA = {
       effect:{ type:'atk_and_next_pw', atkVal:25, nextPwBonus:1.0, turns:2 }
     },
     activeSkills: [
-      { id:'lc_dragon_pierce', name:'竜貫き', type:'red', target:'single',
+      { id:'lc_dragon_pierce', name:'竜貫き', type:'phys', attr:'貫', target:'single',
         power:3.0, cd:5, desc:'単体 ⚔️ Pw:3.0（後列にも50%貫通ダメージ）',
         pierceHit:{ ratio:0.5 } },
-      { id:'lc_moon_slash', name:'円月槍', type:'red', target:'all',
+      { id:'lc_moon_slash', name:'円月槍', type:'phys', attr:'斬', target:'all',
         power:1.2, cd:7, desc:'全体 ⚔️ Pw:1.2 ＋ ATK-15% 2T',
         debuff:{ type:'atk_down', val:-15, turns:2 } },
     ],
@@ -4733,7 +4877,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'lcu_heaven_thrust', name:'皇槍天衝',
         effect:'前衛全体 ⚔️ Pw:4.5（後列に50%貫通）＋ 自身ATK+40%・SPD+20 3T',
-        power:4.5, type:'red', target:'front_row',
+        power:4.5, type:'phys', attr:'貫', target:'front_row',
         pierceHit:{ ratio:0.5 },
         selfBuff:{ atk_up:40, spd_up:20, turns:3 } },
     ],
@@ -4791,13 +4935,13 @@ const CLASS_DATA = {
       effect:{ type:'all_res_down_all', val:-15, turns:3, surpriseVal:-25 }
     },
     activeSkills: [
-      { id:'pf_gravity', name:'重力魔法', type:'black', target:'all',
+      { id:'pf_gravity', name:'重力魔法', type:'spec', attr:'呪', target:'all',
         power:1.0, cd:7, desc:'全体 ✨ Pw:1.0 ＋ SPD-20・ATK-20% 3T',
         effect:{ type:'multi_debuff', debuffs:[
           { type:'spd_down', val:-20, turns:3 },
           { type:'atk_down', val:-20, turns:3 },
         ]}},
-      { id:'pf_amplify', name:'弱体強化', type:'black', target:'single',
+      { id:'pf_amplify', name:'弱体強化', type:'spec', attr:'呪', target:'single',
         power:0, cd:6, desc:'単体のデバフを強化（効果2倍・期間+2T）',
         effect:{ type:'debuff_amplify', multiplier:2, extraTurns:2 } },
     ],
@@ -4813,9 +4957,9 @@ const CLASS_DATA = {
     ultimates: [
       { id:'pfu_forbidden', name:'禁断の理論',
         effect:'単体 ✨ Pw:2.0 ＋ 全ステータス-25%・全耐性-25%（永続）→ 全体 ⚔️ Pw:1.5',
-        power:2.0, type:'black', target:'single',
+        power:2.0, type:'spec', attr:'呪', target:'single',
         debuff:{ type:'grand_debuff_permanent', statVal:-25, resVal:-25, turns:999 },
-        followUp:{ type:'red', target:'all', power:1.5 } },
+        followUp:{ type:'spec', attr:'魔', target:'all', power:1.5 } },
     ],
   },
 
@@ -4850,7 +4994,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'acu_transmutation', name:'完全変成',
         effect:'敵全体のバフを全解除しバフ数×Pw:0.5ダメージ ＋ 味方全体HP完全回復',
-        power:0.5, type:'black', target:'all',
+        power:0.5, type:'spec', attr:'爆', target:'all',
         dispelAndDamage:true, allyFullHeal:true },
     ],
   },
@@ -4868,7 +5012,7 @@ const CLASS_DATA = {
       guaranteeSurprise:true
     },
     activeSkills: [
-      { id:'th_steal', name:'盗む', type:'black', target:'single',
+      { id:'th_steal', name:'盗む', type:'phys', attr:'裂', target:'single',
         power:0.8, cd:5, desc:'単体 ✨ Pw:0.8 ＋ 対象バフを1つ奪取（自身に付与）',
         effect:{ type:'steal_buff', count:1 } },
       { id:'th_decoy', name:'陽動作戦', type:'buff', target:'all_enemy',
@@ -4890,7 +5034,7 @@ const CLASS_DATA = {
     ultimates: [
       { id:'thu_grand_thief', name:'大盗賊の舞い',
         effect:'ランダム敵×8 ✨ Pw:1.0（各攻撃時バフ奪取）＋ 奪ったバフを全て自身に付与',
-        power:1.0, type:'black', target:'random_multi', hits:8,
+        power:1.0, type:'phys', attr:'裂', target:'random_multi', hits:8,
         stealBuff:true, applyStolen:true },
     ],
   },
@@ -13494,8 +13638,8 @@ function triggerShieldBreakPassive(unit, attacker) {
       const dmg  = Math.max(1, Math.floor(unit.atk * pw));
       attacker.hp = Math.max(0, attacker.hp - dmg);
       if (attacker.hp <= 0) attacker.dead = true;
-      spawnBall(unit.uid, attacker.uid, 'red');
-      setTimeout(() => spawnFloatNum(attacker.uid, String(dmg), 'float-dmg-red'), 200);
+      spawnBall(unit.uid, attacker.uid, 'phys');
+      setTimeout(() => spawnFloatNum(attacker.uid, String(dmg), 'float-dmg-phys'), 200);
       addLog(`${unit.name}: [${pe.name}] シールドブレイク反撃 → ${attacker.name}: ${dmg}`, 'trigger');
     }
   });
@@ -14030,7 +14174,8 @@ function executeManualSkill(uid, skillId) {
   }
   if (skillId === '__normal') {
     const equipBonus = getEquipCardBonus(c);
-    doAttack(c, enemies, { id:'normal', name:'通常攻撃', type:'phys', target:'single', power:1.0 + (equipBonus.powerBonus||0) });
+    const _na = getNormalAttackInfo(c);
+    doAttack(c, enemies, { id:'normal', name:'通常攻撃', type:_na.type, attr:_na.attr, target:'single', power:1.0 + (equipBonus.powerBonus||0) });
     gainUltGauge(c, 5);
     renderBattle(); return;
   }
@@ -14750,8 +14895,9 @@ function combatantAct(c, bs) {
       ? (battleState?.allies||[]).filter(x=>!x.dead)
       : (battleState?.enemies||[]).filter(x=>!x.dead);
     if (silFallbackTargets.length) {
+      const _na = getNormalAttackInfo(c);
       doAttack(c, silFallbackTargets,
-        { id:'normal', name:'通常攻撃', type:'phys', target:'single', power:1.0 + (equipBonus.powerBonus||0) });
+        { id:'normal', name:'通常攻撃', type:_na.type, attr:_na.attr, target:'single', power:1.0 + (equipBonus.powerBonus||0) });
     }
     return;
   }
@@ -14809,7 +14955,8 @@ function combatantAct(c, bs) {
     if (paralyzed) {
       addLog(`${c.name}: しびれ中 — 通常攻撃のみ <span class="tag tag-paralysis">PARALYSIS</span>`, 'trigger');
       const equipBonus = getEquipCardBonus(c);
-      doAttack(c, enemies, { id:'normal', name:'通常攻撃', type:'phys', target:'single', power:1.0 + equipBonus.powerBonus });
+      const _na = getNormalAttackInfo(c);
+      doAttack(c, enemies, { id:'normal', name:'通常攻撃', type:_na.type, attr:_na.attr, target:'single', power:1.0 + equipBonus.powerBonus });
       return;
     }
     // Step8-3: 装備カードのアクションスキルをスキルリストに追加
@@ -14850,7 +14997,7 @@ function combatantAct(c, bs) {
         if (tgt) {
           addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${tgt.name}`, 'trigger');
           (sk.effect.debuffs||[]).forEach(db => applyDebuffDirect(tgt, db));
-          spawnSkillNamePop(c.uid, sk.name, 'white'); spawnBall(c.uid, tgt.uid, 'white');
+          spawnSkillNamePop(c.uid, sk.name, 'spec'); spawnBall(c.uid, tgt.uid, 'spec');
         }
         gainUltGauge(c, 8);
       }
@@ -14905,8 +15052,9 @@ function combatantAct(c, bs) {
         return;
       }
     }
+    const _na = getNormalAttackInfo(c);
     const normalSkill = {
-      id:'normal', name:'通常攻撃', type:'phys', target:'single',
+      id:'normal', name:'通常攻撃', type:_na.type, attr:_na.attr, target:'single',
       power: 1.0 + equipBonus.powerBonus,
     };
     if (equipBonus.powerBonus > 0) {
@@ -15001,7 +15149,8 @@ function combatantAct(c, bs) {
   // ===== 味方 tacticsなし / 旧来フォールバックAI =====
   const available = (c.skills||[]).filter(sk => !(c.skillCDs[sk.id] > 0));
   if (!available.length) {
-    doAttack(c, enemies, { id:'normal', name:'通常攻撃', type:'phys', target:'single', power:1.0 });
+    const _na = getNormalAttackInfo(c);
+    doAttack(c, enemies, { id:'normal', name:'通常攻撃', type:_na.type, attr:_na.attr, target:'single', power:1.0 });
     return;
   }
   const hpRatio   = c.hp / c.maxHp;
@@ -15096,12 +15245,8 @@ function spawnBall(fromUid, toUid, type) {
   const colorMap = {
     phys:  { color:'#ff9944', shadow:'rgba(255,153,68,0.7)',   size:10 },
     spec:  { color:'#88aaff', shadow:'rgba(136,170,255,0.8)',  size:10 },
-    red:   { color:'#ff9944', shadow:'rgba(255,153,68,0.7)',   size:10 },
-    white: { color:'#88aaff', shadow:'rgba(136,170,255,0.8)',  size:10 },
-    black: { color:'#ff9944', shadow:'rgba(255,153,68,0.7)',   size:10 },
-    blue:  { color:'#88aaff', shadow:'rgba(136,170,255,0.8)',  size:10 },
-    magic: { color:'#88aaff', shadow:'rgba(136,170,255,0.8)',  size:10 },
     buff:  { color:'#4caf6e', shadow:'rgba(76,175,110,0.7)',   size:8  },
+    heal:  { color:'#4caf6e', shadow:'rgba(76,175,110,0.7)',   size:8  },
     ult:   { color:'#f0cc6e', shadow:'rgba(240,204,110,0.9)',  size:14 },
   };
   const cfg = colorMap[type] || colorMap.phys;
@@ -15165,6 +15310,123 @@ function flashCard(uid, type) {
   void el.offsetWidth;
   el.classList.add(type + '-flash');
   setTimeout(() => el.classList.remove(type + '-flash'), 500);
+}
+
+// 通常攻撃の type/attr マップ（クラスごと）
+const NORMAL_ATTACK_MAP = {
+  warrior:   { type:'phys', attr:'斬' },
+  vanguard:  { type:'phys', attr:'打' },
+  priest:    { type:'spec', attr:'魔' },
+  assassin:  { type:'phys', attr:'斬' },
+  archer:    { type:'phys', attr:'貫' },
+  wizard:    { type:'spec', attr:'魔' },
+  paladin:   { type:'phys', attr:'打' },
+  shaman:    { type:'spec', attr:'呪' },
+  berserker: { type:'phys', attr:'斬' },
+  sentinel:  { type:'phys', attr:'打' },
+  shooter:   { type:'phys', attr:'貫' },
+  caster:    { type:'spec', attr:'魔' },
+  lancer:    { type:'phys', attr:'貫' },
+  minstrel:  { type:'spec', attr:'魔' },
+  professor: { type:'spec', attr:'魔' },
+  alchemist: { type:'spec', attr:'魔' },
+  thief:     { type:'phys', attr:'斬' },
+};
+function getNormalAttackInfo(c) {
+  return NORMAL_ATTACK_MAP[c.classId] || { type:'phys', attr:'打' };
+}
+
+// スキルから attr を推定（enemy スキル等で attr 未指定時のフォールバック）
+function inferSkillAttr(skill, attacker) {
+  if (skill.attr) return skill.attr;
+  const name = skill.name || '';
+  if (/斬|斬撃|切|薙|スラッシュ/.test(name))          return '斬';
+  if (/突|貫|刺|矢|射|スナイプ|アロー|ピアス/.test(name)) return '貫';
+  if (/爆|バースト|メテオ|破裂/.test(name))            return '爆';
+  if (/呪|呪詛|サイレンス|重力/.test(name))            return '呪';
+  if (/裂|裂傷|引き裂|毒刃/.test(name))                return '裂';
+  if (/聖|光|ホーリー/.test(name))                     return '聖';
+  if (skill.type === 'spec') return '魔';
+  return '打';
+}
+
+// 属性ごとのインパクトエフェクトを target カード上に描画
+const _attrFxByUid = {};
+function cancelAttrFx(uid) {
+  if (!uid) return;
+  const rec = _attrFxByUid[uid];
+  if (!rec) return;
+  rec.timers.forEach(t => clearTimeout(t));
+  rec.elements.forEach(el => { try { el.remove(); } catch(_){} });
+  delete _attrFxByUid[uid];
+}
+function registerAttrFx(uid, timer, el) {
+  if (!_attrFxByUid[uid]) _attrFxByUid[uid] = { timers:[], elements:[] };
+  if (timer) _attrFxByUid[uid].timers.push(timer);
+  if (el)    _attrFxByUid[uid].elements.push(el);
+}
+
+function spawnImpactFx(uid, attr, type) {
+  const el = document.getElementById('cc-' + uid);
+  if (!el) return;
+  const arena = document.getElementById('battle-arena');
+  if (!arena) return;
+  const arenaRect = arena.getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
+  const cx = elRect.left - arenaRect.left + elRect.width/2;
+  const cy = elRect.top  - arenaRect.top  + elRect.height/2;
+
+  const fxClassMap = {
+    '斬':'atk-fx-slash', '打':'atk-fx-blunt', '貫':'atk-fx-pierce',
+    '爆':'atk-fx-explode', '魔':'atk-fx-magic', '呪':'atk-fx-curse',
+    '裂':'atk-fx-rend', '聖':'atk-fx-holy',
+  };
+  const fxClass = fxClassMap[attr] || 'atk-fx-blunt';
+  const cssColor = type === 'spec' ? '#88aaff' : '#ff9944';
+
+  if (attr === '聖') {
+    const container = document.createElement('div');
+    container.className = fxClass;
+    container.style.left = cx + 'px';
+    container.style.top  = cy + 'px';
+    for (let i = 0; i < 7; i++) {
+      const p = document.createElement('div');
+      p.className = 'holy-particle';
+      const offX = (Math.random() - 0.5) * 50;
+      const offY = (Math.random() - 0.5) * 30 + 18;
+      p.style.left = (offX + 32) + 'px';
+      p.style.top  = (offY + 32) + 'px';
+      p.style.setProperty('--hx', (Math.random()-0.5)*18 + 'px');
+      p.style.animationDelay = (Math.random() * 0.2) + 's';
+      container.appendChild(p);
+    }
+    arena.appendChild(container);
+    const tid = setTimeout(() => { try { container.remove(); } catch(_){} }, 1100);
+    registerAttrFx(uid, tid, container);
+  } else {
+    const fx = document.createElement('div');
+    fx.className = fxClass;
+    fx.style.left = cx + 'px';
+    fx.style.top  = cy + 'px';
+    fx.style.color = cssColor;
+    arena.appendChild(fx);
+    const tid = setTimeout(() => { try { fx.remove(); } catch(_){} }, 550);
+    registerAttrFx(uid, tid, fx);
+  }
+}
+
+// 攻撃エフェクト（属性別）の総合再生:
+// - attacker と target の既存エフェクトはキャンセル
+// - 飛び道具（ボール）を attacker → target で再生
+// - 到達タイミングで属性インパクトを target に描画
+function playAttrEffect(attacker, target, skill) {
+  const attr = inferSkillAttr(skill, attacker);
+  const type = skill.type === 'buff' ? 'buff' : (skill.type || 'phys');
+  cancelAttrFx(attacker.uid);
+  cancelAttrFx(target.uid);
+  spawnBall(attacker.uid, target.uid, type);
+  const tid = setTimeout(() => spawnImpactFx(target.uid, attr, type), 220);
+  registerAttrFx(target.uid, tid, null);
 }
 
 function doAttack(attacker, targets, skill) {
@@ -15232,7 +15494,7 @@ function doAttack(attacker, targets, skill) {
 
     // Step7a: ブロック判定（物理のみ）
     if (skill.type === 'phys' && rollBlock(target)) {
-      spawnBall(attacker.uid, target.uid, ballType);
+      playAttrEffect(attacker, target, skill);
       setTimeout(() => {
         flashCard(target.uid, 'hit');
         spawnFloatNum(target.uid, 'BLOCK', 'float-buff');
@@ -15244,7 +15506,7 @@ function doAttack(attacker, targets, skill) {
 
     // Step7b: レジスト判定（魔法のみ）
     if (rollResist(target, skill)) {
-      spawnBall(attacker.uid, target.uid, ballType);
+      playAttrEffect(attacker, target, skill);
       setTimeout(() => {
         spawnFloatNum(target.uid, 'RESIST', 'float-debuff');
       }, 200);
@@ -15358,7 +15620,7 @@ function doAttack(attacker, targets, skill) {
     // ダメージカラーマップ
     const dmgColorClass = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
 
-    spawnBall(attacker.uid, target.uid, dmgType);
+    playAttrEffect(attacker, target, skill);
     const hitDelay = 200;
     setTimeout(() => {
       flashCard(target.uid, 'hit');
@@ -16237,14 +16499,14 @@ function computeDmg(attacker, target, skill) {
     return Math.min(90, Math.max(0, res));
   };
 
-  const isSpec = ['spec','white','blue'].includes(dmgType);
+  const isSpec = dmgType === 'spec';
   if (isSpec) {
-    // 特殊ダメージ（spec/white/blue）: mdef耐性
+    // 特殊ダメージ（spec）: mdef耐性
     const mdef = getRes(target.mdef||0, ['mdef_up'], ['mdef_down']);
     const hpDmg = Math.max(minDmg, Math.floor(base * (1 - mdef/100) * staggerMult * nightMult));
     return { hpDmg, dmgType: 'spec' };
   } else {
-    // 物理ダメージ（phys/red/black）: pdef耐性
+    // 物理ダメージ（phys）: pdef耐性
     const pdef = getRes(target.pdef||0, ['pdef_up','rampart','aegis'], ['pdef_down']);
     const hpDmg = Math.max(minDmg, Math.floor(base * (1 - pdef/100) * staggerMult * nightMult));
     return { hpDmg, dmgType: 'phys' };
@@ -16267,7 +16529,7 @@ function rollBlock(target) {
 
 function rollResist(target, skill) {
   // レジスト（特殊スキルのみ）
-  if (!['spec','white','blue'].includes(skill.type)) return false;
+  if (skill.type !== 'spec') return false;
   const resistChance = Math.max(0, ((target.mdef||0) - 20) * 0.3);
   return Math.random() * 100 < resistChance;
 }
@@ -17790,7 +18052,7 @@ function playOneOpeningSkill(action, callback) {
         battleStats.totalDmg += totalDmg;
         battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + totalDmg;
 
-        spawnBall(c.uid, t.uid, dmgType);
+        playAttrEffect(c, t, { type: dmgType, attr: card.attr, name: card.name });
         setTimeout(() => {
           flashCard(t.uid, 'hit');
           const dmgTag = dmgType === 'spec' ? 'tag-dmg-spec' : 'tag-dmg-phys';
