@@ -15249,7 +15249,7 @@ function tickBattle() {
   const all = [...bs.allies, ...bs.enemies].filter(c=>!c.dead);
   all.forEach(c => {
     const flinch = getFlinchMult(c);
-    c.atb += c.spd * 0.02 * flinch;
+    c.atb += c.spd * 0.014 * flinch;
     if (c.atb >= 100) {
       c.atb = 0;
       // スタッガー: 1ターンスキップ → 解除
