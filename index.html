@@ -1896,9 +1896,9 @@ img.item-icon {
   100% { transform: translateY(-44px) scale(0.8); opacity: 0; }
 }
 .float-dmg-phys  { font-size:20px; color:#e07a3a !important; }
-.float-dmg-phys.crit { font-size:26px; }
+.float-dmg-phys.crit { font-size:26px; color:var(--gold2) !important; text-shadow: 0 0 6px rgba(240,204,110,0.7), 0 1px 4px rgba(0,0,0,0.8); }
 .float-dmg-spec  { font-size:20px; color:#7ab4ff !important; animation: specPop 0.9s ease-out forwards; }
-.float-dmg-spec.crit { font-size:26px; }
+.float-dmg-spec.crit { font-size:26px; color:var(--gold2) !important; text-shadow: 0 0 6px rgba(240,204,110,0.7), 0 1px 4px rgba(0,0,0,0.8); }
 .float-dmg-red   { color:#ff7755 !important; }
 .float-dmg-white { color:#88bbff !important; }
 .float-dmg-black { color:#ff7755 !important; }
@@ -15675,8 +15675,7 @@ function doAttack(attacker, targets, skill) {
         if (target._weakSpotStacks < maxSt) {
           target._weakSpotStacks++;
           target.debuffs = target.debuffs||[];
-          target.debuffs.push({ type:'pdef_down', val:-(weakPass.effect.val||5), turns:9999 });
-          setTimeout(() => spawnFloatNum(target.uid, `🔴耐-${weakPass.effect.val||5}%`, 'float-debuff'), 200);
+          target.debuffs.push({ type:'pdef_down', val:-(weakPass.effect.val||5), turns:9999, icon:'⬇物耐', cssClass:'pdef-down' });
         }
       }
     }
