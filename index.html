@@ -4127,7 +4127,7 @@ const CLASS_DATA = {
       effect:{ type:'multi_buff', buffs:[
         { type:'taunt',   val:1,  turns:3 },
         { type:'pdef_up', val:30, turns:3 },
-        { type:'mdef_up', val:30, turns:3 },
+        { type:'mdef_up', val:40, turns:3 },
       ]}
     },
     activeSkills: [
@@ -4135,8 +4135,8 @@ const CLASS_DATA = {
         power:0, cd:6, desc:'物理/特殊耐性+25% 3T',
         effect:{ type:'multi_buff', buffs:[
           { type:'pdef_up', val:25, turns:3 },
-          { type:'mdef_up', val:25, turns:3 },
-          { type:'mdef_up', val:25, turns:3 },
+          { type:'mdef_up', val:35, turns:3 },
+          { type:'mdef_up', val:35, turns:3 },
         ]}
       },
       { id:'vg_shield_bash', name:'シールドバッシュ', type:'phys', target:'single',
@@ -4952,7 +4952,7 @@ const CARDS = {
     effect:{ type:'multi_buff', buffs:[
       { type:'atk_up',  val:30, turns:3 },
       { type:'pdef_up', val:15, turns:3 },
-      { type:'mdef_up', val:15, turns:3 },
+      { type:'mdef_up', val:25, turns:3 },
     ]},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
     desc:'自身 ATK+30%・物理耐性+15%・特殊耐性+15%(3T)',
@@ -4964,7 +4964,7 @@ const CARDS = {
     type:'opening', rarity:1, target:'self',
     effect:{ type:'multi_buff', buffs:[
       { type:'atk_up',  val:20, turns:3 },
-      { type:'mdef_up', val:10, turns:3 },
+      { type:'mdef_up', val:20, turns:3 },
     ], ultGaugeBonus:15 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
     desc:'開幕：ATK+20%・特殊耐性+10%(3T)・ULT+15%',
@@ -5018,7 +5018,7 @@ const CARDS = {
     id:'warrior_passive_tenacity', name:'戦士の執念', class:'warrior', role:'attacker',
     type:'passive', rarity:2,
     effect:{ trigger:'on_lethal', action:{ type:'survive_and_buff',
-      buffs:[ { type:'atk_up', val:30, turns:3 }, { type:'mdef_up', val:20, turns:3 } ],
+      buffs:[ { type:'atk_up', val:30, turns:3 }, { type:'mdef_up', val:30, turns:3 } ],
     }},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
     desc:'致死をHP1で耐える(1戦1回)。耐えた後ATK+30%・特殊耐性+20%(3T)',
@@ -5045,7 +5045,7 @@ const CARDS = {
     type:'opening', rarity:3, target:'all_ally',
     effect:{ type:'multi_buff', buffs:[
       { type:'atk_up',  val:20, turns:3 },
-      { type:'mdef_up', val:10, turns:3 },
+      { type:'mdef_up', val:20, turns:3 },
     ], ultGaugeBonus:15 },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
     desc:'開幕：味方全体 ATK+20%・特殊耐性+10%(3T)・ULT+15%',
@@ -5081,7 +5081,7 @@ const CARDS = {
     type:'support', rarity:1, cd:6, target:'self',
     effect:{ type:'multi_buff', buffs:[
       { type:'damage_reduce', val:20, turns:3 },
-      { type:'mdef_up',       val:10, turns:3 },
+      { type:'mdef_up',       val:20, turns:3 },
     ]},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
     desc:'自身 被ダメ-20%・特殊耐性+10%(3T)',
@@ -5146,7 +5146,7 @@ const CARDS = {
     type:'support', rarity:2, cd:9, target:'all_ally',
     effect:{ type:'multi_buff', buffs:[
       { type:'pdef_up', val:15, turns:3 },
-      { type:'mdef_up', val:15, turns:3 },
+      { type:'mdef_up', val:25, turns:3 },
     ]},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
     desc:'味方全体 物理耐性+15%・特殊耐性+15%(3T)',
@@ -5893,7 +5893,7 @@ const CARDS = {
       { type:'atk_up',     val:40, turns:99 },
       { type:'cri_up',     val:25, turns:99 },
       { type:'spd_up',     val:20, turns:99 },
-      { type:'mdef_up',    val:15, turns:99 },
+      { type:'mdef_up',    val:25, turns:99 },
       { type:'stealth_up', val:30, turns:99 },
     ]},
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
@@ -6313,7 +6313,7 @@ const BABEL_AREAS = [
                 {name:'豪腕殴打',             type:'phys', target:'single',  power:1.4, cd:0}]},
             {hp:48000,
               transitionSkill:{name:'不死の覇気', type:'buff', target:'self',
-                effect:{type:'multi_buff', buffs:[{type:'atk_up',val:50,turns:5},{type:'spd_up',val:35,turns:5},{type:'pdef_up',val:25,turns:5},{type:'mdef_up',val:20,turns:5}]}},
+                effect:{type:'multi_buff', buffs:[{type:'atk_up',val:50,turns:5},{type:'spd_up',val:35,turns:5},{type:'pdef_up',val:25,turns:5},{type:'mdef_up',val:30,turns:5}]}},
               summons:[{count:2, name:'ホブゴブリン', icon:'👹', hp:10000, atk:650, pres:10, mres:5, bres:0, lres:0, spd:72, cri:8,
                 enemySkills:[{name:'激怒の一撃', type:'phys', target:'single', power:2.2, cd:5},{name:'豪腕殴打', type:'phys', target:'single', power:1.6, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]}],
               skills:[
@@ -6470,7 +6470,7 @@ const BABEL_AREAS = [
               {name:'大地砕き', type:'phys', target:'all',    power:1.6, cd:6,  debuff:{type:'paralysis',val:1,turns:1}},
               {name:'踏み潰し', type:'phys', target:'single', power:3.0, cd:4},
               {name:'鱗の砦',   type:'buff', target:'self',   power:0,   cd:8,
-                effect:{type:'multi_buff', buffs:[{type:'pdef_up',val:30,turns:3},{type:'mdef_up',val:20,turns:3}]}},
+                effect:{type:'multi_buff', buffs:[{type:'pdef_up',val:30,turns:3},{type:'mdef_up',val:30,turns:3}]}},
               {name:'噛みつき', type:'phys', target:'single', power:1.4, cd:0}]},
             {hp:92000,
               transitionSkill:{name:'激昂', type:'buff', target:'self',
@@ -6480,7 +6480,7 @@ const BABEL_AREAS = [
                 {name:'踏み潰し・強', type:'phys', target:'lowest_hp', power:3.8, cd:3},
                 {name:'毒液噴射',     type:'phys', target:'all',    power:1.4, cd:7,  debuff:{type:'poison',val:12,turns:3}},
                 {name:'鋼鱗の要塞',   type:'buff', target:'self',   power:0,   cd:6,
-                  effect:{type:'multi_buff', buffs:[{type:'pdef_up',val:40,turns:3},{type:'mdef_up',val:25,turns:3}]}},
+                  effect:{type:'multi_buff', buffs:[{type:'pdef_up',val:40,turns:3},{type:'mdef_up',val:35,turns:3}]}},
                 {name:'噛みつき',     type:'phys', target:'single', power:1.8, cd:0}]},
             {hp:78000,
               transitionSkill:{name:'覚醒の大咆哮', type:'phys', target:'all', power:2.4,
@@ -6492,7 +6492,7 @@ const BABEL_AREAS = [
                 {name:'死の踏み潰し',   type:'phys', target:'lowest_hp', power:5.0, cd:4, debuff:{type:'bleed',val:15,turns:2}},
                 {name:'毒液大噴射',     type:'phys', target:'all',      power:2.0, cd:6, debuff:{type:'strong_poison',val:16,turns:3}},
                 {name:'鋼鱗の要塞・極', type:'buff', target:'self',     power:0,   cd:5,
-                  effect:{type:'multi_buff', buffs:[{type:'pdef_up',val:50,turns:3},{type:'mdef_up',val:30,turns:3}]}},
+                  effect:{type:'multi_buff', buffs:[{type:'pdef_up',val:50,turns:3},{type:'mdef_up',val:40,turns:3}]}},
                 {name:'噛みつき',       type:'phys', target:'single',   power:2.2, cd:0}]}
           ]}]
       ]},
@@ -6821,13 +6821,13 @@ const BABEL_AREAS = [
       { id:'a3s5', name:'結晶の守護', waves:2, enemies:[
         [{name:'クリスタルタートル',icon:'🐢',hp:20000,mp:10000,atk:680,pres:42,mres:35,bres:25,lres:8,spd:38,cri:2,
           enemySkills:[
-            {name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:10,turns:3}]}},
+            {name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:20,turns:3}]}},
             {name:'クリスタルビーム',type:'spec',target:'single',power:0.12,cd:6},
             {name:'結晶フレア',type:'spec',target:'all',power:1.0,cd:9,debuff:{type:'mdef_down',val:-8,turns:2}},
             {name:'甲羅突き',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'クリスタルタートル',icon:'🐢',hp:20000,mp:10000,atk:680,pres:42,mres:35,bres:25,lres:8,spd:38,cri:2,
           enemySkills:[
-            {name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:10,turns:3}]}},
+            {name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:20,turns:3}]}},
             {name:'クリスタルビーム',type:'spec',target:'single',power:0.12,cd:6},
             {name:'甲羅突き',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'スコーピオン',icon:'🦂',hp:8500,mp:5500,atk:680,pres:15,mres:5,bres:5,lres:5,spd:78,cri:10,
@@ -6837,7 +6837,7 @@ const BABEL_AREAS = [
             {name:'尾撃',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'クリスタルタートル',icon:'🐢',hp:20000,mp:10000,atk:680,pres:42,mres:35,bres:25,lres:8,spd:38,cri:2,
           enemySkills:[
-            {name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:10,turns:3}]}},
+            {name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:20,turns:3}]}},
             {name:'クリスタルビーム',type:'spec',target:'single',power:0.12,cd:6},
             {name:'甲羅突き',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'クリスタルゴーレム',icon:'💎',hp:16000,mp:9000,atk:720,pres:40,mres:30,bres:20,lres:45,spd:50,cri:5,
@@ -6974,13 +6974,13 @@ const BABEL_AREAS = [
       { id:'a3s9', name:'貝と棘の要害', waves:2, enemies:[
         [{name:'ロックシェル',icon:'🐚',hp:14000,mp:7000,atk:580,pres:45,mres:20,bres:20,lres:10,spd:42,cri:2,
           enemySkills:[
-            {name:'殻閉じ',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'mdef_up',val:10,turns:3}]}},
+            {name:'殻閉じ',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'mdef_up',val:20,turns:3}]}},
             {name:'殻砕き突進',type:'phys',target:'all',power:1.5,cd:7,hpTrigger:0.5,debuff:{type:'paralysis',val:1,turns:1}},
             {name:'酸分泌',type:'phys',target:'single',power:1.0,cd:6,debuff:{type:'pdef_down',val:-12,turns:2}},
             {name:'殻打ち',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'ロックシェル',icon:'🐚',hp:14000,mp:7000,atk:580,pres:45,mres:20,bres:20,lres:10,spd:42,cri:2,
           enemySkills:[
-            {name:'殻閉じ',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'mdef_up',val:10,turns:3}]}},
+            {name:'殻閉じ',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'mdef_up',val:20,turns:3}]}},
             {name:'殻砕き突進',type:'phys',target:'all',power:1.5,cd:7,hpTrigger:0.5,debuff:{type:'paralysis',val:1,turns:1}},
             {name:'殻打ち',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'スパインラット',icon:'🐀',hp:7800,mp:4000,atk:650,pres:18,mres:5,bres:10,lres:8,spd:92,cri:8,
@@ -6995,12 +6995,12 @@ const BABEL_AREAS = [
             {name:'尾撃',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'ロックシェル',icon:'🐚',hp:14000,mp:7000,atk:580,pres:45,mres:20,bres:20,lres:10,spd:42,cri:2,
           enemySkills:[
-            {name:'殻閉じ',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'mdef_up',val:10,turns:3}]}},
+            {name:'殻閉じ',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'mdef_up',val:20,turns:3}]}},
             {name:'殻砕き突進',type:'phys',target:'all',power:1.5,cd:7,hpTrigger:0.5,debuff:{type:'paralysis',val:1,turns:1}},
             {name:'殻打ち',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'ロックシェル',icon:'🐚',hp:14000,mp:7000,atk:580,pres:45,mres:20,bres:20,lres:10,spd:42,cri:2,
           enemySkills:[
-            {name:'殻閉じ',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'mdef_up',val:10,turns:3}]}},
+            {name:'殻閉じ',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'mdef_up',val:20,turns:3}]}},
             {name:'殻砕き突進',type:'phys',target:'all',power:1.5,cd:7,hpTrigger:0.5,debuff:{type:'paralysis',val:1,turns:1}},
             {name:'酸分泌',type:'phys',target:'single',power:1.0,cd:6,debuff:{type:'pdef_down',val:-12,turns:2}},
             {name:'殻打ち',type:'phys',target:'single',power:1.1,cd:0}]},
@@ -7012,7 +7012,7 @@ const BABEL_AREAS = [
             {name:'踏みつけ',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'クリスタルタートル',icon:'🐢',hp:20000,mp:10000,atk:680,pres:42,mres:35,bres:25,lres:8,spd:38,cri:2,
           enemySkills:[
-            {name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:10,turns:3}]}},
+            {name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:20,turns:3}]}},
             {name:'クリスタルビーム',type:'spec',target:'single',power:0.12,cd:6},
             {name:'甲羅突き',type:'phys',target:'single',power:1.1,cd:0}]}]
       ]},
@@ -7236,7 +7236,7 @@ const BABEL_AREAS = [
             {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'クリスタルタートル',icon:'🐢',hp:20000,mp:10000,atk:680,pres:42,mres:35,bres:25,lres:8,spd:38,cri:2,
           enemySkills:[
-            {name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:10,turns:3}]}},
+            {name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:20,turns:3}]}},
             {name:'クリスタルビーム',type:'spec',target:'single',power:0.12,cd:6},
             {name:'甲羅突き',type:'phys',target:'single',power:1.1,cd:0}]}]
       ]},
@@ -7310,7 +7310,7 @@ const BABEL_AREAS = [
          {name:'クリスタルゴーレム',icon:'💎',hp:16000,mp:9000,atk:720,pres:40,mres:30,bres:20,lres:45,spd:50,cri:5,
           enemySkills:[{name:'結晶砲',type:'spec',target:'all',power:0,cd:8,effect:{type:'blue_hp_mp',hpRatio:0.06,mpRatio:0.06}},{name:'結晶爆散',type:'phys',target:'all',power:1.5,cd:10,hpTrigger:0.5},{name:'結晶拳',type:'phys',target:'single',power:1.6,cd:5},{name:'殴打',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'クリスタルタートル',icon:'🐢',hp:20000,mp:10000,atk:680,pres:42,mres:35,bres:25,lres:8,spd:38,cri:2,
-          enemySkills:[{name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:10,turns:3}]}},{name:'クリスタルビーム',type:'spec',target:'single',power:0.12,cd:6},{name:'甲羅突き',type:'phys',target:'single',power:1.1,cd:0}]},
+          enemySkills:[{name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:20,turns:3}]}},{name:'クリスタルビーム',type:'spec',target:'single',power:0.12,cd:6},{name:'甲羅突き',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'リビングアーマー',icon:'⚔️',hp:20000,mp:7000,atk:900,pres:45,mres:5,bres:30,lres:8,spd:65,cri:8,
           enemySkills:[{name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},{name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'paralysis',val:1,turns:1}},{name:'死の鎧纏い',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:5},{type:'atk_up',val:15,turns:5}]}},{name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},{name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'リビングアーマー',icon:'⚔️',hp:22000,mp:8000,atk:920,pres:45,mres:5,bres:30,lres:8,spd:65,cri:8,
@@ -7349,7 +7349,7 @@ const BABEL_AREAS = [
             {name:'魔力波動・極',     type:'phys', target:'lowest_hp',power:6.0, cd:4},
             {name:'頭突き・極',       type:'phys', target:'single',   power:3.0, cd:0}],
           enemySkills:[
-            {name:'古の封印起動', type:'buff', target:'all_ally', power:0,   cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:25,turns:5},{type:'mdef_up',val:15,turns:5}]}},
+            {name:'古の封印起動', type:'buff', target:'all_ally', power:0,   cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:25,turns:5},{type:'mdef_up',val:25,turns:5}]}},
             {name:'禁断の眼光',   type:'spec', target:'all',      power:2.5, cd:6,  debuff:{type:'paralysis',val:1,turns:1}},
             {name:'死の呪詛',     type:'phys', target:'all',      power:2.0, cd:7,  debuff:{type:'mdef_down',val:-15,turns:3}},
             {name:'魔力波動',     type:'phys', target:'single',   power:4.0, cd:5},
@@ -8205,24 +8205,24 @@ const BABEL_AREAS = [
          {name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
             {name:'炎の吐息',type:'spec',target:'single',power:1.2,cd:5,debuff:{type:'burn',val:8,turns:3}},
-            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:20,turns:3}},
+            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:30,turns:3}},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
             {name:'炎の吐息',type:'spec',target:'single',power:1.2,cd:5,debuff:{type:'burn',val:8,turns:3}},
-            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:20,turns:3}},
+            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:30,turns:3}},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]}]
       ]},
       { id:'a8s3', name:'灼熱の縄張り', waves:3, enemies:[
         [{name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
             {name:'炎の吐息',type:'spec',target:'single',power:1.2,cd:5,debuff:{type:'burn',val:8,turns:3}},
-            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:20,turns:3}},
+            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:30,turns:3}},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
             {name:'炎の吐息',type:'spec',target:'single',power:1.2,cd:5,debuff:{type:'burn',val:8,turns:3}},
-            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:20,turns:3}},
+            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:30,turns:3}},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'イグニス',icon:'🔥',hp:22000,mp:18000,atk:1400,pres:0,mres:20,bres:35,lres:5,spd:88,cri:8,
           enemySkills:[
@@ -8245,12 +8245,12 @@ const BABEL_AREAS = [
         [{name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
             {name:'炎の吐息',type:'spec',target:'single',power:1.2,cd:5,debuff:{type:'burn',val:8,turns:3}},
-            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:20,turns:3}},
+            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:30,turns:3}},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
             {name:'炎の吐息',type:'spec',target:'single',power:1.2,cd:5,debuff:{type:'burn',val:8,turns:3}},
-            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:20,turns:3}},
+            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:30,turns:3}},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'マグマスライム',icon:'🟠',hp:28000,mp:12000,atk:1400,pres:18,mres:12,bres:38,lres:5,spd:62,cri:6,
           enemySkills:[
@@ -8263,12 +8263,12 @@ const BABEL_AREAS = [
         [{name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
             {name:'炎の吐息',type:'spec',target:'single',power:1.2,cd:5,debuff:{type:'burn',val:8,turns:3}},
-            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:20,turns:3}},
+            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:30,turns:3}},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
             {name:'炎の吐息',type:'spec',target:'single',power:1.2,cd:5,debuff:{type:'burn',val:8,turns:3}},
-            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:20,turns:3}},
+            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:30,turns:3}},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ヘルハウンド',icon:'🐕',hp:42000,mp:18000,atk:1650,pres:15,mres:18,bres:30,lres:5,spd:102,cri:12,
           enemySkills:[
@@ -8340,12 +8340,12 @@ const BABEL_AREAS = [
          {name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
             {name:'炎の吐息',type:'spec',target:'single',power:1.2,cd:5,debuff:{type:'burn',val:8,turns:3}},
-            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:20,turns:3}},
+            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:30,turns:3}},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
             {name:'炎の吐息',type:'spec',target:'single',power:1.2,cd:5,debuff:{type:'burn',val:8,turns:3}},
-            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:20,turns:3}},
+            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:30,turns:3}},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'エンバリス',icon:'🦋',hp:20000,mp:14000,atk:1200,pres:5,mres:10,bres:20,lres:0,spd:96,cri:8,
           enemySkills:[
@@ -8550,12 +8550,12 @@ const BABEL_AREAS = [
          {name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
             {name:'炎の吐息',type:'spec',target:'single',power:1.2,cd:5,debuff:{type:'burn',val:8,turns:3}},
-            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:20,turns:3}},
+            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:30,turns:3}},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
             {name:'炎の吐息',type:'spec',target:'single',power:1.2,cd:5,debuff:{type:'burn',val:8,turns:3}},
-            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:20,turns:3}},
+            {name:'熱鱗纏い',type:'buff',target:'self',power:0,cd:8,effect:{type:'mdef_up',val:30,turns:3}},
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'マグナウム',icon:'🐲',hp:52000,mp:20000,atk:1750,pres:20,mres:20,bres:28,lres:8,spd:78,cri:10,
           enemySkills:[
@@ -15652,10 +15652,10 @@ function applyBuff(c, skill, sourceUnit) {
 
   // ===== プリースト: 特殊耐性バフ =====
   if (eff.type === 'heal_mp_and_mres') {
-    c.buffs.push({ type:'mdef_up', val:eff.mresVal||15, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
+    c.buffs.push({ type:'mdef_up', val:eff.mresVal||25, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
-    spawnFloatNum(c.uid, `✨特殊耐性+${eff.mresVal||15}%`, 'float-buff');
-    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 特殊耐性+${eff.mresVal||15}%(${eff.mresTurns||3}T)`, 'trigger');
+    spawnFloatNum(c.uid, `✨特殊耐性+${eff.mresVal||25}%`, 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 特殊耐性+${eff.mresVal||25}%(${eff.mresTurns||3}T)`, 'trigger');
     Audio.buff(); return;
   }
 
@@ -15720,10 +15720,10 @@ function applyBuff(c, skill, sourceUnit) {
     const finalHeal = Math.floor(healAmt * healBonus);
     c.hp = Math.min(c.maxHp, c.hp + finalHeal);
     battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
-    c.buffs.push({ type:'mdef_up', val:eff.mresVal||10, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
+    c.buffs.push({ type:'mdef_up', val:eff.mresVal||20, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
     flashCard(c.uid, 'buff');
     spawnFloatNum(c.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
-    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(finalHeal)} / 特殊耐性+${eff.mresVal||10}%(${eff.mresTurns||3}T)`, 'trigger');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(finalHeal)} / 特殊耐性+${eff.mresVal||20}%(${eff.mresTurns||3}T)`, 'trigger');
     Audio.buff(); return;
   }
 
@@ -15873,7 +15873,7 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'shield_and_mres') {
     const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldVal||0.3) * _slMult);
     applyShield(c, shieldAmt);
-    c.buffs.push({ type:'mdef_up', val:eff.mresVal||8, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
+    c.buffs.push({ type:'mdef_up', val:eff.mresVal||18, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド+${fmt(shieldAmt)} / 特殊耐性+${eff.mresVal}%(${eff.mresTurns}T)`, 'trigger');
     Audio.buff(); return;
@@ -17736,7 +17736,7 @@ function playOneOpeningSkill(action, callback) {
   // ── shield_and_mres ──
   else if (eff.type === 'shield_and_mres') {
     const shAmt = Math.floor(c.atk * (eff.shieldVal || 0.3) * lvMult * bonusMult);
-    const mresVal = Math.round((eff.mresVal || 8) * lvMult * bonusMult);
+    const mresVal = Math.round((eff.mresVal || 18) * lvMult * bonusMult);
     const mresTurns = eff.mresTurns || 3;
     buffTargets.forEach(tgt => {
       applyShield(tgt, shAmt);
@@ -17780,7 +17780,7 @@ function playOneOpeningSkill(action, callback) {
     const healAmt = Math.floor(c.atk * (eff.healRatio||0.8) * lvMult * bonusMult);
     const hb = getBattleHealBonus(c);
     const finalHeal = Math.floor(healAmt * hb);
-    const mresVal = Math.round((eff.mresVal||10) * lvMult * bonusMult);
+    const mresVal = Math.round((eff.mresVal||20) * lvMult * bonusMult);
     const allyTargets = battleState.allies.filter(a=>!a.dead);
     allyTargets.forEach(tgt => {
       tgt.hp = Math.min(tgt.maxHp, tgt.hp + finalHeal);
