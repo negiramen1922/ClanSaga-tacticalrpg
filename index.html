@@ -4862,23 +4862,23 @@ const CLASS_DATA = {
     baseStealth:  5,
     baseHate:    200,
     openingSkill: {
-      id:'pr_open_regen', name:'リジェネレーション', type:'buff', target:'self',
-      desc:'HP再生×0.20/T 3T',
-      effect:{ type:'regen_hp', hpRegenRatio:0.20, turns:3 }
+      id:'pr_open_prayers_song', name:'プレイヤーズソング', type:'buff', target:'all_ally',
+      desc:'味方全体 ATK+10%（3T）＋ HP再生（3T）',
+      effect:{ type:'opening_goddess', atkVal:10, atkTurns:3, hpRegenRatio:0.10, regenTurns:3 }
     },
     activeSkills: [
       { id:'pr_heal', name:'ヒールライト', type:'buff', target:'single',
         power:0, cd:3, desc:'単体HP回復×1.5 + ATK+10% 3T',
         effect:{ type:'heal_and_atk_buff', healRatio:1.5, atkVal:10, atkTurns:3 } },
-      { id:'pr_area', name:'エリアヒール', type:'buff', target:'all_ally',
-        power:0, cd:6, desc:'全体HP回復×1.5 + ATK+10% 2T',
-        effect:{ type:'heal_all_and_atk_buff', healRatio:1.5, atkVal:10, atkTurns:2 } },
+      { id:'pr_sanctuary', name:'サンクチュアリ', type:'buff', target:'all_ally',
+        power:0, cd:7, desc:'味方全体HP回復×1.0 ＋ 全デバフ解除',
+        effect:{ type:'heal_and_cleanse', healRatio:1.0 } },
     ],
     passiveSkills: [
-      { id:'pr_pass_grace', name:'聖なる加護', type:'passive',
+      { id:'pr_pass_grace', name:'ホーリーグレイス', type:'passive',
         desc:'回復量+20%（常時）',
         effect:{ type:'heal_bonus', val:20 } },
-      { id:'pr_pass_goddess', name:'女神の祝福', type:'passive',
+      { id:'pr_pass_goddess', name:'ディヴァインプロテクション', type:'passive',
         desc:'味方全体特殊耐性+10%（常時）',
         effect:{ type:'team_mdef_bonus', val:10 } },
     ],
@@ -12351,6 +12351,10 @@ function launchApp() {
         vg_open_provoke:  'vg_open_iron_guard',
         vg_iron_wall:     'vg_challenge_roar',
       },
+      priest: {
+        pr_open_regen:    'pr_open_prayers_song',
+        pr_area:          'pr_sanctuary',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -15500,6 +15504,32 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
   }
 }
 
+// 味方の classPassives から「チーム全体に常時かかる」効果を集約して適用
+function applyTeamPassives(allies) {
+  if (!allies || !allies.length) return;
+  const liveAllies = allies.filter(a => !a.dead);
+  liveAllies.forEach(holder => {
+    (holder.classPassives||[]).forEach(ps => {
+      // ディヴァインプロテクション系: 味方全体特殊耐性+%
+      if (ps.effect?.type === 'team_mdef_bonus') {
+        const val = ps.effect.val || 10;
+        liveAllies.forEach(target => {
+          target.buffs = target.buffs || [];
+          const exists = target.buffs.some(b => b._teamSource === holder.uid && b.type === 'mdef_up');
+          if (!exists) {
+            target.buffs.push({
+              type:'mdef_up', val, turns:99999,
+              icon:'⬆特殊耐性', cssClass:'mdef-up',
+              isPassive:true, _teamSource: holder.uid
+            });
+          }
+        });
+        addLog(`${holder.name} <span class="tag tag-buff">${ps.name}</span> 味方全体特殊耐性+${val}%`, 'trigger');
+      }
+    });
+  });
+}
+
 function fireOpeningSkills(allies, enemies) {
   if (!battleState) return;
   const scoutOutcome = battleState._scoutOutcome || 'normal';
@@ -15591,6 +15621,8 @@ function startBattle(scoutResult) {
     if (battleState) battleState._scoutOutcome = scoutResult.outcome;
   }
 
+  // チームパッシブ（味方全体に常時バフ）
+  if (battleState) applyTeamPassives(battleState.allies);
   // 開幕スキル発動
   if (battleState) fireOpeningSkills(battleState.allies, battleState.enemies);
 
