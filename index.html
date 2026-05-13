@@ -4813,8 +4813,8 @@ const CLASS_DATA = {
     baseStealth:  3,
     baseHate:    600,
     openingSkill: {
-      id:'vg_open_provoke', name:'プロヴォーク', type:'buff', target:'self',
-      desc:'挑発 + 物理/特殊耐性+30% 3T',
+      id:'vg_open_iron_guard', name:'アイアンガード', type:'buff', target:'self',
+      desc:'挑発 + 物理耐性+30% / 特殊耐性+40%（3T）',
       effect:{ type:'multi_buff', buffs:[
         { type:'taunt',   val:1,  turns:3 },
         { type:'pdef_up', val:30, turns:3 },
@@ -4822,24 +4822,23 @@ const CLASS_DATA = {
       ]}
     },
     activeSkills: [
-      { id:'vg_iron_wall', name:'アイアンウォール', type:'buff', target:'self',
-        power:0, cd:6, desc:'物理/特殊耐性+25% 3T',
+      { id:'vg_challenge_roar', name:'チャレンジロア', type:'buff', target:'self',
+        power:0, cd:7, desc:'自身に挑発（3T）＋ 被ダメ-25%（3T）',
         effect:{ type:'multi_buff', buffs:[
-          { type:'pdef_up', val:25, turns:3 },
-          { type:'mdef_up', val:35, turns:3 },
-          { type:'mdef_up', val:35, turns:3 },
+          { type:'taunt',         val:1,  turns:3 },
+          { type:'damage_reduce', val:25, turns:3 },
         ]}
       },
       { id:'vg_shield_bash', name:'シールドバッシュ', type:'phys', attr:'打', target:'single',
-        power:0.8, cd:4, desc:'単体 ⚔️ Pw:0.8 + 恐怖（ATK-10%）',
-        debuff:{ type:'atk_down', val:-10, turns:3 }
+        power:1.0, cd:5, desc:'単体 ⚔️ Pw:1.0 ＋ スタン（1T）',
+        debuff:{ type:'stun', val:1, turns:1 }
       },
     ],
     passiveSkills: [
-      { id:'vg_pass_guardian', name:'鋼の守護', type:'passive',
+      { id:'vg_pass_guardian', name:'アイアンスキン', type:'passive',
         desc:'被ダメ軽減10%（常時）',
         effect:{ type:'dmg_reduction', val:10 } },
-      { id:'vg_pass_taunt_spirit', name:'挑発の覇気', type:'passive',
+      { id:'vg_pass_taunt_spirit', name:'プロヴォーカー', type:'passive',
         desc:'挑発中ATK+15%',
         effect:{ type:'taunt_atk_bonus', val:15 } },
     ],
@@ -12347,6 +12346,10 @@ function launchApp() {
       warrior: {
         ws_sword_strike:  'ws_triple_slash',
         ws_titan_smash:   'ws_force_impact',
+      },
+      vanguard: {
+        vg_open_provoke:  'vg_open_iron_guard',
+        vg_iron_wall:     'vg_challenge_roar',
       },
     };
     const _skMap = _classSkillMaps[u.classId];
