@@ -5273,35 +5273,41 @@ const CLASS_DATA = {
     baseStats: { atk:680, hp:2900, mp:2400, pres:6, mres:16, bres:8, lres:0, spd:76, cri:6, cridam:140, evade:5 },
     baseSearch: 12, baseStealth: 6, baseHate: 180,
     openingSkill: {
-      id:'mn_open_inspire', name:'鼓舞の歌', type:'buff', target:'all_ally',
-      desc:'味方全体ATK+15%・SPD+10 3T',
-      effect:{ type:'multi_buff_all', buffs:[
+      id:'mn_open_battle_anthem', name:'バトルアンセム', type:'buff', target:'all_ally',
+      desc:'味方全体ATK+15%・SPD+15（3T）',
+      effect:{ type:'multi_buff', buffs:[
         { type:'atk_up', val:15, turns:3 },
-        { type:'spd_up', val:10, turns:3 },
+        { type:'spd_up', val:15, turns:3 },
       ]}
     },
     activeSkills: [
-      { id:'mn_hero_song', name:'英雄の調べ', type:'buff', target:'all_ally',
-        power:0, cd:6, desc:'味方全体ATK+20%・CRI+10% ＋ HP回復×0.8',
-        effect:{ type:'buff_and_heal_all', atkVal:20, atkTurns:3, criVal:10, criTurns:3, healRatio:0.8 } },
-      { id:'mn_rest_melody', name:'安息の旋律', type:'buff', target:'all_ally',
-        power:0, cd:8, desc:'味方全体デバフ解除 ＋ HP再生×0.15/T 3T',
-        effect:{ type:'cleanse_and_regen', regenRatio:0.15, turns:3 } },
+      { id:'mn_orchestral_chant', name:'オーケストラルチャント', type:'buff', target:'all_ally',
+        power:0, cd:8, desc:'味方全体のスキルCD-2',
+        effect:{ type:'cd_reduce_all', val:2 } },
+      { id:'mn_healing_melody', name:'ヒーリングメロディ', type:'buff', target:'all_ally',
+        power:0, cd:7, desc:'味方全体リジェネ（毎T HP+10%、4T）＋ 即時HP+5%',
+        effect:{ type:'heal_and_regen_all', healRatio:0.05, regenVal:10, regenTurns:4 } },
     ],
     passiveSkills: [
-      { id:'mn_pas_resonance', name:'戦歌の共鳴', type:'passive',
-        desc:'味方がスキルを使うたびMP+5%回復（全員）',
-        effect:{ type:'team_mp_on_skill', val:5 } },
-      { id:'mn_pas_ballad', name:'バラードの加護', type:'passive',
-        desc:'味方全体SPD+8（常時）',
-        effect:{ type:'team_spd_bonus', val:8 } },
+      { id:'mn_pas_melody', name:'メロディ', type:'passive',
+        desc:'バフ/回復スキル使用でメロディスタック+1（最大5）。スタック数×10%でバフ・回復の効果が増加',
+        effect:{ type:'melody_stack', maxStacks:5, valBoost:10 } },
+      { id:'mn_pas_polyrhythm', name:'ポリリズム', type:'passive',
+        desc:'バフ/回復スキル使用時、味方全員のATB+10',
+        effect:{ type:'atb_on_buff_skill', val:10 } },
     ],
     skillPool: [],
     ultimates: [
       { id:'mnu_symphony', name:'凱旋の交響曲',
-        effect:'味方全体ATK+40%・全耐性+20%・CRI+20% 3T ＋ 全デバフ解除',
+        effect:'味方全体ATK+30%・CRI+40〜70%(Lvスケール)・被ダメ-20%（3T）＋ リジェネ(3T) ＋ 全デバフ解除',
         power:0, type:'buff', target:'all_ally',
-        buffs:[ { type:'atk_up', val:40, turns:3 }, { type:'all_res_up', val:20, turns:3 }, { type:'cri_up', val:20, turns:3 } ],
+        symphonyBuff:true,
+        buffs:[
+          { type:'atk_up', val:30, turns:3 },
+          { type:'cri_up', val:40, valMax:70, turns:3 },
+          { type:'damage_reduce', val:20, turns:3 },
+          { type:'regen', val:12, turns:3 },
+        ],
         dispelAll:true },
     ],
   },
@@ -12425,6 +12431,13 @@ function launchApp() {
         cs_pas_accel:      'cs_pas_echo',
         csu_catastrophe:   'csu_arcane_storm',
       },
+      minstrel: {
+        mn_open_inspire:   'mn_open_battle_anthem',
+        mn_hero_song:      'mn_orchestral_chant',
+        mn_rest_melody:    'mn_healing_melody',
+        mn_pas_resonance:  'mn_pas_melody',
+        mn_pas_ballad:     'mn_pas_polyrhythm',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -14497,6 +14510,39 @@ function processShieldDamage(target, rawDmg, hpDmg) {
   return { hpDmg: remainHpDmg, shieldBroke: true };
 }
 
+// ミンストレル: メロディスタック増加（自身がバフ/回復スキルを使った時に+1）
+function triggerMelodyStack(caster) {
+  if (!caster || caster.isEnemy) return;
+  const pass = (caster.classPassives||[]).find(p => p.effect?.type === 'melody_stack');
+  if (!pass) return;
+  const maxSt = pass.effect.maxStacks || 5;
+  caster._melodyStacks = Math.min(maxSt, (caster._melodyStacks || 0) + 1);
+  addLog(`${caster.name} <span class="tag tag-buff">メロディ ×${caster._melodyStacks}</span>`, 'trigger');
+}
+
+// ミンストレル: ポリリズム（バフ/回復スキル使用時、味方全員ATB+10）
+function triggerPolyrhythm(caster, allies) {
+  if (!caster || caster.isEnemy) return;
+  const pass = (caster.classPassives||[]).find(p => p.effect?.type === 'atb_on_buff_skill');
+  if (!pass) return;
+  const val = pass.effect.val || 10;
+  (allies||[]).forEach(a => {
+    if (a.dead) return;
+    a.atb = Math.min(100, (a.atb || 0) + val);
+  });
+  addLog(`${caster.name} <span class="tag tag-buff">ポリリズム</span> 味方全員ATB+${val}`, 'trigger');
+}
+
+// メロディスタックによるバフ効果値スケーリング
+function applyMelodyScale(sourceUnit, baseVal) {
+  if (!sourceUnit || sourceUnit.isEnemy) return baseVal;
+  const pass = (sourceUnit.classPassives||[]).find(p => p.effect?.type === 'melody_stack');
+  if (!pass) return baseVal;
+  const stacks = sourceUnit._melodyStacks || 0;
+  const boostPct = stacks * (pass.effect.valBoost || 10);
+  return Math.round(baseVal * (1 + boostPct / 100));
+}
+
 // 回復処理ヘルパー: heal_block デバフで回復量を減らす
 function healUnit(c, amt) {
   if (!c || c.dead || amt <= 0) return 0;
@@ -15219,6 +15265,10 @@ function executeManualSkill(uid, skillId) {
   if (sk.type === 'buff') {
     const buffTargets = resolveBuffTargets(sk, c, allies, enemies);
     addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${buffTargets.map(t=>t.name).join('・')}`, 'trigger');
+    // ミンストレル: メロディスタック+1（バフ/回復系スキル使用時）
+    triggerMelodyStack(c);
+    // ミンストレル: ポリリズム（バフ系スキル使用時、味方全員ATB+10）
+    triggerPolyrhythm(c, allies);
     buffTargets.forEach(tgt => applyBuff(tgt, sk, c));
     gainUltGauge(c, 10);
   } else if (sk.effect?.type === 'debuff_all') {
@@ -15940,6 +15990,8 @@ function tickBattle() {
               a._momentumStacks = 0;
               a.buffs = (a.buffs||[]).filter(b => b._tag !== 'momentum');
             }
+            // ミンストレル: メロディスタックをWAVEリセット
+            if (a._melodyStacks) a._melodyStacks = 0;
           });
           updateTimer();
           renderBattle();
@@ -16073,6 +16125,9 @@ function combatantAct(c, bs) {
         const buffTargets = resolveBuffTargets(sk, c, allies, enemies);
         const tNames = buffTargets.map(t=>t.name).join('・');
         addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${tNames}`, 'trigger');
+        // ミンストレル: メロディスタック・ポリリズム
+        triggerMelodyStack(c);
+        triggerPolyrhythm(c, allies);
         buffTargets.forEach(tgt => applyBuff(tgt, sk, c));
         gainUltGauge(c, 10);
       }
@@ -17137,6 +17192,50 @@ function performUlt(c, enemies, allies) {
     return;
   }
 
+  // ── ミンストレル: 凱旋の交響曲（味方全体バフ＋リジェネ＋デバフ解除、CRI率Lvスケール） ──
+  if (ult.target === 'all_ally' && ult.symphonyBuff) {
+    const liveAllies = allies.filter(a => !a.dead);
+    // メロディスタック+2（必殺発動でスタック増加）
+    triggerMelodyStack(c);
+    triggerMelodyStack(c);
+    triggerPolyrhythm(c, liveAllies);
+    const ultLv = c.ultLv || 1;
+    const interp = (b) => {
+      if (b.valMax === undefined) return b.val;
+      const t = Math.max(0, Math.min(1, (ultLv - 1) / 9));
+      return Math.round(b.val + (b.valMax - b.val) * t);
+    };
+    const iconMap = {
+      atk_up:'⬆ATK', cri_up:'⬆CRI', damage_reduce:'🔽被ダメ↓', regen:'💚再生',
+      spd_up:'⬆SPD', pdef_up:'⬆物理耐性', mdef_up:'⬆特殊耐性',
+    };
+    const cssMap = {
+      atk_up:'atk-up', cri_up:'atk-up', damage_reduce:'hp-up', regen:'hp-up',
+      spd_up:'atk-up', pdef_up:'pdef-up', mdef_up:'mdef-up',
+    };
+    liveAllies.forEach(a => {
+      // デバフ解除
+      if (ult.dispelAll) a.debuffs = (a.debuffs||[]).filter(d => ['max_hp_down'].includes(d.type));
+      (ult.buffs||[]).forEach(b => {
+        const baseVal = interp(b);
+        const scaledVal = applyMelodyScale(c, baseVal);
+        a.buffs.push({
+          type:b.type, val:scaledVal, turns:b.turns,
+          icon: iconMap[b.type]||'⬆', cssClass: cssMap[b.type]||'hp-up',
+        });
+      });
+      spawnBall(c.uid, a.uid, 'ult');
+      setTimeout(() => {
+        flashCard(a.uid, 'buff');
+        spawnFloatNum(a.uid, '🎵交響曲！', 'float-buff');
+      }, 250);
+    });
+    const criBuff = (ult.buffs||[]).find(b => b.type === 'cri_up');
+    const criNow = criBuff ? interp(criBuff) : 0;
+    addLog(`${c.name} 【${ult.name}】味方全体バフ＋CRI+${criNow}%(Lv${ultLv}) ＋ リジェネ ＋ 浄化`, 'trigger');
+    return;
+  }
+
   // ── アイアンフォートレス（味方全体シールド + 自身挑発）──
   if (ult.target === 'all_ally') {
     const liveAllies = allies.filter(a => !a.dead);
@@ -17856,8 +17955,9 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'multi_buff') {
     const buffTypeLabel = { pdef_up:'物理耐性↑', mdef_up:'特殊耐性↑', atk_up:'ATK↑', spd_up:'SPD↑' };
     const details = (eff.buffs||[]).map(b => {
-      (c.buffs=c.buffs||[]).push({ type:b.type, val:b.val, turns:b.turns, icon: iconMap[b.type]||'⬆', cssClass: cssMap[b.type]||'hp-up' });
-      return `${buffTypeLabel[b.type]||b.type}+${b.val} (${b.turns}T)`;
+      const scaledVal = applyMelodyScale(sourceUnit, b.val);
+      (c.buffs=c.buffs||[]).push({ type:b.type, val:scaledVal, turns:b.turns, icon: iconMap[b.type]||'⬆', cssClass: cssMap[b.type]||'hp-up' });
+      return `${buffTypeLabel[b.type]||b.type}+${scaledVal} (${b.turns}T)`;
     }).join(' / ');
     flashCard(c.uid, 'buff');
     spawnSkillNamePop(c.uid, skill.name, 'buff');
@@ -17865,6 +17965,33 @@ function applyBuff(c, skill, sourceUnit) {
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> ${details}`, 'trigger');
     Audio.buff();
     return;
+  }
+
+  // ミンストレル: オーケストラルチャント（味方全体のスキルCD-N）
+  if (eff.type === 'cd_reduce_all') {
+    const reduceVal = eff.val || 2;
+    (c.skillCDs = c.skillCDs || {});
+    Object.keys(c.skillCDs).forEach(k => {
+      if (c.skillCDs[k] > 0) c.skillCDs[k] = Math.max(0, c.skillCDs[k] - reduceVal);
+    });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `🎵CD-${reduceVal}`, 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> スキルCD-${reduceVal}`, 'trigger');
+    Audio.buff(); return;
+  }
+
+  // ミンストレル: ヒーリングメロディ（味方全体に即時HP+リジェネ）
+  if (eff.type === 'heal_and_regen_all') {
+    const healAmt = Math.floor(c.maxHp * (eff.healRatio || 0.05) * _slMult);
+    const scaledHeal = applyMelodyScale(sourceUnit, healAmt);
+    const actualHeal = healUnit(c, scaledHeal);
+    if (actualHeal > 0) battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + actualHeal;
+    const regenVal = applyMelodyScale(sourceUnit, eff.regenVal || 10);
+    c.buffs.push({ type:'regen', val:regenVal, turns:eff.regenTurns||4, icon:'💚再生', cssClass:'hp-up' });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `💚+${fmt(actualHeal)}`, 'float-heal');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(actualHeal)} ＋ 💚再生${regenVal}%/T(${eff.regenTurns||4}T)`, 'trigger');
+    Audio.buff(); return;
   }
 
   // HP回復+シールド同時付与（不滅の要塞）
