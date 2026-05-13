@@ -5236,33 +5236,32 @@ const CLASS_DATA = {
     baseStats: { atk:860, hp:2800, mp:1600, pres:14, mres:10, bres:6, lres:0, spd:84, cri:12, cridam:160, evade:4 },
     baseSearch: 14, baseStealth: 5, baseHate: 350,
     openingSkill: {
-      id:'lc_open_charge', name:'突撃準備', type:'buff', target:'self',
-      desc:'ATK+25% ＋ 次の攻撃Pw+1.0（2T）',
-      effect:{ type:'atk_and_next_pw', atkVal:25, nextPwBonus:1.0, turns:2 }
+      id:'lc_open_charge_lance', name:'チャージランス', type:'phys', attr:'貫', target:'single',
+      power:5.0, cd:0,
+      desc:'単体 ⚔️ Pw:5.0 ＋ 物理耐性-30%（3T）',
+      debuff:{ type:'pdef_down', val:-30, turns:3 }
     },
     activeSkills: [
-      { id:'lc_dragon_pierce', name:'竜貫き', type:'phys', attr:'貫', target:'single',
-        power:3.0, cd:5, desc:'単体 ⚔️ Pw:3.0（後列にも50%貫通ダメージ）',
-        pierceHit:{ ratio:0.5 } },
-      { id:'lc_moon_slash', name:'円月槍', type:'phys', attr:'斬', target:'all',
-        power:1.2, cd:7, desc:'全体 ⚔️ Pw:1.2 ＋ ATK-15% 2T',
+      { id:'lc_dragon_pierce', name:'ドラゴンピアス', type:'phys', attr:'貫', target:'single',
+        power:3.0, cd:5, armorPierce:40,
+        desc:'単体 ⚔️ Pw:3.0 ＋ 物理防御-40%無視' },
+      { id:'lc_moon_slash', name:'円月槍', type:'phys', attr:'斬', target:'random2',
+        power:1.2, cd:7, desc:'ランダム敵2体 ⚔️ Pw:1.2 ＋ ATK-15%（2T）',
         debuff:{ type:'atk_down', val:-15, turns:2 } },
     ],
     passiveSkills: [
-      { id:'lc_pas_momentum', name:'突貫の勢い', type:'passive',
-        desc:'行動後SPD+10スタック（最大5、WAVE後リセット）',
-        effect:{ type:'spd_stack_on_action', val:10, maxStacks:5 } },
-      { id:'lc_pas_pierce', name:'槍の達人', type:'passive',
-        desc:'貫攻撃のダメージ+15%（常時）',
-        effect:{ type:'pierce_dmg_bonus', val:15 } },
+      { id:'lc_pas_momentum', name:'モメンタム', type:'passive',
+        desc:'行動するたびSPD+5（最大4スタック・WAVE後リセット）',
+        effect:{ type:'spd_stack_on_action', val:5, maxStacks:4 } },
+      { id:'lc_pas_velocity', name:'ヴェロシティブースト', type:'passive',
+        desc:'SPDが高いほど攻撃力が上昇',
+        effect:{ type:'spd_to_atk', threshold:80, ratio:1.0 } },
     ],
     skillPool: [],
     ultimates: [
       { id:'lcu_heaven_thrust', name:'皇槍天衝',
-        effect:'前衛全体 ⚔️ Pw:4.5（後列に50%貫通）＋ 自身ATK+40%・SPD+20 3T',
-        power:4.5, type:'phys', attr:'貫', target:'front_row',
-        pierceHit:{ ratio:0.5 },
-        selfBuff:{ atk_up:40, spd_up:20, turns:3 } },
+        effect:'敵全体 ⚔️（貫）Pw:3.0 ＋ 物理防御-40%無視',
+        power:3.0, type:'phys', attr:'貫', target:'all', armorPierce:40 },
     ],
   },
 
@@ -12398,6 +12397,10 @@ function launchApp() {
         as_pass_shadow:    'as_pass_shadow_mastery',
         asu_hunt:          'asu_shadow_hunt',
       },
+      lancer: {
+        lc_open_charge:    'lc_open_charge_lance',
+        lc_pas_pierce:     'lc_pas_velocity',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -15887,7 +15890,14 @@ function tickBattle() {
             return makeCombatant(null, true, e);
           });
           // 味方のATBをリセット（ULT/HP/MPは引き継ぎ）
-          bs.allies.forEach(a => { a.atb = 0; });
+          bs.allies.forEach(a => {
+            a.atb = 0;
+            // ランサー: モメンタム スタックをWAVEリセット
+            if (a._momentumStacks) {
+              a._momentumStacks = 0;
+              a.buffs = (a.buffs||[]).filter(b => b._tag !== 'momentum');
+            }
+          });
           updateTimer();
           renderBattle();
           document.getElementById('battle-wave-info').textContent =
@@ -16890,6 +16900,26 @@ function doAttack(attacker, targets, skill) {
     }
   });
 
+  // ランサー: モメンタム（行動するたびSPDスタック付与）
+  if (!attacker.isEnemy && !skill._isCounter && !skill._isFollowUp && !skill._isCritChain) {
+    const momentumPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='spd_stack_on_action');
+    if (momentumPass) {
+      const cur = attacker._momentumStacks || 0;
+      const maxSt = momentumPass.effect.maxStacks || 4;
+      if (cur < maxSt) {
+        attacker._momentumStacks = cur + 1;
+        const perVal = momentumPass.effect.val || 5;
+        const totalVal = perVal * attacker._momentumStacks;
+        attacker.buffs = (attacker.buffs||[]).filter(b => b._tag !== 'momentum');
+        attacker.buffs.push({
+          type:'spd_up', val: totalVal, turns:99999,
+          icon:'🚀勢い', cssClass:'atk-up', _tag:'momentum'
+        });
+        addLog(`${attacker.name} <span class="tag tag-buff">モメンタム ×${attacker._momentumStacks}</span> SPD+${totalVal}`, 'trigger');
+      }
+    }
+  }
+
   // プロフェッサー: フォロースルー（味方の攻撃時、保持者が確率で同じ敵に追撃）
   if (!attacker.isEnemy && !skill._isCounter && !skill._isFollowUp &&
       ['phys','spec'].includes(skill.type) && (skill.power||0) > 0 && battleState) {
@@ -17875,6 +17905,17 @@ function computeDmg(attacker, target, skill) {
   if (attacker._passiveTargetLock && attacker._passiveTargetLock.lastTargetUid === target.uid) {
     const tl = attacker._passiveTargetLock;
     base *= (1 + Math.min(tl.maxStacks, tl.stacks) * tl.val / 100);
+  }
+  // パッシブ: ヴェロシティブースト（SPDが高いほどATK上昇）
+  const velPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='spd_to_atk');
+  if (velPass) {
+    const threshold = velPass.effect.threshold || 80;
+    const ratio = velPass.effect.ratio || 1.0;
+    const spdBuff = (attacker.buffs||[]).filter(b=>b.type==='spd_up').reduce((s,b)=>s+b.val,0);
+    const spdDebuff = (attacker.debuffs||[]).filter(d=>d.type==='spd_down').reduce((s,d)=>s+d.val,0);
+    const effSpd = (attacker.spd||0) + spdBuff + spdDebuff;
+    const bonus = Math.max(0, effSpd - threshold) * ratio;
+    if (bonus > 0) base *= (1 + bonus / 100);
   }
 
   let power = (skill.power || 1.0) * getSkillLvMult(skill);
