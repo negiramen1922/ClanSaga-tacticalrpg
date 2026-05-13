@@ -4769,7 +4769,7 @@ const CLASS_DATA = {
     role: 'アタッカー',
     species: 'hume',
     attackTypes: ['斬','打'],
-    baseStats: { atk:820, hp:3200, pdef:18, mdef:8, spd:80, cri:8, cridam:150 },
+    baseStats: { atk:820, hp:3200, pdef:18, mdef:8, spd:80, cri:8, cridam:150, evade:3 },
     baseSearch:  10,
     baseStealth:  5,
     baseHate:    400,
@@ -4808,7 +4808,7 @@ const CLASS_DATA = {
     role: 'タンク',
     species: 'hume',
     attackTypes: ['打'],
-    baseStats: { atk:600, hp:4500, pdef:28, mdef:16, spd:60, cri:4, cridam:130 },
+    baseStats: { atk:600, hp:4500, pdef:28, mdef:16, spd:60, cri:4, cridam:130, evade:0 },
     baseSearch:   5,
     baseStealth:  3,
     baseHate:    600,
@@ -4857,7 +4857,7 @@ const CLASS_DATA = {
     role: 'ヒーラー',
     species: 'celestia',
     attackTypes: ['魔'],
-    baseStats: { atk:700, hp:3000, pdef:5, mdef:18, spd:70, cri:5, cridam:140 },
+    baseStats: { atk:700, hp:3000, pdef:5, mdef:18, spd:70, cri:5, cridam:140, evade:3 },
     baseSearch:  10,
     baseStealth:  5,
     baseHate:    200,
@@ -4897,7 +4897,7 @@ const CLASS_DATA = {
     role: 'スカウト',
     species: 'specter',
     attackTypes: ['斬','裂'],
-    baseStats: { atk:950, hp:2000, pdef:5, mdef:5, spd:118, cri:22, cridam:180 },
+    baseStats: { atk:950, hp:2000, pdef:5, mdef:5, spd:118, cri:22, cridam:180, evade:10 },
     baseSearch:  48,
     baseStealth: 45,
     baseHate:    150,
@@ -4940,7 +4940,7 @@ const CLASS_DATA = {
     role: 'レンジ',
     species: 'beast',
     attackTypes: ['貫'],
-    baseStats: { atk:780, hp:2600, pdef:5, mdef:8, spd:85, cri:14, cridam:170 },
+    baseStats: { atk:780, hp:2600, pdef:5, mdef:8, spd:85, cri:14, cridam:170, evade:5 },
     baseSearch:  30,
     baseStealth: 10,
     baseHate:   300,
@@ -4977,7 +4977,7 @@ const CLASS_DATA = {
   wizard: {
     name: 'ウィザード', icon: '🧙', iconImg: 'assets/images/role-ranger.png',
     role: 'レンジ', species: 'hume', attackTypes: ['魔'],
-    baseStats: { atk:850, hp:2400, mp:2200, pres:5, mres:15, bres:3, lres:0, spd:78, cri:10, cridam:155 },
+    baseStats: { atk:850, hp:2400, mp:2200, pres:5, mres:15, bres:3, lres:0, spd:78, cri:10, cridam:155, evade:5 },
     baseSearch: 20, baseStealth: 5, baseHate: 250,
     openingSkill: {
       id:'wz_open_arcane', name:'古代魔法陣', type:'spec', attr:'魔', target:'all',
@@ -5010,7 +5010,7 @@ const CLASS_DATA = {
   paladin: {
     name: 'パラディン', icon: '🛡️', iconImg: 'assets/images/role-vanguard.png',
     role: 'タンク', species: 'celestia', attackTypes: ['突','聖'],
-    baseStats: { atk:700, hp:4200, mp:1800, pres:25, mres:20, bres:10, lres:5, spd:68, cri:6, cridam:145 },
+    baseStats: { atk:700, hp:4200, mp:1800, pres:25, mres:20, bres:10, lres:5, spd:68, cri:6, cridam:145, evade:0 },
     baseSearch: 10, baseStealth: 3, baseHate: 500,
     openingSkill: {
       id:'pd_open_protect', name:'マジックプロテクション', type:'buff', target:'all_ally',
@@ -5044,7 +5044,7 @@ const CLASS_DATA = {
   shaman: {
     name: 'シャーマン', icon: '🔮', iconImg: 'assets/images/class-shaman.png',
     role: 'サポート', species: 'daemon', attackTypes: ['魔','裂'],
-    baseStats: { atk:720, hp:2800, mp:2000, pres:8, mres:18, bres:5, lres:0, spd:75, cri:8, cridam:150 },
+    baseStats: { atk:720, hp:2800, mp:2000, pres:8, mres:18, bres:5, lres:0, spd:75, cri:8, cridam:150, evade:5 },
     baseSearch: 15, baseStealth: 8, baseHate: 200,
     openingSkill: {
       id:'sh_open_fog', name:'呪いの霧', type:'buff', target:'all_enemy',
@@ -5084,7 +5084,7 @@ const CLASS_DATA = {
   berserker: {
     name: 'バーサーカー', icon: '🪓',
     role: 'アタッカー', species: 'beast', attackTypes: ['裂','斬'],
-    baseStats: { atk:920, hp:2500, mp:1600, pres:12, mres:8, bres:5, lres:0, spd:98, cri:16, cridam:175 },
+    baseStats: { atk:920, hp:2500, mp:1600, pres:12, mres:8, bres:5, lres:0, spd:98, cri:16, cridam:175, evade:2 },
     baseSearch: 12, baseStealth: 4, baseHate: 380,
     openingSkill: {
       id:'bk_open_surge', name:'ブラッドサージ', type:'buff', target:'self',
@@ -5121,7 +5121,7 @@ const CLASS_DATA = {
   sentinel: {
     name: 'センチネル', icon: '🗡️',
     role: 'タンク', species: 'hume', attackTypes: ['打','貫'],
-    baseStats: { atk:650, hp:4800, mp:2200, pres:30, mres:16, bres:14, lres:5, spd:55, cri:4, cridam:130 },
+    baseStats: { atk:650, hp:4800, mp:2200, pres:30, mres:16, bres:14, lres:5, spd:55, cri:4, cridam:130, evade:0 },
     baseSearch: 6, baseStealth: 3, baseHate: 620,
     openingSkill: {
       id:'sn_open_guard', name:'ガードスタンス', type:'buff', target:'self',
@@ -5160,7 +5160,7 @@ const CLASS_DATA = {
   shooter: {
     name: 'シューター', icon: '🔫',
     role: 'レンジ', species: 'hume', attackTypes: ['貫'],
-    baseStats: { atk:900, hp:2000, mp:1400, pres:6, mres:8, bres:3, lres:0, spd:92, cri:10, cridam:170 },
+    baseStats: { atk:900, hp:2000, mp:1400, pres:6, mres:8, bres:3, lres:0, spd:92, cri:10, cridam:170, evade:4 },
     baseSearch: 32, baseStealth: 12, baseHate: 280,
     openingSkill: {
       id:'sr_open_bombard', name:'ボムバードゥメント', type:'phys', attr:'貫', target:'all',
@@ -5195,7 +5195,7 @@ const CLASS_DATA = {
   caster: {
     name: 'キャスター', icon: '🌀', iconImg: 'assets/images/class-caster.png',
     role: 'レンジ', species: 'daemon', attackTypes: ['魔'],
-    baseStats: { atk:880, hp:2200, mp:2600, pres:5, mres:16, bres:3, lres:0, spd:72, cri:10, cridam:155 },
+    baseStats: { atk:880, hp:2200, mp:2600, pres:5, mres:16, bres:3, lres:0, spd:72, cri:10, cridam:155, evade:5 },
     baseSearch: 18, baseStealth: 6, baseHate: 220,
     openingSkill: {
       id:'cs_open_charge', name:'魔力充填', type:'buff', target:'self',
@@ -5232,7 +5232,7 @@ const CLASS_DATA = {
   lancer: {
     name: 'ランサー', icon: '🔱', iconImg: 'assets/images/class-lancer.png',
     role: 'アタッカー', species: 'beast', attackTypes: ['貫','斬'],
-    baseStats: { atk:860, hp:2800, mp:1600, pres:14, mres:10, bres:6, lres:0, spd:84, cri:12, cridam:160 },
+    baseStats: { atk:860, hp:2800, mp:1600, pres:14, mres:10, bres:6, lres:0, spd:84, cri:12, cridam:160, evade:4 },
     baseSearch: 14, baseStealth: 5, baseHate: 350,
     openingSkill: {
       id:'lc_open_charge', name:'突撃準備', type:'buff', target:'self',
@@ -5269,7 +5269,7 @@ const CLASS_DATA = {
   minstrel: {
     name: 'ミンストレル', icon: '🎵', iconImg: 'assets/images/class-minstrel.png',
     role: 'サポート', species: 'celestia', attackTypes: ['魔'],
-    baseStats: { atk:680, hp:2900, mp:2400, pres:6, mres:16, bres:8, lres:0, spd:76, cri:6, cridam:140 },
+    baseStats: { atk:680, hp:2900, mp:2400, pres:6, mres:16, bres:8, lres:0, spd:76, cri:6, cridam:140, evade:5 },
     baseSearch: 12, baseStealth: 6, baseHate: 180,
     openingSkill: {
       id:'mn_open_inspire', name:'鼓舞の歌', type:'buff', target:'all_ally',
@@ -5309,7 +5309,7 @@ const CLASS_DATA = {
   professor: {
     name: 'プロフェッサー', icon: '📚', iconImg: 'assets/images/class-professor.png',
     role: 'レンジ', species: 'hume', attackTypes: ['魔'],
-    baseStats: { atk:820, hp:2300, mp:2800, pres:5, mres:14, bres:3, lres:0, spd:70, cri:9, cridam:150 },
+    baseStats: { atk:820, hp:2300, mp:2800, pres:5, mres:14, bres:3, lres:0, spd:70, cri:9, cridam:150, evade:4 },
     baseSearch: 22, baseStealth: 5, baseHate: 200,
     openingSkill: {
       id:'pf_open_battle_order', name:'バトルオーダー', type:'buff', target:'all_ally',
@@ -5349,7 +5349,7 @@ const CLASS_DATA = {
   alchemist: {
     name: 'アルケミスト', icon: '⚗️',
     role: 'サポート', species: 'hume', attackTypes: ['魔'],
-    baseStats: { atk:700, hp:3100, mp:2600, pres:6, mres:14, bres:6, lres:0, spd:74, cri:5, cridam:140 },
+    baseStats: { atk:700, hp:3100, mp:2600, pres:6, mres:14, bres:6, lres:0, spd:74, cri:5, cridam:140, evade:4 },
     baseSearch: 14, baseStealth: 6, baseHate: 190,
     openingSkill: {
       id:'ac_open_brew', name:'賢者の調合', type:'buff', target:'all_ally',
@@ -5385,7 +5385,7 @@ const CLASS_DATA = {
   thief: {
     name: 'シーフ', icon: '🃏',
     role: 'スカウト', species: 'specter', attackTypes: ['斬','裂'],
-    baseStats: { atk:870, hp:2100, mp:1800, pres:5, mres:6, bres:8, lres:0, spd:112, cri:18, cridam:178 },
+    baseStats: { atk:870, hp:2100, mp:1800, pres:5, mres:6, bres:8, lres:0, spd:112, cri:18, cridam:178, evade:8 },
     baseSearch: 44, baseStealth: 40, baseHate: 160,
     openingSkill: {
       id:'th_open_shadow_run', name:'影走り', type:'opening', target:'self',
@@ -13604,6 +13604,7 @@ function calcStats(unit) {
   let mdef   = base.mdef || 0;
   let cri    = base.cri;
   let cridam = base.cridam;
+  let evade  = base.evade || 0;
   // パッシブ加算（すべてフラットまたは%）
   (unit.passives||[]).forEach(p => {
     const pd = PASSIVE_POOL.find(x=>x.id===p.id);
@@ -13650,6 +13651,7 @@ function calcStats(unit) {
     mdef: Math.min(mdef, 99),
     cri,
     cridam,
+    evade,
   };
 }
 
@@ -15455,6 +15457,7 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       maxHp: hp, hp: hp,
       atk, pdef, mdef,
       spd, cri: stats.cri + passiveCri, cridam: stats.cridam,
+      evade: stats.evade || 0,
       search:  cls2?.baseSearch  ?? 10,
       stealth: (cls2?.baseStealth ?? 5) + passiveStealth,
       hate:    isLeader ? Math.floor((cls2?.baseHate ?? 400) * 1.5) : (cls2?.baseHate ?? 400),
@@ -16514,6 +16517,26 @@ function doAttack(attacker, targets, skill) {
     const coverInfo = resolveCoverTarget(target, battleState);
     const coverTarget = coverInfo.coverTarget;
     const coverRatio  = coverInfo.coverRatio || 0.8;
+
+    // Step7-pre: 命中判定（バフ・デバフ・夜戦ペナルティ・回避ステ）
+    if (!skill._isCounter && !skill._isFollowUp && skill.type !== 'buff' && (skill.power||0) > 0) {
+      let hitMod = 0;
+      hitMod += (attacker.buffs||[]).filter(b=>b.type==='hit_up').reduce((s,b)=>s+b.val,0);
+      hitMod += (attacker.debuffs||[]).filter(d=>d.type==='hit_down').reduce((s,d)=>s+d.val,0);
+      if (attacker.nightHitPenalty) hitMod += attacker.nightHitPenalty;
+      let evadeMod = (target.evade || 0);
+      evadeMod += (target.buffs||[]).filter(b=>b.type==='evade_up').reduce((s,b)=>s+b.val,0);
+      const evasionPass = (target.classPassives||[]).find(p=>p.effect?.type==='evasion_bonus');
+      if (evasionPass) evadeMod += (evasionPass.effect.val||0);
+      const hitRate = 100 + hitMod - evadeMod;
+      if (hitRate < 100 && Math.random() * 100 > hitRate) {
+        playAttrEffect(attacker, target, skill);
+        setTimeout(() => spawnFloatNum(target.uid, 'MISS', 'float-debuff'), 200);
+        addLog(`${attacker.name} → ${target.name}: <span class="tag tag-resist">MISS</span>`, 'damage');
+        gainUltGauge(attacker, 2);
+        return;
+      }
+    }
 
     // Step7a: ブロック判定（物理のみ）
     if (skill.type === 'phys' && rollBlock(target)) {
