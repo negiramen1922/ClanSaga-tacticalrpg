@@ -5124,32 +5124,35 @@ const CLASS_DATA = {
     baseStats: { atk:650, hp:4800, mp:2200, pres:30, mres:16, bres:14, lres:5, spd:55, cri:4, cridam:130 },
     baseSearch: 6, baseStealth: 3, baseHate: 620,
     openingSkill: {
-      id:'sn_open_ironwall', name:'鉄壁展開', type:'buff', target:'all_ally',
-      desc:'味方全体シールド（最大HP15%）＋自身に挑発 2T',
-      effect:{ type:'shield_and_self_taunt', shieldRatio:0.15, tauntTurns:2 }
+      id:'sn_open_guard', name:'ガードスタンス', type:'buff', target:'self',
+      desc:'挑発(3T)＋被ダメ-25%(3T)',
+      effect:{ type:'multi_buff', buffs:[
+        { type:'taunt',         val:1,  turns:3 },
+        { type:'damage_reduce', val:25, turns:3 },
+      ]}
     },
     activeSkills: [
-      { id:'sn_counter_guard', name:'カウンターガード', type:'buff', target:'self',
-        power:0, cd:7, desc:'防御姿勢3T（被ダメ-30%・被攻撃時反撃 Pw:0.8）',
-        effect:{ type:'counter_stance', dmgReduction:30, counterPower:0.8, turns:3 } },
-      { id:'sn_shield_bash2', name:'大盾突き', type:'phys', attr:'打', target:'single',
+      { id:'sn_counter_parry', name:'カウンターパリィ', type:'buff', target:'self',
+        power:0, cd:5, desc:'カウンター状態(3T・反撃Pw0.8)＋被ダメ-30%(3T)＋挑発(3T)',
+        effect:{ type:'counter_stance', counterVal:80, counterTurns:3, dmgReduction:30, dmgReduceTurns:3, tauntTurns:3 } },
+      { id:'sn_shield_smash', name:'シールドスマッシュ', type:'phys', attr:'打', target:'single',
         power:1.5, cd:5, desc:'単体 ⚔️ Pw:1.5 ＋ スタン1T',
         debuff:{ type:'stun', val:1, turns:1 } },
     ],
     passiveSkills: [
-      { id:'sn_pas_fort', name:'不動の砦', type:'passive',
-        desc:'HP70%以上のとき受けるダメージ-20%',
-        effect:{ type:'high_hp_reduction', hpThreshold:70, val:20 } },
-      { id:'sn_pas_guard', name:'守護の誓い', type:'passive',
-        desc:'味方が致死ダメージを受けた時、代わりに受ける（CD10）',
-        effect:{ type:'intercept_fatal', cd:10 } },
+      { id:'sn_pas_iron_force', name:'アイアンフォース', type:'passive',
+        desc:'HP70%以上のとき被ダメ-15%',
+        effect:{ type:'high_hp_reduction', hpThreshold:70, val:15 } },
+      { id:'sn_pas_vanguardian', name:'ヴァンガーディアン', type:'passive',
+        desc:'味方が致死ダメージを受けた時、代わりに受ける（戦闘中1回）',
+        effect:{ type:'intercept_fatal' } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'snu_fortress', name:'不壊の要塞',
-        effect:'自身に完全無敵2T＋味方全体シールド（最大HP40%）＋全耐性+30% 3T',
-        power:0, type:'buff', target:'all_ally',
-        selfInvincible:2, shieldRatio:0.40, allResUp:30, resTurns:3 },
+      { id:'snu_impenetrable', name:'インペネトラブル',
+        effect:'自身被ダメ99%カット(2T)＋味方全体シールド(maxHP20%)＋自身挑発(3T)',
+        power:0, type:'buff', target:'self',
+        effect2:{ type:'impenetrable', selfReduce:99, selfReduceTurns:2, shieldRatio:0.20, tauntTurns:3 } },
     ],
   },
 
@@ -12371,6 +12374,13 @@ function launchApp() {
         pd_pas_heal:      'pd_pas_brand',
         pd_pas_bres:      'pd_pas_unbreakable',
       },
+      sentinel: {
+        sn_open_ironwall: 'sn_open_guard',
+        sn_counter_guard: 'sn_counter_parry',
+        sn_shield_bash2:  'sn_shield_smash',
+        sn_pas_fort:      'sn_pas_iron_force',
+        sn_pas_guard:     'sn_pas_vanguardian',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -16646,6 +16656,30 @@ function doAttack(attacker, targets, skill) {
     }, hitDelay);
 
     if (target.hp <= 0) {
+      // センチネル: ヴァンガーディアン（味方致死ダメ庇い、戦闘中1回）
+      if (!target.isEnemy) {
+        const interceptor = (battleState?.allies||[]).find(a =>
+          !a.dead && a.hp > 0 && a.uid !== target.uid &&
+          !a._interceptUsed &&
+          (a.classPassives||[]).some(p=>p.effect?.type==='intercept_fatal')
+        );
+        if (interceptor) {
+          const overflow = (-target.hp) + 1;
+          target.hp = 1;
+          interceptor.hp = Math.max(0, interceptor.hp - overflow);
+          interceptor._interceptUsed = true;
+          flashCard(interceptor.uid, 'hit');
+          spawnFloatNum(interceptor.uid, `🛡️庇う -${overflow}`, 'float-dmg-phys');
+          addLog(`🛡️ <b>${interceptor.name}</b> <span class="tag tag-buff">ヴァンガーディアン！</span> ${target.name}を庇った（${overflow}ダメ肩代わり）`, 'trigger');
+          if (interceptor.hp <= 0) {
+            interceptor.hp = 0; interceptor.dead = true;
+            setTimeout(() => spawnFloatNum(interceptor.uid, 'DEFEAT', 'float-defeat'), hitDelay + 80);
+            addLog(`${interceptor.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+          }
+        }
+      }
+    }
+    if (target.hp <= 0) {
       // パラディン: アンブレイカブル（致死ダメージをHP1で耐える、戦闘中1回）
       if (!target.isEnemy && !target._unbreakableUsed) {
         const unbPass = (target.classPassives||[]).find(p=>p.effect?.type==='unbreakable');
@@ -16744,6 +16778,26 @@ function doAttack(attacker, targets, skill) {
       const shieldAmt = Math.floor(attacker.atk * (skill.effect.shieldSelf.ratio||0.5));
       applyShield(attacker, shieldAmt);
     }
+
+    // カウンター反撃（被攻撃側に counter バフがあれば自動反撃）
+    if (!skill._isCounter && !target.dead && target.hp > 0 && !attacker.dead) {
+      const counterBuff = (target.buffs||[]).find(b => b.type === 'counter');
+      if (counterBuff && attacker.isEnemy !== target.isEnemy) {
+        const counterPower = (counterBuff.val || 80) / 100;
+        const firstAttr = target.attackTypes?.[0] || '打';
+        const counterType = (firstAttr === '魔' || firstAttr === '聖' || firstAttr === '闇') ? 'spec' : 'phys';
+        const counterSkill = {
+          name: 'カウンター', type: counterType, attr: firstAttr,
+          target: 'single', power: counterPower, _isCounter: true,
+        };
+        setTimeout(() => {
+          if (!attacker.dead && !target.dead) {
+            addLog(`${target.name} <span class="tag tag-trigger">↩カウンター</span> → ${attacker.name}`, 'trigger');
+            doAttack(target, [attacker], counterSkill);
+          }
+        }, 250);
+      }
+    }
   });
 }
 
@@ -16760,6 +16814,12 @@ function performUlt(c, enemies, allies) {
   Audio.ult();
 
   const liveEnemies = enemies.filter(e => !e.dead);
+
+  // ── センチネル: インペネトラブル（自身被ダメ99%カット＋全体シールド＋自身挑発）──
+  if (ult.effect2?.type === 'impenetrable') {
+    applyBuff(c, { name: ult.name, effect: ult.effect2 }, c);
+    return;
+  }
 
   // ── ラグナロクスラッシュ（前衛列攻撃 + 自己バフ先付与）──
   if (ult.target === 'front_row') {
@@ -17076,6 +17136,44 @@ function applyBuff(c, skill, sourceUnit) {
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド <span class="tag tag-buff">+${fmt(shieldAmt)}</span>${turnStr}`, 'trigger');
     Audio.buff();
     return;
+  }
+
+  // ===== センチネル: カウンターパリィ（カウンター状態＋被ダメ軽減＋挑発）=====
+  if (eff.type === 'counter_stance') {
+    const counterVal = eff.counterVal || 80;
+    const counterTurns = eff.counterTurns || 3;
+    const dmgRed = eff.dmgReduction || 30;
+    const dmgRedTurns = eff.dmgReduceTurns || 3;
+    const tauntTurns = eff.tauntTurns || 3;
+    c.buffs.push({ type:'counter',       val:counterVal, turns:counterTurns, icon:'↩反撃',     cssClass:'atk-up' });
+    c.buffs.push({ type:'damage_reduce', val:dmgRed,     turns:dmgRedTurns,  icon:'🔽被ダメ↓', cssClass:'hp-up' });
+    c.buffs.push({ type:'taunt',         val:1,          turns:tauntTurns,    icon:'👊挑発',    cssClass:'atk-up' });
+    flashCard(c.uid, 'buff');
+    spawnSkillNamePop(c.uid, skill.name, 'buff');
+    spawnFloatNum(c.uid, '↩カウンター!', 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> ↩反撃Pw${(counterVal/100).toFixed(1)}(${counterTurns}T) / 🔽被ダメ-${dmgRed}%(${dmgRedTurns}T) / 👊挑発(${tauntTurns}T)`, 'trigger');
+    Audio.buff(); return;
+  }
+
+  // ===== センチネル必殺: インペネトラブル（自身被ダメ99%カット＋全体シールド＋自身挑発）=====
+  if (eff.type === 'impenetrable' || skill.effect2?.type === 'impenetrable') {
+    const e = eff.type==='impenetrable' ? eff : skill.effect2;
+    const selfReduce = e.selfReduce || 99;
+    const selfReduceTurns = e.selfReduceTurns || 2;
+    const shieldRatio = e.shieldRatio || 0.20;
+    const tauntTurns = e.tauntTurns || 3;
+    c.buffs.push({ type:'damage_reduce', val:selfReduce, turns:selfReduceTurns, icon:'🛡️鉄壁',  cssClass:'hp-up' });
+    c.buffs.push({ type:'taunt',         val:1,          turns:tauntTurns,      icon:'👊挑発',  cssClass:'atk-up' });
+    (battleState?.allies||[]).filter(a=>!a.dead).forEach(a => {
+      const amt = Math.floor(a.maxHp * shieldRatio * _slMult);
+      applyShield(a, amt);
+      spawnFloatNum(a.uid, `🛡️+${fmt(amt)}`, 'float-buff');
+    });
+    flashCard(c.uid, 'buff');
+    spawnSkillNamePop(c.uid, skill.name, 'buff');
+    spawnFloatNum(c.uid, '🛡️INPENETRABLE', 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡️被ダメ-${selfReduce}%(${selfReduceTurns}T) / 全体🛡シールド+${Math.floor(shieldRatio*100)}% / 👊挑発(${tauntTurns}T)`, 'trigger');
+    Audio.buff(); return;
   }
 
   // ===== パラディン: ブレッシングオブライト（自身大ヒール+リジェネ／味方小ヒール）=====
@@ -17599,7 +17697,16 @@ function computeDmg(attacker, target, skill) {
   const reduceBuff  = (target.buffs||[]).filter(b=>b.type==='damage_reduce').reduce((s,b)=>s+b.val,0);
   const reduceDebuf = (target.debuffs||[]).filter(d=>d.type==='reduce').reduce((s,d)=>s+d.val,0);
   const totalReduce = reduceBuff - reduceDebuf;
-  if (totalReduce > 0) base *= (1 - Math.min(0.8, totalReduce/100));
+  if (totalReduce > 0) base *= (1 - Math.min(0.99, totalReduce/100));
+
+  // パッシブ: アイアンフォース（HP閾値以上で被ダメ減少）
+  const ironForcePass = (target.classPassives||[]).find(p=>p.effect?.type==='high_hp_reduction');
+  if (ironForcePass) {
+    const eff2 = ironForcePass.effect;
+    if (target.hp / target.maxHp >= (eff2.hpThreshold||70)/100) {
+      base *= (1 - (eff2.val||15)/100);
+    }
+  }
 
   // スタッガーボーナス
   const staggerMult = target.staggered ? 1.3 : 1.0;
