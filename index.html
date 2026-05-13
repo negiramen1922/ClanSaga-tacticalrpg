@@ -4924,8 +4924,8 @@ const CLASS_DATA = {
     species: 'hume',
     attackTypes: ['斬','打'],
     baseStats: { atk:820, hp:3200, pdef:18, mdef:8, spd:80, cri:8, cridam:150, evade:3 },
-    baseSearch:  10,
-    baseStealth:  5,
+    baseSearch:  6,
+    baseStealth:  3,
     baseHate:    400,
     openingSkill: {
       id:'ws_open_cry', name:'バトルクライ', type:'buff', target:'self',
@@ -4963,8 +4963,8 @@ const CLASS_DATA = {
     species: 'hume',
     attackTypes: ['打'],
     baseStats: { atk:600, hp:4500, pdef:28, mdef:16, spd:60, cri:4, cridam:130, evade:0 },
-    baseSearch:   5,
-    baseStealth:  3,
+    baseSearch:   3,
+    baseStealth:  1,
     baseHate:    600,
     openingSkill: {
       id:'vg_open_iron_guard', name:'アイアンガード', type:'buff', target:'self',
@@ -5135,29 +5135,31 @@ const CLASS_DATA = {
     baseStats: { atk:850, hp:2400, mp:2200, pres:5, mres:15, bres:3, lres:0, spd:78, cri:10, cridam:155, evade:5 },
     baseSearch: 20, baseStealth: 5, baseHate: 250,
     openingSkill: {
-      id:'wz_open_arcane', name:'古代魔法陣', type:'spec', attr:'魔', target:'all',
-      desc:'全体 ⚔️（魔法）Pw:2.5＋特殊耐性-20%（3T）。奇襲時Pw×1.3',
-      power:2.5, powerOnSurprise:3.25,
-      debuff:{ type:'mres_down', val:-20, turns:3 }
+      id:'wz_open_meteor_shower', name:'メテオシャワー', type:'spec', attr:'爆', target:'random_multi',
+      power:0.5, hits:10, cd:0,
+      desc:'ランダム敵に ✨（爆）Pw:0.5 × 10連射'
     },
     activeSkills: [
-      { id:'wz_silence', name:'サイレンス', type:'spec', attr:'呪', target:'single',
-        power:2.5, cd:7, desc:'単体 🔵 Pw:2.5＋沈黙（次スキル封印）',
-        debuff:{ type:'silence', val:1, turns:1 } },
-      { id:'wz_meteor', name:'メテオストライク', type:'spec', attr:'爆', target:'all',
-        power:2.0, cd:12, desc:'全体 ⚔️（魔法）Pw:2.0' },
+      { id:'wz_arcane_bolt', name:'アーケインボルト', type:'spec', attr:'魔', target:'single',
+        power:4.0, cd:7, desc:'単体 ✨ Pw:4.0 ＋ スロー（2T）',
+        debuff:{ type:'slow', val:1, turns:2 } },
+      { id:'wz_frost_lance', name:'フロストランス', type:'spec', attr:'魔', target:'single',
+        power:3.5, cd:6, magicPierce:30,
+        desc:'単体 ✨ Pw:3.5 ＋ 特殊耐性30%貫通' },
     ],
     passiveSkills: [
-      { id:'wz_pas_stack', name:'魔力集中', effect:'行動するたびに次スキルPw+15%スタック（最大3）',
-        effect:{ type:'power_stack', val:15, max:3 } },
-      { id:'wz_pas_bigcd', name:'蓄積魔力', effect:'CD10以上のスキル使用時ATK+10%（3T）自動付与',
-        effect:{ type:'high_cd_atk', threshold:10, val:10, turns:3 } },
+      { id:'wz_pas_focus', name:'魔力集中', type:'passive',
+        desc:'行動するたび次スキルのPw+0.2（最大3スタック、攻撃で消費）',
+        effect:{ type:'power_stack_on_action', val:0.2, maxStacks:3 } },
+      { id:'wz_pas_resonance', name:'魔力共鳴', type:'passive',
+        desc:'特殊攻撃を受けるたびATK+5%スタック（最大5スタック）',
+        effect:{ type:'atk_on_special_hit', val:5, maxStacks:5 } },
     ],
     ultimates: [
-      { id:'wu_starcurse', name:'星天の呪詛',
-        effect:'単体✨Pw:3.0＋特殊耐性-25%・特殊耐性-20%（永続）→全体⚔️Pw:2.0＋特殊耐性-20%（3T）。奇襲強制会心',
-        target:'single', power:3.0, type:'spec', attr:'呪',
-        debuff:{ type:'multi_res_down', wres:-25, bres:-20, turns:5 } },
+      { id:'wu_arcane_nova', name:'アーケインノヴァ',
+        effect:'中心の敵に ✨魔 Pw:7.0 ／ 隣接 Pw:5.0 ／ 隣々接 Pw:3.0',
+        target:'splash_center', power:7.0, type:'spec', attr:'魔',
+        splashPws:{ 0:7.0, 1:5.0, 2:3.0 } },
     ],
   },
 
@@ -5166,7 +5168,7 @@ const CLASS_DATA = {
     name: 'パラディン', icon: '🛡️', iconImg: 'assets/images/role-vanguard.png',
     role: 'タンク', species: 'celestia', attackTypes: ['突','聖'],
     baseStats: { atk:700, hp:4200, mp:1800, pres:25, mres:20, bres:10, lres:5, spd:68, cri:6, cridam:145, evade:0 },
-    baseSearch: 10, baseStealth: 3, baseHate: 500,
+    baseSearch: 5, baseStealth: 2, baseHate: 500,
     openingSkill: {
       id:'pd_open_protect', name:'マジックプロテクション', type:'buff', target:'all_ally',
       desc:'全体シールド（最大HP20%）＋全体特殊耐性+15%（3T）',
@@ -5202,36 +5204,38 @@ const CLASS_DATA = {
     baseStats: { atk:720, hp:2800, mp:2000, pres:8, mres:18, bres:5, lres:0, spd:75, cri:8, cridam:150, evade:5 },
     baseSearch: 15, baseStealth: 8, baseHate: 200,
     openingSkill: {
-      id:'sh_open_fog', name:'呪いの霧', type:'buff', target:'all_enemy',
-      desc:'全体ATK-20%・SPD-10（3T）。奇襲時効果×1.3',
+      id:'sh_open_curse_cloud', name:'カースクラウド', type:'buff', target:'all_enemy',
+      desc:'全体ATK-20%(3T)＋スロー(2T)＋回復阻害(2T)',
       effect:{ type:'multi_debuff_all', debuffs:[
-        { type:'atk_down', val:-20, turns:3 },
-        { type:'spd_down', val:-10, turns:3 },
+        { type:'atk_down',   val:-20, turns:3 },
+        { type:'slow',       val:1,   turns:2 },
+        { type:'heal_block', val:80,  turns:2 },
       ]}
     },
     activeSkills: [
-      { id:'sh_poison_mist', name:'毒霧散布', type:'spec', attr:'呪', target:'all',
-        power:0.8, cd:7, desc:'全体 ✨ Pw:0.8＋猛毒（3T・ATK×0.15/行動）',
-        debuff:{ type:'lethal_poison', val:15, turns:3 } },
-      { id:'sh_curse', name:'弱体の呪い', type:'spec', attr:'呪', target:'single',
-        power:0.4, cd:5, desc:'単体 ✨ Pw:0.4＋全耐性-20%・ATK-15%（3T）',
-        effect:{ type:'multi_debuff', debuffs:[
-          { type:'all_res_down', val:-20, turns:3 },
-          { type:'atk_down', val:-15, turns:3 },
-        ]}},
+      { id:'sh_soul_drain', name:'ソウルドレイン', type:'spec', attr:'呪', target:'single',
+        power:1.2, cd:6, drain:30,
+        desc:'単体 ✨ Pw:1.2 ＋ 最大HP-5%（永続・最大3スタック）＋ 与ダメ30%吸血',
+        debuff:{ type:'max_hp_down', val:5, turns:99999, maxStacks:3 } },
+      { id:'sh_hex_field', name:'ヘックスフィールド', type:'spec', attr:'呪', target:'all',
+        power:0.7, cd:6, desc:'全体 ✨ Pw:0.7 ＋ 毒（3T）',
+        debuff:{ type:'poison', val:10, turns:3 } },
     ],
     passiveSkills: [
-      { id:'sh_pas_debuff', name:'呪いの連鎖', effect:'デバフ中の敵への与ダメ+15%（常時）',
+      { id:'sh_pas_curse_chain', name:'呪いの連鎖', type:'passive',
+        desc:'デバフ中の敵への与ダメ+15%（常時）',
         effect:{ type:'dmg_vs_debuffed', val:15 } },
-      { id:'sh_pas_res', name:'精霊の加護', effect:'味方全体物理耐性+8%・状態異常耐性+15%（常時）',
-        effect:{ type:'team_res_passive', bres:8, statusRes:15 } },
+      { id:'sh_pas_curse_attract', name:'カースアトラクション', type:'passive',
+        desc:'回復阻害中の敵が味方の単体攻撃の優先ターゲットになる',
+        effect:{ type:'curse_attraction' } },
     ],
     ultimates: [
       { id:'su_grand_curse', name:'大呪詛陣',
-        effect:'全体✨Pw:1.5＋全ステータス-20%・全耐性-20%（3T）＋猛毒（5T）',
+        effect:'全体✨Pw:1.5＋全ステ/全耐性-20%(5T)＋毒(5T)＋回復阻害(3T)',
         target:'all', power:1.5, type:'spec', attr:'呪',
         debuff:{ type:'lethal_poison', val:15, turns:5 },
-        extraDebuff:{ type:'grand_debuff', val:-20, turns:3 } },
+        extraDebuff:{ type:'grand_debuff_permanent', val:-20, statVal:-20, resVal:-20, turns:5 },
+        ultExtraDebuff:{ type:'heal_block', val:80, turns:3 } },
     ],
   },
 
@@ -5240,7 +5244,7 @@ const CLASS_DATA = {
     name: 'バーサーカー', icon: '🪓',
     role: 'アタッカー', species: 'beast', attackTypes: ['裂','斬'],
     baseStats: { atk:920, hp:2500, mp:1600, pres:12, mres:8, bres:5, lres:0, spd:98, cri:16, cridam:175, evade:2 },
-    baseSearch: 12, baseStealth: 4, baseHate: 380,
+    baseSearch: 5, baseStealth: 2, baseHate: 380,
     openingSkill: {
       id:'bk_open_surge', name:'ブラッドサージ', type:'buff', target:'self',
       desc:'ATK+40%（3T）／自身に出血（5T）',
@@ -5277,7 +5281,7 @@ const CLASS_DATA = {
     name: 'センチネル', icon: '🗡️',
     role: 'タンク', species: 'hume', attackTypes: ['打','貫'],
     baseStats: { atk:650, hp:4800, mp:2200, pres:30, mres:16, bres:14, lres:5, spd:55, cri:4, cridam:130, evade:0 },
-    baseSearch: 6, baseStealth: 3, baseHate: 620,
+    baseSearch: 3, baseStealth: 1, baseHate: 620,
     openingSkill: {
       id:'sn_open_guard', name:'ガードスタンス', type:'buff', target:'self',
       desc:'挑発(3T)＋被ダメ-25%(3T)',
@@ -5353,33 +5357,30 @@ const CLASS_DATA = {
     baseStats: { atk:880, hp:2200, mp:2600, pres:5, mres:16, bres:3, lres:0, spd:72, cri:10, cridam:155, evade:5 },
     baseSearch: 18, baseStealth: 6, baseHate: 220,
     openingSkill: {
-      id:'cs_open_charge', name:'魔力充填', type:'buff', target:'self',
-      desc:'MP+30%回復 ＋ 次のスキルPw+50%（1T）',
-      effect:{ type:'mp_regen_and_pw_boost', mpRatio:30, pwBoost:50, turns:1 }
+      id:'cs_open_multicast', name:'マルチキャスト', type:'spec', attr:'魔', target:'all',
+      power:1.0, hits:2, cd:0,
+      desc:'全体 ✨魔 Pw:1.0 × 2連続'
     },
     activeSkills: [
-      { id:'cs_chain', name:'チェインマジック', type:'spec', attr:'魔', target:'all',
-        power:1.5, cd:8, desc:'全体 ⚔️（魔法）Pw:1.5 ＋ チェイン追撃Pw:0.8',
-        chainHit:{ power:0.8 } },
-      { id:'cs_burst', name:'エレメントバースト', type:'spec', attr:'爆', target:'single',
-        power:3.0, cd:6, desc:'単体 ✨ Pw:3.0 ＋ 属性耐性-25% 3T',
-        debuff:{ type:'all_res_down', val:-25, turns:3 } },
+      { id:'cs_chain_lightning', name:'チェインライトニング', type:'spec', attr:'魔', target:'single',
+        power:2.0, cd:4, hits:2, desc:'単体 ✨魔 Pw:2.0 ＋ 隣接1体にPw:1.5の連鎖',
+        chainAdjacent:{ power:1.5 } },
+      { id:'cs_rock_bullet', name:'ロックバレット', type:'spec', attr:'魔', target:'random_multi',
+        power:1.2, hits:5, cd:4, desc:'ランダム敵に ✨魔 Pw:1.2 × 5発' },
     ],
     passiveSkills: [
-      { id:'cs_pas_amp', name:'魔力増幅', type:'passive',
-        desc:'スキル使用のたびATK+12%スタック（最大4、WAVE後リセット）',
-        effect:{ type:'atk_stack_on_skill', val:12, maxStacks:4 } },
-      { id:'cs_pas_accel', name:'呪文加速', type:'passive',
-        desc:'CDが奇数のスキルの再使用ターン-1',
-        effect:{ type:'odd_cd_reduction', val:1 } },
+      { id:'cs_pas_multihit', name:'マルチヒットマスタリー', type:'passive',
+        desc:'スキルのヒット数が多いほど与ダメ+%（ヒット数×5%）',
+        effect:{ type:'multi_hit_mastery', val:5 } },
+      { id:'cs_pas_echo', name:'マジックエコー', type:'passive',
+        desc:'スキル使用時、15%確率でCDが0になる',
+        effect:{ type:'cd_reset_chance', rate:15 } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'csu_catastrophe', name:'カタストロフィ',
-        effect:'全体 ⚔️（魔法）Pw:4.0 ＋ 全耐性-30% 3T。奇襲時強制会心',
-        power:4.0, type:'spec', attr:'爆', target:'all',
-        debuff:{ type:'all_res_down', val:-30, turns:3 },
-        surpriseForceCrit:true },
+      { id:'csu_arcane_storm', name:'アーケインストーム',
+        effect:'全体 ✨魔 Pw:1.0 × 5回連続ヒット',
+        power:1.0, hits:5, type:'spec', attr:'魔', target:'all_multi' },
     ],
   },
 
@@ -5388,35 +5389,34 @@ const CLASS_DATA = {
     name: 'ランサー', icon: '🔱', iconImg: 'assets/images/class-lancer.png',
     role: 'アタッカー', species: 'beast', attackTypes: ['貫','斬'],
     baseStats: { atk:860, hp:2800, mp:1600, pres:14, mres:10, bres:6, lres:0, spd:84, cri:12, cridam:160, evade:4 },
-    baseSearch: 14, baseStealth: 5, baseHate: 350,
+    baseSearch: 8, baseStealth: 3, baseHate: 350,
     openingSkill: {
-      id:'lc_open_charge', name:'突撃準備', type:'buff', target:'self',
-      desc:'ATK+25% ＋ 次の攻撃Pw+1.0（2T）',
-      effect:{ type:'atk_and_next_pw', atkVal:25, nextPwBonus:1.0, turns:2 }
+      id:'lc_open_charge_lance', name:'チャージランス', type:'phys', attr:'貫', target:'single',
+      power:5.0, cd:0,
+      desc:'単体 ⚔️ Pw:5.0 ＋ 物理耐性-30%（3T）',
+      debuff:{ type:'pdef_down', val:-30, turns:3 }
     },
     activeSkills: [
-      { id:'lc_dragon_pierce', name:'竜貫き', type:'phys', attr:'貫', target:'single',
-        power:3.0, cd:5, desc:'単体 ⚔️ Pw:3.0（後列にも50%貫通ダメージ）',
-        pierceHit:{ ratio:0.5 } },
-      { id:'lc_moon_slash', name:'円月槍', type:'phys', attr:'斬', target:'all',
-        power:1.2, cd:7, desc:'全体 ⚔️ Pw:1.2 ＋ ATK-15% 2T',
+      { id:'lc_dragon_pierce', name:'ドラゴンピアス', type:'phys', attr:'貫', target:'single',
+        power:3.0, cd:5, armorPierce:40,
+        desc:'単体 ⚔️ Pw:3.0 ＋ 物理防御-40%無視' },
+      { id:'lc_moon_slash', name:'円月槍', type:'phys', attr:'斬', target:'random2',
+        power:1.2, cd:7, desc:'ランダム敵2体 ⚔️ Pw:1.2 ＋ ATK-15%（2T）',
         debuff:{ type:'atk_down', val:-15, turns:2 } },
     ],
     passiveSkills: [
-      { id:'lc_pas_momentum', name:'突貫の勢い', type:'passive',
-        desc:'行動後SPD+10スタック（最大5、WAVE後リセット）',
-        effect:{ type:'spd_stack_on_action', val:10, maxStacks:5 } },
-      { id:'lc_pas_pierce', name:'槍の達人', type:'passive',
-        desc:'貫攻撃のダメージ+15%（常時）',
-        effect:{ type:'pierce_dmg_bonus', val:15 } },
+      { id:'lc_pas_momentum', name:'モメンタム', type:'passive',
+        desc:'行動するたびSPD+5（最大4スタック・WAVE後リセット）',
+        effect:{ type:'spd_stack_on_action', val:5, maxStacks:4 } },
+      { id:'lc_pas_velocity', name:'ヴェロシティブースト', type:'passive',
+        desc:'SPDが高いほど攻撃力が上昇',
+        effect:{ type:'spd_to_atk', threshold:80, ratio:1.0 } },
     ],
     skillPool: [],
     ultimates: [
       { id:'lcu_heaven_thrust', name:'皇槍天衝',
-        effect:'前衛全体 ⚔️ Pw:4.5（後列に50%貫通）＋ 自身ATK+40%・SPD+20 3T',
-        power:4.5, type:'phys', attr:'貫', target:'front_row',
-        pierceHit:{ ratio:0.5 },
-        selfBuff:{ atk_up:40, spd_up:20, turns:3 } },
+        effect:'敵全体 ⚔️（貫）Pw:3.0 ＋ 物理防御-40%無視',
+        power:3.0, type:'phys', attr:'貫', target:'all', armorPierce:40 },
     ],
   },
 
@@ -12552,6 +12552,33 @@ function launchApp() {
         as_pass_shadow:    'as_pass_shadow_mastery',
         asu_hunt:          'asu_shadow_hunt',
       },
+      lancer: {
+        lc_open_charge:    'lc_open_charge_lance',
+        lc_pas_pierce:     'lc_pas_velocity',
+      },
+      shaman: {
+        sh_open_fog:       'sh_open_curse_cloud',
+        sh_poison_mist:    'sh_hex_field',
+        sh_curse:          'sh_soul_drain',
+        sh_pas_debuff:     'sh_pas_curse_chain',
+        sh_pas_res:        'sh_pas_curse_attract',
+      },
+      wizard: {
+        wz_open_arcane:    'wz_open_meteor_shower',
+        wz_silence:        'wz_arcane_bolt',
+        wz_meteor:         'wz_frost_lance',
+        wz_pas_stack:      'wz_pas_focus',
+        wz_pas_bigcd:      'wz_pas_resonance',
+        wu_starcurse:      'wu_arcane_nova',
+      },
+      caster: {
+        cs_open_charge:    'cs_open_multicast',
+        cs_chain:          'cs_chain_lightning',
+        cs_burst:          'cs_rock_bullet',
+        cs_pas_amp:        'cs_pas_multihit',
+        cs_pas_accel:      'cs_pas_echo',
+        csu_catastrophe:   'csu_arcane_storm',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -14624,6 +14651,19 @@ function processShieldDamage(target, rawDmg, hpDmg) {
   return { hpDmg: remainHpDmg, shieldBroke: true };
 }
 
+// 回復処理ヘルパー: heal_block デバフで回復量を減らす
+function healUnit(c, amt) {
+  if (!c || c.dead || amt <= 0) return 0;
+  const blockDebuff = (c.debuffs||[]).find(d => d.type === 'heal_block');
+  if (blockDebuff) {
+    const reduction = blockDebuff.val || 80;
+    amt = Math.floor(amt * (1 - Math.min(99, reduction) / 100));
+    if (amt < 1) amt = 1;
+  }
+  healUnit(c, amt);
+  return amt;
+}
+
 function tickShields(all) {
   all.forEach(c => {
     if (!c.shield || c.shieldTurns === undefined) return;
@@ -14671,7 +14711,7 @@ function tickDoTHoT(c) {
 
   ;(c.buffs||[]).filter(b=>b.type==='regen').forEach(b => {
     const heal = Math.max(1, Math.floor(c.maxHp * (b.val||5) / 100));
-    c.hp = Math.min(c.maxHp, c.hp + heal);
+    healUnit(c, heal);
     spawnFloatNum(c.uid, '💚+'+heal, 'float-heal');
     addLog(`${c.name} 💚再生 <span class="tag tag-heal">+${heal}HP</span>`, 'trigger');
   });
@@ -14679,7 +14719,7 @@ function tickDoTHoT(c) {
   // プリースト: HP再生tick
   ;(c.buffs||[]).filter(b=>b.type==='hp_regen_tick').forEach(b => {
     const heal = Math.max(1, Math.floor(b.val||0));
-    c.hp = Math.min(c.maxHp, c.hp + heal);
+    healUnit(c, heal);
     spawnFloatNum(c.uid, '💚+'+heal, 'float-heal');
     addLog(`${c.name} 💚HP再生 <span class="tag tag-heal">+${heal}HP</span>`, 'trigger');
   });
@@ -14909,7 +14949,7 @@ function checkPassiveCardTrigger(target, attacker, dmg, bs) {
       const allyGroup = bs ? bs.allies.filter(a=>!a.dead) : [];
       const healAmt = Math.floor(target.atk * (fatalPe.action.hpHeal||2.0) * fatalPe.lvMult);
       allyGroup.forEach(al => {
-        al.hp = Math.min(al.maxHp, al.hp + healAmt);
+        healUnit(al, healAmt);
         battleStats.unitHeal[target.uid] = (battleStats.unitHeal[target.uid]||0) + healAmt;
         spawnFloatNum(al.uid, `💚+${fmt(healAmt)}`, 'float-heal');
       });
@@ -15324,6 +15364,12 @@ function executeManualSkill(uid, skillId) {
   const sk = allSkills.find(s => s.id === skillId);
   if (!sk) return;
   c.skillCDs[sk.id] = sk.cd;
+  // パッシブ: マジックエコー（確率でCDリセット）
+  const echoPass = (c.classPassives||[]).find(p=>p.effect?.type==='cd_reset_chance');
+  if (echoPass && sk.cd > 0 && Math.random() * 100 < (echoPass.effect.rate||15)) {
+    c.skillCDs[sk.id] = 0;
+    addLog(`${c.name} <span class="tag tag-buff">マジックエコー</span> ${sk.name} CD即解除！`, 'trigger');
+  }
   if (sk.type === 'buff') {
     const buffTargets = resolveBuffTargets(sk, c, allies, enemies);
     addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${buffTargets.map(t=>t.name).join('・')}`, 'trigger');
@@ -15356,7 +15402,7 @@ function useImagineActiveSkill() {
   if (eff.healPct) {
     allies.forEach(a => {
       const heal = Math.floor(a.maxHp * eff.healPct / 100);
-      a.hp = Math.min(a.maxHp, a.hp + heal);
+      healUnit(a, heal);
       battleStats.unitHeal[a.uid] = (battleStats.unitHeal[a.uid]||0) + heal;
       spawnFloatNum(a.uid, `💚+${fmt(heal)}`, 'float-heal');
     });
@@ -16041,7 +16087,14 @@ function tickBattle() {
             return makeCombatant(null, true, e);
           });
           // 味方のATBをリセット（ULT/HP/MPは引き継ぎ）
-          bs.allies.forEach(a => { a.atb = 0; });
+          bs.allies.forEach(a => {
+            a.atb = 0;
+            // ランサー: モメンタム スタックをWAVEリセット
+            if (a._momentumStacks) {
+              a._momentumStacks = 0;
+              a.buffs = (a.buffs||[]).filter(b => b._tag !== 'momentum');
+            }
+          });
           updateTimer();
           renderBattle();
           document.getElementById('battle-wave-info').textContent =
@@ -16161,6 +16214,12 @@ function combatantAct(c, bs) {
       if (!checkTrigger(tac.trigger || sk.trigger || 'none', c, enemies, allies, bs)) continue;
       // 発動
       c.skillCDs[sk.id] = sk.cd;
+      // パッシブ: マジックエコー（確率でCDリセット）
+      const echoPass = (c.classPassives||[]).find(p=>p.effect?.type==='cd_reset_chance');
+      if (echoPass && sk.cd > 0 && Math.random() * 100 < (echoPass.effect.rate||15)) {
+        c.skillCDs[sk.id] = 0;
+        addLog(`${c.name} <span class="tag tag-buff">マジックエコー</span> ${sk.name} CD即解除！`, 'trigger');
+      }
       if (tac.trigger && tac.trigger !== 'none') {
         addLog(`<span class="tag tag-trigger">INTERRUPT</span> ${c.name}: トリガー[${TRIGGER_OPTIONS.find(t=>t.value===tac.trigger)?.label||tac.trigger}]`, 'trigger');
       }
@@ -16211,7 +16270,7 @@ function combatantAct(c, bs) {
           const healAmt = Math.floor(c.atk * (eff.healWeakest.ratio||0.8) * lm);
           const hb = getBattleHealBonus(c);
           const finalHeal = Math.floor(healAmt * hb);
-          target.hp = Math.min(target.maxHp, target.hp + finalHeal);
+          healUnit(target, finalHeal);
           battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + finalHeal;
           spawnBall(c.uid, target.uid, 'heal');
           setTimeout(()=>spawnFloatNum(target.uid, `💚+${fmt(finalHeal)}`, 'float-heal'), 200);
@@ -16228,7 +16287,7 @@ function combatantAct(c, bs) {
         const hb2 = getBattleHealBonus(c);
         const finalHeal2 = Math.floor(healAmt2 * hb2);
         aliveAllies2.forEach(al => {
-          al.hp = Math.min(al.maxHp, al.hp + finalHeal2);
+          healUnit(al, finalHeal2);
           battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + finalHeal2;
           spawnFloatNum(al.uid, `💚+${fmt(finalHeal2)}`, 'float-heal');
         });
@@ -16633,6 +16692,13 @@ function playAttrEffect(attacker, target, skill) {
 }
 
 function doAttack(attacker, targets, skill) {
+  // 全体多段攻撃（target='all' && hits>1）: hits回ループ
+  if (skill.target === 'all' && skill.hits > 1 && !skill._processedAllMulti) {
+    for (let i = 0; i < skill.hits; i++) {
+      doAttack(attacker, targets, { ...skill, hits:1, _processedAllMulti:true });
+    }
+    return;
+  }
   let targetList;
   if (skill.target === 'lowest_hp') {
     const alive = targets.filter(t=>!t.dead);
@@ -16660,8 +16726,17 @@ function doAttack(attacker, targets, skill) {
       // プレイヤー攻撃: ヘイト最高の敵を優先ターゲット（同値はランダム）
       const alive = targets.filter(t=>!t.dead);
       if (alive.length) {
-        const maxHate = Math.max(...alive.map(t => t.hate||0));
-        const tops = alive.filter(t => (t.hate||0) === maxHate);
+        // パッシブ: カースアトラクション（シャーマンが居る時、回復阻害中の敵を優先）
+        let pool = alive;
+        const hasCurseAttract = (battleState?.allies||[]).some(a =>
+          !a.dead && (a.classPassives||[]).some(p => p.effect?.type === 'curse_attraction')
+        );
+        if (hasCurseAttract) {
+          const marked = alive.filter(t => (t.debuffs||[]).some(d => d.type === 'heal_block'));
+          if (marked.length) pool = marked;
+        }
+        const maxHate = Math.max(...pool.map(t => t.hate||0));
+        const tops = pool.filter(t => (t.hate||0) === maxHate);
         targetList = [tops[Math.floor(Math.random() * tops.length)]];
       } else { targetList = [...targets]; }
     } else {
@@ -16886,6 +16961,24 @@ function doAttack(attacker, targets, skill) {
         }
       }
     }
+    // パッシブ: 魔力共鳴（被特殊ダメ時にターゲット自身のATK+%スタック）
+    if (skill.type === 'spec' && !target.dead && totalDmg > 0) {
+      const resPass = (target.classPassives||[]).find(p=>p.effect?.type==='atk_on_special_hit');
+      if (resPass) {
+        const maxSt = resPass.effect.maxStacks || 5;
+        target._resonanceStacks = target._resonanceStacks || 0;
+        if (target._resonanceStacks < maxSt) {
+          target._resonanceStacks++;
+          target.buffs = (target.buffs||[]).filter(b => b._tag !== 'resonance');
+          const val = (resPass.effect.val || 5) * target._resonanceStacks;
+          target.buffs.push({
+            type:'atk_up', val, turns:99999,
+            icon:'🔮共鳴', cssClass:'atk-up', _tag:'resonance'
+          });
+          addLog(`${target.name} <span class="tag tag-buff">魔力共鳴 ×${target._resonanceStacks}</span> ATK+${val}%`, 'trigger');
+        }
+      }
+    }
 
     // ダメージカラーマップ
     const dmgColorClass = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
@@ -17010,7 +17103,7 @@ function doAttack(attacker, targets, skill) {
     if (totalDrain > 0) {
       const healed = Math.floor(totalDmg * totalDrain / 100);
       if (healed > 0) {
-        attacker.hp = Math.min(attacker.maxHp, attacker.hp + healed);
+        healUnit(attacker, healed);
         battleStats.unitHeal[attacker.uid] = (battleStats.unitHeal[attacker.uid]||0) + healed;
         setTimeout(() => spawnFloatNum(attacker.uid, '+' + healed, 'float-heal'), hitDelay + 80);
         addLog(`${attacker.name} 吸血 <span class="tag tag-heal">+${healed}HP</span>`, 'all');
@@ -17021,6 +17114,25 @@ function doAttack(attacker, targets, skill) {
     if (skill.effect?.shieldSelf) {
       const shieldAmt = Math.floor(attacker.atk * (skill.effect.shieldSelf.ratio||0.5));
       applyShield(attacker, shieldAmt);
+    }
+
+    // チェインライトニング (隣接1体に連鎖、減衰Pw)
+    if (skill.chainAdjacent && !skill._isChain && !target.dead && totalDmg > 0) {
+      const enemiesList = target.isEnemy ? (battleState?.enemies || []) : (battleState?.allies || []);
+      const targetIdx = enemiesList.indexOf(target);
+      const candidates = [];
+      if (targetIdx > 0 && enemiesList[targetIdx-1] && !enemiesList[targetIdx-1].dead) candidates.push(enemiesList[targetIdx-1]);
+      if (targetIdx >= 0 && enemiesList[targetIdx+1] && !enemiesList[targetIdx+1].dead) candidates.push(enemiesList[targetIdx+1]);
+      if (candidates.length) {
+        const chainTarget = candidates[Math.floor(Math.random() * candidates.length)];
+        const chainSkill = { ...skill, power: skill.chainAdjacent.power, _isChain: true, chainAdjacent: undefined, debuff: undefined };
+        setTimeout(() => {
+          if (!attacker.dead && !chainTarget.dead) {
+            addLog(`⚡ ${attacker.name} <span class="tag tag-trigger">チェイン</span> → ${chainTarget.name}`, 'trigger');
+            doAttack(attacker, [chainTarget], chainSkill);
+          }
+        }, 280);
+      }
     }
 
     // カウンター反撃（被攻撃側に counter バフがあれば自動反撃）
@@ -17043,6 +17155,43 @@ function doAttack(attacker, targets, skill) {
       }
     }
   });
+
+  // ウィザード: 魔力集中（他味方の行動でスタック上昇、自分の攻撃で消費）
+  if (!attacker.isEnemy && !skill._isCounter && !skill._isFollowUp && !skill._isCritChain) {
+    // 他の味方の行動 → 魔力集中保持者のスタック上昇
+    (battleState?.allies||[]).forEach(ally => {
+      if (ally.dead || ally.uid === attacker.uid) return;
+      const focusPass = (ally.classPassives||[]).find(p=>p.effect?.type==='power_stack_on_action');
+      if (!focusPass) return;
+      const maxSt = focusPass.effect.maxStacks || 3;
+      ally._focusStacks = Math.min(maxSt, (ally._focusStacks || 0) + 1);
+    });
+    // 自分が魔力集中持ちで攻撃した場合: スタック消費
+    const myFocus = (attacker.classPassives||[]).find(p=>p.effect?.type==='power_stack_on_action');
+    if (myFocus && ['phys','spec'].includes(skill.type) && (skill.power||0) > 0) {
+      attacker._focusStacks = 0;
+    }
+  }
+
+  // ランサー: モメンタム（行動するたびSPDスタック付与）
+  if (!attacker.isEnemy && !skill._isCounter && !skill._isFollowUp && !skill._isCritChain) {
+    const momentumPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='spd_stack_on_action');
+    if (momentumPass) {
+      const cur = attacker._momentumStacks || 0;
+      const maxSt = momentumPass.effect.maxStacks || 4;
+      if (cur < maxSt) {
+        attacker._momentumStacks = cur + 1;
+        const perVal = momentumPass.effect.val || 5;
+        const totalVal = perVal * attacker._momentumStacks;
+        attacker.buffs = (attacker.buffs||[]).filter(b => b._tag !== 'momentum');
+        attacker.buffs.push({
+          type:'spd_up', val: totalVal, turns:99999,
+          icon:'🚀勢い', cssClass:'atk-up', _tag:'momentum'
+        });
+        addLog(`${attacker.name} <span class="tag tag-buff">モメンタム ×${attacker._momentumStacks}</span> SPD+${totalVal}`, 'trigger');
+      }
+    }
+  }
 
   // プロフェッサー: フォロースルー（味方の攻撃時、保持者が確率で同じ敵に追撃）
   if (!attacker.isEnemy && !skill._isCounter && !skill._isFollowUp &&
@@ -17218,7 +17367,7 @@ function performUlt(c, enemies, allies) {
       if (!alive.length) break;
       const t = alive.reduce((a, b) => (a.hp / a.maxHp) < (b.hp / b.maxHp) ? a : b);
       const healAmt = Math.max(1, Math.floor(c.atk * (ult.power||1.0) * healBonus));
-      t.hp = Math.min(t.maxHp, t.hp + healAmt);
+      healUnit(t, healAmt);
       battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + healAmt;
       // スタックATKバフ
       if (ult.perHitAtkUp) {
@@ -17246,6 +17395,90 @@ function performUlt(c, enemies, allies) {
       }, delay + 300);
     }
     addLog(`${c.name} 【ヒーリングレイン】→ 最低HP%の味方を10回回復 + ATK強化`, 'trigger');
+    return;
+  }
+
+  // ── キャスター: アーケインストーム（全体多段連射）──
+  if (ult.target === 'all_multi' && liveEnemies.length > 0) {
+    const hits = ult.hits || 5;
+    let delay = 0;
+    for (let h = 0; h < hits; h++) {
+      const aliveNow = enemies.filter(e=>!e.dead);
+      if (!aliveNow.length) break;
+      aliveNow.forEach(t => {
+        if (t.dead) return;
+        let { hpDmg: dmg, dmgType } = computeDmg(c, t, ult);
+        const isCrit = ult.forceCrit ? true : rollCrit(c);
+        if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
+        dmg = Math.max(1, dmg);
+        t.hp -= dmg;
+        if (dmg > 0) wakeFromSilence(t);
+        battleStats.totalDmg += dmg;
+        if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + dmg;
+        if (!t.isEnemy) battleStats.unitTaken[t.uid] = (battleStats.unitTaken[t.uid]||0) + dmg;
+        spawnBall(c.uid, t.uid, 'ult');
+        const dmgSnap = dmg, crtSnap = isCrit;
+        const clrSnap = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
+        setTimeout(() => {
+          flashCard(t.uid, 'hit');
+          spawnFloatNum(t.uid, crtSnap ? `${dmgSnap}<span class="crit-label">CRITICAL</span>` : String(dmgSnap), crtSnap ? clrSnap+' crit' : clrSnap);
+        }, delay + 120);
+        if (t.hp <= 0 && !t.dead) {
+          t.dead = true;
+          setTimeout(() => {
+            spawnFloatNum(t.uid, 'DEFEAT', 'float-defeat');
+            addLog(`${t.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+          }, delay + 200);
+        }
+      });
+      delay += 200;
+    }
+    addLog(`${c.name} 【${ult.name}】→ 全体に ×${hits}連射`, 'damage');
+    return;
+  }
+
+  // ── ウィザード: アーケインノヴァ（中心+隣接スプラッシュ）──
+  if (ult.target === 'splash_center' && liveEnemies.length > 0) {
+    // 中心ターゲット: ヘイト最高
+    const maxHate = Math.max(...liveEnemies.map(e => e.hate||0));
+    const tops = liveEnemies.filter(e => (e.hate||0) === maxHate);
+    const center = tops[Math.floor(Math.random() * tops.length)];
+    const centerIdx = enemies.indexOf(center);
+    const splashPws = ult.splashPws || { 0:7.0, 1:5.0, 2:3.0 };
+    let delay = 0;
+    enemies.forEach((t, idx) => {
+      if (t.dead) return;
+      const dist = Math.abs(idx - centerIdx);
+      if (!(dist in splashPws)) return;
+      const pw = splashPws[dist];
+      const splashSkill = { ...ult, power: pw };
+      let { hpDmg: dmg, dmgType } = computeDmg(c, t, splashSkill);
+      const isCrit = ult.forceCrit ? true : rollCrit(c);
+      if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
+      dmg = Math.max(1, dmg);
+      t.hp -= dmg;
+      if (dmg > 0) wakeFromSilence(t);
+      battleStats.totalDmg += dmg;
+      if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + dmg;
+      if (!t.isEnemy) battleStats.unitTaken[t.uid] = (battleStats.unitTaken[t.uid]||0) + dmg;
+      spawnBall(c.uid, t.uid, 'ult');
+      const dmgSnap = dmg, crtSnap = isCrit;
+      const clrSnap = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
+      const distSnap = dist;
+      setTimeout(() => {
+        flashCard(t.uid, 'hit');
+        spawnFloatNum(t.uid, crtSnap ? `${dmgSnap}<span class="crit-label">CRITICAL</span>` : String(dmgSnap), crtSnap ? clrSnap+' crit' : clrSnap);
+      }, delay + 150);
+      delay += 100;
+      if (t.hp <= 0 && !t.dead) {
+        t.dead = true;
+        setTimeout(() => {
+          spawnFloatNum(t.uid, 'DEFEAT', 'float-defeat');
+          addLog(`${t.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+        }, delay + 200);
+      }
+      addLog(`${c.name} 【${ult.name}】→ ${t.name}（${distSnap===0?'中心':distSnap===1?'隣接':'隣々接'} Pw:${pw}）: <span class="tag tag-dmg">${dmgSnap}</span>`, 'damage');
+    });
     return;
   }
 
@@ -17371,9 +17604,10 @@ function performUlt(c, enemies, allies) {
     }
     if (ult.debuff) { applyDebuff(t, ult.debuff, c); setTimeout(()=>spawnFloatNum(t.uid,'弱体','float-debuff'),350); }
     if (ult.extraDebuff) { applyDebuffDirect(t, ult.extraDebuff); }
+    if (ult.ultExtraDebuff) { applyDebuffDirect(t, ult.ultExtraDebuff); }
     if (ult.drain) {
       const h = Math.floor(dmg * ult.drain / 100);
-      c.hp = Math.min(c.maxHp, c.hp + h);
+      healUnit(c, h);
       battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + h;
       setTimeout(() => spawnFloatNum(c.uid, '+'+h, 'float-heal'), 350);
     }
@@ -17385,7 +17619,7 @@ function performUlt(c, enemies, allies) {
     liveAllies.forEach(a => {
       if (ult.allyHeal) {
         const h = Math.floor(a.maxHp * (ult.allyHeal.healRatio||1.0) * healBonus);
-        a.hp = Math.min(a.maxHp, a.hp + h);
+        healUnit(a, h);
         battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + h;
         spawnFloatNum(a.uid, `💚+${h}`, 'float-heal');
       }
@@ -17547,7 +17781,7 @@ function applyBuff(c, skill, sourceUnit) {
     const isSelf = sourceUnit && c.uid === sourceUnit.uid;
     const ratio = isSelf ? (eff.selfHealRatio||0.30) : (eff.allyHealRatio||0.12);
     const healAmt = Math.floor(c.maxHp * ratio * _slMult * healBonus);
-    c.hp = Math.min(c.maxHp, c.hp + healAmt);
+    healUnit(c, healAmt);
     battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + healAmt;
     if (isSelf) {
       const regenVal = Math.round((eff.selfRegenVal||8) * _slMult);
@@ -17566,7 +17800,7 @@ function applyBuff(c, skill, sourceUnit) {
     const healAmt = Math.floor(atk * (eff.healRatio||1.5) * _slMult);
     const healBonus = getBattleHealBonus(sourceUnit);
     const finalHeal = Math.floor(healAmt * healBonus);
-    c.hp = Math.min(c.maxHp, c.hp + finalHeal);
+    healUnit(c, finalHeal);
     battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
     const _atkVal1 = Math.round((eff.atkVal||10) * _slMult);
     c.buffs.push({ type:'atk_up', val:_atkVal1, turns:eff.atkTurns||3, icon:'⬆ATK', cssClass:'atk-up' });
@@ -17583,7 +17817,7 @@ function applyBuff(c, skill, sourceUnit) {
     const healAmt = Math.floor(atk * (eff.healRatio||1.5) * _slMult);
     const healBonus = getBattleHealBonus(sourceUnit);
     const finalHeal = Math.floor(healAmt * healBonus);
-    c.hp = Math.min(c.maxHp, c.hp + finalHeal);
+    healUnit(c, finalHeal);
     battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
     const _atkVal2 = Math.round((eff.atkVal||10) * _slMult);
     c.buffs.push({ type:'atk_up', val:_atkVal2, turns:eff.atkTurns||2, icon:'⬆ATK', cssClass:'atk-up' });
@@ -17631,7 +17865,7 @@ function applyBuff(c, skill, sourceUnit) {
     const healAmt = Math.floor(atk * (eff.healRatio||3.0) * _slMult);
     const healBonus = getBattleHealBonus(sourceUnit);
     const finalHeal = Math.floor(healAmt * healBonus);
-    c.hp = Math.min(c.maxHp, c.hp + finalHeal);
+    healUnit(c, finalHeal);
     if (eff.dispelAll) {
       c.buffs = (c.buffs||[]).filter(b => !(b.val < 0 || ['atk_down','mdef_down','pdef_down','spd_down','slow'].includes(b.type)));
     }
@@ -17661,7 +17895,7 @@ function applyBuff(c, skill, sourceUnit) {
     const healAmt = Math.floor(atk * (eff.healRatio||0.8) * _slMult);
     const healBonus = getBattleHealBonus(sourceUnit);
     const finalHeal = Math.floor(healAmt * healBonus);
-    c.hp = Math.min(c.maxHp, c.hp + finalHeal);
+    healUnit(c, finalHeal);
     battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
     c.buffs.push({ type:'mdef_up', val:eff.mresVal||20, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
     flashCard(c.uid, 'buff');
@@ -17676,7 +17910,7 @@ function applyBuff(c, skill, sourceUnit) {
     const healAmt = Math.floor(atk * (eff.healRatio||1.2) * _slMult);
     const healBonus = getBattleHealBonus(sourceUnit);
     const finalHeal = Math.floor(healAmt * healBonus);
-    c.hp = Math.min(c.maxHp, c.hp + finalHeal);
+    healUnit(c, finalHeal);
     battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
     const removed = (c.debuffs||[]).length;
     c.debuffs = [];
@@ -17791,7 +18025,7 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'heal_and_shield') {
     const healAmt   = Math.floor((sourceUnit?.atk||c.atk) * (eff.healRatio||2.0) * _slMult);
     const shieldAmt = Math.floor((sourceUnit?.atk||c.atk) * (eff.shieldRatio||3.0) * _slMult);
-    c.hp = Math.min(c.maxHp, c.hp + healAmt);
+    healUnit(c, healAmt);
     applyShield(c, shieldAmt);
     flashCard(c.uid, 'buff');
     spawnSkillNamePop(c.uid, skill.name, 'buff');
@@ -17856,7 +18090,7 @@ function applyBuff(c, skill, sourceUnit) {
     const atk = sourceUnit?.atk || c.atk;
     const healAmt   = Math.floor(atk * (eff.healRatio||2.0) * _slMult);
     const shieldAmt = Math.floor(atk * (eff.shieldRatio||3.0) * _slMult);
-    c.hp = Math.min(c.maxHp, c.hp + healAmt);
+    healUnit(c, healAmt);
     applyShield(c, shieldAmt);
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
     spawnFloatNum(c.uid, `💚+${fmt(healAmt)}`, 'float-heal');
@@ -17866,7 +18100,7 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'iron_will') {
     const m = skill.lvBonus ? (skill.lvBonus[(skill._cardLv||1)-1]||1.0) : 1.0;
     const hpBonus = Math.floor(c.maxHp * (eff.hpVal||20) / 100);
-    c.hp = Math.min(c.maxHp, c.hp + hpBonus);
+    healUnit(c, hpBonus);
     c.buffs.push({ type:'hp_regen', val:eff.hpVal, turns:eff.turns||3, icon:'💚', cssClass:'hp-up' });
     const isLowHp = c.hp / c.maxHp <= 0.5;
     let detail = `HP+${Math.round(eff.hpVal*m)}%(${eff.turns}T)`;
@@ -17944,7 +18178,7 @@ function applyBuff(c, skill, sourceUnit) {
 
   if (eff.type==='hp_up') {
     const bonus = Math.floor(c.maxHp*_scaledVal/100);
-    c.hp = Math.min(c.maxHp, c.hp+bonus);
+    healUnit(c, bonus);
     spawnFloatNum(c.uid, '+'+fmt(bonus), 'float-heal');
   }
   if (eff.type==='damage_reduce') {
@@ -17953,7 +18187,7 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type==='rampart') {
     c.buffs.push({ type:'pdef_up', val:_scaledVal, turns:eff.turns, icon:'⬆物理耐性', cssClass:'pdef-up' });
     const heal = Math.floor(c.maxHp*0.3);
-    c.hp = Math.min(c.maxHp, c.hp+heal);
+    healUnit(c, heal);
     spawnFloatNum(c.uid, '+'+fmt(heal), 'float-heal');
   }
   if (eff.type === 'taunt') {
@@ -18030,8 +18264,26 @@ function computeDmg(attacker, target, skill) {
     const tl = attacker._passiveTargetLock;
     base *= (1 + Math.min(tl.maxStacks, tl.stacks) * tl.val / 100);
   }
+  // パッシブ: ヴェロシティブースト（SPDが高いほどATK上昇）
+  const velPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='spd_to_atk');
+  if (velPass) {
+    const threshold = velPass.effect.threshold || 80;
+    const ratio = velPass.effect.ratio || 1.0;
+    const spdBuff = (attacker.buffs||[]).filter(b=>b.type==='spd_up').reduce((s,b)=>s+b.val,0);
+    const spdDebuff = (attacker.debuffs||[]).filter(d=>d.type==='spd_down').reduce((s,d)=>s+d.val,0);
+    const effSpd = (attacker.spd||0) + spdBuff + spdDebuff;
+    const bonus = Math.max(0, effSpd - threshold) * ratio;
+    if (bonus > 0) base *= (1 + bonus / 100);
+  }
 
   let power = (skill.power || 1.0) * getSkillLvMult(skill);
+  // ウィザード: 魔力集中（行動するたびスタック、攻撃時にPwボーナス）
+  if (attacker._focusStacks > 0 && ['phys','spec'].includes(skill.type) && !skill._isCounter && !skill._isFollowUp) {
+    const focusPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='power_stack_on_action');
+    if (focusPass) {
+      power += attacker._focusStacks * (focusPass.effect.val || 0.2);
+    }
+  }
   // スキルPwバフ（混沌爆発など）
   const _skillPwBuff = (attacker.buffs||[]).filter(b=>b.type==='skillPw_up').reduce((s,b)=>s+b.val,0);
   if (_skillPwBuff) power *= (1 + _skillPwBuff / 100);
@@ -18078,6 +18330,11 @@ function computeDmg(attacker, target, skill) {
   if (insightPass && (target.debuffs||[]).length > 0) {
     base *= (1 + (insightPass.effect.val||20)/100);
   }
+  // パッシブ: マルチヒットマスタリー（スキルのヒット数×%与ダメボーナス）
+  const multiHitPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='multi_hit_mastery');
+  if (multiHitPass && skill.hits && skill.hits > 1) {
+    base *= (1 + (skill.hits * (multiHitPass.effect.val||5)) / 100);
+  }
 
   // スタッガーボーナス
   const staggerMult = target.staggered ? 1.3 : 1.0;
@@ -18102,7 +18359,9 @@ function computeDmg(attacker, target, skill) {
   const isSpec = dmgType === 'spec';
   if (isSpec) {
     // 特殊ダメージ（spec）: mdef耐性
-    const mdef = getRes(target.mdef||0, ['mdef_up'], ['mdef_down']);
+    let mdef = getRes(target.mdef||0, ['mdef_up'], ['mdef_down']);
+    // magicPierce: 魔法貫通（特殊耐性を無視）
+    if (skill.magicPierce) mdef = mdef * (1 - Math.min(100, skill.magicPierce) / 100);
     const hpDmg = Math.max(minDmg, Math.floor(base * (1 - mdef/100) * staggerMult * nightMult));
     return { hpDmg, dmgType: 'spec' };
   } else {
@@ -18158,6 +18417,31 @@ function tryApplyDebuff(target, debuff, attacker) {
 }
 
 function applyDebuffDirect(target, debuff) {
+  // 最大HP減少（永続スタック、シャーマン「ソウルドレイン」）
+  if (debuff.type === 'max_hp_down') {
+    const maxSt = debuff.maxStacks || 3;
+    target._maxHpDownStacks = (target._maxHpDownStacks || 0);
+    if (target._maxHpDownStacks >= maxSt) return;
+    if (!target._originalMaxHp) target._originalMaxHp = target.maxHp;
+    target._maxHpDownStacks++;
+    const reduction = Math.floor(target._originalMaxHp * (debuff.val||5) / 100);
+    target.maxHp = Math.max(1, target.maxHp - reduction);
+    if (target.hp > target.maxHp) target.hp = target.maxHp;
+    target.debuffs = target.debuffs || [];
+    const existing = target.debuffs.find(d => d.type === 'max_hp_down');
+    if (existing) {
+      existing.val = (existing.val || 0) + (debuff.val||5);
+      existing.stacks = target._maxHpDownStacks;
+    } else {
+      target.debuffs.push({
+        type:'max_hp_down', val: debuff.val||5, turns: debuff.turns||99999,
+        stacks: 1, icon:'💀最大HP↓', cssClass:'reduce',
+      });
+    }
+    spawnFloatNum(target.uid, `💀-MaxHP${debuff.val||5}%`, 'float-debuff');
+    addLog(`${target.name}: 💀最大HP-${debuff.val||5}%（×${target._maxHpDownStacks}） <span class="tag tag-trigger">DEBUFF</span>`, 'trigger');
+    return;
+  }
   // 複合デバフ型を展開
   if (debuff.type === 'all_res_down') {
     ['pres_down','mres_down','bres_down'].forEach(t => applyDebuffDirect(target, { ...debuff, type:t }));
@@ -18182,12 +18466,14 @@ function applyDebuffDirect(target, debuff) {
     bleed:'🩸', burn:'🔥', reduce:'🔽',
     slow:'⚡', bres_down:'⬇物理耐性', lres_down:'⬇特殊耐性',
     atk_down:'⚔️↓', spd_down:'🐢', hit_down:'🌫️', silence:'💤', mark:'🎯',
+    heal_block:'🚫回復阻害', max_hp_down:'💀最大HP↓',
   };
   const labelMap = {
     pres_down:'物理耐性↓', mres_down:'特殊耐性↓', bres_down:'物理耐性↓',
     stun:'💫気絶', poison:'☠毒', bleed:'🩸出血', burn:'🔥燃焼',
     reduce:'弱体化', slow:'⚡スロー', atk_down:'⚔️ATK↓',
     spd_down:'🐢SPD↓', hit_down:'🌫️命中↓', silence:'💤沈黙', mark:'🎯マーク',
+    heal_block:'🚫回復阻害', max_hp_down:'💀最大HP↓',
   };
   target.debuffs.push({
     type:  debuff.type,
@@ -19055,7 +19341,7 @@ function triggerWormBurrow(worm, bs) {
 function triggerWormEmergence(worm, bs) {
   pauseBattle();
   const healAmt = Math.floor(worm.maxHp * 0.15);
-  worm.hp = Math.min(worm.maxHp, worm.hp + healAmt);
+  healUnit(worm, healAmt);
   worm._underground = false;
   worm._wormActCount = 0;
   worm.atb = 30;
@@ -19082,7 +19368,7 @@ function handleGuardianArmDeath(arm, bs) {
     const headHeal = Math.floor(head.maxHp * 0.25);
     const armHeal  = Math.floor(otherArm.maxHp * 0.30);
     head.hp     = Math.min(head.maxHp,     head.hp + headHeal);
-    otherArm.hp = Math.min(otherArm.maxHp, otherArm.hp + armHeal);
+    healUnit(otherArm, armHeal);
     addLog(`💀 <b>右腕破壊！</b> 左腕が緊急修復魔法陣発動！ 頭部+${headHeal}HP / 左腕+${armHeal}HP 回復`, 'trigger');
     setTimeout(() => {
       spawnFloatNum(head.uid, '💚+'+headHeal, 'float-heal');
@@ -19786,7 +20072,7 @@ function playOneOpeningSkill(action, callback) {
     const mresVal = Math.round((eff.mresVal||20) * lvMult * bonusMult);
     const allyTargets = battleState.allies.filter(a=>!a.dead);
     allyTargets.forEach(tgt => {
-      tgt.hp = Math.min(tgt.maxHp, tgt.hp + finalHeal);
+      healUnit(tgt, finalHeal);
       battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + finalHeal;
       (tgt.buffs=tgt.buffs||[]).push({ type:'mdef_up', val:mresVal, turns:eff.mresTurns||3, icon:'⬆特殊耐性', cssClass:'mdef-up' });
       spawnFloatNum(tgt.uid, `💚+${fmt(finalHeal)}`, 'float-heal');
