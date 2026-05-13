@@ -2334,7 +2334,7 @@ img.item-icon {
   background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.2);
 }
 .float-shield      { color:#88aaff !important; font-weight:700; }
-.tag-paralysis     { background:rgba(255,220,60,0.2);   color:#ffe040; }
+.tag-slow     { background:rgba(255,220,60,0.2);   color:#ffe040; }
 .tag-flinch        { background:rgba(140,200,255,0.2);  color:#90c8ff; }
 .tag-cover         { background:rgba(76,175,110,0.2);   color:var(--green); }
 .tag-shield-break  { background:rgba(100,160,255,0.3);  color:#aaccff; font-weight:700; }
@@ -4923,7 +4923,7 @@ const CLASS_DATA = {
     role: 'アタッカー',
     species: 'hume',
     attackTypes: ['斬','打'],
-    baseStats: { atk:820, hp:3200, pdef:18, mdef:8, spd:80, cri:8, cridam:150 },
+    baseStats: { atk:820, hp:3200, pdef:18, mdef:8, spd:80, cri:8, cridam:150, evade:3 },
     baseSearch:  10,
     baseStealth:  5,
     baseHate:    400,
@@ -4962,7 +4962,7 @@ const CLASS_DATA = {
     role: 'タンク',
     species: 'hume',
     attackTypes: ['打'],
-    baseStats: { atk:600, hp:4500, pdef:28, mdef:16, spd:60, cri:4, cridam:130 },
+    baseStats: { atk:600, hp:4500, pdef:28, mdef:16, spd:60, cri:4, cridam:130, evade:0 },
     baseSearch:   5,
     baseStealth:  3,
     baseHate:    600,
@@ -5011,7 +5011,7 @@ const CLASS_DATA = {
     role: 'ヒーラー',
     species: 'celestia',
     attackTypes: ['魔'],
-    baseStats: { atk:700, hp:3000, pdef:5, mdef:18, spd:70, cri:5, cridam:140 },
+    baseStats: { atk:700, hp:3000, pdef:5, mdef:18, spd:70, cri:5, cridam:140, evade:3 },
     baseSearch:  10,
     baseStealth:  5,
     baseHate:    200,
@@ -5051,39 +5051,40 @@ const CLASS_DATA = {
     role: 'スカウト',
     species: 'specter',
     attackTypes: ['斬','裂'],
-    baseStats: { atk:950, hp:2000, pdef:5, mdef:5, spd:118, cri:22, cridam:180 },
+    baseStats: { atk:950, hp:2000, pdef:5, mdef:5, spd:118, cri:22, cridam:180, evade:10 },
     baseSearch:  48,
     baseStealth: 45,
     baseHate:    150,
     openingSkill: {
-      id:'as_open_shadow', name:'影潜り', type:'phys', attr:'裂', target:'single',
-      desc:'ATK+25%・CRI+15% + 奇襲時⚔️Pw:3.0（通常時Pw:1.0） 3T',
-      power:3.0,
-      effect:{ type:'surprise_burst', normalPw:1.0, surprisePw:3.0 },
-      surpriseBuff:[ { type:'atk_up', val:25, turns:3 }, { type:'cri_up', val:15, turns:3 } ]
+      id:'as_open_blitz', name:'シャドウブリッツ', type:'phys', attr:'裂', target:'single',
+      power:0.8, hits:3, cd:0,
+      desc:'単体 ⚔️ Pw:0.8 ×3連撃（夜戦時 Pw:1.2×3）＋自身ATK+15%(3T)',
+      effect:{ type:'shadow_blitz', normalPw:0.8, nightPw:1.2, hits:3, atkUp:15, atkTurns:3 }
     },
     activeSkills: [
-      { id:'as_poison_blade', name:'毒刃', type:'phys', attr:'裂', target:'single',
-        power:1.6, cd:4, desc:'単体 ✨ Pw:1.6 + 猛毒3T（ATK×10%/T）',
-        debuff:{ type:'lethal_poison', val:10, turns:3 } },
-      { id:'as_backstab', name:'バックスタブ', type:'phys', attr:'斬', target:'single',
-        power:2.0, cd:5, desc:'単体 ✨ Pw:2.0（CC中強制会心+Pw:1.0）',
-        ccBonus:1.0, ccForceCrit:true },
+      { id:'as_poison_fang', name:'ポイズンファング', type:'phys', attr:'裂', target:'single',
+        power:0.7, hits:3, cd:4, desc:'単体 ⚔️ Pw:0.7 ×3連撃 ＋ 毒3T',
+        debuff:{ type:'poison', val:10, turns:3 } },
+      { id:'as_flare_signal', name:'フレアシグナル', type:'buff', target:'self',
+        power:0, cd:6, desc:'自身回避+10%(3T)。昼: 敵2体スロー(2T) ／ 夜: 味方全体命中+30%(3T)＋自身ヘイト+500',
+        effect:{ type:'flare_signal', evadeUp:10, evadeTurns:3,
+                 dayTargets:2, daySlowTurns:2,
+                 nightHitUp:30, nightHitTurns:3, nightHateUp:500 } },
     ],
     passiveSkills: [
-      { id:'as_pass_night', name:'夜の狩人', type:'passive',
-        desc:'夜戦中ATK+20%・CRI+15%・SPD+15%',
-        effect:{ type:'night_bonus', atk:20, cri:15, spd:15 } },
-      { id:'as_pass_shadow', name:'影の達人', type:'passive',
-        desc:'隠密+20%・CRI率常時+8%',
-        effect:{ type:'stealth_cri', stealth:20, cri:8 } },
+      { id:'as_pass_night_hunter', name:'夜の狩人', type:'passive',
+        desc:'夜戦中ATK+30%・CRI+20・SPD+20 ／ 昼戦中ATK-20%',
+        effect:{ type:'night_bonus', atk:30, cri:20, spd:20, dayAtkPenalty:20 } },
+      { id:'as_pass_shadow_mastery', name:'シャドウマスタリー', type:'passive',
+        desc:'CRI時、同じ敵にPw0.5の追撃（1ターン1回）',
+        effect:{ type:'crit_chain_attack', power:0.5 } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'asu_hunt', name:'影狩り（シャドウハント）',
-        effect:'最もHPの低い敵に⚔️Pw4.0(強制会心)+✨Pw2.0。撃破時即再行動(次の最低HP敵を自動追跡)。連続撃破でATK+10%スタック。夜戦中⚔️Pw+2.0追加',
-        power:4.0, type:'phys', attr:'裂', target:'lowest_hp', forceCrit:true,
-        blackPw:2.0, reattackOnKill:true, killAtkStack:10, nightRedBonus:2.0 },
+      { id:'asu_shadow_hunt', name:'シャドウハント',
+        effect:'最もHPの低い敵に⚔️Pw0.5×10連撃／撃破時 次の最低HP敵に再発動',
+        power:0.5, hits:10, type:'phys', attr:'裂', target:'lowest_hp',
+        reattackOnKill:true },
     ],
   },
 
@@ -5094,26 +5095,28 @@ const CLASS_DATA = {
     role: 'レンジ',
     species: 'beast',
     attackTypes: ['貫'],
-    baseStats: { atk:780, hp:2600, pdef:5, mdef:8, spd:85, cri:14, cridam:170 },
+    baseStats: { atk:780, hp:2600, pdef:5, mdef:8, spd:85, cri:14, cridam:170, evade:5 },
     baseSearch:  30,
     baseStealth: 10,
     baseHate:   300,
     openingSkill: {
-      id:'ar_open_preemptive', name:'先制射撃', type:'phys', attr:'貫', target:'random_multi',
-      power:0.5, hits:6, cd:0,
-      desc:'ランダム敵×6連射 ⚔️ Pw:0.5'
+      id:'ar_open_volley', name:'プレシジョンヴォレー', type:'phys', attr:'貫', target:'all',
+      power:0.5, cd:0,
+      desc:'全体 ⚔️ Pw:0.5 ＋ 物理耐性-10%（3T）',
+      debuff:{ type:'pdef_down', val:-10, turns:3 }
     },
     activeSkills: [
       { id:'ar_pierce', name:'ピアシングアロー', type:'phys', attr:'貫', target:'single',
         power:2.0, cd:4, desc:'単体 ⚔️ Pw:2.0 貫通矢' },
       { id:'ar_rain', name:'アローレイン', type:'phys', attr:'貫', target:'all',
-        power:0.7, cd:6, desc:'全体 ⚔️ Pw:0.7 矢の雨' },
+        power:0.7, cd:6, desc:'全体 ⚔️ Pw:0.7 ＋ 命中-15%（3T）',
+        debuff:{ type:'hit_down', val:-15, turns:3 } },
     ],
     passiveSkills: [
-      { id:'ar_pass_eagle', name:'鷹の目', type:'passive',
+      { id:'ar_pass_eagle', name:'イーグルアイ', type:'passive',
         desc:'CRI率常時+8%・ATK+10%',
         effect:{ type:'cri_atk_bonus', cri:8, atk:10 } },
-      { id:'ar_pass_weak', name:'弱点狙い', type:'passive',
+      { id:'ar_pass_weak', name:'ウィークスポット', type:'passive',
         desc:'攻撃した敵の物理耐性-5%（最大5スタック）',
         effect:{ type:'pdef_down_on_attack', val:5, maxStacks:5 } },
     ],
@@ -5129,7 +5132,7 @@ const CLASS_DATA = {
   wizard: {
     name: 'ウィザード', icon: '🧙', iconImg: 'assets/images/role-ranger.png',
     role: 'レンジ', species: 'hume', attackTypes: ['魔'],
-    baseStats: { atk:850, hp:2400, mp:2200, pres:5, mres:15, bres:3, lres:0, spd:78, cri:10, cridam:155 },
+    baseStats: { atk:850, hp:2400, mp:2200, pres:5, mres:15, bres:3, lres:0, spd:78, cri:10, cridam:155, evade:5 },
     baseSearch: 20, baseStealth: 5, baseHate: 250,
     openingSkill: {
       id:'wz_open_arcane', name:'古代魔法陣', type:'spec', attr:'魔', target:'all',
@@ -5161,34 +5164,34 @@ const CLASS_DATA = {
   // ── パラディン（セレスティア・タンク）★3 ──
   paladin: {
     name: 'パラディン', icon: '🛡️', iconImg: 'assets/images/role-vanguard.png',
-    role: 'タンク', species: 'celestia', attackTypes: ['聖','打'],
-    baseStats: { atk:700, hp:4200, mp:1800, pres:25, mres:20, bres:10, lres:5, spd:68, cri:6, cridam:145 },
+    role: 'タンク', species: 'celestia', attackTypes: ['突','聖'],
+    baseStats: { atk:700, hp:4200, mp:1800, pres:25, mres:20, bres:10, lres:5, spd:68, cri:6, cridam:145, evade:0 },
     baseSearch: 10, baseStealth: 3, baseHate: 500,
     openingSkill: {
-      id:'pd_open_holy', name:'聖なる加護', type:'buff', target:'all_ally',
+      id:'pd_open_protect', name:'マジックプロテクション', type:'buff', target:'all_ally',
       desc:'全体シールド（最大HP20%）＋全体特殊耐性+15%（3T）',
-      effect:{ type:'shield_and_res', shieldRatio:0.20, resType:'wres', resVal:15, turns:3 }
+      effect:{ type:'shield_and_res', shieldRatio:0.20, resType:'mres', resVal:15, turns:3 }
     },
     activeSkills: [
-      { id:'pd_holy_strike', name:'聖光撃', type:'spec', attr:'聖', target:'single',
-        power:2.0, cd:5, desc:'単体 ⚔️（聖）Pw:2.0＋対象特殊耐性-15%（2T）',
-        debuff:{ type:'wres_down', val:-15, turns:2 } },
-      { id:'pd_miracle', name:'奇跡の光', type:'buff', target:'all_ally',
-        power:0, cd:8, desc:'全体HP回復×1.2＋全デバフ解除',
-        effect:{ type:'heal_and_cleanse', healRatio:1.2 } },
+      { id:'pd_holy_lance', name:'ホーリーランス', type:'spec', attr:'聖', target:'single',
+        power:2.0, cd:4, desc:'単体 ✨（聖）Pw:2.0＋対象特殊耐性-10%（2T）',
+        debuff:{ type:'mdef_down', val:-10, turns:2 } },
+      { id:'pd_blessing_light', name:'ブレッシングオブライト', type:'buff', target:'all_ally',
+        power:0, cd:7, desc:'自身: 大ヒール（maxHP30%）＋リジェネ(3T)／味方全体: 小ヒール（maxHP12%）',
+        effect:{ type:'blessing_of_light', selfHealRatio:0.30, selfRegenVal:8, selfRegenTurns:3, allyHealRatio:0.12 } },
     ],
     passiveSkills: [
-      { id:'pd_pas_heal', name:'奇跡の器', effect:'回復スキル使用時、対象にATKの30%の追加HP回復',
-        effect:{ type:'heal_bonus', val:30 } },
-      { id:'pd_pas_bres', name:'聖域の守護', effect:'味方全体物理耐性+8%（常時）',
-        effect:{ type:'team_bres', val:8 } },
+      { id:'pd_pas_brand', name:'聖なる烙印', type:'passive',
+        desc:'ホーリーランス命中時、対象に特殊耐性-5%スタック付与（最大3スタック・5T）',
+        effect:{ type:'sacred_brand', val:-5, maxStacks:3, turns:5 } },
+      { id:'pd_pas_unbreakable', name:'アンブレイカブル', type:'passive',
+        desc:'致死ダメージを受けてもHP1で耐える（戦闘中1回）',
+        effect:{ type:'unbreakable' } },
     ],
     ultimates: [
-      { id:'pu_divine', name:'天罰の審判',
-        effect:'単体⚔️（聖）Pw:6.0強制会心＋全体HP回復×1.5＋全体全耐性+20%（3T）',
-        target:'single', power:6.0, type:'spec', attr:'聖', forceCrit:true,
-        allyHeal:{ healRatio:1.5 },
-        allyBuff:{ type:'all_res_up', val:20, turns:3 } },
+      { id:'pu_judgment', name:'ジャッジメント',
+        effect:'単体 ✨（聖）Pw:1.5×6回（合計Pw:9.0相当）',
+        target:'single', power:1.5, hits:6, type:'spec', attr:'聖' },
     ],
   },
 
@@ -5196,7 +5199,7 @@ const CLASS_DATA = {
   shaman: {
     name: 'シャーマン', icon: '🔮', iconImg: 'assets/images/class-shaman.png',
     role: 'サポート', species: 'daemon', attackTypes: ['魔','裂'],
-    baseStats: { atk:720, hp:2800, mp:2000, pres:8, mres:18, bres:5, lres:0, spd:75, cri:8, cridam:150 },
+    baseStats: { atk:720, hp:2800, mp:2000, pres:8, mres:18, bres:5, lres:0, spd:75, cri:8, cridam:150, evade:5 },
     baseSearch: 15, baseStealth: 8, baseHate: 200,
     openingSkill: {
       id:'sh_open_fog', name:'呪いの霧', type:'buff', target:'all_enemy',
@@ -5236,7 +5239,7 @@ const CLASS_DATA = {
   berserker: {
     name: 'バーサーカー', icon: '🪓',
     role: 'アタッカー', species: 'beast', attackTypes: ['裂','斬'],
-    baseStats: { atk:920, hp:2500, mp:1600, pres:12, mres:8, bres:5, lres:0, spd:98, cri:16, cridam:175 },
+    baseStats: { atk:920, hp:2500, mp:1600, pres:12, mres:8, bres:5, lres:0, spd:98, cri:16, cridam:175, evade:2 },
     baseSearch: 12, baseStealth: 4, baseHate: 380,
     openingSkill: {
       id:'bk_open_surge', name:'ブラッドサージ', type:'buff', target:'self',
@@ -5273,35 +5276,38 @@ const CLASS_DATA = {
   sentinel: {
     name: 'センチネル', icon: '🗡️',
     role: 'タンク', species: 'hume', attackTypes: ['打','貫'],
-    baseStats: { atk:650, hp:4800, mp:2200, pres:30, mres:16, bres:14, lres:5, spd:55, cri:4, cridam:130 },
+    baseStats: { atk:650, hp:4800, mp:2200, pres:30, mres:16, bres:14, lres:5, spd:55, cri:4, cridam:130, evade:0 },
     baseSearch: 6, baseStealth: 3, baseHate: 620,
     openingSkill: {
-      id:'sn_open_ironwall', name:'鉄壁展開', type:'buff', target:'all_ally',
-      desc:'味方全体シールド（最大HP15%）＋自身に挑発 2T',
-      effect:{ type:'shield_and_self_taunt', shieldRatio:0.15, tauntTurns:2 }
+      id:'sn_open_guard', name:'ガードスタンス', type:'buff', target:'self',
+      desc:'挑発(3T)＋被ダメ-25%(3T)',
+      effect:{ type:'multi_buff', buffs:[
+        { type:'taunt',         val:1,  turns:3 },
+        { type:'damage_reduce', val:25, turns:3 },
+      ]}
     },
     activeSkills: [
-      { id:'sn_counter_guard', name:'カウンターガード', type:'buff', target:'self',
-        power:0, cd:7, desc:'防御姿勢3T（被ダメ-30%・被攻撃時反撃 Pw:0.8）',
-        effect:{ type:'counter_stance', dmgReduction:30, counterPower:0.8, turns:3 } },
-      { id:'sn_shield_bash2', name:'大盾突き', type:'phys', attr:'打', target:'single',
+      { id:'sn_counter_parry', name:'カウンターパリィ', type:'buff', target:'self',
+        power:0, cd:5, desc:'カウンター状態(3T・反撃Pw0.8)＋被ダメ-30%(3T)＋挑発(3T)',
+        effect:{ type:'counter_stance', counterVal:80, counterTurns:3, dmgReduction:30, dmgReduceTurns:3, tauntTurns:3 } },
+      { id:'sn_shield_smash', name:'シールドスマッシュ', type:'phys', attr:'打', target:'single',
         power:1.5, cd:5, desc:'単体 ⚔️ Pw:1.5 ＋ スタン1T',
         debuff:{ type:'stun', val:1, turns:1 } },
     ],
     passiveSkills: [
-      { id:'sn_pas_fort', name:'不動の砦', type:'passive',
-        desc:'HP70%以上のとき受けるダメージ-20%',
-        effect:{ type:'high_hp_reduction', hpThreshold:70, val:20 } },
-      { id:'sn_pas_guard', name:'守護の誓い', type:'passive',
-        desc:'味方が致死ダメージを受けた時、代わりに受ける（CD10）',
-        effect:{ type:'intercept_fatal', cd:10 } },
+      { id:'sn_pas_iron_force', name:'アイアンフォース', type:'passive',
+        desc:'HP70%以上のとき被ダメ-15%',
+        effect:{ type:'high_hp_reduction', hpThreshold:70, val:15 } },
+      { id:'sn_pas_vanguardian', name:'ヴァンガーディアン', type:'passive',
+        desc:'味方が致死ダメージを受けた時、代わりに受ける（戦闘中1回）',
+        effect:{ type:'intercept_fatal' } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'snu_fortress', name:'不壊の要塞',
-        effect:'自身に完全無敵2T＋味方全体シールド（最大HP40%）＋全耐性+30% 3T',
-        power:0, type:'buff', target:'all_ally',
-        selfInvincible:2, shieldRatio:0.40, allResUp:30, resTurns:3 },
+      { id:'snu_impenetrable', name:'インペネトラブル',
+        effect:'自身被ダメ99%カット(2T)＋味方全体シールド(maxHP20%)＋自身挑発(3T)',
+        power:0, type:'buff', target:'self',
+        effect2:{ type:'impenetrable', selfReduce:99, selfReduceTurns:2, shieldRatio:0.20, tauntTurns:3 } },
     ],
   },
 
@@ -5309,37 +5315,34 @@ const CLASS_DATA = {
   shooter: {
     name: 'シューター', icon: '🔫',
     role: 'レンジ', species: 'hume', attackTypes: ['貫'],
-    baseStats: { atk:800, hp:2400, mp:1400, pres:6, mres:8, bres:3, lres:0, spd:92, cri:20, cridam:185 },
+    baseStats: { atk:900, hp:2000, mp:1400, pres:6, mres:8, bres:3, lres:0, spd:92, cri:10, cridam:170, evade:4 },
     baseSearch: 32, baseStealth: 12, baseHate: 280,
     openingSkill: {
-      id:'sr_open_aim', name:'精密照準', type:'buff', target:'self',
-      desc:'CRI+20%・CRI倍率+30% 3T',
-      effect:{ type:'multi_buff', buffs:[
-        { type:'cri_up',    val:20, turns:3 },
-        { type:'cridam_up', val:30, turns:3 },
-      ]}
+      id:'sr_open_bombard', name:'ボムバードゥメント', type:'phys', attr:'貫', target:'all',
+      power:0.6, cd:0,
+      desc:'全体 ⚔️ Pw:0.6 砲撃'
     },
     activeSkills: [
-      { id:'sr_snipe', name:'スナイプ', type:'phys', attr:'貫', target:'single',
-        power:3.5, cd:7, desc:'単体 ⚔️ Pw:3.5（強制会心）',
-        forceCrit:true },
-      { id:'sr_burst', name:'バースト射撃', type:'phys', attr:'貫', target:'random_multi',
-        power:0.8, hits:5, cd:5, desc:'ランダム敵×5 ⚔️ Pw:0.8' },
+      { id:'sr_armor_break', name:'アーマーブレイク', type:'phys', attr:'貫', target:'single',
+        power:2.0, cd:4, armorPierce:50,
+        desc:'単体 ⚔️ Pw:2.0 ＋ 物理防御-50%無視' },
+      { id:'sr_bunker_buster', name:'バンカーバスター', type:'phys', attr:'貫', target:'single',
+        power:3.5, cd:7, armorPierce:70,
+        desc:'単体 ⚔️ Pw:3.5 ＋ 物理防御-70%無視' },
     ],
     passiveSkills: [
-      { id:'sr_pas_crieye', name:'狙撃手の眼', type:'passive',
-        desc:'CRI時ダメージ+20%（常時）',
-        effect:{ type:'crit_dmg_bonus', val:20 } },
-      { id:'sr_pas_weakspot', name:'急所狙い', type:'passive',
-        desc:'攻撃した敵のCRI耐性-5%スタック（最大3）',
-        effect:{ type:'cri_res_down_stack', val:5, maxStacks:3 } },
+      { id:'sr_pas_overdrive', name:'オーバードライブ', type:'passive',
+        desc:'戦闘開始から3T間 ATK+30%・SPD+15',
+        effect:{ type:'overdrive', atk:30, spd:15, turns:3 } },
+      { id:'sr_pas_target_lock', name:'ターゲットロック', type:'passive',
+        desc:'同じ敵を連撃するたび与ダメ+10%（最大5、別敵でリセット）',
+        effect:{ type:'target_lock', val:10, maxStacks:5 } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'sru_deadshot', name:'デッドショット',
-        effect:'単体 ⚔️ Pw:8.0 強制会心（CC中+Pw:4.0追加）',
-        power:8.0, type:'phys', attr:'貫', target:'single', forceCrit:true,
-        ccBonus:4.0 },
+      { id:'sru_railgun', name:'レールガン',
+        effect:'単体 ⚔️ Pw:10.0 ＋ 物理防御完全無視',
+        power:10.0, type:'phys', attr:'貫', target:'single', armorPierce:100 },
     ],
   },
 
@@ -5347,7 +5350,7 @@ const CLASS_DATA = {
   caster: {
     name: 'キャスター', icon: '🌀', iconImg: 'assets/images/class-caster.png',
     role: 'レンジ', species: 'daemon', attackTypes: ['魔'],
-    baseStats: { atk:880, hp:2200, mp:2600, pres:5, mres:16, bres:3, lres:0, spd:72, cri:10, cridam:155 },
+    baseStats: { atk:880, hp:2200, mp:2600, pres:5, mres:16, bres:3, lres:0, spd:72, cri:10, cridam:155, evade:5 },
     baseSearch: 18, baseStealth: 6, baseHate: 220,
     openingSkill: {
       id:'cs_open_charge', name:'魔力充填', type:'buff', target:'self',
@@ -5384,7 +5387,7 @@ const CLASS_DATA = {
   lancer: {
     name: 'ランサー', icon: '🔱', iconImg: 'assets/images/class-lancer.png',
     role: 'アタッカー', species: 'beast', attackTypes: ['貫','斬'],
-    baseStats: { atk:860, hp:2800, mp:1600, pres:14, mres:10, bres:6, lres:0, spd:84, cri:12, cridam:160 },
+    baseStats: { atk:860, hp:2800, mp:1600, pres:14, mres:10, bres:6, lres:0, spd:84, cri:12, cridam:160, evade:4 },
     baseSearch: 14, baseStealth: 5, baseHate: 350,
     openingSkill: {
       id:'lc_open_charge', name:'突撃準備', type:'buff', target:'self',
@@ -5421,7 +5424,7 @@ const CLASS_DATA = {
   minstrel: {
     name: 'ミンストレル', icon: '🎵', iconImg: 'assets/images/class-minstrel.png',
     role: 'サポート', species: 'celestia', attackTypes: ['魔'],
-    baseStats: { atk:680, hp:2900, mp:2400, pres:6, mres:16, bres:8, lres:0, spd:76, cri:6, cridam:140 },
+    baseStats: { atk:680, hp:2900, mp:2400, pres:6, mres:16, bres:8, lres:0, spd:76, cri:6, cridam:140, evade:5 },
     baseSearch: 12, baseStealth: 6, baseHate: 180,
     openingSkill: {
       id:'mn_open_inspire', name:'鼓舞の歌', type:'buff', target:'all_ally',
@@ -5461,37 +5464,37 @@ const CLASS_DATA = {
   professor: {
     name: 'プロフェッサー', icon: '📚', iconImg: 'assets/images/class-professor.png',
     role: 'レンジ', species: 'hume', attackTypes: ['魔'],
-    baseStats: { atk:820, hp:2300, mp:2800, pres:5, mres:14, bres:3, lres:0, spd:70, cri:9, cridam:150 },
+    baseStats: { atk:820, hp:2300, mp:2800, pres:5, mres:14, bres:3, lres:0, spd:70, cri:9, cridam:150, evade:4 },
     baseSearch: 22, baseStealth: 5, baseHate: 200,
     openingSkill: {
-      id:'pf_open_analyze', name:'解析眼', type:'buff', target:'all_enemy',
-      desc:'敵全体の全耐性-15% 3T（奇襲時-25%）',
-      effect:{ type:'all_res_down_all', val:-15, turns:3, surpriseVal:-25 }
+      id:'pf_open_battle_order', name:'バトルオーダー', type:'buff', target:'all_ally',
+      desc:'味方全体ATK+15%・SPD+15(3T)＋敵全体SPD-40%(1T)',
+      effect:{ type:'battle_order', allyAtkUp:15, allySpdUp:15, allyTurns:3, enemySpdDown:-40, enemyTurns:1 }
     },
     activeSkills: [
-      { id:'pf_gravity', name:'重力魔法', type:'spec', attr:'呪', target:'all',
-        power:1.0, cd:7, desc:'全体 ✨ Pw:1.0 ＋ SPD-20・ATK-20% 3T',
-        effect:{ type:'multi_debuff', debuffs:[
-          { type:'spd_down', val:-20, turns:3 },
-          { type:'atk_down', val:-20, turns:3 },
+      { id:'pf_stun_howl', name:'スタンハウル', type:'spec', attr:'魔', target:'random3',
+        power:0.7, cd:5, desc:'敵ランダム3体 ✨ Pw:0.7 ＋ スタン1T',
+        debuff:{ type:'stun', val:1, turns:1 } },
+      { id:'pf_bravely_howl', name:'ブレイブリーハウル', type:'buff', target:'highest_atk2_ally',
+        power:0, cd:7, desc:'味方ATK上位2人にATK+25%・SPD+15(3T)',
+        effect:{ type:'multi_buff', buffs:[
+          { type:'atk_up', val:25, turns:3 },
+          { type:'spd_up', val:15, turns:3 },
         ]}},
-      { id:'pf_amplify', name:'弱体強化', type:'spec', attr:'呪', target:'single',
-        power:0, cd:6, desc:'単体のデバフを強化（効果2倍・期間+2T）',
-        effect:{ type:'debuff_amplify', multiplier:2, extraTurns:2 } },
     ],
     passiveSkills: [
-      { id:'pf_pas_research', name:'研究の成果', type:'passive',
-        desc:'デバフ中の敵への与ダメ+18%（常時）',
-        effect:{ type:'dmg_vs_debuffed', val:18 } },
-      { id:'pf_pas_theory', name:'魔法理論', type:'passive',
-        desc:'全体攻撃時、対象の最も低い耐性に追加ダメージ+20%',
-        effect:{ type:'lowest_res_bonus', val:20 } },
+      { id:'pf_pas_insight', name:'アカデミック・インサイト', type:'passive',
+        desc:'デバフ中の敵への与ダメ+20%（常時）',
+        effect:{ type:'dmg_vs_debuffed', val:20 } },
+      { id:'pf_pas_followup', name:'フォロースルー', type:'passive',
+        desc:'他の味方が攻撃した時、10%で同じ敵に追撃（発動毎に半減、戦闘ごとリセット）',
+        effect:{ type:'follow_up_attack', rate:10, decay:0.5 } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'pfu_forbidden', name:'禁断の理論',
-        effect:'単体 ✨ Pw:2.0 ＋ 全ステータス-25%・全耐性-25%（永続）→ 全体 ⚔️ Pw:1.5',
-        power:2.0, type:'spec', attr:'呪', target:'single',
+      { id:'pfu_mission_complete', name:'ミッションコンプリート',
+        effect:'単体 ✨ Pw:2.0 ＋ 全ステ-25%・全耐性-25%（8T）→ 全体 ✨ Pw:1.5',
+        power:2.0, type:'spec', attr:'魔', target:'single',
         debuff:{ type:'grand_debuff_permanent', statVal:-25, resVal:-25, turns:8 },
         followUp:{ type:'spec', attr:'魔', target:'all', power:1.5 } },
     ],
@@ -5501,7 +5504,7 @@ const CLASS_DATA = {
   alchemist: {
     name: 'アルケミスト', icon: '⚗️',
     role: 'サポート', species: 'hume', attackTypes: ['魔'],
-    baseStats: { atk:700, hp:3100, mp:2600, pres:6, mres:14, bres:6, lres:0, spd:74, cri:5, cridam:140 },
+    baseStats: { atk:700, hp:3100, mp:2600, pres:6, mres:14, bres:6, lres:0, spd:74, cri:5, cridam:140, evade:4 },
     baseSearch: 14, baseStealth: 6, baseHate: 190,
     openingSkill: {
       id:'ac_open_brew', name:'賢者の調合', type:'buff', target:'all_ally',
@@ -5537,7 +5540,7 @@ const CLASS_DATA = {
   thief: {
     name: 'シーフ', icon: '🃏',
     role: 'スカウト', species: 'specter', attackTypes: ['斬','裂'],
-    baseStats: { atk:870, hp:2100, mp:1800, pres:5, mres:6, bres:8, lres:0, spd:112, cri:18, cridam:178 },
+    baseStats: { atk:870, hp:2100, mp:1800, pres:5, mres:6, bres:8, lres:0, spd:112, cri:18, cridam:178, evade:8 },
     baseSearch: 44, baseStealth: 40, baseHate: 160,
     openingSkill: {
       id:'th_open_shadow_run', name:'影走り', type:'opening', target:'self',
@@ -5843,7 +5846,7 @@ const CARDS = {
     id:'warrior_grand_sweep', name:'グランドスウィープ', class:'warrior', role:'attacker',
     type:'attack', rarity:2, cd:6, target:'all',
     effect:{ type:'damage', power:1.0, damageType:'phys',
-      debuff:{ type:'paralysis', val:1, turns:1 },
+      debuff:{ type:'slow', val:1, turns:1 },
     },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
     desc:'⚔️全体 Pw1.0 + ひるみ(1T)',
@@ -5981,7 +5984,7 @@ const CARDS = {
   'vg_great_shield_slam': {
     id:'vg_great_shield_slam', name:'大盾叩きつけ', class:'vanguard', role:'tank',
     type:'attack', rarity:2, cd:6, target:'single',
-    effect:{ type:'damage', power:1.8, damageType:'phys', debuff:{ type:'paralysis', val:1, turns:1 } },
+    effect:{ type:'damage', power:1.8, damageType:'phys', debuff:{ type:'slow', val:1, turns:1 } },
     lvBonus:[1.0,1.2,1.4,1.7,2.0],
     desc:'⚔️単体 Pw1.8 + ひるみ(1T)',
     descLv:(lv)=>`⚔️単体 Pw${(1.8*[1.0,1.2,1.4,1.7,2.0][lv-1]).toFixed(1)} + ひるみ(1T)`,
@@ -6643,7 +6646,7 @@ const CARDS = {
     id:'as_shadow_bind', name:'影縫い', class:'assassin', role:'attacker',
     type:'attack', rarity:2, cd:8, target:'single',
     effect:{ type:'damage', power:1.5, damageType:'spec',
-      debuff:{ type:'paralysis', val:1, turns:2 },
+      debuff:{ type:'slow', val:1, turns:2 },
       extraDebuff:{ type:'pdef_down', val:-15, turns:2 },
       extraDebuff2:{ type:'mdef_down', val:-12, turns:2 },
     },
@@ -6906,9 +6909,9 @@ const BABEL_AREAS = [
       ]},
       { id:'a1s8', name:'ゴブリンライダーの斥候', waves:1, enemies:[
         [{name:'ゴブリンライダー', icon:'🐺', hp:2500, mp:400, atk:250, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
-          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'paralysis', val:1, turns:1}},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'slow', val:1, turns:1}},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンライダー', icon:'🐺', hp:2500, mp:400, atk:250, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
-          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'paralysis', val:1, turns:1}},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'slow', val:1, turns:1}},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリン', icon:'👺', hp:1800, mp:300, atk:180, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
@@ -6980,9 +6983,9 @@ const BABEL_AREAS = [
       ]},
       { id:'a2s3', name:'ゴブリンライダー部隊', waves:1, enemies:[
         [{name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:340, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
-          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'paralysis', val:1, turns:1}},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'slow', val:1, turns:1}},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:340, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
-          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'paralysis', val:1, turns:1}},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'slow', val:1, turns:1}},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
@@ -7216,7 +7219,7 @@ const BABEL_AREAS = [
       ]},
       { id:'a2bs5', name:'苔むした道', waves:1, enemies:[
         [{name:'トレント', icon:'🌳', hp:20000, mp:4000, atk:420, pres:30, mres:20, bres:10, lres:0, spd:38, cri:3,
-          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'paralysis', val:1, turns:1}},{name:'木の大腕', type:'phys', target:'all', power:1.0, cd:8},{name:'大地の怒り', type:'phys', target:'all', power:1.2, cd:10, debuff:{type:'mdef_down', val:-10, turns:2}},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'slow', val:1, turns:1}},{name:'木の大腕', type:'phys', target:'all', power:1.0, cd:8},{name:'大地の怒り', type:'phys', target:'all', power:1.2, cd:10, debuff:{type:'mdef_down', val:-10, turns:2}},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'モスボア', icon:'🐗', hp:6000, mp:1500, atk:350, pres:15, mres:8, bres:5, lres:0, spd:60, cri:5,
           enemySkills:[{name:'自己修復', type:'buff', target:'self', power:0, cd:8, effect:{type:'heal_and_shield', healRatio:1.5, shieldRatio:0}},{name:'突進', type:'phys', target:'single', power:1.8, cd:5},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'モスボア', icon:'🐗', hp:6000, mp:1500, atk:350, pres:15, mres:8, bres:5, lres:0, spd:60, cri:5,
@@ -7232,9 +7235,9 @@ const BABEL_AREAS = [
          {name:'フォレストラプター', icon:'🦖', hp:5500, mp:1500, atk:460, pres:5, mres:0, bres:0, lres:0, spd:105, cri:14,
           enemySkills:[{name:'高速突撃', type:'phys', target:'single', power:2.2, cd:5},{name:'爪裂き', type:'phys', target:'single', power:1.8, cd:4, debuff:{type:'bleed', val:8, turns:3}},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]}],
         [{name:'トレント', icon:'🌳', hp:22000, mp:5000, atk:450, pres:30, mres:20, bres:10, lres:0, spd:38, cri:3,
-          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'paralysis', val:1, turns:1}},{name:'木の大腕', type:'phys', target:'all', power:1.0, cd:8},{name:'大地の怒り', type:'phys', target:'all', power:1.2, cd:10, debuff:{type:'mdef_down', val:-10, turns:2}},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'slow', val:1, turns:1}},{name:'木の大腕', type:'phys', target:'all', power:1.0, cd:8},{name:'大地の怒り', type:'phys', target:'all', power:1.2, cd:10, debuff:{type:'mdef_down', val:-10, turns:2}},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'トレント', icon:'🌳', hp:22000, mp:5000, atk:450, pres:30, mres:20, bres:10, lres:0, spd:38, cri:3,
-          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'paralysis', val:1, turns:1}},{name:'木の大腕', type:'phys', target:'all', power:1.0, cd:8},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'slow', val:1, turns:1}},{name:'木の大腕', type:'phys', target:'all', power:1.0, cd:8},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'モスボア', icon:'🐗', hp:7000, mp:2000, atk:380, pres:15, mres:8, bres:5, lres:0, spd:60, cri:5,
           enemySkills:[{name:'自己修復', type:'buff', target:'self', power:0, cd:8, effect:{type:'heal_and_shield', healRatio:1.5, shieldRatio:0}},{name:'突進', type:'phys', target:'single', power:1.8, cd:5},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
@@ -7254,7 +7257,7 @@ const BABEL_AREAS = [
          {name:'フォレストラプター', icon:'🦖', hp:6000, mp:1800, atk:500, pres:5, mres:0, bres:0, lres:0, spd:105, cri:14,
           enemySkills:[{name:'高速突撃', type:'phys', target:'single', power:2.2, cd:5},{name:'爪裂き', type:'phys', target:'single', power:1.8, cd:4, debuff:{type:'bleed', val:8, turns:3}},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'トレント', icon:'🌳', hp:22000, mp:5000, atk:480, pres:30, mres:20, bres:10, lres:0, spd:38, cri:3,
-          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'paralysis', val:1, turns:1}},{name:'大地の怒り', type:'phys', target:'all', power:1.2, cd:10, debuff:{type:'mdef_down', val:-10, turns:2}},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'slow', val:1, turns:1}},{name:'大地の怒り', type:'phys', target:'all', power:1.2, cd:10, debuff:{type:'mdef_down', val:-10, turns:2}},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'コボルト戦士', icon:'🐾', hp:5500, mp:1500, atk:420, pres:10, mres:5, bres:0, lres:0, spd:88, cri:8,
           enemySkills:[{name:'連携突き', type:'phys', target:'single', power:1.8, cd:5},{name:'剣撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'コボルトアーチャー', icon:'🏹', hp:3800, mp:1200, atk:340, pres:0, mres:8, bres:0, lres:0, spd:95, cri:12,
@@ -7268,7 +7271,7 @@ const BABEL_AREAS = [
          {name:'オーク', icon:'🧌', hp:10500, mp:2800, atk:580, pres:20, mres:8, bres:5, lres:0, spd:62, cri:6,
           enemySkills:[{name:'地響き踏み', type:'phys', target:'all', power:0.9, cd:8},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'トレント', icon:'🌳', hp:23000, mp:5500, atk:500, pres:30, mres:20, bres:10, lres:0, spd:38, cri:3,
-          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'paralysis', val:1, turns:1}},{name:'木の大腕', type:'phys', target:'all', power:1.0, cd:8},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]}],
+          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'slow', val:1, turns:1}},{name:'木の大腕', type:'phys', target:'all', power:1.0, cd:8},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]}],
         [{name:'フォレストラプター', icon:'🦖', hp:6500, mp:2000, atk:540, pres:5, mres:0, bres:0, lres:0, spd:105, cri:14,
           enemySkills:[{name:'高速突撃', type:'phys', target:'single', power:2.2, cd:5},{name:'爪裂き', type:'phys', target:'single', power:1.8, cd:4, debuff:{type:'bleed', val:8, turns:3}},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'フォレストラプター', icon:'🦖', hp:6500, mp:2000, atk:540, pres:5, mres:0, bres:0, lres:0, spd:105, cri:14,
@@ -7288,7 +7291,7 @@ const BABEL_AREAS = [
          {name:'フォレストラプター', icon:'🦖', hp:7000, mp:2200, atk:580, pres:5, mres:0, bres:0, lres:0, spd:108, cri:16,
           enemySkills:[{name:'高速突撃', type:'phys', target:'single', power:2.2, cd:5},{name:'爪裂き', type:'phys', target:'single', power:1.8, cd:4, debuff:{type:'bleed', val:8, turns:3}},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'トレント', icon:'🌳', hp:24000, mp:6000, atk:520, pres:30, mres:20, bres:10, lres:0, spd:38, cri:3,
-          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'paralysis', val:1, turns:1}},{name:'大地の怒り', type:'phys', target:'all', power:1.2, cd:10, debuff:{type:'mdef_down', val:-10, turns:2}},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:6, debuff:{type:'slow', val:1, turns:1}},{name:'大地の怒り', type:'phys', target:'all', power:1.2, cd:10, debuff:{type:'mdef_down', val:-10, turns:2}},{name:'枝撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'キラービー', icon:'🐝', hp:3200, mp:1000, atk:420, pres:0, mres:5, bres:0, lres:0, spd:112, cri:12,
           enemySkills:[{name:'毒針連撃', type:'phys', target:'single', power:1.5, cd:5, debuff:{type:'poison', val:10, turns:3}},{name:'刺撃', type:'phys', target:'single', power:1.0, cd:0}]}],
         [{name:'オーク', icon:'🧌', hp:11000, mp:3000, atk:600, pres:20, mres:8, bres:5, lres:0, spd:62, cri:6,
@@ -7313,7 +7316,7 @@ const BABEL_AREAS = [
             {hp:88000, skills:[
               {name:'大咆哮',   type:'spec', target:'highest_atk3', power:0,   cd:-1, onlyOnce:true,
                 effect:{type:'multi_debuff', debuffs:[{type:'atk_down',val:-20,turns:2},{type:'spd_down',val:-20,turns:2}]}},
-              {name:'大地砕き', type:'phys', target:'all',    power:1.6, cd:6,  debuff:{type:'paralysis',val:1,turns:1}},
+              {name:'大地砕き', type:'phys', target:'all',    power:1.6, cd:6,  debuff:{type:'slow',val:1,turns:1}},
               {name:'踏み潰し', type:'phys', target:'single', power:3.0, cd:4},
               {name:'鱗の砦',   type:'buff', target:'self',   power:0,   cd:8,
                 effect:{type:'multi_buff', buffs:[{type:'pdef_up',val:30,turns:3},{type:'mdef_up',val:30,turns:3}]}},
@@ -7322,7 +7325,7 @@ const BABEL_AREAS = [
               transitionSkill:{name:'激昂', type:'buff', target:'self',
                 effect:{type:'multi_buff', buffs:[{type:'atk_up',val:25,turns:5},{type:'spd_up',val:15,turns:5}]}},
               skills:[
-                {name:'大地砕き・強', type:'phys', target:'all',    power:2.2, cd:5,  debuff:{type:'paralysis',val:1,turns:1}},
+                {name:'大地砕き・強', type:'phys', target:'all',    power:2.2, cd:5,  debuff:{type:'slow',val:1,turns:1}},
                 {name:'踏み潰し・強', type:'phys', target:'lowest_hp', power:3.8, cd:3},
                 {name:'毒液噴射',     type:'phys', target:'all',    power:1.4, cd:7,  debuff:{type:'poison',val:12,turns:3}},
                 {name:'鋼鱗の要塞',   type:'buff', target:'self',   power:0,   cd:6,
@@ -7334,7 +7337,7 @@ const BABEL_AREAS = [
               summons:[{count:2, name:'モスボア', icon:'🐗', hp:9000, atk:550, pres:15, mres:8, bres:5, lres:0, spd:58, cri:5,
                 enemySkills:[{name:'自己修復', type:'buff', target:'self', power:0, cd:8, effect:{type:'heal_and_shield',healRatio:1.5,shieldRatio:0}},{name:'突進', type:'phys', target:'single', power:1.8, cd:5},{name:'牙撃', type:'phys', target:'single', power:1.0, cd:0}]}],
               skills:[
-                {name:'覚醒の踏み砕き', type:'phys', target:'all',      power:2.8, cd:4, debuff:{type:'paralysis',val:1,turns:1}},
+                {name:'覚醒の踏み砕き', type:'phys', target:'all',      power:2.8, cd:4, debuff:{type:'slow',val:1,turns:1}},
                 {name:'死の踏み潰し',   type:'phys', target:'lowest_hp', power:5.0, cd:4, debuff:{type:'bleed',val:15,turns:2}},
                 {name:'毒液大噴射',     type:'phys', target:'all',      power:2.0, cd:6, debuff:{type:'strong_poison',val:16,turns:3}},
                 {name:'鋼鱗の要塞・極', type:'buff', target:'self',     power:0,   cd:5,
@@ -7357,7 +7360,7 @@ const BABEL_AREAS = [
       ]},
       { id:'a2cs2', name:'毒胞子の茂み', waves:1, enemies:[
         [{name:'ヴェノムマイコニド', icon:'🟣', hp:8000, mp:3500, atk:520, pres:25, mres:8, bres:0, lres:0, spd:52, cri:4,
-          enemySkills:[{name:'毒胞子散布', type:'phys', target:'all', power:1.0, cd:5, debuff:{type:'strong_poison', val:12, turns:3}},{name:'菌糸の縛り', type:'spec', target:'single', power:1.5, cd:7, debuff:{type:'paralysis', val:1, turns:1}},{name:'叩きつけ', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'毒胞子散布', type:'phys', target:'all', power:1.0, cd:5, debuff:{type:'strong_poison', val:12, turns:3}},{name:'菌糸の縛り', type:'spec', target:'single', power:1.5, cd:7, debuff:{type:'slow', val:1, turns:1}},{name:'叩きつけ', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ヴェノムマイコニド', icon:'🟣', hp:8000, mp:3500, atk:520, pres:25, mres:8, bres:0, lres:0, spd:52, cri:4,
           enemySkills:[{name:'毒胞子散布', type:'phys', target:'all', power:1.0, cd:5, debuff:{type:'strong_poison', val:12, turns:3}},{name:'叩きつけ', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ヴェノムボア', icon:'🐗', hp:10000, mp:3000, atk:580, pres:18, mres:5, bres:5, lres:0, spd:62, cri:6,
@@ -7365,11 +7368,11 @@ const BABEL_AREAS = [
       ]},
       { id:'a2cs3', name:'幻惑の花畑', waves:1, enemies:[
         [{name:'スリープフラワー', icon:'🌸', hp:7000, mp:5000, atk:460, pres:10, mres:15, bres:0, lres:0, spd:58, cri:5,
-          enemySkills:[{name:'眠り花粉', type:'spec', target:'single', power:1.0, cd:5, debuff:{type:'silence', val:1, turns:2}},{name:'甘い香り', type:'spec', target:'all', power:0.6, cd:8, debuff:{type:'paralysis', val:1, turns:1}},{name:'花弁散布', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'眠り花粉', type:'spec', target:'single', power:1.0, cd:5, debuff:{type:'silence', val:1, turns:2}},{name:'甘い香り', type:'spec', target:'all', power:0.6, cd:8, debuff:{type:'slow', val:1, turns:1}},{name:'花弁散布', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'スリープフラワー', icon:'🌸', hp:7000, mp:5000, atk:460, pres:10, mres:15, bres:0, lres:0, spd:58, cri:5,
           enemySkills:[{name:'眠り花粉', type:'spec', target:'single', power:1.0, cd:5, debuff:{type:'silence', val:1, turns:2}},{name:'花弁散布', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'マンドラゴラ', icon:'🌿', hp:6500, mp:4000, atk:480, pres:8, mres:20, bres:0, lres:0, spd:55, cri:6,
-          enemySkills:[{name:'絶叫', type:'spec', target:'all', power:0.8, cd:6, debuff:{type:'atk_down', val:-15, turns:2}},{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:8, debuff:{type:'paralysis', val:1, turns:1}},{name:'茎撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'絶叫', type:'spec', target:'all', power:0.8, cd:6, debuff:{type:'atk_down', val:-15, turns:2}},{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:8, debuff:{type:'slow', val:1, turns:1}},{name:'茎撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'マンドラゴラ', icon:'🌿', hp:6500, mp:4000, atk:480, pres:8, mres:20, bres:0, lres:0, spd:55, cri:6,
           enemySkills:[{name:'絶叫', type:'spec', target:'all', power:0.8, cd:6, debuff:{type:'atk_down', val:-15, turns:2}},{name:'茎撃ち', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
@@ -7377,15 +7380,15 @@ const BABEL_AREAS = [
         [{name:'マイコニド', icon:'🍄', hp:10500, mp:3500, atk:560, pres:35, mres:5, bres:0, lres:0, spd:50, cri:3,
           enemySkills:[{name:'胞子散布', type:'spec', target:'all', power:0.8, cd:6, debuff:{type:'mdef_down', val:-8, turns:2}},{name:'根茎叩き', type:'phys', target:'single', power:1.8, cd:5},{name:'叩きつけ', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ヴェノムマイコニド', icon:'🟣', hp:9000, mp:4000, atk:580, pres:25, mres:8, bres:0, lres:0, spd:52, cri:4,
-          enemySkills:[{name:'毒胞子散布', type:'phys', target:'all', power:1.0, cd:5, debuff:{type:'strong_poison', val:12, turns:3}},{name:'菌糸の縛り', type:'spec', target:'single', power:1.5, cd:7, debuff:{type:'paralysis', val:1, turns:1}},{name:'叩きつけ', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'毒胞子散布', type:'phys', target:'all', power:1.0, cd:5, debuff:{type:'strong_poison', val:12, turns:3}},{name:'菌糸の縛り', type:'spec', target:'single', power:1.5, cd:7, debuff:{type:'slow', val:1, turns:1}},{name:'叩きつけ', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ピクシー', icon:'🧚', hp:5000, mp:6000, atk:380, pres:5, mres:20, bres:0, lres:0, spd:110, cri:10,
           enemySkills:[{name:'妖精の癒し', type:'buff', target:'all_ally', power:0, cd:6, effect:{type:'heal_and_shield', healRatio:1.0, shieldRatio:0}},{name:'魔力奪取', type:'phys', target:'single', power:1.2, cd:8, debuff:{type:'mdef_down', val:-12, turns:2}},{name:'妖精の一撃', type:'spec', target:'single', power:1.0, cd:0}]},
          {name:'ヴェノムウルフ', icon:'🐺', hp:7000, mp:2500, atk:540, pres:5, mres:5, bres:0, lres:0, spd:95, cri:10,
           enemySkills:[{name:'猛毒噛みつき', type:'phys', target:'single', power:1.6, cd:5, debuff:{type:'strong_poison', val:10, turns:3}},{name:'遠吠え', type:'spec', target:'all', power:0.5, cd:8, debuff:{type:'atk_down', val:-10, turns:2}},{name:'噛みつき', type:'phys', target:'single', power:1.0, cd:0}]}],
         [{name:'スリープフラワー', icon:'🌸', hp:7500, mp:5500, atk:500, pres:10, mres:15, bres:0, lres:0, spd:58, cri:5,
-          enemySkills:[{name:'眠り花粉', type:'spec', target:'single', power:1.0, cd:5, debuff:{type:'silence', val:1, turns:2}},{name:'甘い香り', type:'spec', target:'all', power:0.6, cd:8, debuff:{type:'paralysis', val:1, turns:1}},{name:'花弁散布', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'眠り花粉', type:'spec', target:'single', power:1.0, cd:5, debuff:{type:'silence', val:1, turns:2}},{name:'甘い香り', type:'spec', target:'all', power:0.6, cd:8, debuff:{type:'slow', val:1, turns:1}},{name:'花弁散布', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'マンドラゴラ', icon:'🌿', hp:7000, mp:4500, atk:520, pres:8, mres:20, bres:0, lres:0, spd:55, cri:6,
-          enemySkills:[{name:'絶叫', type:'spec', target:'all', power:0.8, cd:6, debuff:{type:'atk_down', val:-15, turns:2}},{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:8, debuff:{type:'paralysis', val:1, turns:1}},{name:'茎撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
+          enemySkills:[{name:'絶叫', type:'spec', target:'all', power:0.8, cd:6, debuff:{type:'atk_down', val:-15, turns:2}},{name:'根の束縛', type:'spec', target:'single', power:1.5, cd:8, debuff:{type:'slow', val:1, turns:1}},{name:'茎撃ち', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ピクシー', icon:'🧚', hp:5500, mp:7000, atk:400, pres:5, mres:20, bres:0, lres:0, spd:112, cri:10,
           enemySkills:[{name:'妖精の癒し', type:'buff', target:'all_ally', power:0, cd:6, effect:{type:'heal_and_shield', healRatio:1.2, shieldRatio:0}},{name:'魔力奪取', type:'phys', target:'single', power:1.2, cd:8, debuff:{type:'mdef_down', val:-12, turns:2}},{name:'妖精の一撃', type:'spec', target:'single', power:1.0, cd:0}]},
          {name:'ピクシー', icon:'🧚', hp:5500, mp:7000, atk:400, pres:5, mres:20, bres:0, lres:0, spd:112, cri:10,
@@ -7489,7 +7492,7 @@ const BABEL_AREAS = [
             {name:'隠密潜伏', type:'buff', target:'self',   power:0,   cd:6, effect:{type:'pdef_up', val:25, turns:3}},
             {name:'体当たり', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ヴェノムマイコニド', icon:'🟣', hp:9500, atk:600, pres:25, mres:8, bres:0, lres:0, spd:52, cri:4,
-          enemySkills:[{name:'毒胞子散布', type:'phys', target:'all', power:1.0, cd:5, debuff:{type:'strong_poison', val:12, turns:3}},{name:'菌糸の縛り', type:'spec', target:'single', power:1.5, cd:7, debuff:{type:'paralysis', val:1, turns:1}},{name:'叩きつけ', type:'phys', target:'single', power:1.0, cd:0}]}]
+          enemySkills:[{name:'毒胞子散布', type:'phys', target:'all', power:1.0, cd:5, debuff:{type:'strong_poison', val:12, turns:3}},{name:'菌糸の縛り', type:'spec', target:'single', power:1.5, cd:7, debuff:{type:'slow', val:1, turns:1}},{name:'叩きつけ', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
       { id:'a2cs8', name:'テオナナカトルの間', waves:1, enemies:[
         [{name:'テオナナカトル', icon:'🍄', atk:1100, pres:22, mres:20, bres:10, lres:5, spd:55, cri:5,
@@ -7542,13 +7545,13 @@ const BABEL_AREAS = [
         [{name:'クラッグゴート',icon:'🐐',hp:9300,mp:5000,atk:640,pres:12,mres:5,bres:8,lres:5,spd:85,cri:8,
           enemySkills:[
             {name:'連携突き',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'bleed',val:8,turns:2}},
-            {name:'岩蹴り',type:'phys',target:'single',power:1.5,cd:4,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩蹴り',type:'phys',target:'single',power:1.5,cd:4,debuff:{type:'slow',val:1,turns:1}},
             {name:'足場崩し',type:'spec',target:'all',power:0.8,cd:8,debuff:{type:'spd_down',val:-15,turns:2}},
             {name:'角突き',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'クラッグゴート',icon:'🐐',hp:9300,mp:5000,atk:640,pres:12,mres:5,bres:8,lres:5,spd:85,cri:8,
           enemySkills:[
             {name:'連携突き',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'bleed',val:8,turns:2}},
-            {name:'岩蹴り',type:'phys',target:'single',power:1.5,cd:4,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩蹴り',type:'phys',target:'single',power:1.5,cd:4,debuff:{type:'slow',val:1,turns:1}},
             {name:'角突き',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'スパインラット',icon:'🐀',hp:7800,mp:4000,atk:650,pres:18,mres:5,bres:10,lres:8,spd:92,cri:8,
           enemySkills:[
@@ -7632,13 +7635,13 @@ const BABEL_AREAS = [
       { id:'a3s4', name:'崖の狩人', waves:2, surpriseForced:true, enemies:[
         [{name:'ハイランドハーピー',icon:'🦅',hp:11000,mp:7500,atk:800,pres:5,mres:10,bres:8,lres:5,spd:105,cri:14,
           enemySkills:[
-            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'嵐の爪撃',type:'phys',target:'single',power:2.0,cd:6},
             {name:'風の刃',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-10,turns:2}},
             {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ハイランドハーピー',icon:'🦅',hp:11000,mp:7500,atk:800,pres:5,mres:10,bres:8,lres:5,spd:105,cri:14,
           enemySkills:[
-            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'嵐の爪撃',type:'phys',target:'single',power:2.0,cd:6},
             {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'スパインラット',icon:'🐀',hp:7800,mp:4000,atk:650,pres:18,mres:5,bres:10,lres:8,spd:92,cri:8,
@@ -7648,13 +7651,13 @@ const BABEL_AREAS = [
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'ハイランドハーピー',icon:'🦅',hp:11000,mp:7500,atk:800,pres:5,mres:10,bres:8,lres:5,spd:105,cri:14,
           enemySkills:[
-            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'嵐の爪撃',type:'phys',target:'single',power:2.0,cd:6},
             {name:'風の刃',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-10,turns:2}},
             {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ハイランドハーピー',icon:'🦅',hp:11000,mp:7500,atk:800,pres:5,mres:10,bres:8,lres:5,spd:105,cri:14,
           enemySkills:[
-            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'嵐の爪撃',type:'phys',target:'single',power:2.0,cd:6},
             {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'レッサーワイバーン',icon:'🐉',hp:18000,mp:9000,atk:1000,pres:12,mres:15,bres:12,lres:8,spd:95,cri:14,
@@ -7705,7 +7708,7 @@ const BABEL_AREAS = [
           enemySkills:[
             {name:'超高速突撃',type:'phys',target:'single',power:2.5,cd:5},
             {name:'空中連撃',type:'phys',target:'all',power:1.0,cd:6},
-            {name:'高高度急降下',type:'phys',target:'single',power:2.0,cd:8,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'高高度急降下',type:'phys',target:'single',power:2.0,cd:8,debuff:{type:'slow',val:1,turns:1}},
             {name:'嘴撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'スカイラプター',icon:'🦖',hp:10500,mp:6500,atk:880,pres:5,mres:5,bres:8,lres:5,spd:125,cri:18,
           enemySkills:[
@@ -7718,7 +7721,7 @@ const BABEL_AREAS = [
             {name:'嘴撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ハイランドハーピー',icon:'🦅',hp:11000,mp:7500,atk:800,pres:5,mres:10,bres:8,lres:5,spd:105,cri:14,
           enemySkills:[
-            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'嵐の爪撃',type:'phys',target:'single',power:2.0,cd:6},
             {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'スカイラプター',icon:'🦖',hp:10500,mp:6500,atk:880,pres:5,mres:5,bres:8,lres:5,spd:125,cri:18,
@@ -7729,7 +7732,7 @@ const BABEL_AREAS = [
          {name:'スカイラプター',icon:'🦖',hp:10500,mp:6500,atk:880,pres:5,mres:5,bres:8,lres:5,spd:125,cri:18,
           enemySkills:[
             {name:'超高速突撃',type:'phys',target:'single',power:2.5,cd:5},
-            {name:'高高度急降下',type:'phys',target:'single',power:2.0,cd:8,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'高高度急降下',type:'phys',target:'single',power:2.0,cd:8,debuff:{type:'slow',val:1,turns:1}},
             {name:'嘴撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'レッサーワイバーン',icon:'🐉',hp:18000,mp:9000,atk:1000,pres:12,mres:15,bres:12,lres:8,spd:95,cri:14,
           enemySkills:[
@@ -7738,7 +7741,7 @@ const BABEL_AREAS = [
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ハイランドハーピー',icon:'🦅',hp:11000,mp:7500,atk:800,pres:5,mres:10,bres:8,lres:5,spd:105,cri:14,
           enemySkills:[
-            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'風の刃',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-10,turns:2}},
             {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]}]
       ]},
@@ -7747,7 +7750,7 @@ const BABEL_AREAS = [
           enemySkills:[
             {name:'大地砕き',type:'phys',target:'single',power:2.5,cd:5},
             {name:'岩石噛み砕き',type:'phys',target:'single',power:2.0,cd:7,debuff:{type:'pdef_down',val:-15,turns:2}},
-            {name:'地響き',type:'phys',target:'all',power:1.2,cd:9,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'地響き',type:'phys',target:'all',power:1.2,cd:9,debuff:{type:'slow',val:1,turns:1}},
             {name:'突進',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ロックイーター',icon:'🦕',hp:22000,mp:10000,atk:980,pres:20,mres:10,bres:15,lres:8,spd:72,cri:10,
           enemySkills:[
@@ -7758,7 +7761,7 @@ const BABEL_AREAS = [
           enemySkills:[
             {name:'大地砕き',type:'phys',target:'single',power:2.5,cd:5},
             {name:'岩石噛み砕き',type:'phys',target:'single',power:2.0,cd:7,debuff:{type:'pdef_down',val:-15,turns:2}},
-            {name:'地響き',type:'phys',target:'all',power:1.2,cd:9,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'地響き',type:'phys',target:'all',power:1.2,cd:9,debuff:{type:'slow',val:1,turns:1}},
             {name:'突進',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ロックイーター',icon:'🦕',hp:22000,mp:10000,atk:980,pres:20,mres:10,bres:15,lres:8,spd:72,cri:10,
           enemySkills:[
@@ -7821,13 +7824,13 @@ const BABEL_AREAS = [
         [{name:'ロックシェル',icon:'🐚',hp:14000,mp:7000,atk:580,pres:45,mres:20,bres:20,lres:10,spd:42,cri:2,
           enemySkills:[
             {name:'殻閉じ',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'mdef_up',val:20,turns:3}]}},
-            {name:'殻砕き突進',type:'phys',target:'all',power:1.5,cd:7,hpTrigger:0.5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'殻砕き突進',type:'phys',target:'all',power:1.5,cd:7,hpTrigger:0.5,debuff:{type:'slow',val:1,turns:1}},
             {name:'酸分泌',type:'phys',target:'single',power:1.0,cd:6,debuff:{type:'pdef_down',val:-12,turns:2}},
             {name:'殻打ち',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'ロックシェル',icon:'🐚',hp:14000,mp:7000,atk:580,pres:45,mres:20,bres:20,lres:10,spd:42,cri:2,
           enemySkills:[
             {name:'殻閉じ',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'mdef_up',val:20,turns:3}]}},
-            {name:'殻砕き突進',type:'phys',target:'all',power:1.5,cd:7,hpTrigger:0.5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'殻砕き突進',type:'phys',target:'all',power:1.5,cd:7,hpTrigger:0.5,debuff:{type:'slow',val:1,turns:1}},
             {name:'殻打ち',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'スパインラット',icon:'🐀',hp:7800,mp:4000,atk:650,pres:18,mres:5,bres:10,lres:8,spd:92,cri:8,
           enemySkills:[
@@ -7842,12 +7845,12 @@ const BABEL_AREAS = [
         [{name:'ロックシェル',icon:'🐚',hp:14000,mp:7000,atk:580,pres:45,mres:20,bres:20,lres:10,spd:42,cri:2,
           enemySkills:[
             {name:'殻閉じ',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'mdef_up',val:20,turns:3}]}},
-            {name:'殻砕き突進',type:'phys',target:'all',power:1.5,cd:7,hpTrigger:0.5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'殻砕き突進',type:'phys',target:'all',power:1.5,cd:7,hpTrigger:0.5,debuff:{type:'slow',val:1,turns:1}},
             {name:'殻打ち',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'ロックシェル',icon:'🐚',hp:14000,mp:7000,atk:580,pres:45,mres:20,bres:20,lres:10,spd:42,cri:2,
           enemySkills:[
             {name:'殻閉じ',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:3},{type:'mdef_up',val:20,turns:3}]}},
-            {name:'殻砕き突進',type:'phys',target:'all',power:1.5,cd:7,hpTrigger:0.5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'殻砕き突進',type:'phys',target:'all',power:1.5,cd:7,hpTrigger:0.5,debuff:{type:'slow',val:1,turns:1}},
             {name:'酸分泌',type:'phys',target:'single',power:1.0,cd:6,debuff:{type:'pdef_down',val:-12,turns:2}},
             {name:'殻打ち',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'ビートル',icon:'🪲',hp:16000,mp:7000,atk:750,pres:32,mres:15,bres:18,lres:10,spd:60,cri:5,
@@ -7865,13 +7868,13 @@ const BABEL_AREAS = [
       { id:'a3s10', name:'峡谷の王者たち', waves:2, surpriseForced:true, enemies:[
         [{name:'ハイランドハーピー',icon:'🦅',hp:12000,atk:820,pres:5,mres:10,bres:8,lres:5,spd:108,cri:14,
           enemySkills:[
-            {name:'魅惑の旋律', type:'spec', target:'single', power:1.8, cd:5, debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'魅惑の旋律', type:'spec', target:'single', power:1.8, cd:5, debuff:{type:'slow',val:1,turns:1}},
             {name:'嵐の爪撃',   type:'phys', target:'single', power:2.0, cd:6},
             {name:'旋風切り',   type:'phys', target:'all',    power:1.0, cd:8, debuff:{type:'atk_down',val:-8,turns:2}},
             {name:'爪撃',       type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ハイランドハーピー',icon:'🦅',hp:12000,atk:820,pres:5,mres:10,bres:8,lres:5,spd:108,cri:14,
           enemySkills:[
-            {name:'魅惑の旋律', type:'spec', target:'single', power:1.8, cd:5, debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'魅惑の旋律', type:'spec', target:'single', power:1.8, cd:5, debuff:{type:'slow',val:1,turns:1}},
             {name:'嵐の爪撃',   type:'phys', target:'single', power:2.0, cd:6},
             {name:'爪撃',       type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'スカイラプター',icon:'🦖',hp:11000,atk:900,pres:5,mres:5,bres:8,lres:5,spd:128,cri:18,
@@ -7895,9 +7898,9 @@ const BABEL_AREAS = [
               {name:'急降下爪',       type:'phys', target:'lowest_hp',power:3.5, cd:4,  debuff:{type:'bleed',val:10,turns:2}},
               {name:'爪撃',           type:'phys', target:'single',   power:1.5, cd:0}]},
             {hp:220000,
-              transitionSkill:{name:'覇気の突風', type:'phys', target:'all', power:2.2, debuff:{type:'paralysis',val:1,turns:1}},
+              transitionSkill:{name:'覇気の突風', type:'phys', target:'all', power:2.2, debuff:{type:'slow',val:1,turns:1}},
               summons:[{count:2, name:'ハイランドハーピー', icon:'🦅', hp:12000, atk:820, pres:5, mres:10, bres:8, lres:5, spd:108, cri:14,
-                enemySkills:[{name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'paralysis',val:1,turns:1}},{name:'嵐の爪撃',type:'phys',target:'single',power:2.0,cd:6},{name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]}],
+                enemySkills:[{name:'魅惑の旋律',type:'spec',target:'single',power:1.8,cd:5,debuff:{type:'slow',val:1,turns:1}},{name:'嵐の爪撃',type:'phys',target:'single',power:2.0,cd:6},{name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]}],
               skills:[
                 {name:'神風斬・双',     type:'phys', target:'single',   power:4.5, cd:4, forceCrit:true, hits:2},
                 {name:'嵐の翼風圧',     type:'phys', target:'all',      power:2.6, cd:5},
@@ -7918,7 +7921,7 @@ const BABEL_AREAS = [
           ]},
          {name:'ロックバード',icon:'🦅',hp:14000,atk:780,pres:12,mres:8,bres:10,lres:5,spd:90,cri:10,
           enemySkills:[
-            {name:'岩石投下', type:'phys', target:'all',    power:1.5, cd:6, debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩石投下', type:'phys', target:'all',    power:1.5, cd:6, debuff:{type:'slow',val:1,turns:1}},
             {name:'風切り嘴', type:'phys', target:'single', power:1.8, cd:4},
             {name:'爪撃',     type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
@@ -8043,7 +8046,7 @@ const BABEL_AREAS = [
           enemySkills:[
             {name:'奇襲の牙',type:'phys',target:'single',power:3.0,cd:-1,onlyOnce:true,debuff:{type:'mdef_down',val:-20,turns:3}},
             {name:'毒液噴射',type:'phys',target:'all',power:1.2,cd:7,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'迷彩の罠',type:'spec',target:'single',power:1.5,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'迷彩の罠',type:'spec',target:'single',power:1.5,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'噛みつき',type:'phys',target:'single',power:1.8,cd:5},
             {name:'引っ掻き',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ミミックチェスト',icon:'📦',hp:14000,mp:7000,atk:850,pres:15,mres:15,bres:10,lres:8,spd:75,cri:15,
@@ -8065,7 +8068,7 @@ const BABEL_AREAS = [
           enemySkills:[
             {name:'奇襲の牙',type:'phys',target:'single',power:3.0,cd:-1,onlyOnce:true,debuff:{type:'mdef_down',val:-20,turns:3}},
             {name:'毒液噴射',type:'phys',target:'all',power:1.2,cd:7,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'迷彩の罠',type:'spec',target:'single',power:1.5,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'迷彩の罠',type:'spec',target:'single',power:1.5,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'噛みつき',type:'phys',target:'single',power:1.8,cd:5},
             {name:'引っ掻き',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'エンシェントゴーレム',icon:'🗿',hp:18000,mp:8000,atk:750,pres:35,mres:25,bres:15,lres:5,spd:48,cri:3,
@@ -8090,14 +8093,14 @@ const BABEL_AREAS = [
         [{name:'リビングアーマー',icon:'⚔️',hp:18000,mp:6000,atk:880,pres:45,mres:5,bres:30,lres:8,spd:65,cri:8,
           enemySkills:[
             {name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},
-            {name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'死の鎧纏い',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:5},{type:'atk_up',val:15,turns:5}]}},
             {name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},
             {name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'リビングアーマー',icon:'⚔️',hp:18000,mp:6000,atk:880,pres:45,mres:5,bres:30,lres:8,spd:65,cri:8,
           enemySkills:[
             {name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},
-            {name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'スケルトン',icon:'💀',hp:8000,mp:4000,atk:700,pres:8,mres:15,bres:30,lres:5,spd:80,cri:8,
           enemySkills:[
@@ -8111,7 +8114,7 @@ const BABEL_AREAS = [
         [{name:'リビングアーマー',icon:'⚔️',hp:20000,mp:7000,atk:900,pres:45,mres:5,bres:30,lres:8,spd:65,cri:8,
           enemySkills:[
             {name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},
-            {name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'死の鎧纏い',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:5},{type:'atk_up',val:15,turns:5}]}},
             {name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},
             {name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]},
@@ -8138,7 +8141,7 @@ const BABEL_AREAS = [
          {name:'リビングアーマー',icon:'⚔️',hp:20000,mp:7000,atk:900,pres:45,mres:5,bres:30,lres:8,spd:65,cri:8,
           enemySkills:[
             {name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},
-            {name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},
             {name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ガーゴイル',icon:'👹',hp:12000,mp:7000,atk:820,pres:15,mres:20,bres:18,lres:8,spd:88,cri:12,
@@ -8158,11 +8161,11 @@ const BABEL_AREAS = [
          {name:'クリスタルタートル',icon:'🐢',hp:20000,mp:10000,atk:680,pres:42,mres:35,bres:25,lres:8,spd:38,cri:2,
           enemySkills:[{name:'結晶甲羅展開',type:'buff',target:'self',power:0,cd:8,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:12,turns:3},{type:'mdef_up',val:20,turns:3}]}},{name:'クリスタルビーム',type:'spec',target:'single',power:0.12,cd:6},{name:'甲羅突き',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'リビングアーマー',icon:'⚔️',hp:20000,mp:7000,atk:900,pres:45,mres:5,bres:30,lres:8,spd:65,cri:8,
-          enemySkills:[{name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},{name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'paralysis',val:1,turns:1}},{name:'死の鎧纏い',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:5},{type:'atk_up',val:15,turns:5}]}},{name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},{name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]}],
+          enemySkills:[{name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},{name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'slow',val:1,turns:1}},{name:'死の鎧纏い',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:5},{type:'atk_up',val:15,turns:5}]}},{name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},{name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'リビングアーマー',icon:'⚔️',hp:22000,mp:8000,atk:920,pres:45,mres:5,bres:30,lres:8,spd:65,cri:8,
-          enemySkills:[{name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},{name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'paralysis',val:1,turns:1}},{name:'死の鎧纏い',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:5},{type:'atk_up',val:15,turns:5}]}},{name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},{name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]},
+          enemySkills:[{name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},{name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'slow',val:1,turns:1}},{name:'死の鎧纏い',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:5},{type:'atk_up',val:15,turns:5}]}},{name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},{name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ミミックチェスト',icon:'📦',hp:16000,mp:8000,atk:900,pres:15,mres:15,bres:10,lres:8,spd:75,cri:15,
-          enemySkills:[{name:'奇襲の牙',type:'phys',target:'single',power:3.0,cd:-1,onlyOnce:true,debuff:{type:'mdef_down',val:-20,turns:3}},{name:'毒液噴射',type:'phys',target:'all',power:1.2,cd:7,debuff:{type:'strong_poison',val:12,turns:3}},{name:'迷彩の罠',type:'spec',target:'single',power:1.5,cd:5,debuff:{type:'paralysis',val:1,turns:1}},{name:'噛みつき',type:'phys',target:'single',power:1.8,cd:5},{name:'引っ掻き',type:'phys',target:'single',power:1.0,cd:0}]},
+          enemySkills:[{name:'奇襲の牙',type:'phys',target:'single',power:3.0,cd:-1,onlyOnce:true,debuff:{type:'mdef_down',val:-20,turns:3}},{name:'毒液噴射',type:'phys',target:'all',power:1.2,cd:7,debuff:{type:'strong_poison',val:12,turns:3}},{name:'迷彩の罠',type:'spec',target:'single',power:1.5,cd:5,debuff:{type:'slow',val:1,turns:1}},{name:'噛みつき',type:'phys',target:'single',power:1.8,cd:5},{name:'引っ掻き',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ガーゴイル',icon:'👹',hp:14000,mp:8000,atk:900,pres:15,mres:20,bres:18,lres:8,spd:88,cri:12,
           enemySkills:[{name:'石化の眼光',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'stun',val:1,turns:1}},{name:'急降下爪撃',type:'phys',target:'single',power:2.2,cd:5},{name:'絶叫',type:'spec',target:'all',power:0.8,cd:8,hpTrigger:0.5,debuff:{type:'mdef_down',val:-12,turns:2}},{name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'エンシェントゴーレム',icon:'🗿',hp:20000,mp:9000,atk:800,pres:35,mres:25,bres:15,lres:5,spd:48,cri:3,
@@ -8174,21 +8177,21 @@ const BABEL_AREAS = [
          {name:'ガーゴイル',icon:'👹',hp:14000,mp:8000,atk:900,pres:15,mres:20,bres:18,lres:8,spd:88,cri:12,
           enemySkills:[{name:'石化の眼光',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'stun',val:1,turns:1}},{name:'急降下爪撃',type:'phys',target:'single',power:2.2,cd:5},{name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ミミックチェスト',icon:'📦',hp:16000,mp:8000,atk:900,pres:15,mres:15,bres:10,lres:8,spd:75,cri:15,
-          enemySkills:[{name:'奇襲の牙',type:'phys',target:'single',power:3.0,cd:-1,onlyOnce:true,debuff:{type:'mdef_down',val:-20,turns:3}},{name:'毒液噴射',type:'phys',target:'all',power:1.2,cd:7,debuff:{type:'strong_poison',val:12,turns:3}},{name:'迷彩の罠',type:'spec',target:'single',power:1.5,cd:5,debuff:{type:'paralysis',val:1,turns:1}},{name:'噛みつき',type:'phys',target:'single',power:1.8,cd:5},{name:'引っ掻き',type:'phys',target:'single',power:1.0,cd:0}]},
+          enemySkills:[{name:'奇襲の牙',type:'phys',target:'single',power:3.0,cd:-1,onlyOnce:true,debuff:{type:'mdef_down',val:-20,turns:3}},{name:'毒液噴射',type:'phys',target:'all',power:1.2,cd:7,debuff:{type:'strong_poison',val:12,turns:3}},{name:'迷彩の罠',type:'spec',target:'single',power:1.5,cd:5,debuff:{type:'slow',val:1,turns:1}},{name:'噛みつき',type:'phys',target:'single',power:1.8,cd:5},{name:'引っ掻き',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'リビングアーマー',icon:'⚔️',hp:22000,mp:8000,atk:920,pres:45,mres:5,bres:30,lres:8,spd:65,cri:8,
-          enemySkills:[{name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},{name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'paralysis',val:1,turns:1}},{name:'死の鎧纏い',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:5},{type:'atk_up',val:15,turns:5}]}},{name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},{name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]}],
+          enemySkills:[{name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},{name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'slow',val:1,turns:1}},{name:'死の鎧纏い',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:5},{type:'atk_up',val:15,turns:5}]}},{name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},{name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'エンシェントゴーレム',icon:'🗿',hp:22000,mp:10000,atk:820,pres:35,mres:25,bres:15,lres:5,spd:48,cri:3,
           enemySkills:[{name:'魔力起動',type:'buff',target:'self',power:0,cd:-1,onlyOnce:true,effect:{type:'multi_buff',buffs:[{type:'atk_up',val:15,turns:5},{type:'pdef_up',val:10,turns:5}]}},{name:'魔力砲',type:'phys',target:'single',power:1.8,cd:7},{name:'魔力爆発',type:'phys',target:'all',power:1.2,cd:9,debuff:{type:'mdef_down',val:-10,turns:2}},{name:'緊急修復',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'heal_and_shield',healRatio:1.5,shieldRatio:0}},{name:'岩拳',type:'phys',target:'single',power:1.6,cd:5},{name:'踏みつけ',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'クリスタルゴーレム',icon:'💎',hp:20000,mp:11000,atk:780,pres:40,mres:30,bres:20,lres:45,spd:50,cri:5,
           enemySkills:[{name:'結晶砲',type:'spec',target:'all',power:0,cd:8,effect:{type:'blue_hp_mp',hpRatio:0.07,mpRatio:0.07}},{name:'結晶爆散',type:'phys',target:'all',power:1.5,cd:10,hpTrigger:0.5},{name:'結晶の障壁',type:'buff',target:'all_ally',power:0,cd:9,effect:{type:'pdef_up',val:10,turns:2}},{name:'結晶拳',type:'phys',target:'single',power:1.6,cd:5},{name:'殴打',type:'phys',target:'single',power:1.1,cd:0}]},
          {name:'リビングアーマー',icon:'⚔️',hp:24000,mp:9000,atk:950,pres:45,mres:5,bres:30,lres:8,spd:65,cri:8,
-          enemySkills:[{name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},{name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'paralysis',val:1,turns:1}},{name:'死の鎧纏い',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:5},{type:'atk_up',val:15,turns:5}]}},{name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},{name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]},
+          enemySkills:[{name:'鉄鎧の一撃',type:'phys',target:'single',power:2.5,cd:5},{name:'呪縛の剣気',type:'spec',target:'single',power:2.0,cd:7,debuff:{type:'slow',val:1,turns:1}},{name:'死の鎧纏い',type:'buff',target:'self',power:0,cd:9,hpTrigger:0.5,effect:{type:'multi_buff',buffs:[{type:'pdef_up',val:20,turns:5},{type:'atk_up',val:15,turns:5}]}},{name:'黒煙噴出',type:'phys',target:'all',power:1.0,cd:8,debuff:{type:'atk_down',val:-12,turns:2}},{name:'剣撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ミミックチェスト',icon:'📦',hp:18000,mp:9000,atk:950,pres:15,mres:15,bres:10,lres:8,spd:75,cri:15,
-          enemySkills:[{name:'奇襲の牙',type:'phys',target:'single',power:3.0,cd:-1,onlyOnce:true,debuff:{type:'mdef_down',val:-20,turns:3}},{name:'毒液噴射',type:'phys',target:'all',power:1.2,cd:7,debuff:{type:'strong_poison',val:12,turns:3}},{name:'迷彩の罠',type:'spec',target:'single',power:1.5,cd:5,debuff:{type:'paralysis',val:1,turns:1}},{name:'噛みつき',type:'phys',target:'single',power:1.8,cd:5},{name:'引っ掻き',type:'phys',target:'single',power:1.0,cd:0}]}],
+          enemySkills:[{name:'奇襲の牙',type:'phys',target:'single',power:3.0,cd:-1,onlyOnce:true,debuff:{type:'mdef_down',val:-20,turns:3}},{name:'毒液噴射',type:'phys',target:'all',power:1.2,cd:7,debuff:{type:'strong_poison',val:12,turns:3}},{name:'迷彩の罠',type:'spec',target:'single',power:1.5,cd:5,debuff:{type:'slow',val:1,turns:1}},{name:'噛みつき',type:'phys',target:'single',power:1.8,cd:5},{name:'引っ掻き',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'ゲートガーディアン・頭部',icon:'💀',hp:400000,atk:2200,pres:20,mres:25,bres:20,lres:10,spd:75,cri:12,
           isProtected:'guardian',
           guardianFinalSkills:[
-            {name:'禁断の眼光・覚醒', type:'spec', target:'all',      power:3.5, cd:5,  debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'禁断の眼光・覚醒', type:'spec', target:'all',      power:3.5, cd:5,  debuff:{type:'slow',val:1,turns:1}},
             {name:'裁きの光・解放',   type:'spec', target:'all',      power:5.0, cd:-1, onlyOnce:true},
             {name:'時の支配',         type:'spec', target:'all',      power:2.0, cd:7,  debuff:{type:'silence',val:1,turns:2}},
             {name:'古の怒り',         type:'phys', target:'all',      power:4.0, cd:6},
@@ -8196,7 +8199,7 @@ const BABEL_AREAS = [
             {name:'頭突き・極',       type:'phys', target:'single',   power:3.0, cd:0}],
           enemySkills:[
             {name:'古の封印起動', type:'buff', target:'all_ally', power:0,   cd:-1, onlyOnce:true, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:25,turns:5},{type:'mdef_up',val:25,turns:5}]}},
-            {name:'禁断の眼光',   type:'spec', target:'all',      power:2.5, cd:6,  debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'禁断の眼光',   type:'spec', target:'all',      power:2.5, cd:6,  debuff:{type:'slow',val:1,turns:1}},
             {name:'死の呪詛',     type:'phys', target:'all',      power:2.0, cd:7,  debuff:{type:'mdef_down',val:-15,turns:3}},
             {name:'魔力波動',     type:'phys', target:'single',   power:4.0, cd:5},
             {name:'頭突き',       type:'phys', target:'single',   power:2.0, cd:0}]},
@@ -8204,14 +8207,14 @@ const BABEL_AREAS = [
           isGuardian:true, guardianId:'right',
           enemySkills:[
             {name:'鉄槌の一撃', type:'phys', target:'single', power:4.5, cd:5, debuff:{type:'pdef_down',val:-20,turns:2}},
-            {name:'払い薙ぎ',   type:'phys', target:'all',    power:2.0, cd:6, debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'払い薙ぎ',   type:'phys', target:'all',    power:2.0, cd:6, debuff:{type:'slow',val:1,turns:1}},
             {name:'鎧の突貫',   type:'phys', target:'single', power:3.0, cd:4},
             {name:'鉄拳',       type:'phys', target:'single', power:1.5, cd:0}]},
          {name:'ゲートガーディアン・左腕',icon:'🫲',hp:200000,atk:1600,pres:15,mres:30,bres:15,lres:15,spd:72,cri:10,
           isGuardian:true, guardianId:'left',
           enemySkills:[
             {name:'魔力解放',   type:'phys', target:'all',    power:2.5, cd:5, debuff:{type:'mdef_down',val:-15,turns:2}},
-            {name:'呪縛の鎖',   type:'spec', target:'single', power:2.0, cd:6, debuff:{type:'paralysis',val:1,turns:2}},
+            {name:'呪縛の鎖',   type:'spec', target:'single', power:2.0, cd:6, debuff:{type:'slow',val:1,turns:2}},
             {name:'暗黒の雷撃', type:'phys', target:'all',    power:1.8, cd:7},
             {name:'魔力拳',     type:'phys', target:'single', power:1.5, cd:0}]}]
       ]},
@@ -8236,7 +8239,7 @@ const BABEL_AREAS = [
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'砂スライム',icon:'🟡',hp:18000,mp:9000,atk:1000,pres:8,mres:12,bres:5,lres:0,spd:72,cri:5,
           enemySkills:[
@@ -8296,7 +8299,7 @@ const BABEL_AREAS = [
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]}]
       ]},
       { id:'a7s3', name:'ハゲワシの監視', waves:2, enemies:[
@@ -8348,17 +8351,17 @@ const BABEL_AREAS = [
         [{name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'砂スライム',icon:'🟡',hp:18000,mp:9000,atk:1000,pres:8,mres:12,bres:5,lres:0,spd:72,cri:5,
           enemySkills:[
@@ -8371,12 +8374,12 @@ const BABEL_AREAS = [
         [{name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートウルフ',icon:'🐺',hp:26000,mp:12000,atk:1200,pres:12,mres:8,bres:8,lres:0,spd:98,cri:10,
           enemySkills:[
@@ -8392,7 +8395,7 @@ const BABEL_AREAS = [
       { id:'a7s5', name:'砂岩の番所', waves:3, enemies:[
         [{name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'砂スライム',icon:'🟡',hp:18000,mp:9000,atk:1000,pres:8,mres:12,bres:5,lres:0,spd:72,cri:5,
@@ -8405,27 +8408,27 @@ const BABEL_AREAS = [
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートウルフ',icon:'🐺',hp:26000,mp:12000,atk:1200,pres:12,mres:8,bres:8,lres:0,spd:98,cri:10,
@@ -8513,12 +8516,12 @@ const BABEL_AREAS = [
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'サンドワーム',icon:'🐛',hp:35000,mp:14000,atk:1200,pres:25,mres:10,bres:12,lres:5,spd:50,cri:6,
           enemySkills:[
@@ -8585,21 +8588,21 @@ const BABEL_AREAS = [
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'サンドワーム',icon:'🐛',hp:35000,mp:14000,atk:1200,pres:25,mres:10,bres:12,lres:5,spd:50,cri:6,
@@ -8609,12 +8612,12 @@ const BABEL_AREAS = [
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'サンドワーム',icon:'🐛',hp:35000,mp:14000,atk:1200,pres:25,mres:10,bres:12,lres:5,spd:50,cri:6,
@@ -8702,12 +8705,12 @@ const BABEL_AREAS = [
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]}]
       ]},
       { id:'a7s10', name:'荒野の支配者', waves:3, enemies:[
@@ -8743,12 +8746,12 @@ const BABEL_AREAS = [
             {name:'爪撃',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートウルフ',icon:'🐺',hp:26000,mp:12000,atk:1200,pres:12,mres:8,bres:8,lres:0,spd:98,cri:10,
@@ -8778,18 +8781,18 @@ const BABEL_AREAS = [
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]}]
       ]},
       { id:'a7s11', name:'荒野の総力戦', waves:3, enemies:[
@@ -8811,12 +8814,12 @@ const BABEL_AREAS = [
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートスコーピオン',icon:'🦂',hp:22000,mp:12000,atk:1100,pres:15,mres:10,bres:8,lres:5,spd:82,cri:13,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'砂スライム',icon:'🟡',hp:18000,mp:9000,atk:1000,pres:8,mres:12,bres:5,lres:0,spd:72,cri:5,
           enemySkills:[
@@ -8828,7 +8831,7 @@ const BABEL_AREAS = [
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'サンドバジリスク',icon:'🦎',hp:28000,mp:14000,atk:1250,pres:18,mres:15,bres:10,lres:5,spd:102,cri:14,
@@ -8863,7 +8866,7 @@ const BABEL_AREAS = [
             {name:'噛みつき',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ロックゴーレム',icon:'🪨',hp:48000,mp:16000,atk:1150,pres:48,mres:18,bres:20,lres:5,spd:38,cri:3,
           enemySkills:[
-            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'岩盤崩し',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'土砂降り',type:'phys',target:'single',power:2.5,cd:5},
             {name:'拳撃',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'デザートウルフ',icon:'🐺',hp:26000,mp:12000,atk:1200,pres:12,mres:8,bres:8,lres:0,spd:98,cri:10,
@@ -8897,7 +8900,7 @@ const BABEL_AREAS = [
          {name:'デザートスコーピオン',icon:'🦂',hp:80000,mp:16000,atk:1300,pres:18,mres:12,bres:10,lres:5,spd:85,cri:15,
           enemySkills:[
             {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]}],
         // WAVE2: 死肉の匂いに引き寄せられたグラベルワーム＋スカベンジャー
         [{name:'ヴァルチャー',icon:'🦅',hp:85000,mp:20000,atk:1450,pres:10,mres:5,bres:10,lres:0,spd:110,cri:16,
@@ -8927,7 +8930,7 @@ const BABEL_AREAS = [
             {name:'デザートスコーピオン',icon:'🦂',hp:85000,mp:16000,atk:1300,pres:18,mres:12,bres:10,lres:5,spd:85,cri:15,
               enemySkills:[
                 {name:'毒針',type:'phys',target:'single',power:1.2,cd:5,debuff:{type:'strong_poison',val:12,turns:3}},
-                {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+                {name:'ハサミ挟み',type:'phys',target:'single',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
                 {name:'刺突',type:'phys',target:'single',power:1.0,cd:0}]}
           ],
           phases:[
@@ -8935,7 +8938,7 @@ const BABEL_AREAS = [
               {name:'地中突破',   type:'phys', target:'all',    power:1.5, cd:-1, onlyOnce:true},
               {name:'砂嵐',       type:'spec', target:'all',    power:0.8, cd:5,  debuff:{type:'atk_down',val:-15,turns:2}},
               {name:'地中突撃',   type:'phys', target:'single', power:4.0, cd:4},
-              {name:'地響き',     type:'phys', target:'all',    power:1.5, cd:7,  debuff:{type:'paralysis',val:1,turns:1}},
+              {name:'地響き',     type:'phys', target:'all',    power:1.5, cd:7,  debuff:{type:'slow',val:1,turns:1}},
               {name:'体当たり',   type:'phys', target:'single', power:1.5, cd:0}]},
             {hp:700000,
               transitionSkill:{name:'怒りの咆哮', type:'buff', target:'self', power:0, effect:{type:'multi_buff',buffs:[{type:'atk_up',val:25,turns:5},{type:'spd_up',val:15,turns:5}]}},
@@ -8943,7 +8946,7 @@ const BABEL_AREAS = [
               {name:'全体薙ぎ払い', type:'phys', target:'all',    power:2.4, cd:4},
               {name:'砂嵐・強',     type:'spec', target:'all',    power:1.2, cd:4,  debuff:{type:'atk_down',val:-20,turns:2}},
               {name:'地中突撃・強', type:'phys', target:'single', power:5.5, cd:4},
-              {name:'地震',         type:'phys', target:'all',    power:2.0, cd:6,  debuff:{type:'paralysis',val:1,turns:1}},
+              {name:'地震',         type:'phys', target:'all',    power:2.0, cd:6,  debuff:{type:'slow',val:1,turns:1}},
               {name:'体当たり',     type:'phys', target:'single', power:1.8, cd:0}]},
             {hp:800000,
               transitionSkill:{name:'地竜の怒り', type:'phys', target:'all', power:2.5},
@@ -9181,7 +9184,7 @@ const BABEL_AREAS = [
         [{name:'オブシディアン',icon:'🦏',hp:65000,mp:16000,atk:1550,pres:55,mres:15,bres:25,lres:5,spd:42,cri:4,
           enemySkills:[
             {name:'黒曜石突進',type:'phys',target:'single',power:2.5,cd:6},
-            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
@@ -9206,12 +9209,12 @@ const BABEL_AREAS = [
         [{name:'オブシディアン',icon:'🦏',hp:65000,mp:16000,atk:1550,pres:55,mres:15,bres:25,lres:5,spd:42,cri:4,
           enemySkills:[
             {name:'黒曜石突進',type:'phys',target:'single',power:2.5,cd:6},
-            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'オブシディアン',icon:'🦏',hp:65000,mp:16000,atk:1550,pres:55,mres:15,bres:25,lres:5,spd:42,cri:4,
           enemySkills:[
             {name:'黒曜石突進',type:'phys',target:'single',power:2.5,cd:6},
-            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'マグマスライム',icon:'🟠',hp:28000,mp:12000,atk:1400,pres:18,mres:12,bres:38,lres:5,spd:62,cri:6,
           enemySkills:[
@@ -9224,12 +9227,12 @@ const BABEL_AREAS = [
         [{name:'オブシディアン',icon:'🦏',hp:65000,mp:16000,atk:1550,pres:55,mres:15,bres:25,lres:5,spd:42,cri:4,
           enemySkills:[
             {name:'黒曜石突進',type:'phys',target:'single',power:2.5,cd:6},
-            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'オブシディアン',icon:'🦏',hp:65000,mp:16000,atk:1550,pres:55,mres:15,bres:25,lres:5,spd:42,cri:4,
           enemySkills:[
             {name:'黒曜石突進',type:'phys',target:'single',power:2.5,cd:6},
-            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'ヘルハウンド',icon:'🐕',hp:42000,mp:18000,atk:1650,pres:15,mres:18,bres:30,lres:5,spd:102,cri:12,
           enemySkills:[
@@ -9253,13 +9256,13 @@ const BABEL_AREAS = [
             {name:'噛みつき',type:'phys',target:'single',power:1.5,cd:0}]},
          {name:'ヴォルタイル',icon:'🐍',hp:32000,mp:18000,atk:1550,pres:10,mres:22,bres:15,lres:35,spd:92,cri:12,
           enemySkills:[
-            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'slow',val:1,turns:1}},
+            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'電撃',type:'spec',target:'single',power:1.0,cd:0}]},
          {name:'ヴォルタイル',icon:'🐍',hp:32000,mp:18000,atk:1550,pres:10,mres:22,bres:15,lres:35,spd:92,cri:12,
           enemySkills:[
-            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'slow',val:1,turns:1}},
+            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'電撃',type:'spec',target:'single',power:1.0,cd:0}]}],
         [{name:'マグナウム',icon:'🐲',hp:52000,mp:20000,atk:1750,pres:20,mres:20,bres:28,lres:8,spd:78,cri:10,
           enemySkills:[
@@ -9280,18 +9283,18 @@ const BABEL_AREAS = [
       { id:'a8s7', name:'雷鳴と溶岩', waves:3, enemies:[
         [{name:'ヴォルタイル',icon:'🐍',hp:32000,mp:18000,atk:1550,pres:10,mres:22,bres:15,lres:35,spd:92,cri:12,
           enemySkills:[
-            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'slow',val:1,turns:1}},
+            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'電撃',type:'spec',target:'single',power:1.0,cd:0}]},
          {name:'ヴォルタイル',icon:'🐍',hp:32000,mp:18000,atk:1550,pres:10,mres:22,bres:15,lres:35,spd:92,cri:12,
           enemySkills:[
-            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'slow',val:1,turns:1}},
+            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'電撃',type:'spec',target:'single',power:1.0,cd:0}]},
          {name:'ヴォルタイル',icon:'🐍',hp:32000,mp:18000,atk:1550,pres:10,mres:22,bres:15,lres:35,spd:92,cri:12,
           enemySkills:[
-            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'slow',val:1,turns:1}},
+            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'電撃',type:'spec',target:'single',power:1.0,cd:0}]},
          {name:'エンバリス',icon:'🦋',hp:20000,mp:14000,atk:1200,pres:5,mres:10,bres:20,lres:0,spd:96,cri:8,
           enemySkills:[
@@ -9310,13 +9313,13 @@ const BABEL_AREAS = [
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]}],
         [{name:'ヴォルタイル',icon:'🐍',hp:32000,mp:18000,atk:1550,pres:10,mres:22,bres:15,lres:35,spd:92,cri:12,
           enemySkills:[
-            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'slow',val:1,turns:1}},
+            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'電撃',type:'spec',target:'single',power:1.0,cd:0}]},
          {name:'ヴォルタイル',icon:'🐍',hp:32000,mp:18000,atk:1550,pres:10,mres:22,bres:15,lres:35,spd:92,cri:12,
           enemySkills:[
-            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'slow',val:1,turns:1}},
+            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'電撃',type:'spec',target:'single',power:1.0,cd:0}]},
          {name:'マグナウム',icon:'🐲',hp:52000,mp:20000,atk:1750,pres:20,mres:20,bres:28,lres:8,spd:78,cri:10,
           enemySkills:[
@@ -9330,18 +9333,18 @@ const BABEL_AREAS = [
             {name:'噛みつき',type:'phys',target:'single',power:1.5,cd:0}]}],
         [{name:'ヴォルタイル',icon:'🐍',hp:32000,mp:18000,atk:1550,pres:10,mres:22,bres:15,lres:35,spd:92,cri:12,
           enemySkills:[
-            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'slow',val:1,turns:1}},
+            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'電撃',type:'spec',target:'single',power:1.0,cd:0}]},
          {name:'ヴォルタイル',icon:'🐍',hp:32000,mp:18000,atk:1550,pres:10,mres:22,bres:15,lres:35,spd:92,cri:12,
           enemySkills:[
-            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'slow',val:1,turns:1}},
+            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'電撃',type:'spec',target:'single',power:1.0,cd:0}]},
          {name:'オブシディアン',icon:'🦏',hp:65000,mp:16000,atk:1550,pres:55,mres:15,bres:25,lres:5,spd:42,cri:4,
           enemySkills:[
             {name:'黒曜石突進',type:'phys',target:'single',power:2.5,cd:6},
-            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'エンバリス',icon:'🦋',hp:20000,mp:14000,atk:1200,pres:5,mres:10,bres:20,lres:0,spd:96,cri:8,
           enemySkills:[
@@ -9391,7 +9394,7 @@ const BABEL_AREAS = [
         [{name:'オブシディアン',icon:'🦏',hp:65000,mp:16000,atk:1550,pres:55,mres:15,bres:25,lres:5,spd:42,cri:4,
           enemySkills:[
             {name:'黒曜石突進',type:'phys',target:'single',power:2.5,cd:6},
-            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'サラマンダー',icon:'🦎',hp:36000,mp:18000,atk:1500,pres:15,mres:18,bres:30,lres:5,spd:80,cri:10,
           enemySkills:[
@@ -9410,13 +9413,13 @@ const BABEL_AREAS = [
             {name:'噛みつき',type:'phys',target:'single',power:1.5,cd:0}]}],
         [{name:'ヴォルタイル',icon:'🐍',hp:32000,mp:18000,atk:1550,pres:10,mres:22,bres:15,lres:35,spd:92,cri:12,
           enemySkills:[
-            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'slow',val:1,turns:1}},
+            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'電撃',type:'spec',target:'single',power:1.0,cd:0}]},
          {name:'ヴォルタイル',icon:'🐍',hp:32000,mp:18000,atk:1550,pres:10,mres:22,bres:15,lres:35,spd:92,cri:12,
           enemySkills:[
-            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'paralysis',val:1,turns:1}},
-            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'溶岩放電',type:'spec',target:'all',power:1.3,cd:6,debuff:{type:'slow',val:1,turns:1}},
+            {name:'感電噛み',type:'phys',target:'single',power:2.0,cd:5,debuff:{type:'slow',val:1,turns:1}},
             {name:'電撃',type:'spec',target:'single',power:1.0,cd:0}]},
          {name:'ヘルハウンド',icon:'🐕',hp:42000,mp:18000,atk:1650,pres:15,mres:18,bres:30,lres:5,spd:102,cri:12,
           enemySkills:[
@@ -9451,7 +9454,7 @@ const BABEL_AREAS = [
          {name:'オブシディアン',icon:'🦏',hp:65000,mp:16000,atk:1550,pres:55,mres:15,bres:25,lres:5,spd:42,cri:4,
           enemySkills:[
             {name:'黒曜石突進',type:'phys',target:'single',power:2.5,cd:6},
-            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'エンバリス',icon:'🦋',hp:20000,mp:14000,atk:1200,pres:5,mres:10,bres:20,lres:0,spd:96,cri:8,
           enemySkills:[
@@ -9502,12 +9505,12 @@ const BABEL_AREAS = [
         [{name:'オブシディアン',icon:'🦏',hp:65000,mp:16000,atk:1550,pres:55,mres:15,bres:25,lres:5,spd:42,cri:4,
           enemySkills:[
             {name:'黒曜石突進',type:'phys',target:'single',power:2.5,cd:6},
-            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'オブシディアン',icon:'🦏',hp:65000,mp:16000,atk:1550,pres:55,mres:15,bres:25,lres:5,spd:42,cri:4,
           enemySkills:[
             {name:'黒曜石突進',type:'phys',target:'single',power:2.5,cd:6},
-            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'paralysis',val:1,turns:1}},
+            {name:'角の薙ぎ払い',type:'phys',target:'all',power:1.5,cd:7,debuff:{type:'slow',val:1,turns:1}},
             {name:'体当たり',type:'phys',target:'single',power:1.0,cd:0}]},
          {name:'エンバリス',icon:'🦋',hp:20000,mp:14000,atk:1200,pres:5,mres:10,bres:20,lres:0,spd:96,cri:8,
           enemySkills:[
@@ -11252,8 +11255,8 @@ const NEWS_DATA = [
   <li><b>燃焼</b>：ATK×10%/T × 3T、耐性無視</li>
   <li><b>出血（旧 裂傷）</b>：ATK×4→8→12→16→20%/T × 5T 加速型、耐性無視</li>
   <li><b>スタン → 気絶</b>：ATB満タンでも行動キャンセル方式に</li>
-  <li><b>しびれ</b>：ATB進行 -40%（行動はできる）</li>
-  <li><b>沈黙</b>：行動不可（被ダメで覚醒）。睡眠・ひるみ・拘束は削除し沈黙/しびれに整理</li>
+  <li><b>スロー</b>：ATB進行 -40%（行動はできる）</li>
+  <li><b>沈黙</b>：行動不可（被ダメで覚醒）。睡眠・ひるみ・拘束は削除し沈黙/スローに整理</li>
   <li>敵側の <b>turns:999</b> バフ・デバフを <b>5〜8T</b> に短縮（27箇所）</li>
   <li><b>特殊耐性バフ（MDEF↑）</b>の効果量を一律 +10pt 底上げ（10〜30% → 20〜40%）</li>
 </ul>
@@ -12509,6 +12512,46 @@ function launchApp() {
         pr_open_regen:    'pr_open_prayers_song',
         pr_area:          'pr_sanctuary',
       },
+      archer: {
+        ar_open_preemptive: 'ar_open_volley',
+      },
+      shooter: {
+        sr_open_aim:      'sr_open_bombard',
+        sr_snipe:         'sr_armor_break',
+        sr_burst:         'sr_bunker_buster',
+        sr_pas_crieye:    'sr_pas_overdrive',
+        sr_pas_weakspot:  'sr_pas_target_lock',
+      },
+      paladin: {
+        pd_open_holy:     'pd_open_protect',
+        pd_holy_strike:   'pd_holy_lance',
+        pd_miracle:       'pd_blessing_light',
+        pd_pas_heal:      'pd_pas_brand',
+        pd_pas_bres:      'pd_pas_unbreakable',
+      },
+      sentinel: {
+        sn_open_ironwall: 'sn_open_guard',
+        sn_counter_guard: 'sn_counter_parry',
+        sn_shield_bash2:  'sn_shield_smash',
+        sn_pas_fort:      'sn_pas_iron_force',
+        sn_pas_guard:     'sn_pas_vanguardian',
+      },
+      professor: {
+        pf_open_analyze:  'pf_open_battle_order',
+        pf_gravity:       'pf_stun_howl',
+        pf_amplify:       'pf_bravely_howl',
+        pf_pas_research:  'pf_pas_insight',
+        pf_pas_theory:    'pf_pas_followup',
+        pfu_forbidden:    'pfu_mission_complete',
+      },
+      assassin: {
+        as_open_shadow:    'as_open_blitz',
+        as_poison_blade:   'as_poison_fang',
+        as_backstab:       'as_flare_signal',
+        as_pass_night:     'as_pass_night_hunter',
+        as_pass_shadow:    'as_pass_shadow_mastery',
+        asu_hunt:          'asu_shadow_hunt',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -13724,6 +13767,7 @@ function calcStats(unit) {
   let mdef   = base.mdef || 0;
   let cri    = base.cri;
   let cridam = base.cridam;
+  let evade  = base.evade || 0;
   // パッシブ加算（すべてフラットまたは%）
   (unit.passives||[]).forEach(p => {
     const pd = PASSIVE_POOL.find(x=>x.id===p.id);
@@ -13770,6 +13814,7 @@ function calcStats(unit) {
     mdef: Math.min(mdef, 99),
     cri,
     cridam,
+    evade,
   };
 }
 
@@ -14642,16 +14687,16 @@ function tickDoTHoT(c) {
 }
 
 // ============================================================
-//  CC SYSTEM — 気絶・しびれ・沈黙
+//  CC SYSTEM — 気絶・スロー・沈黙
 // ============================================================
 
-function isParalyzed(c) {
-  return (c.debuffs||[]).some(d => d.type === 'paralysis');
+function isSlowed(c) {
+  return (c.debuffs||[]).some(d => d.type === 'slow');
 }
 
-// しびれ中は ATB 進行速度を低下（行動はできる）
+// スロー中は ATB 進行速度を低下（行動はできる）
 function getAtbMult(c) {
-  return (c.debuffs||[]).some(d => d.type === 'paralysis') ? 0.6 : 1.0;
+  return (c.debuffs||[]).some(d => d.type === 'slow') ? 0.6 : 1.0;
 }
 
 // 沈黙（睡眠相当）は被ダメで覚醒する
@@ -14674,6 +14719,11 @@ function resolveBuffTargets(skill, caster, allies, enemies) {
   if (t === 'self') return [caster];
   if (t === 'all_ally') return allies.filter(a=>!a.dead);
   if (t === 'all_enemy') return enemies.filter(e=>!e.dead);
+  // プロフェッサー: ATK上位2人の味方
+  if (t === 'highest_atk2_ally') {
+    const alive = allies.filter(a=>!a.dead);
+    return [...alive].sort((a,b)=>(b.atk||0)-(a.atk||0)).slice(0, Math.min(2, alive.length));
+  }
   if (t === 'single_ally') {
     // プリースト: 最もHP割合が低い味方（自身も含む）
     const alive = allies.filter(a=>!a.dead);
@@ -15570,6 +15620,7 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       maxHp: hp, hp: hp,
       atk, pdef, mdef,
       spd, cri: stats.cri + passiveCri, cridam: stats.cridam,
+      evade: stats.evade || 0,
       search:  cls2?.baseSearch  ?? 10,
       stealth: (cls2?.baseStealth ?? 5) + passiveStealth,
       hate:    isLeader ? Math.floor((cls2?.baseHate ?? 400) * 1.5) : (cls2?.baseHate ?? 400),
@@ -15608,6 +15659,22 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       }
       if (ps.effect?.type === 'dmg_vs_bleed') {
         combatant._passiveBloodHunter = { val: ps.effect.val || 25 };
+      }
+      if (ps.effect?.type === 'overdrive') {
+        const turns = ps.effect.turns || 3;
+        const atk = ps.effect.atk || 30;
+        const spd = ps.effect.spd || 15;
+        combatant.buffs.push({ type:'atk_up', val:atk, turns, icon:'⚙️OD', cssClass:'atk-up', isPassive:true });
+        combatant.buffs.push({ type:'spd_up', val:spd, turns, icon:'⚙️OD', cssClass:'spd-up', isPassive:true });
+      }
+      if (ps.effect?.type === 'target_lock') {
+        combatant._passiveTargetLock = { stacks:0, maxStacks: ps.effect.maxStacks||5, val: ps.effect.val||10, lastTargetUid:null };
+      }
+      // 夜の狩人: 昼戦時のATKペナルティを即時適用。夜戦突入時に解除＋bonus付与
+      if (ps.effect?.type === 'night_bonus' && ps.effect.dayAtkPenalty) {
+        const pen = ps.effect.dayAtkPenalty;
+        combatant._dayAtkPenalty = pen;
+        combatant.atk = Math.floor(combatant.atk * (1 - pen / 100));
       }
     });
     applyPassiveCards(combatant, unit);
@@ -15713,6 +15780,16 @@ function fireOpeningSkills(allies, enemies) {
       addLog(`${ally.name} <span class="tag tag-skill">${opening.name}</span> [開幕]`, 'trigger');
       if (opening.target === 'all_ally') {
         aliveAllies.forEach(a => { applyBuff(a, opening, ally); flashCard(a.uid, 'buff'); });
+        // プロフェッサー: バトルオーダー（味方バフは applyBuff 済、敵デバフを追加適用）
+        if (opening.effect?.type === 'battle_order' && aliveEnemies.length) {
+          const spdDownVal = opening.effect.enemySpdDown || -40;
+          const spdDownTurns = opening.effect.enemyTurns || 1;
+          aliveEnemies.forEach(e => {
+            applyDebuffDirect(e, { type:'spd_down', val:spdDownVal, turns:spdDownTurns });
+            spawnFloatNum(e.uid, '🐢SPD↓', 'float-debuff');
+          });
+          addLog(`敵全体に <span class="tag tag-trigger">🐢SPD${spdDownVal}%(${spdDownTurns}T)</span>`, 'trigger');
+        }
       } else if (opening.target === 'all_enemy') {
         const effInner = opening.effect;
         aliveEnemies.forEach(e => {
@@ -15729,7 +15806,13 @@ function fireOpeningSkills(allies, enemies) {
     } else if (opening.type === 'phys' || opening.type === 'spec') {
       addLog(`${ally.name} <span class="tag tag-skill">${opening.name}</span> [開幕]`, 'trigger');
       if (aliveEnemies.length) {
-        const pw = (scoutOutcome==='success' && opening.powerOnSurprise) ? opening.powerOnSurprise : (opening.power||1.0);
+        let pw = (scoutOutcome==='success' && opening.powerOnSurprise) ? opening.powerOnSurprise : (opening.power||1.0);
+        // アサシン: シャドウブリッツ（夜戦時 Pw 強化＋自身ATKバフ）
+        if (opening.effect?.type === 'shadow_blitz') {
+          const isNight = battleState?.isNight;
+          pw = isNight ? (opening.effect.nightPw||1.2) : (opening.effect.normalPw||0.8);
+          ally.buffs.push({ type:'atk_up', val:opening.effect.atkUp||15, turns:opening.effect.atkTurns||3, icon:'⬆ATK', cssClass:'atk-up' });
+        }
         const opWithPw = { ...opening, power: pw };
         if (opening.target === 'random_multi') {
           const hitCount = opening.hits || 6;
@@ -15871,6 +15954,8 @@ function tickBattle() {
       // buff/debuff ターン消費
       c.buffs   = (c.buffs||[]).filter(b=>{ b.turns--; return b.turns > 0; });
       c.debuffs = (c.debuffs||[]).filter(d=>{ d.turns--; return d.turns > 0; });
+      // ターン制パッシブのリセット
+      c._critChainUsedThisTurn = false;
     });
     tickShields(all);
     // プリースト: 聖なる怒りパッシブチェック
@@ -16610,6 +16695,26 @@ function doAttack(attacker, targets, skill) {
     const coverTarget = coverInfo.coverTarget;
     const coverRatio  = coverInfo.coverRatio || 0.8;
 
+    // Step7-pre: 命中判定（バフ・デバフ・夜戦ペナルティ・回避ステ）
+    if (!skill._isCounter && !skill._isFollowUp && skill.type !== 'buff' && (skill.power||0) > 0) {
+      let hitMod = 0;
+      hitMod += (attacker.buffs||[]).filter(b=>b.type==='hit_up').reduce((s,b)=>s+b.val,0);
+      hitMod += (attacker.debuffs||[]).filter(d=>d.type==='hit_down').reduce((s,d)=>s+d.val,0);
+      if (attacker.nightHitPenalty) hitMod += attacker.nightHitPenalty;
+      let evadeMod = (target.evade || 0);
+      evadeMod += (target.buffs||[]).filter(b=>b.type==='evade_up').reduce((s,b)=>s+b.val,0);
+      const evasionPass = (target.classPassives||[]).find(p=>p.effect?.type==='evasion_bonus');
+      if (evasionPass) evadeMod += (evasionPass.effect.val||0);
+      const hitRate = 100 + hitMod - evadeMod;
+      if (hitRate < 100 && Math.random() * 100 > hitRate) {
+        playAttrEffect(attacker, target, skill);
+        setTimeout(() => spawnFloatNum(target.uid, 'MISS', 'float-debuff'), 200);
+        addLog(`${attacker.name} → ${target.name}: <span class="tag tag-resist">MISS</span>`, 'damage');
+        gainUltGauge(attacker, 2);
+        return;
+      }
+    }
+
     // Step7a: ブロック判定（物理のみ）
     if (skill.type === 'phys' && rollBlock(target)) {
       playAttrEffect(attacker, target, skill);
@@ -16636,6 +16741,16 @@ function doAttack(attacker, targets, skill) {
     // Step7c: クリティカル判定（red/white のみ）
     const result = computeDmg(attacker, target, skill);
     let { hpDmg, dmgType } = result;
+    // パッシブ: ターゲットロック スタック更新（ダメージ計算後）
+    if (attacker._passiveTargetLock) {
+      const tl = attacker._passiveTargetLock;
+      if (tl.lastTargetUid === target.uid) {
+        tl.stacks = Math.min(tl.maxStacks, tl.stacks + 1);
+      } else {
+        tl.stacks = 0;
+        tl.lastTargetUid = target.uid;
+      }
+    }
     // 種族相性ログ（有利/不利時のみ）
     const _specMult = getSpeciesMultiplier(attacker.species, target.species);
     if (_specMult > 1.0) {
@@ -16645,7 +16760,7 @@ function doAttack(attacker, targets, skill) {
     }
     const forceByLowHp  = skill.effect?.forceCritIfLowHp && (target.hp / target.maxHp) <= 0.5;
     const forceByShield = skill.effect?.forceCritIfShield && (attacker.shield||0) > 0;
-    const targetCC = target.staggered || (target.buffs||[]).some(b=>['stun','paralysis','silence'].includes(b.type));
+    const targetCC = target.staggered || (target.buffs||[]).some(b=>['stun','slow','silence'].includes(b.type));
     const forceByCC = skill.ccForceCrit && targetCC;
     const isCrit = skill.forceCrit || forceByLowHp || forceByShield || forceByCC ? true : rollCrit(attacker);
     if (isCrit) {
@@ -16658,6 +16773,27 @@ function doAttack(attacker, targets, skill) {
         attacker._criChainStacks = Math.min(cc.maxStacks || 5, (attacker._criChainStacks || 0) + 1);
         attacker.atk = Math.floor(attacker._baseAtk * (1 + attacker._criChainStacks * (cc.bonusPerCrit || 8) / 100));
         addLog(`${attacker.name} <span class="tag tag-buff">クリット連鎖 ×${attacker._criChainStacks}</span> ATK+${attacker._criChainStacks * (cc.bonusPerCrit||8)}%`, 'trigger');
+      }
+      // アサシン: シャドウマスタリー（CRI時 同じ敵にPw0.5追撃、1ターン1回）
+      if (!skill._isCritChain && !attacker._critChainUsedThisTurn) {
+        const chainPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='crit_chain_attack');
+        if (chainPass) {
+          attacker._critChainUsedThisTurn = true;
+          const chainPower = chainPass.effect.power || 0.5;
+          const firstAttr = attacker.attackTypes?.[0] || skill.attr || '斬';
+          const chainType = (firstAttr === '魔' || firstAttr === '聖' || firstAttr === '闇') ? 'spec' : 'phys';
+          const chainSkill = {
+            name: 'シャドウマスタリー', type: chainType, attr: firstAttr,
+            target: 'single', power: chainPower, _isCritChain: true,
+          };
+          const chainTarget = target;
+          setTimeout(() => {
+            if (!attacker.dead && !chainTarget.dead) {
+              addLog(`🗡️ ${attacker.name} <span class="tag tag-trigger">シャドウマスタリー</span> → ${chainTarget.name}`, 'trigger');
+              doAttack(attacker, [chainTarget], chainSkill);
+            }
+          }, 280);
+        }
       }
     }
     hpDmg = Math.max(hpDmg > 0 ? 1 : 0, hpDmg);
@@ -16736,6 +16872,20 @@ function doAttack(attacker, targets, skill) {
         }
       }
     }
+    // パッシブ: 聖なる烙印（ホーリーランス命中時、対象の特殊耐性-5%スタック）
+    if (!attacker.isEnemy && totalDmg > 0 && skill.id === 'pd_holy_lance') {
+      const brandPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='sacred_brand');
+      if (brandPass) {
+        const eff = brandPass.effect;
+        const maxSt = eff.maxStacks || 3;
+        target._sacredBrandStacks = (target._sacredBrandStacks||0);
+        if (target._sacredBrandStacks < maxSt) {
+          target._sacredBrandStacks++;
+          target.debuffs = target.debuffs||[];
+          target.debuffs.push({ type:'mdef_down', val:(eff.val||-5), turns:eff.turns||5, icon:'⬇特耐', cssClass:'mdef-down' });
+        }
+      }
+    }
 
     // ダメージカラーマップ
     const dmgColorClass = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
@@ -16750,6 +16900,41 @@ function doAttack(attacker, targets, skill) {
     }, hitDelay);
 
     if (target.hp <= 0) {
+      // センチネル: ヴァンガーディアン（味方致死ダメ庇い、戦闘中1回）
+      if (!target.isEnemy) {
+        const interceptor = (battleState?.allies||[]).find(a =>
+          !a.dead && a.hp > 0 && a.uid !== target.uid &&
+          !a._interceptUsed &&
+          (a.classPassives||[]).some(p=>p.effect?.type==='intercept_fatal')
+        );
+        if (interceptor) {
+          const overflow = (-target.hp) + 1;
+          target.hp = 1;
+          interceptor.hp = Math.max(0, interceptor.hp - overflow);
+          interceptor._interceptUsed = true;
+          flashCard(interceptor.uid, 'hit');
+          spawnFloatNum(interceptor.uid, `🛡️庇う -${overflow}`, 'float-dmg-phys');
+          addLog(`🛡️ <b>${interceptor.name}</b> <span class="tag tag-buff">ヴァンガーディアン！</span> ${target.name}を庇った（${overflow}ダメ肩代わり）`, 'trigger');
+          if (interceptor.hp <= 0) {
+            interceptor.hp = 0; interceptor.dead = true;
+            setTimeout(() => spawnFloatNum(interceptor.uid, 'DEFEAT', 'float-defeat'), hitDelay + 80);
+            addLog(`${interceptor.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+          }
+        }
+      }
+    }
+    if (target.hp <= 0) {
+      // パラディン: アンブレイカブル（致死ダメージをHP1で耐える、戦闘中1回）
+      if (!target.isEnemy && !target._unbreakableUsed) {
+        const unbPass = (target.classPassives||[]).find(p=>p.effect?.type==='unbreakable');
+        if (unbPass) {
+          target._unbreakableUsed = true;
+          target.hp = 1;
+          flashCard(target.uid, 'buff');
+          spawnFloatNum(target.uid, '🛡️UNBREAKABLE', 'float-buff');
+          addLog(`✨ <b>${target.name}</b> <span class="tag tag-buff">アンブレイカブル！</span> 致死ダメージを耐えた！`, 'trigger');
+        }
+      }
       // アンデッドパッシブ: 一度だけHP1で耐える
       if (target.isEnemy && target.passive?.type === 'undying' && !target._undyingUsed) {
         target._undyingUsed = true;
@@ -16777,7 +16962,7 @@ function doAttack(attacker, targets, skill) {
       setTimeout(() => checkPassiveCardTrigger(target, attacker, totalDmg, battleState), hitDelay + 100);
     }
 
-    // デバフ付与（しびれ・ひるみ・毒・スタン等すべて対応）
+    // デバフ付与（スロー・ひるみ・毒・スタン等すべて対応）
     if (skill.debuff) {
       const isAmbush = battleState?._scoutOutcome === 'ambush';
       const debuffToApply = (isAmbush && skill.debuff.surpriseTurns)
@@ -16788,7 +16973,7 @@ function doAttack(attacker, targets, skill) {
         pdef_down:'物理耐性↓', mdef_down:'特殊耐性↓',
         stun:'💫スタン', poison:'☠毒', lethal_poison:'☠☠猛毒', strong_poison:'☠☠猛毒',
         bleed:'🩸裂傷', burn:'🔥燃焼',
-        paralysis:'⚡しびれ', flinch:'💧ひるみ', atk_down:'ATK↓',
+        slow:'⚡スロー', flinch:'💧ひるみ', atk_down:'ATK↓',
         silence:'🔇沈黙', spd_down:'SPD↓', hit_down:'命中↓',
       }[skill.debuff.type] || '⬇弱体';
       addLog(`${target.name} に <span class="tag tag-trigger">${debuffLabel}</span> 付与`, 'trigger');
@@ -16837,7 +17022,55 @@ function doAttack(attacker, targets, skill) {
       const shieldAmt = Math.floor(attacker.atk * (skill.effect.shieldSelf.ratio||0.5));
       applyShield(attacker, shieldAmt);
     }
+
+    // カウンター反撃（被攻撃側に counter バフがあれば自動反撃）
+    if (!skill._isCounter && !target.dead && target.hp > 0 && !attacker.dead) {
+      const counterBuff = (target.buffs||[]).find(b => b.type === 'counter');
+      if (counterBuff && attacker.isEnemy !== target.isEnemy) {
+        const counterPower = (counterBuff.val || 80) / 100;
+        const firstAttr = target.attackTypes?.[0] || '打';
+        const counterType = (firstAttr === '魔' || firstAttr === '聖' || firstAttr === '闇') ? 'spec' : 'phys';
+        const counterSkill = {
+          name: 'カウンター', type: counterType, attr: firstAttr,
+          target: 'single', power: counterPower, _isCounter: true,
+        };
+        setTimeout(() => {
+          if (!attacker.dead && !target.dead) {
+            addLog(`${target.name} <span class="tag tag-trigger">↩カウンター</span> → ${attacker.name}`, 'trigger');
+            doAttack(target, [attacker], counterSkill);
+          }
+        }, 250);
+      }
+    }
   });
+
+  // プロフェッサー: フォロースルー（味方の攻撃時、保持者が確率で同じ敵に追撃）
+  if (!attacker.isEnemy && !skill._isCounter && !skill._isFollowUp &&
+      ['phys','spec'].includes(skill.type) && (skill.power||0) > 0 && battleState) {
+    const liveTarget = targetList.find(t=>!t.dead);
+    if (liveTarget) {
+      (battleState.allies||[]).forEach(ally => {
+        if (ally.dead || ally.uid === attacker.uid) return;
+        const fpass = (ally.classPassives||[]).find(p=>p.effect?.type==='follow_up_attack');
+        if (!fpass) return;
+        if (ally._followUpRate === undefined) ally._followUpRate = fpass.effect.rate || 10;
+        if (Math.random() * 100 < ally._followUpRate) {
+          ally._followUpRate *= (fpass.effect.decay || 0.5);
+          const naInfo = getNormalAttackInfo(ally);
+          const followSkill = {
+            name: 'フォロースルー', type: naInfo.type, attr: naInfo.attr,
+            target: 'single', power: 1.0, _isFollowUp: true,
+          };
+          setTimeout(() => {
+            if (!ally.dead && !liveTarget.dead) {
+              addLog(`📚 ${ally.name} <span class="tag tag-trigger">フォロースルー</span> → ${liveTarget.name}`, 'trigger');
+              doAttack(ally, [liveTarget], followSkill);
+            }
+          }, 300);
+        }
+      });
+    }
+  }
 }
 
 function performUlt(c, enemies, allies) {
@@ -16853,6 +17086,12 @@ function performUlt(c, enemies, allies) {
   Audio.ult();
 
   const liveEnemies = enemies.filter(e => !e.dead);
+
+  // ── センチネル: インペネトラブル（自身被ダメ99%カット＋全体シールド＋自身挑発）──
+  if (ult.effect2?.type === 'impenetrable') {
+    applyBuff(c, { name: ult.name, effect: ult.effect2 }, c);
+    return;
+  }
 
   // ── ラグナロクスラッシュ（前衛列攻撃 + 自己バフ先付与）──
   if (ult.target === 'front_row') {
@@ -16999,7 +17238,7 @@ function performUlt(c, enemies, allies) {
     if (ult.finalDispel) {
       setTimeout(() => {
         allies.filter(a=>!a.dead).forEach(al => {
-          al.buffs = (al.buffs||[]).filter(b => !(b.val < 0 || ['atk_down','mres_down','pres_down','bres_down','spd_down','paralysis'].includes(b.type)));
+          al.buffs = (al.buffs||[]).filter(b => !(b.val < 0 || ['atk_down','mres_down','pres_down','bres_down','spd_down','slow'].includes(b.type)));
         });
         spawnFloatNum(c.uid, '✨浄化完了', 'float-buff');
         addLog(`${c.name}: ヒーリングレイン — 全味方デバフ解除`, 'trigger');
@@ -17007,6 +17246,94 @@ function performUlt(c, enemies, allies) {
       }, delay + 300);
     }
     addLog(`${c.name} 【ヒーリングレイン】→ 最低HP%の味方を10回回復 + ATK強化`, 'trigger');
+    return;
+  }
+
+  // ── アサシン: シャドウハント（最低HP敵に多段連撃、撃破時 次の最低HPに再ハント）──
+  if (ult.target === 'lowest_hp' && ult.reattackOnKill && liveEnemies.length > 0) {
+    const hits = ult.hits || 10;
+    let delay = 0;
+    let huntCount = 0;
+    const maxHunts = 5; // 暴走防止
+    const performHunt = () => {
+      if (huntCount >= maxHunts) return;
+      const alive = enemies.filter(e=>!e.dead);
+      if (!alive.length) return;
+      huntCount++;
+      const t = alive.reduce((a,b)=>(a.hp/a.maxHp)<=(b.hp/b.maxHp)?a:b);
+      let killed = false;
+      for (let i = 0; i < hits; i++) {
+        if (t.dead) break;
+        let { hpDmg: dmg, dmgType } = computeDmg(c, t, ult);
+        const isCrit = ult.forceCrit ? true : rollCrit(c);
+        if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
+        dmg = Math.max(1, dmg);
+        t.hp -= dmg;
+        if (dmg > 0) wakeFromSilence(t);
+        battleStats.totalDmg += dmg;
+        if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + dmg;
+        if (!t.isEnemy) battleStats.unitTaken[t.uid] = (battleStats.unitTaken[t.uid]||0) + dmg;
+        spawnBall(c.uid, t.uid, 'ult');
+        const dmgSnap = dmg, crtSnap = isCrit;
+        const clrSnap = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
+        setTimeout(() => {
+          flashCard(t.uid, 'hit');
+          spawnFloatNum(t.uid, crtSnap ? `${dmgSnap}<span class="crit-label">CRITICAL</span>` : String(dmgSnap), crtSnap ? clrSnap+' crit' : clrSnap);
+        }, delay + 130);
+        delay += 160;
+        if (t.hp <= 0 && !t.dead) {
+          t.dead = true;
+          killed = true;
+          setTimeout(() => {
+            spawnFloatNum(t.uid, 'DEFEAT', 'float-defeat');
+            addLog(`${t.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+          }, delay + 200);
+          break;
+        }
+      }
+      addLog(`${c.name} 【${ult.name}】→ ${t.name} に ×${hits}連撃${killed?'（撃破）':''}`, 'damage');
+      if (killed && enemies.filter(e=>!e.dead).length > 0) {
+        setTimeout(() => performHunt(), delay + 280);
+      }
+    };
+    performHunt();
+    return;
+  }
+
+  // ── 単体多段必殺技（ジャッジメント等）──
+  if (ult.target === 'single' && ult.hits > 1 && liveEnemies.length > 0) {
+    const t = liveEnemies[0];
+    const hits = ult.hits;
+    let delay = 0;
+    for (let i = 0; i < hits; i++) {
+      if (t.dead) break;
+      let { hpDmg: dmg, dmgType: _ultDmgType } = computeDmg(c, t, ult);
+      const _ultClr = _ultDmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
+      const isCrit = ult.forceCrit ? true : rollCrit(c);
+      if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
+      dmg = Math.max(1, dmg);
+      t.hp -= dmg;
+      if (dmg > 0) wakeFromSilence(t);
+      battleStats.totalDmg += dmg;
+      if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + dmg;
+      if (!t.isEnemy) battleStats.unitTaken[t.uid] = (battleStats.unitTaken[t.uid]||0) + dmg;
+      spawnBall(c.uid, t.uid, 'ult');
+      const dmgSnap = dmg, crtSnap = isCrit, clrSnap = _ultClr;
+      setTimeout(() => {
+        flashCard(t.uid, 'hit');
+        spawnFloatNum(t.uid, crtSnap ? `${dmgSnap}<span class="crit-label">CRITICAL</span>` : String(dmgSnap), crtSnap ? clrSnap+' crit' : clrSnap);
+      }, delay + 150);
+      delay += 180;
+      if (t.hp <= 0 && !t.dead) {
+        t.dead = true;
+        setTimeout(() => {
+          spawnFloatNum(t.uid, 'DEFEAT', 'float-defeat');
+          addLog(`${t.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+        }, delay + 200);
+        break;
+      }
+    }
+    addLog(`${c.name} 【${ult.name}】→ ${t.name} に ×${hits} 連撃`, 'damage');
     return;
   }
 
@@ -17110,7 +17437,7 @@ function applyBuff(c, skill, sourceUnit) {
     rampart:'⛩城壁', aegis:'✨盾', atk_buff:'⬆ATK',
     shield:'🛡盾', damage_reduce:'🔽被ダメ↓', cc_immune:'💪CC無効',
     cover_target:'🤝身代わり', hate_up:'🔥ヘイト↑',
-    paralysis:'⚡しびれ', flinch:'💧ひるみ',
+    slow:'⚡スロー', flinch:'💧ひるみ',
   };
   const cssMap = {
     atk_up:'atk-up', pdef_up:'pdef-up', mdef_up:'mdef-up',
@@ -17132,6 +17459,105 @@ function applyBuff(c, skill, sourceUnit) {
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド <span class="tag tag-buff">+${fmt(shieldAmt)}</span>${turnStr}`, 'trigger');
     Audio.buff();
     return;
+  }
+
+  // ===== アサシン: フレアシグナル（自身回避バフ＋昼夜分岐）=====
+  if (eff.type === 'flare_signal') {
+    const isNight = battleState?.isNight;
+    // 共通: 自身回避+10%(3T)
+    c.buffs.push({ type:'evade_up', val:eff.evadeUp||10, turns:eff.evadeTurns||3, icon:'👁回避↑', cssClass:'atk-up' });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `👁回避+${eff.evadeUp||10}%`, 'float-buff');
+    if (!isNight) {
+      // 昼戦時: 敵2体にスロー
+      const enemies = (battleState?.enemies||[]).filter(e=>!e.dead);
+      const targets = enemies.slice(0, eff.dayTargets||2);
+      targets.forEach(e => {
+        applyDebuffDirect(e, { type:'slow', val:1, turns:eff.daySlowTurns||2 });
+        spawnFloatNum(e.uid, '🐌スロー', 'float-debuff');
+      });
+      addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 自身回避+${eff.evadeUp||10}% / 敵${targets.length}体に🐌スロー(${eff.daySlowTurns||2}T)`, 'trigger');
+    } else {
+      // 夜戦時: 味方全体命中アップ＋自身ヘイト誘導
+      const allies = (battleState?.allies||[]).filter(a=>!a.dead);
+      allies.forEach(a => {
+        a.buffs.push({ type:'hit_up', val:eff.nightHitUp||30, turns:eff.nightHitTurns||3, icon:'🎯命中↑', cssClass:'atk-up' });
+        spawnFloatNum(a.uid, `🎯命中+${eff.nightHitUp||30}%`, 'float-buff');
+      });
+      c.buffs.push({ type:'hate_up', val:eff.nightHateUp||500, turns:99, icon:'🔥ヘイト↑', cssClass:'atk-up' });
+      c.hate = (c.hate || 0) + (eff.nightHateUp||500);
+      addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🌙夜戦: 自身回避+${eff.evadeUp||10}% / 味方全体🎯命中+${eff.nightHitUp||30}% / 自身ヘイト+${eff.nightHateUp||500}`, 'trigger');
+    }
+    Audio.buff(); return;
+  }
+
+  // ===== プロフェッサー: バトルオーダー（味方ATK/SPDバフ部分。敵デバフは fireOpeningSkills 側で処理）=====
+  if (eff.type === 'battle_order') {
+    const atkUp = eff.allyAtkUp || 15;
+    const spdUp = eff.allySpdUp || 15;
+    const turns = eff.allyTurns || 3;
+    c.buffs.push({ type:'atk_up', val:atkUp, turns, icon:'⬆ATK', cssClass:'atk-up' });
+    c.buffs.push({ type:'spd_up', val:spdUp, turns, icon:'⬆SPD', cssClass:'atk-up' });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `⬆ATK+${atkUp}%/SPD+${spdUp}`, 'float-buff');
+    Audio.buff(); return;
+  }
+
+  // ===== センチネル: カウンターパリィ（カウンター状態＋被ダメ軽減＋挑発）=====
+  if (eff.type === 'counter_stance') {
+    const counterVal = eff.counterVal || 80;
+    const counterTurns = eff.counterTurns || 3;
+    const dmgRed = eff.dmgReduction || 30;
+    const dmgRedTurns = eff.dmgReduceTurns || 3;
+    const tauntTurns = eff.tauntTurns || 3;
+    c.buffs.push({ type:'counter',       val:counterVal, turns:counterTurns, icon:'↩反撃',     cssClass:'atk-up' });
+    c.buffs.push({ type:'damage_reduce', val:dmgRed,     turns:dmgRedTurns,  icon:'🔽被ダメ↓', cssClass:'hp-up' });
+    c.buffs.push({ type:'taunt',         val:1,          turns:tauntTurns,    icon:'👊挑発',    cssClass:'atk-up' });
+    flashCard(c.uid, 'buff');
+    spawnSkillNamePop(c.uid, skill.name, 'buff');
+    spawnFloatNum(c.uid, '↩カウンター!', 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> ↩反撃Pw${(counterVal/100).toFixed(1)}(${counterTurns}T) / 🔽被ダメ-${dmgRed}%(${dmgRedTurns}T) / 👊挑発(${tauntTurns}T)`, 'trigger');
+    Audio.buff(); return;
+  }
+
+  // ===== センチネル必殺: インペネトラブル（自身被ダメ99%カット＋全体シールド＋自身挑発）=====
+  if (eff.type === 'impenetrable' || skill.effect2?.type === 'impenetrable') {
+    const e = eff.type==='impenetrable' ? eff : skill.effect2;
+    const selfReduce = e.selfReduce || 99;
+    const selfReduceTurns = e.selfReduceTurns || 2;
+    const shieldRatio = e.shieldRatio || 0.20;
+    const tauntTurns = e.tauntTurns || 3;
+    c.buffs.push({ type:'damage_reduce', val:selfReduce, turns:selfReduceTurns, icon:'🛡️鉄壁',  cssClass:'hp-up' });
+    c.buffs.push({ type:'taunt',         val:1,          turns:tauntTurns,      icon:'👊挑発',  cssClass:'atk-up' });
+    (battleState?.allies||[]).filter(a=>!a.dead).forEach(a => {
+      const amt = Math.floor(a.maxHp * shieldRatio * _slMult);
+      applyShield(a, amt);
+      spawnFloatNum(a.uid, `🛡️+${fmt(amt)}`, 'float-buff');
+    });
+    flashCard(c.uid, 'buff');
+    spawnSkillNamePop(c.uid, skill.name, 'buff');
+    spawnFloatNum(c.uid, '🛡️INPENETRABLE', 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡️被ダメ-${selfReduce}%(${selfReduceTurns}T) / 全体🛡シールド+${Math.floor(shieldRatio*100)}% / 👊挑発(${tauntTurns}T)`, 'trigger');
+    Audio.buff(); return;
+  }
+
+  // ===== パラディン: ブレッシングオブライト（自身大ヒール+リジェネ／味方小ヒール）=====
+  if (eff.type === 'blessing_of_light') {
+    const healBonus = getBattleHealBonus(sourceUnit);
+    const isSelf = sourceUnit && c.uid === sourceUnit.uid;
+    const ratio = isSelf ? (eff.selfHealRatio||0.30) : (eff.allyHealRatio||0.12);
+    const healAmt = Math.floor(c.maxHp * ratio * _slMult * healBonus);
+    c.hp = Math.min(c.maxHp, c.hp + healAmt);
+    battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + healAmt;
+    if (isSelf) {
+      const regenVal = Math.round((eff.selfRegenVal||8) * _slMult);
+      c.buffs.push({ type:'regen', val:regenVal, turns:eff.selfRegenTurns||3, icon:'💚再生', cssClass:'hp-up' });
+    }
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `💚+${fmt(healAmt)}`, 'float-heal');
+    const tag = isSelf ? ` <span class="tag tag-buff">${skill.name}</span>` : '';
+    addLog(`${c.name}${tag} 💚HP+${fmt(healAmt)}${isSelf?` ／ 💚再生(${eff.selfRegenTurns||3}T)`:''}`, 'trigger');
+    Audio.buff(); return;
   }
 
   // ===== プリースト: HP回復+ATKバフ（単体）=====
@@ -17178,8 +17604,8 @@ function applyBuff(c, skill, sourceUnit) {
 
   // ===== プリースト: 全デバフ解除+ATKバフ =====
   if (eff.type === 'dispel_and_atk_buff') {
-    const removed = (c.buffs||[]).filter(b => b.val < 0 || ['atk_down','mres_down','pres_down','bres_down','spd_down','paralysis'].includes(b.type)).length;
-    c.buffs = (c.buffs||[]).filter(b => !(b.val < 0 || ['atk_down','mres_down','pres_down','bres_down','spd_down','paralysis'].includes(b.type)));
+    const removed = (c.buffs||[]).filter(b => b.val < 0 || ['atk_down','mres_down','pres_down','bres_down','spd_down','slow'].includes(b.type)).length;
+    c.buffs = (c.buffs||[]).filter(b => !(b.val < 0 || ['atk_down','mres_down','pres_down','bres_down','spd_down','slow'].includes(b.type)));
     const _atkVal3 = Math.round((eff.atkVal||20) * _slMult);
     c.buffs.push({ type:'atk_up', val:_atkVal3, turns:eff.atkTurns||2, icon:'⬆ATK', cssClass:'atk-up' });
     flashCard(c.uid, 'buff'); spawnSkillNamePop(c.uid, skill.name, 'buff');
@@ -17207,7 +17633,7 @@ function applyBuff(c, skill, sourceUnit) {
     const finalHeal = Math.floor(healAmt * healBonus);
     c.hp = Math.min(c.maxHp, c.hp + finalHeal);
     if (eff.dispelAll) {
-      c.buffs = (c.buffs||[]).filter(b => !(b.val < 0 || ['atk_down','mdef_down','pdef_down','spd_down','paralysis'].includes(b.type)));
+      c.buffs = (c.buffs||[]).filter(b => !(b.val < 0 || ['atk_down','mdef_down','pdef_down','spd_down','slow'].includes(b.type)));
     }
     battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + finalHeal;
     flashCard(c.uid, 'buff');
@@ -17265,11 +17691,14 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'shield_and_res') {
     const shieldAmt = Math.floor(c.maxHp * (eff.shieldRatio||0.20) * _slMult);
     applyShield(c, shieldAmt);
-    const resIcon = eff.resType==='wres'?'⬆特殊耐性':'⬆物理耐性';
-    c.buffs.push({ type:`${eff.resType}_up`, val:eff.resVal||15, turns:eff.turns||3, icon:resIcon, cssClass:'mdef-up' });
+    const isMagic = eff.resType==='wres' || eff.resType==='mres' || eff.resType==='mdef';
+    const buffType = isMagic ? 'mdef_up' : 'pdef_up';
+    const resIcon = isMagic ? '⬆特殊耐性' : '⬆物理耐性';
+    const cssClass = isMagic ? 'mdef-up' : 'pdef-up';
+    c.buffs.push({ type:buffType, val:eff.resVal||15, turns:eff.turns||3, icon:resIcon, cssClass });
     flashCard(c.uid, 'buff');
     spawnFloatNum(c.uid, `🛡️+${fmt(shieldAmt)}`, 'float-buff');
-    addLog(`${c.name} 🛡シールド+${fmt(shieldAmt)} / ${eff.resType==='wres'?'特殊':'物理'}耐性+${eff.resVal}%(${eff.turns}T)`, 'trigger');
+    addLog(`${c.name} 🛡シールド+${fmt(shieldAmt)} / ${isMagic?'特殊':'物理'}耐性+${eff.resVal}%(${eff.turns}T)`, 'trigger');
     Audio.buff(); return;
   }
 
@@ -17596,6 +18025,11 @@ function computeDmg(attacker, target, skill) {
   if (attacker._passiveTauntSpirit && (attacker.buffs||[]).some(b=>b.type==='taunt')) {
     base *= (1 + attacker._passiveTauntSpirit.val / 100);
   }
+  // パッシブ: ターゲットロック（同じ敵への連撃ボーナス）
+  if (attacker._passiveTargetLock && attacker._passiveTargetLock.lastTargetUid === target.uid) {
+    const tl = attacker._passiveTargetLock;
+    base *= (1 + Math.min(tl.maxStacks, tl.stacks) * tl.val / 100);
+  }
 
   let power = (skill.power || 1.0) * getSkillLvMult(skill);
   // スキルPwバフ（混沌爆発など）
@@ -17606,7 +18040,7 @@ function computeDmg(attacker, target, skill) {
     power += skill.conditionalPower.bonusPower;
   }
   // CC中追加ダメージ（バックスタブ等）
-  const _targetCC = target.staggered || (target.buffs||[]).some(b=>['stun','paralysis','silence'].includes(b.type));
+  const _targetCC = target.staggered || (target.buffs||[]).some(b=>['stun','slow','silence'].includes(b.type));
   if (skill.ccBonus && _targetCC) power += skill.ccBonus;
   // 出血中の敵に対する追加Pw（クリムゾンストーム / ヴォルカニックゴア 等）
   if (skill.bleedBonusPow && (target.debuffs||[]).some(d=>d.type==='bleed')) {
@@ -17628,7 +18062,22 @@ function computeDmg(attacker, target, skill) {
   const reduceBuff  = (target.buffs||[]).filter(b=>b.type==='damage_reduce').reduce((s,b)=>s+b.val,0);
   const reduceDebuf = (target.debuffs||[]).filter(d=>d.type==='reduce').reduce((s,d)=>s+d.val,0);
   const totalReduce = reduceBuff - reduceDebuf;
-  if (totalReduce > 0) base *= (1 - Math.min(0.8, totalReduce/100));
+  if (totalReduce > 0) base *= (1 - Math.min(0.99, totalReduce/100));
+
+  // パッシブ: アイアンフォース（HP閾値以上で被ダメ減少）
+  const ironForcePass = (target.classPassives||[]).find(p=>p.effect?.type==='high_hp_reduction');
+  if (ironForcePass) {
+    const eff2 = ironForcePass.effect;
+    if (target.hp / target.maxHp >= (eff2.hpThreshold||70)/100) {
+      base *= (1 - (eff2.val||15)/100);
+    }
+  }
+
+  // パッシブ: アカデミック・インサイト（デバフ中の敵への与ダメ+%）
+  const insightPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='dmg_vs_debuffed');
+  if (insightPass && (target.debuffs||[]).length > 0) {
+    base *= (1 + (insightPass.effect.val||20)/100);
+  }
 
   // スタッガーボーナス
   const staggerMult = target.staggered ? 1.3 : 1.0;
@@ -17658,7 +18107,9 @@ function computeDmg(attacker, target, skill) {
     return { hpDmg, dmgType: 'spec' };
   } else {
     // 物理ダメージ（phys）: pdef耐性
-    const pdef = getRes(target.pdef||0, ['pdef_up','rampart','aegis'], ['pdef_down']);
+    let pdef = getRes(target.pdef||0, ['pdef_up','rampart','aegis'], ['pdef_down']);
+    // armorPierce: 装甲貫通（物理防御を無視）
+    if (skill.armorPierce) pdef = pdef * (1 - Math.min(100, skill.armorPierce) / 100);
     const hpDmg = Math.max(minDmg, Math.floor(base * (1 - pdef/100) * staggerMult * nightMult));
     return { hpDmg, dmgType: 'phys' };
   }
@@ -17714,11 +18165,12 @@ function applyDebuffDirect(target, debuff) {
   }
   if (debuff.type === 'grand_debuff' || debuff.type === 'grand_debuff_permanent') {
     const subTurns = debuff.type === 'grand_debuff_permanent' ? Math.min(debuff.turns||8, 8) : debuff.turns;
-    ['pres_down','mres_down','bres_down','atk_down','spd_down'].forEach(t => applyDebuffDirect(target, { ...debuff, type:t, turns: subTurns }));
+    // pres/mres/bres は getRes で認識されないため、pdef_down/mdef_down にエイリアス
+    ['pdef_down','mdef_down','atk_down','spd_down'].forEach(t => applyDebuffDirect(target, { ...debuff, type:t, turns: subTurns }));
     return;
   }
-  // CC免疫チェック（気絶・しびれ・沈黙は無効化）
-  const ccTypes = ['stun', 'paralysis', 'silence'];
+  // CC免疫チェック（気絶・スロー・沈黙は無効化）
+  const ccTypes = ['stun', 'slow', 'silence'];
   if (ccTypes.includes(debuff.type) && (target.buffs||[]).some(b=>b.type==='cc_immune')) {
     addLog(`${target.name}: CC無効 <span class="tag tag-resist">IMMUNE</span>`, 'trigger');
     return;
@@ -17728,13 +18180,13 @@ function applyDebuffDirect(target, debuff) {
   const iconMap = {
     pres_down:'⬇物理耐性', mres_down:'⬇特殊耐性', stun:'💫', poison:'☠️',
     bleed:'🩸', burn:'🔥', reduce:'🔽',
-    paralysis:'⚡', bres_down:'⬇物理耐性', lres_down:'⬇特殊耐性',
+    slow:'⚡', bres_down:'⬇物理耐性', lres_down:'⬇特殊耐性',
     atk_down:'⚔️↓', spd_down:'🐢', hit_down:'🌫️', silence:'💤', mark:'🎯',
   };
   const labelMap = {
     pres_down:'物理耐性↓', mres_down:'特殊耐性↓', bres_down:'物理耐性↓',
     stun:'💫気絶', poison:'☠毒', bleed:'🩸出血', burn:'🔥燃焼',
-    reduce:'弱体化', paralysis:'⚡しびれ', atk_down:'⚔️ATK↓',
+    reduce:'弱体化', slow:'⚡スロー', atk_down:'⚔️ATK↓',
     spd_down:'🐢SPD↓', hit_down:'🌫️命中↓', silence:'💤沈黙', mark:'🎯マーク',
   };
   target.debuffs.push({
@@ -18880,10 +19332,15 @@ function applyNightModifiers() {
         c.nightDamageMult = 1.35;
         addLog(`${c.name}: 夜戦 ダメージ+35%`, 'trigger');
       }
-      // パッシブ: 夜の狩人（アサシン: 夜戦ATK+20%・CRI+15%・SPD+15%）
+      // パッシブ: 夜の狩人（アサシン: 夜戦ATK+30%・CRI+20・SPD+20、昼戦中ATK-20%は解除）
       const nightPass = (cls?.passiveSkills||[]).find(p=>p.effect?.type==='night_bonus');
       if (nightPass) {
         const np = nightPass.effect;
+        // 昼戦ATKペナルティを解除
+        if (c._dayAtkPenalty) {
+          c.atk = Math.floor(c.atk / (1 - c._dayAtkPenalty / 100));
+          c._dayAtkPenalty = 0;
+        }
         c.atk = Math.floor(c.atk * (1 + (np.atk||0)/100));
         c.cri += (np.cri||0);
         c.spd += (np.spd||0);
