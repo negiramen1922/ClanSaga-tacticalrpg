@@ -4775,21 +4775,20 @@ const CLASS_DATA = {
     baseHate:    400,
     openingSkill: {
       id:'ws_open_cry', name:'バトルクライ', type:'buff', target:'self',
-      desc:'ATK+20% 3T',
-      effect:{ type:'atk_up', val:20, turns:3 }
+      desc:'ATK+25% 3T',
+      effect:{ type:'atk_up', val:25, turns:3 }
     },
     activeSkills: [
-      { id:'ws_sword_strike', name:'ソードストライク', type:'phys', attr:'斬', target:'single',
+      { id:'ws_triple_slash', name:'トリプルスラッシュ', type:'phys', attr:'斬', target:'single',
         power:0.7, hits:3, cd:3, desc:'単体×3回 ⚔️ Pw:0.7' },
-      { id:'ws_titan_smash', name:'タイタンスマッシュ', type:'phys', attr:'打', target:'single',
-        power:2.0, cd:5, desc:'単体 ✨ Pw:2.0（HP50%以上+Pw:1.0）',
-        conditionalPower:{ condition:'self_hp_above_50pct', bonusPower:1.0 } },
+      { id:'ws_force_impact', name:'フォースインパクト', type:'phys', attr:'打', target:'random3',
+        power:1.2, cd:6, desc:'ランダム敵×3 ⚔️ Pw:1.2' },
     ],
     passiveSkills: [
-      { id:'ws_pass_spirit', name:'戦士の闘志', type:'passive',
+      { id:'ws_pass_spirit', name:'ファイティングスピリット', type:'passive',
         desc:'攻撃するたびにATK+3%（最大5スタック、WAVE後リセット）',
         effect:{ type:'atk_stack_on_attack', val:3, maxStacks:5 } },
-      { id:'ws_pass_blood', name:'血戦', type:'passive',
+      { id:'ws_pass_blood', name:'アンブレイカブル', type:'passive',
         desc:'HP50%以下でATK+20%・CRI+10%',
         effect:{ type:'low_hp_boost', hpThreshold:50, atk:20, cri:10 } },
     ],
@@ -12335,27 +12334,34 @@ function launchApp() {
 
   // ユニット補正
   gState.ownedUnits.forEach(u => {
-    // バーサーカー: 旧スキルID → 新スキルID への置換（リデザイン後の互換）
-    if (u.classId === 'berserker') {
-      const _bkSkillMap = {
+    // クラスリデザインに伴う旧スキルID → 新スキルID マイグレーション
+    const _classSkillMaps = {
+      berserker: {
         bk_frenzy:        'bk_crimson_slash',
         bk_rampage:       'bk_crimson_storm',
         bk_open_blood:    'bk_open_surge',
         bk_pas_killing:   'bk_pas_soul',
         bk_pas_undying:   'bk_pas_bloodhunter',
         bku_bloodstorm:   'bku_volcanic_gore',
-      };
+      },
+      warrior: {
+        ws_sword_strike:  'ws_triple_slash',
+        ws_titan_smash:   'ws_force_impact',
+      },
+    };
+    const _skMap = _classSkillMaps[u.classId];
+    if (_skMap) {
       if (Array.isArray(u.selectedSkills)) {
-        u.selectedSkills = u.selectedSkills.map(sid => _bkSkillMap[sid] || sid);
+        u.selectedSkills = u.selectedSkills.map(sid => _skMap[sid] || sid);
       }
       if (Array.isArray(u.tactics)) {
-        u.tactics.forEach(t => { if (t && _bkSkillMap[t.skillId]) t.skillId = _bkSkillMap[t.skillId]; });
+        u.tactics.forEach(t => { if (t && _skMap[t.skillId]) t.skillId = _skMap[t.skillId]; });
       }
       const _prog = gState.unitProgress?.[u.uid];
       if (_prog?.skillLevels) {
-        Object.keys(_bkSkillMap).forEach(oldId => {
+        Object.keys(_skMap).forEach(oldId => {
           if (_prog.skillLevels[oldId] !== undefined) {
-            const newId = _bkSkillMap[oldId];
+            const newId = _skMap[oldId];
             _prog.skillLevels[newId] = Math.max(_prog.skillLevels[newId]||1, _prog.skillLevels[oldId]);
             delete _prog.skillLevels[oldId];
           }
