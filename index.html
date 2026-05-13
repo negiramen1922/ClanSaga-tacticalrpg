@@ -4981,29 +4981,31 @@ const CLASS_DATA = {
     baseStats: { atk:850, hp:2400, mp:2200, pres:5, mres:15, bres:3, lres:0, spd:78, cri:10, cridam:155, evade:5 },
     baseSearch: 20, baseStealth: 5, baseHate: 250,
     openingSkill: {
-      id:'wz_open_arcane', name:'古代魔法陣', type:'spec', attr:'魔', target:'all',
-      desc:'全体 ⚔️（魔法）Pw:2.5＋特殊耐性-20%（3T）。奇襲時Pw×1.3',
-      power:2.5, powerOnSurprise:3.25,
-      debuff:{ type:'mres_down', val:-20, turns:3 }
+      id:'wz_open_meteor_shower', name:'メテオシャワー', type:'spec', attr:'爆', target:'random_multi',
+      power:0.5, hits:10, cd:0,
+      desc:'ランダム敵に ✨（爆）Pw:0.5 × 10連射'
     },
     activeSkills: [
-      { id:'wz_silence', name:'サイレンス', type:'spec', attr:'呪', target:'single',
-        power:2.5, cd:7, desc:'単体 🔵 Pw:2.5＋沈黙（次スキル封印）',
-        debuff:{ type:'silence', val:1, turns:1 } },
-      { id:'wz_meteor', name:'メテオストライク', type:'spec', attr:'爆', target:'all',
-        power:2.0, cd:12, desc:'全体 ⚔️（魔法）Pw:2.0' },
+      { id:'wz_arcane_bolt', name:'アーケインボルト', type:'spec', attr:'魔', target:'single',
+        power:4.0, cd:7, desc:'単体 ✨ Pw:4.0 ＋ スロー（2T）',
+        debuff:{ type:'slow', val:1, turns:2 } },
+      { id:'wz_frost_lance', name:'フロストランス', type:'spec', attr:'魔', target:'single',
+        power:3.5, cd:6, magicPierce:30,
+        desc:'単体 ✨ Pw:3.5 ＋ 特殊耐性30%貫通' },
     ],
     passiveSkills: [
-      { id:'wz_pas_stack', name:'魔力集中', effect:'行動するたびに次スキルPw+15%スタック（最大3）',
-        effect:{ type:'power_stack', val:15, max:3 } },
-      { id:'wz_pas_bigcd', name:'蓄積魔力', effect:'CD10以上のスキル使用時ATK+10%（3T）自動付与',
-        effect:{ type:'high_cd_atk', threshold:10, val:10, turns:3 } },
+      { id:'wz_pas_focus', name:'魔力集中', type:'passive',
+        desc:'行動するたび次スキルのPw+0.2（最大3スタック、攻撃で消費）',
+        effect:{ type:'power_stack_on_action', val:0.2, maxStacks:3 } },
+      { id:'wz_pas_resonance', name:'魔力共鳴', type:'passive',
+        desc:'特殊攻撃を受けるたびATK+5%スタック（最大5スタック）',
+        effect:{ type:'atk_on_special_hit', val:5, maxStacks:5 } },
     ],
     ultimates: [
-      { id:'wu_starcurse', name:'星天の呪詛',
-        effect:'単体✨Pw:3.0＋特殊耐性-25%・特殊耐性-20%（永続）→全体⚔️Pw:2.0＋特殊耐性-20%（3T）。奇襲強制会心',
-        target:'single', power:3.0, type:'spec', attr:'呪',
-        debuff:{ type:'multi_res_down', wres:-25, bres:-20, turns:5 } },
+      { id:'wu_arcane_nova', name:'アーケインノヴァ',
+        effect:'中心の敵に ✨魔 Pw:7.0 ／ 隣接 Pw:5.0 ／ 隣々接 Pw:3.0',
+        target:'splash_center', power:7.0, type:'spec', attr:'魔',
+        splashPws:{ 0:7.0, 1:5.0, 2:3.0 } },
     ],
   },
 
@@ -12410,6 +12412,14 @@ function launchApp() {
         sh_pas_debuff:     'sh_pas_curse_chain',
         sh_pas_res:        'sh_pas_curse_attract',
       },
+      wizard: {
+        wz_open_arcane:    'wz_open_meteor_shower',
+        wz_silence:        'wz_arcane_bolt',
+        wz_meteor:         'wz_frost_lance',
+        wz_pas_stack:      'wz_pas_focus',
+        wz_pas_bigcd:      'wz_pas_resonance',
+        wu_starcurse:      'wu_arcane_nova',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -16773,6 +16783,24 @@ function doAttack(attacker, targets, skill) {
         }
       }
     }
+    // パッシブ: 魔力共鳴（被特殊ダメ時にターゲット自身のATK+%スタック）
+    if (skill.type === 'spec' && !target.dead && totalDmg > 0) {
+      const resPass = (target.classPassives||[]).find(p=>p.effect?.type==='atk_on_special_hit');
+      if (resPass) {
+        const maxSt = resPass.effect.maxStacks || 5;
+        target._resonanceStacks = target._resonanceStacks || 0;
+        if (target._resonanceStacks < maxSt) {
+          target._resonanceStacks++;
+          target.buffs = (target.buffs||[]).filter(b => b._tag !== 'resonance');
+          const val = (resPass.effect.val || 5) * target._resonanceStacks;
+          target.buffs.push({
+            type:'atk_up', val, turns:99999,
+            icon:'🔮共鳴', cssClass:'atk-up', _tag:'resonance'
+          });
+          addLog(`${target.name} <span class="tag tag-buff">魔力共鳴 ×${target._resonanceStacks}</span> ATK+${val}%`, 'trigger');
+        }
+      }
+    }
 
     // ダメージカラーマップ
     const dmgColorClass = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
@@ -16930,6 +16958,23 @@ function doAttack(attacker, targets, skill) {
       }
     }
   });
+
+  // ウィザード: 魔力集中（他味方の行動でスタック上昇、自分の攻撃で消費）
+  if (!attacker.isEnemy && !skill._isCounter && !skill._isFollowUp && !skill._isCritChain) {
+    // 他の味方の行動 → 魔力集中保持者のスタック上昇
+    (battleState?.allies||[]).forEach(ally => {
+      if (ally.dead || ally.uid === attacker.uid) return;
+      const focusPass = (ally.classPassives||[]).find(p=>p.effect?.type==='power_stack_on_action');
+      if (!focusPass) return;
+      const maxSt = focusPass.effect.maxStacks || 3;
+      ally._focusStacks = Math.min(maxSt, (ally._focusStacks || 0) + 1);
+    });
+    // 自分が魔力集中持ちで攻撃した場合: スタック消費
+    const myFocus = (attacker.classPassives||[]).find(p=>p.effect?.type==='power_stack_on_action');
+    if (myFocus && ['phys','spec'].includes(skill.type) && (skill.power||0) > 0) {
+      attacker._focusStacks = 0;
+    }
+  }
 
   // ランサー: モメンタム（行動するたびSPDスタック付与）
   if (!attacker.isEnemy && !skill._isCounter && !skill._isFollowUp && !skill._isCritChain) {
@@ -17153,6 +17198,51 @@ function performUlt(c, enemies, allies) {
       }, delay + 300);
     }
     addLog(`${c.name} 【ヒーリングレイン】→ 最低HP%の味方を10回回復 + ATK強化`, 'trigger');
+    return;
+  }
+
+  // ── ウィザード: アーケインノヴァ（中心+隣接スプラッシュ）──
+  if (ult.target === 'splash_center' && liveEnemies.length > 0) {
+    // 中心ターゲット: ヘイト最高
+    const maxHate = Math.max(...liveEnemies.map(e => e.hate||0));
+    const tops = liveEnemies.filter(e => (e.hate||0) === maxHate);
+    const center = tops[Math.floor(Math.random() * tops.length)];
+    const centerIdx = enemies.indexOf(center);
+    const splashPws = ult.splashPws || { 0:7.0, 1:5.0, 2:3.0 };
+    let delay = 0;
+    enemies.forEach((t, idx) => {
+      if (t.dead) return;
+      const dist = Math.abs(idx - centerIdx);
+      if (!(dist in splashPws)) return;
+      const pw = splashPws[dist];
+      const splashSkill = { ...ult, power: pw };
+      let { hpDmg: dmg, dmgType } = computeDmg(c, t, splashSkill);
+      const isCrit = ult.forceCrit ? true : rollCrit(c);
+      if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
+      dmg = Math.max(1, dmg);
+      t.hp -= dmg;
+      if (dmg > 0) wakeFromSilence(t);
+      battleStats.totalDmg += dmg;
+      if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + dmg;
+      if (!t.isEnemy) battleStats.unitTaken[t.uid] = (battleStats.unitTaken[t.uid]||0) + dmg;
+      spawnBall(c.uid, t.uid, 'ult');
+      const dmgSnap = dmg, crtSnap = isCrit;
+      const clrSnap = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
+      const distSnap = dist;
+      setTimeout(() => {
+        flashCard(t.uid, 'hit');
+        spawnFloatNum(t.uid, crtSnap ? `${dmgSnap}<span class="crit-label">CRITICAL</span>` : String(dmgSnap), crtSnap ? clrSnap+' crit' : clrSnap);
+      }, delay + 150);
+      delay += 100;
+      if (t.hp <= 0 && !t.dead) {
+        t.dead = true;
+        setTimeout(() => {
+          spawnFloatNum(t.uid, 'DEFEAT', 'float-defeat');
+          addLog(`${t.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+        }, delay + 200);
+      }
+      addLog(`${c.name} 【${ult.name}】→ ${t.name}（${distSnap===0?'中心':distSnap===1?'隣接':'隣々接'} Pw:${pw}）: <span class="tag tag-dmg">${dmgSnap}</span>`, 'damage');
+    });
     return;
   }
 
@@ -17951,6 +18041,13 @@ function computeDmg(attacker, target, skill) {
   }
 
   let power = (skill.power || 1.0) * getSkillLvMult(skill);
+  // ウィザード: 魔力集中（行動するたびスタック、攻撃時にPwボーナス）
+  if (attacker._focusStacks > 0 && ['phys','spec'].includes(skill.type) && !skill._isCounter && !skill._isFollowUp) {
+    const focusPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='power_stack_on_action');
+    if (focusPass) {
+      power += attacker._focusStacks * (focusPass.effect.val || 0.2);
+    }
+  }
   // スキルPwバフ（混沌爆発など）
   const _skillPwBuff = (attacker.buffs||[]).filter(b=>b.type==='skillPw_up').reduce((s,b)=>s+b.val,0);
   if (_skillPwBuff) power *= (1 + _skillPwBuff / 100);
@@ -18021,7 +18118,9 @@ function computeDmg(attacker, target, skill) {
   const isSpec = dmgType === 'spec';
   if (isSpec) {
     // 特殊ダメージ（spec）: mdef耐性
-    const mdef = getRes(target.mdef||0, ['mdef_up'], ['mdef_down']);
+    let mdef = getRes(target.mdef||0, ['mdef_up'], ['mdef_down']);
+    // magicPierce: 魔法貫通（特殊耐性を無視）
+    if (skill.magicPierce) mdef = mdef * (1 - Math.min(100, skill.magicPierce) / 100);
     const hpDmg = Math.max(minDmg, Math.floor(base * (1 - mdef/100) * staggerMult * nightMult));
     return { hpDmg, dmgType: 'spec' };
   } else {
