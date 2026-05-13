@@ -4945,21 +4945,23 @@ const CLASS_DATA = {
     baseStealth: 10,
     baseHate:   300,
     openingSkill: {
-      id:'ar_open_preemptive', name:'先制射撃', type:'phys', attr:'貫', target:'random_multi',
-      power:0.5, hits:6, cd:0,
-      desc:'ランダム敵×6連射 ⚔️ Pw:0.5'
+      id:'ar_open_volley', name:'プレシジョンヴォレー', type:'phys', attr:'貫', target:'all',
+      power:0.5, cd:0,
+      desc:'全体 ⚔️ Pw:0.5 ＋ 物理耐性-10%（3T）',
+      debuff:{ type:'pdef_down', val:-10, turns:3 }
     },
     activeSkills: [
       { id:'ar_pierce', name:'ピアシングアロー', type:'phys', attr:'貫', target:'single',
         power:2.0, cd:4, desc:'単体 ⚔️ Pw:2.0 貫通矢' },
       { id:'ar_rain', name:'アローレイン', type:'phys', attr:'貫', target:'all',
-        power:0.7, cd:6, desc:'全体 ⚔️ Pw:0.7 矢の雨' },
+        power:0.7, cd:6, desc:'全体 ⚔️ Pw:0.7 ＋ 命中-15%（3T）',
+        debuff:{ type:'hit_down', val:-15, turns:3 } },
     ],
     passiveSkills: [
-      { id:'ar_pass_eagle', name:'鷹の目', type:'passive',
+      { id:'ar_pass_eagle', name:'イーグルアイ', type:'passive',
         desc:'CRI率常時+8%・ATK+10%',
         effect:{ type:'cri_atk_bonus', cri:8, atk:10 } },
-      { id:'ar_pass_weak', name:'弱点狙い', type:'passive',
+      { id:'ar_pass_weak', name:'ウィークスポット', type:'passive',
         desc:'攻撃した敵の物理耐性-5%（最大5スタック）',
         effect:{ type:'pdef_down_on_attack', val:5, maxStacks:5 } },
     ],
@@ -12354,6 +12356,9 @@ function launchApp() {
       priest: {
         pr_open_regen:    'pr_open_prayers_song',
         pr_area:          'pr_sanctuary',
+      },
+      archer: {
+        ar_open_preemptive: 'ar_open_volley',
       },
     };
     const _skMap = _classSkillMaps[u.classId];
