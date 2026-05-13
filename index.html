@@ -4929,21 +4929,20 @@ const CLASS_DATA = {
     baseHate:    400,
     openingSkill: {
       id:'ws_open_cry', name:'バトルクライ', type:'buff', target:'self',
-      desc:'ATK+20% 3T',
-      effect:{ type:'atk_up', val:20, turns:3 }
+      desc:'ATK+25% 3T',
+      effect:{ type:'atk_up', val:25, turns:3 }
     },
     activeSkills: [
-      { id:'ws_sword_strike', name:'ソードストライク', type:'phys', attr:'斬', target:'single',
+      { id:'ws_triple_slash', name:'トリプルスラッシュ', type:'phys', attr:'斬', target:'single',
         power:0.7, hits:3, cd:3, desc:'単体×3回 ⚔️ Pw:0.7' },
-      { id:'ws_titan_smash', name:'タイタンスマッシュ', type:'phys', attr:'打', target:'single',
-        power:2.0, cd:5, desc:'単体 ✨ Pw:2.0（HP50%以上+Pw:1.0）',
-        conditionalPower:{ condition:'self_hp_above_50pct', bonusPower:1.0 } },
+      { id:'ws_force_impact', name:'フォースインパクト', type:'phys', attr:'打', target:'random3',
+        power:1.2, cd:6, desc:'ランダム敵×3 ⚔️ Pw:1.2' },
     ],
     passiveSkills: [
-      { id:'ws_pass_spirit', name:'戦士の闘志', type:'passive',
+      { id:'ws_pass_spirit', name:'ファイティングスピリット', type:'passive',
         desc:'攻撃するたびにATK+3%（最大5スタック、WAVE後リセット）',
         effect:{ type:'atk_stack_on_attack', val:3, maxStacks:5 } },
-      { id:'ws_pass_blood', name:'血戦', type:'passive',
+      { id:'ws_pass_blood', name:'アンブレイカブル', type:'passive',
         desc:'HP50%以下でATK+20%・CRI+10%',
         effect:{ type:'low_hp_boost', hpThreshold:50, atk:20, cri:10 } },
     ],
@@ -4968,8 +4967,8 @@ const CLASS_DATA = {
     baseStealth:  3,
     baseHate:    600,
     openingSkill: {
-      id:'vg_open_provoke', name:'プロヴォーク', type:'buff', target:'self',
-      desc:'挑発 + 物理/特殊耐性+30% 3T',
+      id:'vg_open_iron_guard', name:'アイアンガード', type:'buff', target:'self',
+      desc:'挑発 + 物理耐性+30% / 特殊耐性+40%（3T）',
       effect:{ type:'multi_buff', buffs:[
         { type:'taunt',   val:1,  turns:3 },
         { type:'pdef_up', val:30, turns:3 },
@@ -4977,24 +4976,23 @@ const CLASS_DATA = {
       ]}
     },
     activeSkills: [
-      { id:'vg_iron_wall', name:'アイアンウォール', type:'buff', target:'self',
-        power:0, cd:6, desc:'物理/特殊耐性+25% 3T',
+      { id:'vg_challenge_roar', name:'アイアンタウント', type:'buff', target:'self',
+        power:0, cd:7, desc:'自身に挑発（3T）＋ 被ダメ-25%（3T）',
         effect:{ type:'multi_buff', buffs:[
-          { type:'pdef_up', val:25, turns:3 },
-          { type:'mdef_up', val:35, turns:3 },
-          { type:'mdef_up', val:35, turns:3 },
+          { type:'taunt',         val:1,  turns:3 },
+          { type:'damage_reduce', val:25, turns:3 },
         ]}
       },
       { id:'vg_shield_bash', name:'シールドバッシュ', type:'phys', attr:'打', target:'single',
-        power:0.8, cd:4, desc:'単体 ⚔️ Pw:0.8 + 恐怖（ATK-10%）',
-        debuff:{ type:'atk_down', val:-10, turns:3 }
+        power:1.0, cd:5, desc:'単体 ⚔️ Pw:1.0 ＋ スタン（1T）',
+        debuff:{ type:'stun', val:1, turns:1 }
       },
     ],
     passiveSkills: [
-      { id:'vg_pass_guardian', name:'鋼の守護', type:'passive',
+      { id:'vg_pass_guardian', name:'アイアンスキン', type:'passive',
         desc:'被ダメ軽減10%（常時）',
         effect:{ type:'dmg_reduction', val:10 } },
-      { id:'vg_pass_taunt_spirit', name:'挑発の覇気', type:'passive',
+      { id:'vg_pass_taunt_spirit', name:'プロヴォーカー', type:'passive',
         desc:'挑発中ATK+15%',
         effect:{ type:'taunt_atk_bonus', val:15 } },
     ],
@@ -5018,23 +5016,23 @@ const CLASS_DATA = {
     baseStealth:  5,
     baseHate:    200,
     openingSkill: {
-      id:'pr_open_regen', name:'リジェネレーション', type:'buff', target:'self',
-      desc:'HP再生×0.20/T 3T',
-      effect:{ type:'regen_hp', hpRegenRatio:0.20, turns:3 }
+      id:'pr_open_prayers_song', name:'プレイヤーズソング', type:'buff', target:'all_ally',
+      desc:'味方全体 ATK+10%（3T）＋ HP再生（3T）',
+      effect:{ type:'opening_goddess', atkVal:10, atkTurns:3, hpRegenRatio:0.10, regenTurns:3 }
     },
     activeSkills: [
       { id:'pr_heal', name:'ヒールライト', type:'buff', target:'single',
         power:0, cd:3, desc:'単体HP回復×1.5 + ATK+10% 3T',
         effect:{ type:'heal_and_atk_buff', healRatio:1.5, atkVal:10, atkTurns:3 } },
-      { id:'pr_area', name:'エリアヒール', type:'buff', target:'all_ally',
-        power:0, cd:6, desc:'全体HP回復×1.5 + ATK+10% 2T',
-        effect:{ type:'heal_all_and_atk_buff', healRatio:1.5, atkVal:10, atkTurns:2 } },
+      { id:'pr_sanctuary', name:'サンクチュアリ', type:'buff', target:'all_ally',
+        power:0, cd:7, desc:'味方全体HP回復×1.0 ＋ 全デバフ解除',
+        effect:{ type:'heal_and_cleanse', healRatio:1.0 } },
     ],
     passiveSkills: [
-      { id:'pr_pass_grace', name:'聖なる加護', type:'passive',
+      { id:'pr_pass_grace', name:'ホーリーグレイス', type:'passive',
         desc:'回復量+20%（常時）',
         effect:{ type:'heal_bonus', val:20 } },
-      { id:'pr_pass_goddess', name:'女神の祝福', type:'passive',
+      { id:'pr_pass_goddess', name:'ディヴァインプロテクション', type:'passive',
         desc:'味方全体特殊耐性+10%（常時）',
         effect:{ type:'team_mdef_bonus', val:10 } },
     ],
@@ -5237,36 +5235,37 @@ const CLASS_DATA = {
   // ── バーサーカー（ビースト・アタッカー）★3 ──
   berserker: {
     name: 'バーサーカー', icon: '🪓',
-    role: 'アタッカー', species: 'beast', attackTypes: ['斬','打'],
+    role: 'アタッカー', species: 'beast', attackTypes: ['裂','斬'],
     baseStats: { atk:920, hp:2500, mp:1600, pres:12, mres:8, bres:5, lres:0, spd:98, cri:16, cridam:175 },
     baseSearch: 12, baseStealth: 4, baseHate: 380,
     openingSkill: {
-      id:'bk_open_blood', name:'血の覚醒', type:'buff', target:'self',
-      desc:'ATK+30%（3T）。自身HP-10%。奇襲時ATK+50%',
-      effect:{ type:'atk_up_self_dmg', atkVal:30, selfHpCost:10, turns:3, surpriseAtk:50 }
+      id:'bk_open_surge', name:'ブラッドサージ', type:'buff', target:'self',
+      desc:'ATK+40%（3T）／自身に出血（5T）',
+      effect:{ type:'berserker_surge', atkVal:40, turns:3, bleedTurns:5 }
     },
     activeSkills: [
-      { id:'bk_frenzy', name:'狂乱の一撃', type:'phys', attr:'裂', target:'single',
-        power:2.5, cd:5, desc:'単体 ⚔️ Pw:2.5（残HP%が低いほどPw+最大+1.5）',
-        scaledByMissingHp:{ maxBonus:1.5 } },
-      { id:'bk_rampage', name:'乱舞斬り', type:'phys', attr:'斬', target:'random_multi',
-        power:0.9, hits:4, cd:6, desc:'ランダム敵×4 ⚔️ Pw:0.9（低HP時CRI率+20%）',
-        lowHpCriBonus:20 },
+      { id:'bk_crimson_slash', name:'クリムゾンスラッシュ', type:'phys', attr:'裂', target:'single',
+        power:1.8, cd:4, desc:'単体 ⚔️ Pw:1.8 ＋ 出血（5T）',
+        debuff:{ type:'bleed', val:0, turns:5 } },
+      { id:'bk_crimson_storm', name:'クリムゾンストーム', type:'phys', attr:'裂', target:'all',
+        power:1.2, cd:7, desc:'全体 ⚔️ Pw:1.2 ＋ 出血（3T）／出血中の敵にPw+0.5',
+        debuff:{ type:'bleed', val:0, turns:3 }, bleedBonusPow:0.5 },
     ],
     passiveSkills: [
-      { id:'bk_pas_killing', name:'殺戮本能', type:'passive',
+      { id:'bk_pas_soul', name:'バーサーカーソウル', type:'passive',
         desc:'HP50%以下でATK+30%・SPD+20',
         effect:{ type:'low_hp_boost', hpThreshold:50, atk:30, spd:20 } },
-      { id:'bk_pas_undying', name:'不屈の闘気', type:'passive',
-        desc:'致死ダメージを1度だけHP1で耐える（1戦1回）',
-        effect:{ type:'death_resist', uses:1 } },
+      { id:'bk_pas_bloodhunter', name:'ブラッドハンター', type:'passive',
+        desc:'出血中の敵への与ダメ+25%',
+        effect:{ type:'dmg_vs_bleed', val:25 } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'bku_bloodstorm', name:'血嵐乱舞',
-        effect:'自身HP30%消費→ランダム敵×10 ⚔️ Pw:1.2 強制会心。撃破ごとにATK+8%スタック',
-        power:1.2, type:'phys', attr:'裂', target:'random_multi', hits:10, forceCrit:true,
-        selfHpCost:30, killAtkStack:8 },
+      { id:'bku_volcanic_gore', name:'ヴォルカニックゴア',
+        effect:'自身に出血（5T）→ 単体 ⚔️ Pw:8.0 強制会心。出血中の敵には Pw+2.0',
+        power:8.0, type:'phys', attr:'裂', target:'single', forceCrit:true,
+        bleedBonusPow:2.0,
+        selfBleed:{ turns:5 } },
     ],
   },
 
@@ -12488,6 +12487,48 @@ function launchApp() {
 
   // ユニット補正
   gState.ownedUnits.forEach(u => {
+    // クラスリデザインに伴う旧スキルID → 新スキルID マイグレーション
+    const _classSkillMaps = {
+      berserker: {
+        bk_frenzy:        'bk_crimson_slash',
+        bk_rampage:       'bk_crimson_storm',
+        bk_open_blood:    'bk_open_surge',
+        bk_pas_killing:   'bk_pas_soul',
+        bk_pas_undying:   'bk_pas_bloodhunter',
+        bku_bloodstorm:   'bku_volcanic_gore',
+      },
+      warrior: {
+        ws_sword_strike:  'ws_triple_slash',
+        ws_titan_smash:   'ws_force_impact',
+      },
+      vanguard: {
+        vg_open_provoke:  'vg_open_iron_guard',
+        vg_iron_wall:     'vg_challenge_roar',
+      },
+      priest: {
+        pr_open_regen:    'pr_open_prayers_song',
+        pr_area:          'pr_sanctuary',
+      },
+    };
+    const _skMap = _classSkillMaps[u.classId];
+    if (_skMap) {
+      if (Array.isArray(u.selectedSkills)) {
+        u.selectedSkills = u.selectedSkills.map(sid => _skMap[sid] || sid);
+      }
+      if (Array.isArray(u.tactics)) {
+        u.tactics.forEach(t => { if (t && _skMap[t.skillId]) t.skillId = _skMap[t.skillId]; });
+      }
+      const _prog = gState.unitProgress?.[u.uid];
+      if (_prog?.skillLevels) {
+        Object.keys(_skMap).forEach(oldId => {
+          if (_prog.skillLevels[oldId] !== undefined) {
+            const newId = _skMap[oldId];
+            _prog.skillLevels[newId] = Math.max(_prog.skillLevels[newId]||1, _prog.skillLevels[oldId]);
+            delete _prog.skillLevels[oldId];
+          }
+        });
+      }
+    }
     // 旧スキル選択UIの互換（selectedSkills）
     if (!u.selectedSkills || !u.selectedSkills.length) {
       const cls = CLASS_DATA[u.classId];
@@ -15565,6 +15606,9 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       if (ps.effect?.type === 'heal_bonus') {
         combatant._passiveHealBonus = (ps.effect.val||20) / 100;
       }
+      if (ps.effect?.type === 'dmg_vs_bleed') {
+        combatant._passiveBloodHunter = { val: ps.effect.val || 25 };
+      }
     });
     applyPassiveCards(combatant, unit);
 
@@ -15612,6 +15656,32 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       _underground: false,
     };
   }
+}
+
+// 味方の classPassives から「チーム全体に常時かかる」効果を集約して適用
+function applyTeamPassives(allies) {
+  if (!allies || !allies.length) return;
+  const liveAllies = allies.filter(a => !a.dead);
+  liveAllies.forEach(holder => {
+    (holder.classPassives||[]).forEach(ps => {
+      // ディヴァインプロテクション系: 味方全体特殊耐性+%
+      if (ps.effect?.type === 'team_mdef_bonus') {
+        const val = ps.effect.val || 10;
+        liveAllies.forEach(target => {
+          target.buffs = target.buffs || [];
+          const exists = target.buffs.some(b => b._teamSource === holder.uid && b.type === 'mdef_up');
+          if (!exists) {
+            target.buffs.push({
+              type:'mdef_up', val, turns:99999,
+              icon:'⬆特殊耐性', cssClass:'mdef-up',
+              isPassive:true, _teamSource: holder.uid
+            });
+          }
+        });
+        addLog(`${holder.name} <span class="tag tag-buff">${ps.name}</span> 味方全体特殊耐性+${val}%`, 'trigger');
+      }
+    });
+  });
 }
 
 function fireOpeningSkills(allies, enemies) {
@@ -15705,6 +15775,8 @@ function startBattle(scoutResult) {
     if (battleState) battleState._scoutOutcome = scoutResult.outcome;
   }
 
+  // チームパッシブ（味方全体に常時バフ）
+  if (battleState) applyTeamPassives(battleState.allies);
   // 開幕スキル発動
   if (battleState) fireOpeningSkills(battleState.allies, battleState.enemies);
 
@@ -16939,6 +17011,12 @@ function performUlt(c, enemies, allies) {
   }
 
   // ── 通常の必殺技（後方互換）──
+  // バーサーカー: 必殺技発動前に自身へ出血付与（ヴォルカニックゴア等）
+  if (ult.selfBleed) {
+    applyDebuffDirect(c, { type:'bleed', val:0, turns:ult.selfBleed.turns||5 });
+    spawnFloatNum(c.uid, '🩸自爆覚悟', 'float-debuff');
+    addLog(`${c.name} <span class="tag tag-buff">${ult.name}</span> 🩸自身出血(${ult.selfBleed.turns||5}T)`, 'trigger');
+  }
   const targetList = (ult.target==='all') ? [...liveEnemies] : liveEnemies.slice(0,1);
   targetList.forEach(t => {
     if (t.dead) return;
@@ -17375,6 +17453,22 @@ function applyBuff(c, skill, sourceUnit) {
     return;
   }
 
+  // バーサーカー開幕: ブラッドサージ（ATK+% ＋ 自身に出血）
+  if (eff.type === 'berserker_surge') {
+    const atkVal = eff.atkVal || 40;
+    const turns  = eff.turns  || 3;
+    const bleedTurns = eff.bleedTurns || 5;
+    c.buffs = c.buffs || [];
+    c.buffs.push({ type:'atk_up', val:atkVal, turns, icon:'⬆ATK', cssClass:'atk-up' });
+    applyDebuffDirect(c, { type:'bleed', val:0, turns:bleedTurns });
+    flashCard(c.uid, 'buff');
+    spawnSkillNamePop(c.uid, skill.name, 'buff');
+    spawnFloatNum(c.uid, '🩸狂戦士', 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> ATK+${atkVal}%(${turns}T) / 🩸自身出血(${bleedTurns}T)`, 'trigger');
+    Audio.buff();
+    return;
+  }
+
   // 後方互換: 古い型名フォールバック
   if (!iconMap['pres_up']) iconMap['pres_up'] = '⬆物理耐性';
   if (!cssMap['pres_up'])  cssMap['pres_up']  = 'pdef-up';
@@ -17494,6 +17588,10 @@ function computeDmg(attacker, target, skill) {
   if (attacker._passiveBloodBattle && attacker.hp <= attacker.maxHp * 0.5) {
     base *= (1 + attacker._passiveBloodBattle.atk / 100);
   }
+  // パッシブ: ブラッドハンター（出血中の敵への与ダメ+%）
+  if (attacker._passiveBloodHunter && (target.debuffs||[]).some(d=>d.type==='bleed')) {
+    base *= (1 + attacker._passiveBloodHunter.val / 100);
+  }
   // パッシブ: 挑発の覇気（挑発中ATK+%）
   if (attacker._passiveTauntSpirit && (attacker.buffs||[]).some(b=>b.type==='taunt')) {
     base *= (1 + attacker._passiveTauntSpirit.val / 100);
@@ -17510,6 +17608,10 @@ function computeDmg(attacker, target, skill) {
   // CC中追加ダメージ（バックスタブ等）
   const _targetCC = target.staggered || (target.buffs||[]).some(b=>['stun','paralysis','silence'].includes(b.type));
   if (skill.ccBonus && _targetCC) power += skill.ccBonus;
+  // 出血中の敵に対する追加Pw（クリムゾンストーム / ヴォルカニックゴア 等）
+  if (skill.bleedBonusPow && (target.debuffs||[]).some(d=>d.type==='bleed')) {
+    power += skill.bleedBonusPow;
+  }
   // スタッガー中ターゲットへの追加ダメージ（ソウルピアス等）
   if (skill.effect?.stunBonus && (target.staggered || (target.debuffs||[]).some(d=>d.type==='stun'))) {
     power += skill.effect.stunBonus;
