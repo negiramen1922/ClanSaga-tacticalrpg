@@ -5359,32 +5359,35 @@ const CLASS_DATA = {
     baseStats: { atk:700, hp:3100, mp:2600, pres:6, mres:14, bres:6, lres:0, spd:74, cri:5, cridam:140, evade:4 },
     baseSearch: 14, baseStealth: 6, baseHate: 190,
     openingSkill: {
-      id:'ac_open_brew', name:'賢者の調合', type:'buff', target:'all_ally',
-      desc:'味方全体HP+15%回復 ＋ ATK+10% 3T',
-      effect:{ type:'heal_and_atk_all', healRatio:0.15, atkVal:10, atkTurns:3 }
+      id:'ac_open_buff_potion', name:'バフポーション', type:'buff', target:'all_ally',
+      desc:'味方全体ATK+15%・SPD+10・被ダメ-10%(3T)',
+      effect:{ type:'multi_buff', buffs:[
+        { type:'atk_up', val:15, turns:3 },
+        { type:'spd_up', val:10, turns:3 },
+        { type:'damage_reduce', val:10, turns:3 },
+      ]}
     },
     activeSkills: [
-      { id:'ac_transmute', name:'変成術', type:'buff', target:'single_enemy',
-        power:0, cd:6, desc:'敵のバフを全解除し、解除数×ATK×0.5を味方単体HP回復',
-        effect:{ type:'dispel_and_convert_heal', healPerBuff:0.5 } },
-      { id:'ac_elixir', name:'エリクサー散布', type:'buff', target:'all_ally',
-        power:0, cd:8, desc:'味方全体HP回復×1.2 ＋ 全耐性+15% 2T',
-        effect:{ type:'heal_and_res_all', healRatio:1.2, resVal:15, resTurns:2 } },
+      { id:'ac_summon_golem', name:'ゴーレム召喚', type:'buff', target:'self',
+        power:0, cd:10, desc:'ゴーレム1体召喚（HP=自身ATK×15）。味方全員を80%で庇う',
+        effect:{ type:'summon_golem', hpMult:15, coverRatio:80, atkScale:0.5 } },
+      { id:'ac_random_potion', name:'ランダムポーション', type:'spec', attr:'魔', target:'single',
+        power:0, cd:3, desc:'単体敵に毒/✨ダメージ/回復阻害のいずれかをランダム発動',
+        effect:{ type:'random_potion' } },
     ],
     passiveSkills: [
       { id:'ac_pas_stone', name:'賢者の石', type:'passive',
-        desc:'毎ターン味方全体HP回復（ATK×5%）',
+        desc:'毎ターン味方全体HP回復（自身ATKの5%）',
         effect:{ type:'team_regen_per_turn', ratio:5 } },
-      { id:'ac_pas_refine', name:'精製術', type:'passive',
-        desc:'回復量+15% ＋ 味方全体状態異常耐性+20%（常時）',
-        effect:{ type:'heal_and_status_res', healBonus:15, statusRes:20 } },
+      { id:'ac_pas_refine', name:'多重錬成', type:'passive',
+        desc:'スキル発動時、20%確率で同じスキルがもう一度発動',
+        effect:{ type:'skill_double_chance', rate:20 } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'acu_transmutation', name:'完全変成',
-        effect:'敵全体のバフを全解除しバフ数×Pw:0.5ダメージ ＋ 味方全体HP完全回復',
-        power:0.5, type:'spec', attr:'爆', target:'all',
-        dispelAndDamage:true, allyFullHeal:true },
+      { id:'acu_transmutation', name:'完全錬成',
+        effect:'全敵 ✨魔 Pw:3.0 ＋ 敵ごとに別々のランダムデバフ ＋ 味方全体HP完全回復',
+        power:3.0, type:'spec', attr:'魔', target:'transmutation_complete' },
     ],
   },
 
@@ -12438,6 +12441,12 @@ function launchApp() {
         mn_pas_resonance:  'mn_pas_melody',
         mn_pas_ballad:     'mn_pas_polyrhythm',
       },
+      alchemist: {
+        ac_open_brew:      'ac_open_buff_potion',
+        ac_transmute:      'ac_summon_golem',
+        ac_elixir:         'ac_random_potion',
+        ac_pas_refine:     'ac_pas_refine',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -14688,7 +14697,8 @@ function resolveCoverTarget(target, bs) {
     target.buffs = (target.buffs||[]).filter(b => b !== coverBuff);
     return { primaryTarget: target, coverTarget: null };
   }
-  return { primaryTarget: target, coverTarget: coverSource, coverRatio: 0.8 };
+  const ratio = coverBuff.ratio || (coverBuff.val ? coverBuff.val / 100 : 0.8);
+  return { primaryTarget: target, coverTarget: coverSource, coverRatio: ratio };
 }
 
 /** シールドブレイク時のパッシブ発動（反撃の盾） */
@@ -15279,6 +15289,31 @@ function executeManualSkill(uid, skillId) {
   } else {
     addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${sk.target==='all'?'敵全体':(enemies[0]?.name||'敵')}`, 'damage');
     doAttack(c, enemies, sk);
+  }
+  // アルケミスト: 多重錬成（20%で同じスキルがもう一度発動）
+  if (!sk._doubledOnce) {
+    const doublePass = (c.classPassives||[]).find(p => p.effect?.type === 'skill_double_chance');
+    if (doublePass && Math.random() * 100 < (doublePass.effect.rate || 20)) {
+      addLog(`${c.name} <span class="tag tag-buff">多重錬成</span> ${sk.name} 連続発動！`, 'trigger');
+      const skClone = { ...sk, _doubledOnce: true };
+      setTimeout(() => {
+        if (!c.dead && battleState && battleRunning) {
+          const enemies2 = bs.enemies.filter(e=>!e.dead);
+          const allies2 = bs.allies.filter(a=>!a.dead);
+          if (skClone.type === 'buff') {
+            const buffTargets = resolveBuffTargets(skClone, c, allies2, enemies2);
+            triggerMelodyStack(c);
+            triggerPolyrhythm(c, allies2);
+            buffTargets.forEach(tgt => applyBuff(tgt, skClone, c));
+          } else if (skClone.effect?.type === 'debuff_all') {
+            enemies2.forEach(e => { applyDebuffDirect(e, skClone.effect.debuff); spawnFloatNum(e.uid,'🌫️','float-debuff'); });
+          } else {
+            doAttack(c, enemies2, skClone);
+          }
+          renderBattle();
+        }
+      }, 500);
+    }
   }
   renderBattle();
 }
@@ -15899,6 +15934,16 @@ function tickBattle() {
       // ターン制パッシブのリセット
       c._critChainUsedThisTurn = false;
     });
+    // アルケミスト: 賢者の石（毎ターン味方全体HP回復）
+    (bs.allies||[]).filter(a => !a.dead && !a.isGolem).forEach(alchemist => {
+      const pass = (alchemist.classPassives||[]).find(p => p.effect?.type === 'team_regen_per_turn');
+      if (!pass) return;
+      const healVal = Math.floor(alchemist.atk * (pass.effect.ratio || 5) / 100);
+      (bs.allies||[]).filter(a => !a.dead && !a.isGolem).forEach(target => {
+        const actual = healUnit(target, healVal);
+        if (actual > 0) spawnFloatNum(target.uid, `💚+${actual}`, 'float-heal');
+      });
+    });
     tickShields(all);
     // プリースト: 聖なる怒りパッシブチェック
     checkPriestPassives(bs);
@@ -15955,7 +16000,8 @@ function tickBattle() {
   }
 
   // Check win/lose
-  const alliesAlive = bs.allies.filter(c=>!c.dead);
+  // 敗北判定: ゴーレムは生存判定から除外（召喚物はパーティの一員ではない）
+  const alliesAlive = bs.allies.filter(c=>!c.dead && !c.isGolem);
   const enemiesAlive = bs.enemies.filter(c=>!c.dead);
 
   if (!enemiesAlive.length) {
@@ -16593,6 +16639,25 @@ function playAttrEffect(attacker, target, skill) {
 }
 
 function doAttack(attacker, targets, skill) {
+  // アルケミスト: ランダムポーション（毒/直接ダメ/回復阻害をランダム抽選）
+  if (skill.effect?.type === 'random_potion' && !skill._potionRolled) {
+    const roll = Math.floor(Math.random() * 3);
+    const rolled = { ...skill, _potionRolled: true, effect: { ...skill.effect, _resolvedType: roll } };
+    if (roll === 0) {
+      rolled.power = 0.4;
+      rolled.debuff = { type: 'poison', val: 10, turns: 3 };
+      rolled.name = (skill.name||'ポーション') + '（毒）';
+    } else if (roll === 1) {
+      rolled.power = 1.5;
+      rolled.name = (skill.name||'ポーション') + '（ダメージ）';
+    } else {
+      rolled.power = 0.4;
+      rolled.debuff = { type: 'heal_block', val: 80, turns: 3 };
+      rolled.name = (skill.name||'ポーション') + '（回復阻害）';
+    }
+    doAttack(attacker, targets, rolled);
+    return;
+  }
   // 全体多段攻撃（target='all' && hits>1）: hits回ループ
   if (skill.target === 'all' && skill.hits > 1 && !skill._processedAllMulti) {
     for (let i = 0; i < skill.hits; i++) {
@@ -16641,7 +16706,10 @@ function doAttack(attacker, targets, skill) {
         targetList = [tops[Math.floor(Math.random() * tops.length)]];
       } else { targetList = [...targets]; }
     } else {
-      targetList = isSingle ? [targets[Math.floor(Math.random()*targets.length)]] : [...targets];
+      // 敵が味方を狙う時はゴーレムを直接狙わない（cover_target経由で受けるため）
+      const filtered = attacker.isEnemy ? targets.filter(t => !t.isGolem) : targets;
+      const pickList = filtered.length ? filtered : targets;
+      targetList = isSingle ? [pickList[Math.floor(Math.random()*pickList.length)]] : [...pickList];
     }
   }
 
@@ -17427,6 +17495,61 @@ function performUlt(c, enemies, allies) {
     return;
   }
 
+  // ── アルケミスト: 完全錬成（全敵爆ダメ＋ランダムデバフ＋味方完全回復）──
+  if (ult.target === 'transmutation_complete' && liveEnemies.length > 0) {
+    const debuffPool = [
+      { type:'poison', val:10, turns:3, label:'☠毒' },
+      { type:'heal_block', val:80, turns:3, label:'🚫回復阻害' },
+      { type:'max_hp_down', val:10, turns:99999, maxStacks:1, label:'💀最大HP-10%' },
+      { type:'atk_down', val:-30, turns:3, label:'⚔️ATK-30%' },
+    ];
+    let delay = 0;
+    enemies.forEach(t => {
+      if (t.dead) return;
+      let { hpDmg: dmg, dmgType } = computeDmg(c, t, ult);
+      const isCrit = ult.forceCrit ? true : rollCrit(c);
+      if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
+      dmg = Math.max(1, dmg);
+      t.hp -= dmg;
+      if (dmg > 0) wakeFromSilence(t);
+      battleStats.totalDmg += dmg;
+      if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + dmg;
+      if (!t.isEnemy) battleStats.unitTaken[t.uid] = (battleStats.unitTaken[t.uid]||0) + dmg;
+      spawnBall(c.uid, t.uid, 'ult');
+      const dmgSnap = dmg, crtSnap = isCrit;
+      const clrSnap = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
+      setTimeout(() => {
+        flashCard(t.uid, 'hit');
+        spawnFloatNum(t.uid, crtSnap ? `${dmgSnap}<span class="crit-label">CRITICAL</span>` : String(dmgSnap), crtSnap ? clrSnap+' crit' : clrSnap);
+      }, delay + 130);
+      // ランダムデバフを敵ごとに抽選
+      const db = debuffPool[Math.floor(Math.random() * debuffPool.length)];
+      applyDebuffDirect(t, { type:db.type, val:db.val, turns:db.turns, maxStacks:db.maxStacks });
+      setTimeout(() => spawnFloatNum(t.uid, db.label, 'float-debuff'), delay + 200);
+      delay += 120;
+      if (t.hp <= 0 && !t.dead) {
+        t.dead = true;
+        setTimeout(() => {
+          spawnFloatNum(t.uid, 'DEFEAT', 'float-defeat');
+          addLog(`${t.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+        }, delay + 200);
+      }
+    });
+    // 味方全体HP完全回復
+    (allies||[]).filter(a => !a.dead && !a.isGolem).forEach(a => {
+      const heal = a.maxHp - a.hp;
+      if (heal > 0) {
+        const actual = healUnit(a, heal);
+        if (actual > 0) {
+          battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + actual;
+          spawnFloatNum(a.uid, `💚+${fmt(actual)}`, 'float-heal');
+        }
+      }
+    });
+    addLog(`${c.name} 【${ult.name}】全敵に爆ダメージ＋ランダムデバフ ＋ 味方全体HP完全回復`, 'trigger');
+    return;
+  }
+
   // ── アサシン: シャドウハント（最低HP敵に多段連撃、撃破時 次の最低HPに再ハント）──
   if (ult.target === 'lowest_hp' && ult.reattackOnKill && liveEnemies.length > 0) {
     const hits = ult.hits || 10;
@@ -17965,6 +18088,51 @@ function applyBuff(c, skill, sourceUnit) {
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> ${details}`, 'trigger');
     Audio.buff();
     return;
+  }
+
+  // アルケミスト: ゴーレム召喚（味方側召喚、味方全員に cover_target 付与）
+  if (eff.type === 'summon_golem') {
+    if (!battleState) return;
+    const hpMult = eff.hpMult || 15;
+    const coverRatio = eff.coverRatio || 80;
+    const golemHp = Math.floor((sourceUnit?.atk || c.atk) * hpMult);
+    // 既存ゴーレムがいれば除去（同時に1体のみ）
+    battleState.allies = (battleState.allies||[]).filter(a => !a.isGolem || a.dead);
+    // ゴーレム生成
+    const golem = {
+      uid: 'golem_' + Math.random().toString(36).slice(2),
+      name: 'ゴーレム', icon: '🗿',
+      classId: null, species: 'construct',
+      attackTypes: ['打'],
+      maxHp: golemHp, hp: golemHp,
+      atk: 0, pdef: 30, mdef: 20, spd: 0, cri: 0, cridam: 100,
+      evade: 0, atb: 0,
+      isEnemy: false, dead: false,
+      isGolem: true, _summonerUid: sourceUnit?.uid || c.uid,
+      staggered: false, staggerUsed: false,
+      skills: [], skillCDs: {}, usedOnce: {},
+      ultimate: null, ultGauge: 0,
+      buffs: [], debuffs: [],
+      classPassives: [],
+      hate: 50,
+    };
+    battleState.allies.push(golem);
+    // 既存の cover_target を解除してから新規付与
+    battleState.allies.forEach(a => {
+      if (a.uid === golem.uid) return;
+      if (a.dead) return;
+      a.buffs = (a.buffs||[]).filter(b => b.type !== 'cover_target' || !(b._tag === 'golem'));
+      a.buffs.push({
+        type:'cover_target', val:coverRatio, turns:99999,
+        sourceUid:golem.uid, ratio:coverRatio/100,
+        icon:'🤝庇う', cssClass:'hp-up', _tag:'golem',
+      });
+    });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, '🗿ゴーレム召喚', 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🗿ゴーレム召喚 HP:${fmt(golemHp)} / 味方全員を${coverRatio}%で庇う`, 'trigger');
+    if (typeof renderBattle === 'function') setTimeout(() => renderBattle(), 50);
+    Audio.buff(); return;
   }
 
   // ミンストレル: オーケストラルチャント（味方全体のスキルCD-N）
