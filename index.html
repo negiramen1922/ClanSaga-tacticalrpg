@@ -5009,34 +5009,34 @@ const CLASS_DATA = {
   // ── パラディン（セレスティア・タンク）★3 ──
   paladin: {
     name: 'パラディン', icon: '🛡️', iconImg: 'assets/images/role-vanguard.png',
-    role: 'タンク', species: 'celestia', attackTypes: ['聖','打'],
+    role: 'タンク', species: 'celestia', attackTypes: ['突','聖'],
     baseStats: { atk:700, hp:4200, mp:1800, pres:25, mres:20, bres:10, lres:5, spd:68, cri:6, cridam:145 },
     baseSearch: 10, baseStealth: 3, baseHate: 500,
     openingSkill: {
-      id:'pd_open_holy', name:'聖なる加護', type:'buff', target:'all_ally',
+      id:'pd_open_protect', name:'マジックプロテクション', type:'buff', target:'all_ally',
       desc:'全体シールド（最大HP20%）＋全体特殊耐性+15%（3T）',
-      effect:{ type:'shield_and_res', shieldRatio:0.20, resType:'wres', resVal:15, turns:3 }
+      effect:{ type:'shield_and_res', shieldRatio:0.20, resType:'mres', resVal:15, turns:3 }
     },
     activeSkills: [
-      { id:'pd_holy_strike', name:'聖光撃', type:'spec', attr:'聖', target:'single',
-        power:2.0, cd:5, desc:'単体 ⚔️（聖）Pw:2.0＋対象特殊耐性-15%（2T）',
-        debuff:{ type:'wres_down', val:-15, turns:2 } },
-      { id:'pd_miracle', name:'奇跡の光', type:'buff', target:'all_ally',
-        power:0, cd:8, desc:'全体HP回復×1.2＋全デバフ解除',
-        effect:{ type:'heal_and_cleanse', healRatio:1.2 } },
+      { id:'pd_holy_lance', name:'ホーリーランス', type:'spec', attr:'聖', target:'single',
+        power:2.0, cd:4, desc:'単体 ✨（聖）Pw:2.0＋対象特殊耐性-10%（2T）',
+        debuff:{ type:'mdef_down', val:-10, turns:2 } },
+      { id:'pd_blessing_light', name:'ブレッシングオブライト', type:'buff', target:'all_ally',
+        power:0, cd:7, desc:'自身: 大ヒール（maxHP30%）＋リジェネ(3T)／味方全体: 小ヒール（maxHP12%）',
+        effect:{ type:'blessing_of_light', selfHealRatio:0.30, selfRegenVal:8, selfRegenTurns:3, allyHealRatio:0.12 } },
     ],
     passiveSkills: [
-      { id:'pd_pas_heal', name:'奇跡の器', effect:'回復スキル使用時、対象にATKの30%の追加HP回復',
-        effect:{ type:'heal_bonus', val:30 } },
-      { id:'pd_pas_bres', name:'聖域の守護', effect:'味方全体物理耐性+8%（常時）',
-        effect:{ type:'team_bres', val:8 } },
+      { id:'pd_pas_brand', name:'聖なる烙印', type:'passive',
+        desc:'ホーリーランス命中時、対象に特殊耐性-5%スタック付与（最大3スタック・5T）',
+        effect:{ type:'sacred_brand', val:-5, maxStacks:3, turns:5 } },
+      { id:'pd_pas_unbreakable', name:'アンブレイカブル', type:'passive',
+        desc:'致死ダメージを受けてもHP1で耐える（戦闘中1回）',
+        effect:{ type:'unbreakable' } },
     ],
     ultimates: [
-      { id:'pu_divine', name:'天罰の審判',
-        effect:'単体⚔️（聖）Pw:6.0強制会心＋全体HP回復×1.5＋全体全耐性+20%（3T）',
-        target:'single', power:6.0, type:'spec', attr:'聖', forceCrit:true,
-        allyHeal:{ healRatio:1.5 },
-        allyBuff:{ type:'all_res_up', val:20, turns:3 } },
+      { id:'pu_judgment', name:'ジャッジメント',
+        effect:'単体 ✨（聖）Pw:1.5×6回（合計Pw:9.0相当）',
+        target:'single', power:1.5, hits:6, type:'spec', attr:'聖' },
     ],
   },
 
@@ -12364,6 +12364,13 @@ function launchApp() {
         sr_pas_crieye:    'sr_pas_overdrive',
         sr_pas_weakspot:  'sr_pas_target_lock',
       },
+      paladin: {
+        pd_open_holy:     'pd_open_protect',
+        pd_holy_strike:   'pd_holy_lance',
+        pd_miracle:       'pd_blessing_light',
+        pd_pas_heal:      'pd_pas_brand',
+        pd_pas_bres:      'pd_pas_unbreakable',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -16611,6 +16618,20 @@ function doAttack(attacker, targets, skill) {
         }
       }
     }
+    // パッシブ: 聖なる烙印（ホーリーランス命中時、対象の特殊耐性-5%スタック）
+    if (!attacker.isEnemy && totalDmg > 0 && skill.id === 'pd_holy_lance') {
+      const brandPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='sacred_brand');
+      if (brandPass) {
+        const eff = brandPass.effect;
+        const maxSt = eff.maxStacks || 3;
+        target._sacredBrandStacks = (target._sacredBrandStacks||0);
+        if (target._sacredBrandStacks < maxSt) {
+          target._sacredBrandStacks++;
+          target.debuffs = target.debuffs||[];
+          target.debuffs.push({ type:'mdef_down', val:(eff.val||-5), turns:eff.turns||5, icon:'⬇特耐', cssClass:'mdef-down' });
+        }
+      }
+    }
 
     // ダメージカラーマップ
     const dmgColorClass = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
@@ -16625,6 +16646,17 @@ function doAttack(attacker, targets, skill) {
     }, hitDelay);
 
     if (target.hp <= 0) {
+      // パラディン: アンブレイカブル（致死ダメージをHP1で耐える、戦闘中1回）
+      if (!target.isEnemy && !target._unbreakableUsed) {
+        const unbPass = (target.classPassives||[]).find(p=>p.effect?.type==='unbreakable');
+        if (unbPass) {
+          target._unbreakableUsed = true;
+          target.hp = 1;
+          flashCard(target.uid, 'buff');
+          spawnFloatNum(target.uid, '🛡️UNBREAKABLE', 'float-buff');
+          addLog(`✨ <b>${target.name}</b> <span class="tag tag-buff">アンブレイカブル！</span> 致死ダメージを耐えた！`, 'trigger');
+        }
+      }
       // アンデッドパッシブ: 一度だけHP1で耐える
       if (target.isEnemy && target.passive?.type === 'undying' && !target._undyingUsed) {
         target._undyingUsed = true;
@@ -16885,6 +16917,43 @@ function performUlt(c, enemies, allies) {
     return;
   }
 
+  // ── 単体多段必殺技（ジャッジメント等）──
+  if (ult.target === 'single' && ult.hits > 1 && liveEnemies.length > 0) {
+    const t = liveEnemies[0];
+    const hits = ult.hits;
+    let delay = 0;
+    for (let i = 0; i < hits; i++) {
+      if (t.dead) break;
+      let { hpDmg: dmg, dmgType: _ultDmgType } = computeDmg(c, t, ult);
+      const _ultClr = _ultDmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
+      const isCrit = ult.forceCrit ? true : rollCrit(c);
+      if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
+      dmg = Math.max(1, dmg);
+      t.hp -= dmg;
+      if (dmg > 0) wakeFromSilence(t);
+      battleStats.totalDmg += dmg;
+      if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + dmg;
+      if (!t.isEnemy) battleStats.unitTaken[t.uid] = (battleStats.unitTaken[t.uid]||0) + dmg;
+      spawnBall(c.uid, t.uid, 'ult');
+      const dmgSnap = dmg, crtSnap = isCrit, clrSnap = _ultClr;
+      setTimeout(() => {
+        flashCard(t.uid, 'hit');
+        spawnFloatNum(t.uid, crtSnap ? `${dmgSnap}<span class="crit-label">CRITICAL</span>` : String(dmgSnap), crtSnap ? clrSnap+' crit' : clrSnap);
+      }, delay + 150);
+      delay += 180;
+      if (t.hp <= 0 && !t.dead) {
+        t.dead = true;
+        setTimeout(() => {
+          spawnFloatNum(t.uid, 'DEFEAT', 'float-defeat');
+          addLog(`${t.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+        }, delay + 200);
+        break;
+      }
+    }
+    addLog(`${c.name} 【${ult.name}】→ ${t.name} に ×${hits} 連撃`, 'damage');
+    return;
+  }
+
   // ── 通常の必殺技（後方互換）──
   // バーサーカー: 必殺技発動前に自身へ出血付与（ヴォルカニックゴア等）
   if (ult.selfBleed) {
@@ -17007,6 +17076,25 @@ function applyBuff(c, skill, sourceUnit) {
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド <span class="tag tag-buff">+${fmt(shieldAmt)}</span>${turnStr}`, 'trigger');
     Audio.buff();
     return;
+  }
+
+  // ===== パラディン: ブレッシングオブライト（自身大ヒール+リジェネ／味方小ヒール）=====
+  if (eff.type === 'blessing_of_light') {
+    const healBonus = getBattleHealBonus(sourceUnit);
+    const isSelf = sourceUnit && c.uid === sourceUnit.uid;
+    const ratio = isSelf ? (eff.selfHealRatio||0.30) : (eff.allyHealRatio||0.12);
+    const healAmt = Math.floor(c.maxHp * ratio * _slMult * healBonus);
+    c.hp = Math.min(c.maxHp, c.hp + healAmt);
+    battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + healAmt;
+    if (isSelf) {
+      const regenVal = Math.round((eff.selfRegenVal||8) * _slMult);
+      c.buffs.push({ type:'regen', val:regenVal, turns:eff.selfRegenTurns||3, icon:'💚再生', cssClass:'hp-up' });
+    }
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `💚+${fmt(healAmt)}`, 'float-heal');
+    const tag = isSelf ? ` <span class="tag tag-buff">${skill.name}</span>` : '';
+    addLog(`${c.name}${tag} 💚HP+${fmt(healAmt)}${isSelf?` ／ 💚再生(${eff.selfRegenTurns||3}T)`:''}`, 'trigger');
+    Audio.buff(); return;
   }
 
   // ===== プリースト: HP回復+ATKバフ（単体）=====
@@ -17140,11 +17228,14 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'shield_and_res') {
     const shieldAmt = Math.floor(c.maxHp * (eff.shieldRatio||0.20) * _slMult);
     applyShield(c, shieldAmt);
-    const resIcon = eff.resType==='wres'?'⬆特殊耐性':'⬆物理耐性';
-    c.buffs.push({ type:`${eff.resType}_up`, val:eff.resVal||15, turns:eff.turns||3, icon:resIcon, cssClass:'mdef-up' });
+    const isMagic = eff.resType==='wres' || eff.resType==='mres' || eff.resType==='mdef';
+    const buffType = isMagic ? 'mdef_up' : 'pdef_up';
+    const resIcon = isMagic ? '⬆特殊耐性' : '⬆物理耐性';
+    const cssClass = isMagic ? 'mdef-up' : 'pdef-up';
+    c.buffs.push({ type:buffType, val:eff.resVal||15, turns:eff.turns||3, icon:resIcon, cssClass });
     flashCard(c.uid, 'buff');
     spawnFloatNum(c.uid, `🛡️+${fmt(shieldAmt)}`, 'float-buff');
-    addLog(`${c.name} 🛡シールド+${fmt(shieldAmt)} / ${eff.resType==='wres'?'特殊':'物理'}耐性+${eff.resVal}%(${eff.turns}T)`, 'trigger');
+    addLog(`${c.name} 🛡シールド+${fmt(shieldAmt)} / ${isMagic?'特殊':'物理'}耐性+${eff.resVal}%(${eff.turns}T)`, 'trigger');
     Audio.buff(); return;
   }
 
