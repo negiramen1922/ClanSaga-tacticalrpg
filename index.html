@@ -5157,37 +5157,34 @@ const CLASS_DATA = {
   shooter: {
     name: 'シューター', icon: '🔫',
     role: 'レンジ', species: 'hume', attackTypes: ['貫'],
-    baseStats: { atk:800, hp:2400, mp:1400, pres:6, mres:8, bres:3, lres:0, spd:92, cri:20, cridam:185 },
+    baseStats: { atk:900, hp:2000, mp:1400, pres:6, mres:8, bres:3, lres:0, spd:92, cri:10, cridam:170 },
     baseSearch: 32, baseStealth: 12, baseHate: 280,
     openingSkill: {
-      id:'sr_open_aim', name:'精密照準', type:'buff', target:'self',
-      desc:'CRI+20%・CRI倍率+30% 3T',
-      effect:{ type:'multi_buff', buffs:[
-        { type:'cri_up',    val:20, turns:3 },
-        { type:'cridam_up', val:30, turns:3 },
-      ]}
+      id:'sr_open_bombard', name:'ボムバードゥメント', type:'phys', attr:'貫', target:'all',
+      power:0.6, cd:0,
+      desc:'全体 ⚔️ Pw:0.6 砲撃'
     },
     activeSkills: [
-      { id:'sr_snipe', name:'スナイプ', type:'phys', attr:'貫', target:'single',
-        power:3.5, cd:7, desc:'単体 ⚔️ Pw:3.5（強制会心）',
-        forceCrit:true },
-      { id:'sr_burst', name:'バースト射撃', type:'phys', attr:'貫', target:'random_multi',
-        power:0.8, hits:5, cd:5, desc:'ランダム敵×5 ⚔️ Pw:0.8' },
+      { id:'sr_armor_break', name:'アーマーブレイク', type:'phys', attr:'貫', target:'single',
+        power:2.0, cd:4, armorPierce:50,
+        desc:'単体 ⚔️ Pw:2.0 ＋ 物理防御-50%無視' },
+      { id:'sr_bunker_buster', name:'バンカーバスター', type:'phys', attr:'貫', target:'single',
+        power:3.5, cd:7, armorPierce:70,
+        desc:'単体 ⚔️ Pw:3.5 ＋ 物理防御-70%無視' },
     ],
     passiveSkills: [
-      { id:'sr_pas_crieye', name:'狙撃手の眼', type:'passive',
-        desc:'CRI時ダメージ+20%（常時）',
-        effect:{ type:'crit_dmg_bonus', val:20 } },
-      { id:'sr_pas_weakspot', name:'急所狙い', type:'passive',
-        desc:'攻撃した敵のCRI耐性-5%スタック（最大3）',
-        effect:{ type:'cri_res_down_stack', val:5, maxStacks:3 } },
+      { id:'sr_pas_overdrive', name:'オーバードライブ', type:'passive',
+        desc:'戦闘開始から3T間 ATK+30%・SPD+15',
+        effect:{ type:'overdrive', atk:30, spd:15, turns:3 } },
+      { id:'sr_pas_target_lock', name:'ターゲットロック', type:'passive',
+        desc:'同じ敵を連撃するたび与ダメ+10%（最大5、別敵でリセット）',
+        effect:{ type:'target_lock', val:10, maxStacks:5 } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'sru_deadshot', name:'デッドショット',
-        effect:'単体 ⚔️ Pw:8.0 強制会心（CC中+Pw:4.0追加）',
-        power:8.0, type:'phys', attr:'貫', target:'single', forceCrit:true,
-        ccBonus:4.0 },
+      { id:'sru_railgun', name:'レールガン',
+        effect:'単体 ⚔️ Pw:10.0 ＋ 物理防御完全無視',
+        power:10.0, type:'phys', attr:'貫', target:'single', armorPierce:100 },
     ],
   },
 
@@ -12360,6 +12357,13 @@ function launchApp() {
       archer: {
         ar_open_preemptive: 'ar_open_volley',
       },
+      shooter: {
+        sr_open_aim:      'sr_open_bombard',
+        sr_snipe:         'sr_armor_break',
+        sr_burst:         'sr_bunker_buster',
+        sr_pas_crieye:    'sr_pas_overdrive',
+        sr_pas_weakspot:  'sr_pas_target_lock',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -15460,6 +15464,16 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       if (ps.effect?.type === 'dmg_vs_bleed') {
         combatant._passiveBloodHunter = { val: ps.effect.val || 25 };
       }
+      if (ps.effect?.type === 'overdrive') {
+        const turns = ps.effect.turns || 3;
+        const atk = ps.effect.atk || 30;
+        const spd = ps.effect.spd || 15;
+        combatant.buffs.push({ type:'atk_up', val:atk, turns, icon:'⚙️OD', cssClass:'atk-up', isPassive:true });
+        combatant.buffs.push({ type:'spd_up', val:spd, turns, icon:'⚙️OD', cssClass:'spd-up', isPassive:true });
+      }
+      if (ps.effect?.type === 'target_lock') {
+        combatant._passiveTargetLock = { stacks:0, maxStacks: ps.effect.maxStacks||5, val: ps.effect.val||10, lastTargetUid:null };
+      }
     });
     applyPassiveCards(combatant, unit);
 
@@ -16487,6 +16501,16 @@ function doAttack(attacker, targets, skill) {
     // Step7c: クリティカル判定（red/white のみ）
     const result = computeDmg(attacker, target, skill);
     let { hpDmg, dmgType } = result;
+    // パッシブ: ターゲットロック スタック更新（ダメージ計算後）
+    if (attacker._passiveTargetLock) {
+      const tl = attacker._passiveTargetLock;
+      if (tl.lastTargetUid === target.uid) {
+        tl.stacks = Math.min(tl.maxStacks, tl.stacks + 1);
+      } else {
+        tl.stacks = 0;
+        tl.lastTargetUid = target.uid;
+      }
+    }
     // 種族相性ログ（有利/不利時のみ）
     const _specMult = getSpeciesMultiplier(attacker.species, target.species);
     if (_specMult > 1.0) {
@@ -17447,6 +17471,11 @@ function computeDmg(attacker, target, skill) {
   if (attacker._passiveTauntSpirit && (attacker.buffs||[]).some(b=>b.type==='taunt')) {
     base *= (1 + attacker._passiveTauntSpirit.val / 100);
   }
+  // パッシブ: ターゲットロック（同じ敵への連撃ボーナス）
+  if (attacker._passiveTargetLock && attacker._passiveTargetLock.lastTargetUid === target.uid) {
+    const tl = attacker._passiveTargetLock;
+    base *= (1 + Math.min(tl.maxStacks, tl.stacks) * tl.val / 100);
+  }
 
   let power = (skill.power || 1.0) * getSkillLvMult(skill);
   // スキルPwバフ（混沌爆発など）
@@ -17509,7 +17538,9 @@ function computeDmg(attacker, target, skill) {
     return { hpDmg, dmgType: 'spec' };
   } else {
     // 物理ダメージ（phys）: pdef耐性
-    const pdef = getRes(target.pdef||0, ['pdef_up','rampart','aegis'], ['pdef_down']);
+    let pdef = getRes(target.pdef||0, ['pdef_up','rampart','aegis'], ['pdef_down']);
+    // armorPierce: 装甲貫通（物理防御を無視）
+    if (skill.armorPierce) pdef = pdef * (1 - Math.min(100, skill.armorPierce) / 100);
     const hpDmg = Math.max(minDmg, Math.floor(base * (1 - pdef/100) * staggerMult * nightMult));
     return { hpDmg, dmgType: 'phys' };
   }
