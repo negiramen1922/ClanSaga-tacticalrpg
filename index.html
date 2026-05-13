@@ -5398,36 +5398,37 @@ const CLASS_DATA = {
     baseStats: { atk:870, hp:2100, mp:1800, pres:5, mres:6, bres:8, lres:0, spd:112, cri:18, cridam:178, evade:8 },
     baseSearch: 44, baseStealth: 40, baseHate: 160,
     openingSkill: {
-      id:'th_open_shadow_run', name:'影走り', type:'opening', target:'self',
-      desc:'奇襲判定 ＋ SPD+30・回避+20% 2T',
-      effect:{ type:'shadow_dash', spdVal:30, evasion:20, turns:2 },
-      guaranteeSurprise:true
+      id:'th_open_shadow_run', name:'影走り', type:'buff', target:'self',
+      desc:'自身SPD+30・回避+20%（3T）＋ 奇襲判定',
+      guaranteeSurprise:true,
+      effect:{ type:'shadow_dash', spdVal:30, evasion:20, turns:3 }
     },
     activeSkills: [
-      { id:'th_steal', name:'盗む', type:'phys', attr:'裂', target:'single',
-        power:0.8, cd:5, desc:'単体 ✨ Pw:0.8 ＋ 対象バフを1つ奪取（自身に付与）',
-        effect:{ type:'steal_buff', count:1 } },
-      { id:'th_decoy', name:'陽動作戦', type:'buff', target:'all_enemy',
-        power:0, cd:7, desc:'敵全体のターゲットをランダム変更 ＋ ATK-10% 3T',
-        effect:{ type:'multi_debuff_all', debuffs:[
-          { type:'hate_shuffle', val:1, turns:1 },
-          { type:'atk_down', val:-10, turns:3 },
-        ]}},
+      { id:'th_steal_weapon', name:'武器奪取', type:'phys', attr:'裂', target:'single',
+        power:1.2, cd:4, desc:'単体 ⚔️ Pw:1.2 ＋ 対象ATK-30%（3T）',
+        debuff:{ type:'atk_down', val:-30, turns:3 } },
+      { id:'th_steal_armor', name:'防具剥ぎ', type:'phys', attr:'裂', target:'single',
+        power:1.2, cd:6, desc:'単体 ⚔️ Pw:1.2 ＋ 対象pdef-25%/mdef-25%（3T）＋ バフ1個奪取',
+        effect:{ type:'steal_buff', count:1,
+          extraDebuffs:[
+            { type:'pdef_down', val:-25, turns:3 },
+            { type:'mdef_down', val:-25, turns:3 },
+          ]} },
     ],
     passiveSkills: [
       { id:'th_pas_evade', name:'盗賊の身のこなし', type:'passive',
         desc:'回避率+15%（常時）',
         effect:{ type:'evasion_bonus', val:15 } },
-      { id:'th_pas_trophy', name:'財宝荒らし', type:'passive',
-        desc:'CRI+10%（常時）＋ 敵撃破時ゴールド獲得+50%',
-        effect:{ type:'cri_and_gold_bonus', cri:10, goldBonus:50 } },
+      { id:'th_pas_counter_step', name:'カウンターステップ', type:'passive',
+        desc:'回避成功時、攻撃してきた敵に自動反撃 Pw:1.0',
+        effect:{ type:'counter_on_evade', power:1.0 } },
     ],
     skillPool: [],
     ultimates: [
       { id:'thu_grand_thief', name:'大盗賊の舞い',
-        effect:'ランダム敵×8 ✨ Pw:1.0（各攻撃時バフ奪取）＋ 奪ったバフを全て自身に付与',
-        power:1.0, type:'phys', attr:'裂', target:'random_multi', hits:8,
-        stealBuff:true, applyStolen:true },
+        effect:'ランダム敵×6 ⚔️ Pw:1.5（各ヒットでバフ1個奪取し自身に付与）',
+        power:1.5, type:'phys', attr:'裂', target:'random_multi', hits:6,
+        stealBuff:true, stealCount:1 },
     ],
   },
 };
@@ -12447,6 +12448,11 @@ function launchApp() {
         ac_elixir:         'ac_random_potion',
         ac_pas_refine:     'ac_pas_refine',
       },
+      thief: {
+        th_steal:          'th_steal_weapon',
+        th_decoy:          'th_steal_armor',
+        th_pas_trophy:     'th_pas_counter_step',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -16755,6 +16761,22 @@ function doAttack(attacker, targets, skill) {
         setTimeout(() => spawnFloatNum(target.uid, 'MISS', 'float-debuff'), 200);
         addLog(`${attacker.name} → ${target.name}: <span class="tag tag-resist">MISS</span>`, 'damage');
         gainUltGauge(attacker, 2);
+        // パッシブ: カウンターステップ（回避時に自動反撃）
+        const evadeCounterPass = (target.classPassives||[]).find(p => p.effect?.type === 'counter_on_evade');
+        if (evadeCounterPass && !attacker.dead && !skill._isCounter && !skill._isFollowUp) {
+          const power = evadeCounterPass.effect.power || 1.0;
+          const firstAttr = target.attackTypes?.[0] || '裂';
+          const counterType = (firstAttr === '魔' || firstAttr === '聖' || firstAttr === '闇') ? 'spec' : 'phys';
+          setTimeout(() => {
+            if (!attacker.dead && !target.dead) {
+              addLog(`${target.name} <span class="tag tag-trigger">↩カウンターステップ</span> → ${attacker.name}`, 'trigger');
+              doAttack(target, [attacker], {
+                name: 'カウンターステップ', type: counterType, attr: firstAttr,
+                target: 'single', power, _isCounter: true,
+              });
+            }
+          }, 280);
+        }
         return;
       }
     }
@@ -17040,6 +17062,26 @@ function doAttack(attacker, targets, skill) {
       }[skill.debuff.type] || '⬇弱体';
       addLog(`${target.name} に <span class="tag tag-trigger">${debuffLabel}</span> 付与`, 'trigger');
       setTimeout(() => spawnFloatNum(target.uid, debuffLabel, 'float-debuff'), hitDelay + 100);
+    }
+
+    // シーフ: バフ奪取（steal_buff）
+    if (skill.effect?.type === 'steal_buff' && !target.dead && totalDmg > 0) {
+      const count = skill.effect.count || 1;
+      let stolen = 0;
+      for (let i = 0; i < count; i++) {
+        const stealable = (target.buffs||[]).filter(b => !b.isPassive && b.turns < 9999);
+        if (!stealable.length) break;
+        const buff = stealable[Math.floor(Math.random() * stealable.length)];
+        target.buffs = target.buffs.filter(b => b !== buff);
+        attacker.buffs = attacker.buffs || [];
+        attacker.buffs.push({ ...buff });
+        stolen++;
+        addLog(`${attacker.name} <span class="tag tag-buff">バフ奪取</span> ${target.name} の ${buff.icon||buff.type}`, 'trigger');
+      }
+      if (stolen > 0) spawnFloatNum(attacker.uid, `🃏奪取×${stolen}`, 'float-buff');
+      if (skill.effect.extraDebuffs) {
+        skill.effect.extraDebuffs.forEach(db => applyDebuffDirect(target, db));
+      }
     }
 
     // 複数デバフ同時付与（弱点狙い等）
@@ -17331,6 +17373,54 @@ function performUlt(c, enemies, allies) {
       const bonusDesc = resBuff ? `全耐性+${resBuff}%` : (ult.selfAtkUp ? `ATK+${ult.selfAtkUp}%` : '');
       addLog(`${c.name}: 完全挑発（${ult.tauntTurns}T）+ ${bonusDesc}`, 'trigger');
     }
+    return;
+  }
+
+  // ── シーフ: 大盗賊の舞い（ランダム×6 + バフ奪取）──
+  if (ult.target === 'random_multi' && ult.stealBuff) {
+    const hits = ult.hits || 6;
+    let delay = 0;
+    for (let i = 0; i < hits; i++) {
+      const alive = enemies.filter(e => !e.dead);
+      if (alive.length === 0) break;
+      const t = alive[Math.floor(Math.random() * alive.length)];
+      let { hpDmg: dmg, dmgType } = computeDmg(c, t, ult);
+      const isCrit = ult.forceCrit ? true : rollCrit(c);
+      if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
+      dmg = Math.max(1, dmg);
+      t.hp -= dmg;
+      if (dmg > 0) wakeFromSilence(t);
+      battleStats.totalDmg += dmg;
+      if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + dmg;
+      if (!t.isEnemy) battleStats.unitTaken[t.uid] = (battleStats.unitTaken[t.uid]||0) + dmg;
+      spawnBall(c.uid, t.uid, 'ult');
+      const dmgSnap = dmg, crtSnap = isCrit;
+      const clrSnap = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
+      setTimeout(() => {
+        flashCard(t.uid, 'hit');
+        spawnFloatNum(t.uid, crtSnap ? `${dmgSnap}<span class="crit-label">CRITICAL</span>` : String(dmgSnap), crtSnap ? clrSnap+' crit' : clrSnap);
+      }, delay + 100);
+      // バフ奪取
+      const stealCount = ult.stealCount || 1;
+      for (let s = 0; s < stealCount; s++) {
+        const stealable = (t.buffs||[]).filter(b => !b.isPassive && b.turns < 9999);
+        if (!stealable.length) break;
+        const buff = stealable[Math.floor(Math.random() * stealable.length)];
+        t.buffs = t.buffs.filter(b => b !== buff);
+        c.buffs = c.buffs || [];
+        c.buffs.push({ ...buff });
+        addLog(`${c.name} <span class="tag tag-buff">バフ奪取</span> ${t.name} の ${buff.icon||buff.type}`, 'trigger');
+      }
+      delay += 150;
+      if (t.hp <= 0 && !t.dead) {
+        t.dead = true;
+        setTimeout(() => {
+          spawnFloatNum(t.uid, 'DEFEAT', 'float-defeat');
+          addLog(`${t.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+        }, delay + 200);
+      }
+    }
+    addLog(`${c.name} 【${ult.name}】→ ランダム敵に×${hits}連射＋バフ奪取`, 'damage');
     return;
   }
 
@@ -18088,6 +18178,19 @@ function applyBuff(c, skill, sourceUnit) {
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> ${details}`, 'trigger');
     Audio.buff();
     return;
+  }
+
+  // シーフ: 影走り（自身SPD+回避バフ）
+  if (eff.type === 'shadow_dash') {
+    const spdVal = eff.spdVal || 30;
+    const evVal = eff.evasion || 20;
+    const turns = eff.turns || 3;
+    c.buffs.push({ type:'spd_up', val:spdVal, turns, icon:'⬆SPD', cssClass:'atk-up' });
+    c.buffs.push({ type:'evade_up', val:evVal, turns, icon:'👁回避↑', cssClass:'atk-up' });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `👤影走り SPD+${spdVal}/回避+${evVal}%`, 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> SPD+${spdVal} / 回避+${evVal}%(${turns}T)`, 'trigger');
+    Audio.buff(); return;
   }
 
   // アルケミスト: ゴーレム召喚（味方側召喚、味方全員に cover_target 付与）
