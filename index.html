@@ -5312,34 +5312,34 @@ const CLASS_DATA = {
     baseStats: { atk:820, hp:2300, mp:2800, pres:5, mres:14, bres:3, lres:0, spd:70, cri:9, cridam:150 },
     baseSearch: 22, baseStealth: 5, baseHate: 200,
     openingSkill: {
-      id:'pf_open_analyze', name:'解析眼', type:'buff', target:'all_enemy',
-      desc:'敵全体の全耐性-15% 3T（奇襲時-25%）',
-      effect:{ type:'all_res_down_all', val:-15, turns:3, surpriseVal:-25 }
+      id:'pf_open_battle_order', name:'バトルオーダー', type:'buff', target:'all_ally',
+      desc:'味方全体ATK+15%・SPD+15(3T)＋敵全体SPD-40%(1T)',
+      effect:{ type:'battle_order', allyAtkUp:15, allySpdUp:15, allyTurns:3, enemySpdDown:-40, enemyTurns:1 }
     },
     activeSkills: [
-      { id:'pf_gravity', name:'重力魔法', type:'spec', attr:'呪', target:'all',
-        power:1.0, cd:7, desc:'全体 ✨ Pw:1.0 ＋ SPD-20・ATK-20% 3T',
-        effect:{ type:'multi_debuff', debuffs:[
-          { type:'spd_down', val:-20, turns:3 },
-          { type:'atk_down', val:-20, turns:3 },
+      { id:'pf_stun_howl', name:'スタンハウル', type:'spec', attr:'魔', target:'random3',
+        power:0.7, cd:5, desc:'敵ランダム3体 ✨ Pw:0.7 ＋ スタン1T',
+        debuff:{ type:'stun', val:1, turns:1 } },
+      { id:'pf_bravely_howl', name:'ブレイブリーハウル', type:'buff', target:'highest_atk2_ally',
+        power:0, cd:7, desc:'味方ATK上位2人にATK+25%・SPD+15(3T)',
+        effect:{ type:'multi_buff', buffs:[
+          { type:'atk_up', val:25, turns:3 },
+          { type:'spd_up', val:15, turns:3 },
         ]}},
-      { id:'pf_amplify', name:'弱体強化', type:'spec', attr:'呪', target:'single',
-        power:0, cd:6, desc:'単体のデバフを強化（効果2倍・期間+2T）',
-        effect:{ type:'debuff_amplify', multiplier:2, extraTurns:2 } },
     ],
     passiveSkills: [
-      { id:'pf_pas_research', name:'研究の成果', type:'passive',
-        desc:'デバフ中の敵への与ダメ+18%（常時）',
-        effect:{ type:'dmg_vs_debuffed', val:18 } },
-      { id:'pf_pas_theory', name:'魔法理論', type:'passive',
-        desc:'全体攻撃時、対象の最も低い耐性に追加ダメージ+20%',
-        effect:{ type:'lowest_res_bonus', val:20 } },
+      { id:'pf_pas_insight', name:'アカデミック・インサイト', type:'passive',
+        desc:'デバフ中の敵への与ダメ+20%（常時）',
+        effect:{ type:'dmg_vs_debuffed', val:20 } },
+      { id:'pf_pas_followup', name:'フォロースルー', type:'passive',
+        desc:'他の味方が攻撃した時、10%で同じ敵に追撃（発動毎に半減、戦闘ごとリセット）',
+        effect:{ type:'follow_up_attack', rate:10, decay:0.5 } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'pfu_forbidden', name:'禁断の理論',
-        effect:'単体 ✨ Pw:2.0 ＋ 全ステータス-25%・全耐性-25%（永続）→ 全体 ⚔️ Pw:1.5',
-        power:2.0, type:'spec', attr:'呪', target:'single',
+      { id:'pfu_mission_complete', name:'ミッションコンプリート',
+        effect:'単体 ✨ Pw:2.0 ＋ 全ステ-25%・全耐性-25%（8T）→ 全体 ✨ Pw:1.5',
+        power:2.0, type:'spec', attr:'魔', target:'single',
         debuff:{ type:'grand_debuff_permanent', statVal:-25, resVal:-25, turns:8 },
         followUp:{ type:'spec', attr:'魔', target:'all', power:1.5 } },
     ],
@@ -12381,6 +12381,14 @@ function launchApp() {
         sn_pas_fort:      'sn_pas_iron_force',
         sn_pas_guard:     'sn_pas_vanguardian',
       },
+      professor: {
+        pf_open_analyze:  'pf_open_battle_order',
+        pf_gravity:       'pf_stun_howl',
+        pf_amplify:       'pf_bravely_howl',
+        pf_pas_research:  'pf_pas_insight',
+        pf_pas_theory:    'pf_pas_followup',
+        pfu_forbidden:    'pfu_mission_complete',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -14546,6 +14554,11 @@ function resolveBuffTargets(skill, caster, allies, enemies) {
   if (t === 'self') return [caster];
   if (t === 'all_ally') return allies.filter(a=>!a.dead);
   if (t === 'all_enemy') return enemies.filter(e=>!e.dead);
+  // プロフェッサー: ATK上位2人の味方
+  if (t === 'highest_atk2_ally') {
+    const alive = allies.filter(a=>!a.dead);
+    return [...alive].sort((a,b)=>(b.atk||0)-(a.atk||0)).slice(0, Math.min(2, alive.length));
+  }
   if (t === 'single_ally') {
     // プリースト: 最もHP割合が低い味方（自身も含む）
     const alive = allies.filter(a=>!a.dead);
@@ -15595,6 +15608,16 @@ function fireOpeningSkills(allies, enemies) {
       addLog(`${ally.name} <span class="tag tag-skill">${opening.name}</span> [開幕]`, 'trigger');
       if (opening.target === 'all_ally') {
         aliveAllies.forEach(a => { applyBuff(a, opening, ally); flashCard(a.uid, 'buff'); });
+        // プロフェッサー: バトルオーダー（味方バフは applyBuff 済、敵デバフを追加適用）
+        if (opening.effect?.type === 'battle_order' && aliveEnemies.length) {
+          const spdDownVal = opening.effect.enemySpdDown || -40;
+          const spdDownTurns = opening.effect.enemyTurns || 1;
+          aliveEnemies.forEach(e => {
+            applyDebuffDirect(e, { type:'spd_down', val:spdDownVal, turns:spdDownTurns });
+            spawnFloatNum(e.uid, '🐢SPD↓', 'float-debuff');
+          });
+          addLog(`敵全体に <span class="tag tag-trigger">🐢SPD${spdDownVal}%(${spdDownTurns}T)</span>`, 'trigger');
+        }
       } else if (opening.target === 'all_enemy') {
         const effInner = opening.effect;
         aliveEnemies.forEach(e => {
@@ -16799,6 +16822,34 @@ function doAttack(attacker, targets, skill) {
       }
     }
   });
+
+  // プロフェッサー: フォロースルー（味方の攻撃時、保持者が確率で同じ敵に追撃）
+  if (!attacker.isEnemy && !skill._isCounter && !skill._isFollowUp &&
+      ['phys','spec'].includes(skill.type) && (skill.power||0) > 0 && battleState) {
+    const liveTarget = targetList.find(t=>!t.dead);
+    if (liveTarget) {
+      (battleState.allies||[]).forEach(ally => {
+        if (ally.dead || ally.uid === attacker.uid) return;
+        const fpass = (ally.classPassives||[]).find(p=>p.effect?.type==='follow_up_attack');
+        if (!fpass) return;
+        if (ally._followUpRate === undefined) ally._followUpRate = fpass.effect.rate || 10;
+        if (Math.random() * 100 < ally._followUpRate) {
+          ally._followUpRate *= (fpass.effect.decay || 0.5);
+          const naInfo = getNormalAttackInfo(ally);
+          const followSkill = {
+            name: 'フォロースルー', type: naInfo.type, attr: naInfo.attr,
+            target: 'single', power: 1.0, _isFollowUp: true,
+          };
+          setTimeout(() => {
+            if (!ally.dead && !liveTarget.dead) {
+              addLog(`📚 ${ally.name} <span class="tag tag-trigger">フォロースルー</span> → ${liveTarget.name}`, 'trigger');
+              doAttack(ally, [liveTarget], followSkill);
+            }
+          }, 300);
+        }
+      });
+    }
+  }
 }
 
 function performUlt(c, enemies, allies) {
@@ -17136,6 +17187,18 @@ function applyBuff(c, skill, sourceUnit) {
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド <span class="tag tag-buff">+${fmt(shieldAmt)}</span>${turnStr}`, 'trigger');
     Audio.buff();
     return;
+  }
+
+  // ===== プロフェッサー: バトルオーダー（味方ATK/SPDバフ部分。敵デバフは fireOpeningSkills 側で処理）=====
+  if (eff.type === 'battle_order') {
+    const atkUp = eff.allyAtkUp || 15;
+    const spdUp = eff.allySpdUp || 15;
+    const turns = eff.allyTurns || 3;
+    c.buffs.push({ type:'atk_up', val:atkUp, turns, icon:'⬆ATK', cssClass:'atk-up' });
+    c.buffs.push({ type:'spd_up', val:spdUp, turns, icon:'⬆SPD', cssClass:'atk-up' });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `⬆ATK+${atkUp}%/SPD+${spdUp}`, 'float-buff');
+    Audio.buff(); return;
   }
 
   // ===== センチネル: カウンターパリィ（カウンター状態＋被ダメ軽減＋挑発）=====
@@ -17708,6 +17771,12 @@ function computeDmg(attacker, target, skill) {
     }
   }
 
+  // パッシブ: アカデミック・インサイト（デバフ中の敵への与ダメ+%）
+  const insightPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='dmg_vs_debuffed');
+  if (insightPass && (target.debuffs||[]).length > 0) {
+    base *= (1 + (insightPass.effect.val||20)/100);
+  }
+
   // スタッガーボーナス
   const staggerMult = target.staggered ? 1.3 : 1.0;
 
@@ -17794,7 +17863,8 @@ function applyDebuffDirect(target, debuff) {
   }
   if (debuff.type === 'grand_debuff' || debuff.type === 'grand_debuff_permanent') {
     const subTurns = debuff.type === 'grand_debuff_permanent' ? Math.min(debuff.turns||8, 8) : debuff.turns;
-    ['pres_down','mres_down','bres_down','atk_down','spd_down'].forEach(t => applyDebuffDirect(target, { ...debuff, type:t, turns: subTurns }));
+    // pres/mres/bres は getRes で認識されないため、pdef_down/mdef_down にエイリアス
+    ['pdef_down','mdef_down','atk_down','spd_down'].forEach(t => applyDebuffDirect(target, { ...debuff, type:t, turns: subTurns }));
     return;
   }
   // CC免疫チェック（気絶・しびれ・沈黙は無効化）
