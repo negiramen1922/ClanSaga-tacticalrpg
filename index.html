@@ -4902,34 +4902,35 @@ const CLASS_DATA = {
     baseStealth: 45,
     baseHate:    150,
     openingSkill: {
-      id:'as_open_shadow', name:'影潜り', type:'phys', attr:'裂', target:'single',
-      desc:'ATK+25%・CRI+15% + 奇襲時⚔️Pw:3.0（通常時Pw:1.0） 3T',
-      power:3.0,
-      effect:{ type:'surprise_burst', normalPw:1.0, surprisePw:3.0 },
-      surpriseBuff:[ { type:'atk_up', val:25, turns:3 }, { type:'cri_up', val:15, turns:3 } ]
+      id:'as_open_blitz', name:'シャドウブリッツ', type:'phys', attr:'裂', target:'single',
+      power:0.8, hits:3, cd:0,
+      desc:'単体 ⚔️ Pw:0.8 ×3連撃（夜戦時 Pw:1.2×3）＋自身ATK+15%(3T)',
+      effect:{ type:'shadow_blitz', normalPw:0.8, nightPw:1.2, hits:3, atkUp:15, atkTurns:3 }
     },
     activeSkills: [
-      { id:'as_poison_blade', name:'毒刃', type:'phys', attr:'裂', target:'single',
-        power:1.6, cd:4, desc:'単体 ✨ Pw:1.6 + 猛毒3T（ATK×10%/T）',
-        debuff:{ type:'lethal_poison', val:10, turns:3 } },
-      { id:'as_backstab', name:'バックスタブ', type:'phys', attr:'斬', target:'single',
-        power:2.0, cd:5, desc:'単体 ✨ Pw:2.0（CC中強制会心+Pw:1.0）',
-        ccBonus:1.0, ccForceCrit:true },
+      { id:'as_poison_fang', name:'ポイズンファング', type:'phys', attr:'裂', target:'single',
+        power:0.7, hits:3, cd:4, desc:'単体 ⚔️ Pw:0.7 ×3連撃 ＋ 毒3T',
+        debuff:{ type:'poison', val:10, turns:3 } },
+      { id:'as_flare_signal', name:'フレアシグナル', type:'buff', target:'self',
+        power:0, cd:6, desc:'自身回避+10%(3T)。昼: 敵2体スロー(2T) ／ 夜: 味方全体命中+30%(3T)＋自身ヘイト+500',
+        effect:{ type:'flare_signal', evadeUp:10, evadeTurns:3,
+                 dayTargets:2, daySlowTurns:2,
+                 nightHitUp:30, nightHitTurns:3, nightHateUp:500 } },
     ],
     passiveSkills: [
-      { id:'as_pass_night', name:'夜の狩人', type:'passive',
-        desc:'夜戦中ATK+20%・CRI+15%・SPD+15%',
-        effect:{ type:'night_bonus', atk:20, cri:15, spd:15 } },
-      { id:'as_pass_shadow', name:'影の達人', type:'passive',
-        desc:'隠密+20%・CRI率常時+8%',
-        effect:{ type:'stealth_cri', stealth:20, cri:8 } },
+      { id:'as_pass_night_hunter', name:'夜の狩人', type:'passive',
+        desc:'夜戦中ATK+30%・CRI+20・SPD+20 ／ 昼戦中ATK-20%',
+        effect:{ type:'night_bonus', atk:30, cri:20, spd:20, dayAtkPenalty:20 } },
+      { id:'as_pass_shadow_mastery', name:'シャドウマスタリー', type:'passive',
+        desc:'CRI時、同じ敵にPw0.5の追撃（1ターン1回）',
+        effect:{ type:'crit_chain_attack', power:0.5 } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'asu_hunt', name:'影狩り（シャドウハント）',
-        effect:'最もHPの低い敵に⚔️Pw4.0(強制会心)+✨Pw2.0。撃破時即再行動(次の最低HP敵を自動追跡)。連続撃破でATK+10%スタック。夜戦中⚔️Pw+2.0追加',
-        power:4.0, type:'phys', attr:'裂', target:'lowest_hp', forceCrit:true,
-        blackPw:2.0, reattackOnKill:true, killAtkStack:10, nightRedBonus:2.0 },
+      { id:'asu_shadow_hunt', name:'シャドウハント',
+        effect:'最もHPの低い敵に⚔️Pw0.5×10連撃／撃破時 次の最低HP敵に再発動',
+        power:0.5, hits:10, type:'phys', attr:'裂', target:'lowest_hp',
+        reattackOnKill:true },
     ],
   },
 
@@ -12389,6 +12390,14 @@ function launchApp() {
         pf_pas_theory:    'pf_pas_followup',
         pfu_forbidden:    'pfu_mission_complete',
       },
+      assassin: {
+        as_open_shadow:    'as_open_blitz',
+        as_poison_blade:   'as_poison_fang',
+        as_backstab:       'as_flare_signal',
+        as_pass_night:     'as_pass_night_hunter',
+        as_pass_shadow:    'as_pass_shadow_mastery',
+        asu_hunt:          'asu_shadow_hunt',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -15507,6 +15516,12 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       if (ps.effect?.type === 'target_lock') {
         combatant._passiveTargetLock = { stacks:0, maxStacks: ps.effect.maxStacks||5, val: ps.effect.val||10, lastTargetUid:null };
       }
+      // 夜の狩人: 昼戦時のATKペナルティを即時適用。夜戦突入時に解除＋bonus付与
+      if (ps.effect?.type === 'night_bonus' && ps.effect.dayAtkPenalty) {
+        const pen = ps.effect.dayAtkPenalty;
+        combatant._dayAtkPenalty = pen;
+        combatant.atk = Math.floor(combatant.atk * (1 - pen / 100));
+      }
     });
     applyPassiveCards(combatant, unit);
 
@@ -15637,7 +15652,13 @@ function fireOpeningSkills(allies, enemies) {
     } else if (opening.type === 'phys' || opening.type === 'spec') {
       addLog(`${ally.name} <span class="tag tag-skill">${opening.name}</span> [開幕]`, 'trigger');
       if (aliveEnemies.length) {
-        const pw = (scoutOutcome==='success' && opening.powerOnSurprise) ? opening.powerOnSurprise : (opening.power||1.0);
+        let pw = (scoutOutcome==='success' && opening.powerOnSurprise) ? opening.powerOnSurprise : (opening.power||1.0);
+        // アサシン: シャドウブリッツ（夜戦時 Pw 強化＋自身ATKバフ）
+        if (opening.effect?.type === 'shadow_blitz') {
+          const isNight = battleState?.isNight;
+          pw = isNight ? (opening.effect.nightPw||1.2) : (opening.effect.normalPw||0.8);
+          ally.buffs.push({ type:'atk_up', val:opening.effect.atkUp||15, turns:opening.effect.atkTurns||3, icon:'⬆ATK', cssClass:'atk-up' });
+        }
         const opWithPw = { ...opening, power: pw };
         if (opening.target === 'random_multi') {
           const hitCount = opening.hits || 6;
@@ -15779,6 +15800,8 @@ function tickBattle() {
       // buff/debuff ターン消費
       c.buffs   = (c.buffs||[]).filter(b=>{ b.turns--; return b.turns > 0; });
       c.debuffs = (c.debuffs||[]).filter(d=>{ d.turns--; return d.turns > 0; });
+      // ターン制パッシブのリセット
+      c._critChainUsedThisTurn = false;
     });
     tickShields(all);
     // プリースト: 聖なる怒りパッシブチェック
@@ -16597,6 +16620,27 @@ function doAttack(attacker, targets, skill) {
         attacker.atk = Math.floor(attacker._baseAtk * (1 + attacker._criChainStacks * (cc.bonusPerCrit || 8) / 100));
         addLog(`${attacker.name} <span class="tag tag-buff">クリット連鎖 ×${attacker._criChainStacks}</span> ATK+${attacker._criChainStacks * (cc.bonusPerCrit||8)}%`, 'trigger');
       }
+      // アサシン: シャドウマスタリー（CRI時 同じ敵にPw0.5追撃、1ターン1回）
+      if (!skill._isCritChain && !attacker._critChainUsedThisTurn) {
+        const chainPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='crit_chain_attack');
+        if (chainPass) {
+          attacker._critChainUsedThisTurn = true;
+          const chainPower = chainPass.effect.power || 0.5;
+          const firstAttr = attacker.attackTypes?.[0] || skill.attr || '斬';
+          const chainType = (firstAttr === '魔' || firstAttr === '聖' || firstAttr === '闇') ? 'spec' : 'phys';
+          const chainSkill = {
+            name: 'シャドウマスタリー', type: chainType, attr: firstAttr,
+            target: 'single', power: chainPower, _isCritChain: true,
+          };
+          const chainTarget = target;
+          setTimeout(() => {
+            if (!attacker.dead && !chainTarget.dead) {
+              addLog(`🗡️ ${attacker.name} <span class="tag tag-trigger">シャドウマスタリー</span> → ${chainTarget.name}`, 'trigger');
+              doAttack(attacker, [chainTarget], chainSkill);
+            }
+          }, 280);
+        }
+      }
     }
     hpDmg = Math.max(hpDmg > 0 ? 1 : 0, hpDmg);
 
@@ -17051,6 +17095,57 @@ function performUlt(c, enemies, allies) {
     return;
   }
 
+  // ── アサシン: シャドウハント（最低HP敵に多段連撃、撃破時 次の最低HPに再ハント）──
+  if (ult.target === 'lowest_hp' && ult.reattackOnKill && liveEnemies.length > 0) {
+    const hits = ult.hits || 10;
+    let delay = 0;
+    let huntCount = 0;
+    const maxHunts = 5; // 暴走防止
+    const performHunt = () => {
+      if (huntCount >= maxHunts) return;
+      const alive = enemies.filter(e=>!e.dead);
+      if (!alive.length) return;
+      huntCount++;
+      const t = alive.reduce((a,b)=>(a.hp/a.maxHp)<=(b.hp/b.maxHp)?a:b);
+      let killed = false;
+      for (let i = 0; i < hits; i++) {
+        if (t.dead) break;
+        let { hpDmg: dmg, dmgType } = computeDmg(c, t, ult);
+        const isCrit = ult.forceCrit ? true : rollCrit(c);
+        if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
+        dmg = Math.max(1, dmg);
+        t.hp -= dmg;
+        if (dmg > 0) wakeFromSilence(t);
+        battleStats.totalDmg += dmg;
+        if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + dmg;
+        if (!t.isEnemy) battleStats.unitTaken[t.uid] = (battleStats.unitTaken[t.uid]||0) + dmg;
+        spawnBall(c.uid, t.uid, 'ult');
+        const dmgSnap = dmg, crtSnap = isCrit;
+        const clrSnap = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
+        setTimeout(() => {
+          flashCard(t.uid, 'hit');
+          spawnFloatNum(t.uid, crtSnap ? `${dmgSnap}<span class="crit-label">CRITICAL</span>` : String(dmgSnap), crtSnap ? clrSnap+' crit' : clrSnap);
+        }, delay + 130);
+        delay += 160;
+        if (t.hp <= 0 && !t.dead) {
+          t.dead = true;
+          killed = true;
+          setTimeout(() => {
+            spawnFloatNum(t.uid, 'DEFEAT', 'float-defeat');
+            addLog(`${t.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+          }, delay + 200);
+          break;
+        }
+      }
+      addLog(`${c.name} 【${ult.name}】→ ${t.name} に ×${hits}連撃${killed?'（撃破）':''}`, 'damage');
+      if (killed && enemies.filter(e=>!e.dead).length > 0) {
+        setTimeout(() => performHunt(), delay + 280);
+      }
+    };
+    performHunt();
+    return;
+  }
+
   // ── 単体多段必殺技（ジャッジメント等）──
   if (ult.target === 'single' && ult.hits > 1 && liveEnemies.length > 0) {
     const t = liveEnemies[0];
@@ -17210,6 +17305,36 @@ function applyBuff(c, skill, sourceUnit) {
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🛡シールド <span class="tag tag-buff">+${fmt(shieldAmt)}</span>${turnStr}`, 'trigger');
     Audio.buff();
     return;
+  }
+
+  // ===== アサシン: フレアシグナル（自身回避バフ＋昼夜分岐）=====
+  if (eff.type === 'flare_signal') {
+    const isNight = battleState?.isNight;
+    // 共通: 自身回避+10%(3T)
+    c.buffs.push({ type:'evade_up', val:eff.evadeUp||10, turns:eff.evadeTurns||3, icon:'👁回避↑', cssClass:'atk-up' });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `👁回避+${eff.evadeUp||10}%`, 'float-buff');
+    if (!isNight) {
+      // 昼戦時: 敵2体にスロー
+      const enemies = (battleState?.enemies||[]).filter(e=>!e.dead);
+      const targets = enemies.slice(0, eff.dayTargets||2);
+      targets.forEach(e => {
+        applyDebuffDirect(e, { type:'slow', val:1, turns:eff.daySlowTurns||2 });
+        spawnFloatNum(e.uid, '🐌スロー', 'float-debuff');
+      });
+      addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 自身回避+${eff.evadeUp||10}% / 敵${targets.length}体に🐌スロー(${eff.daySlowTurns||2}T)`, 'trigger');
+    } else {
+      // 夜戦時: 味方全体命中アップ＋自身ヘイト誘導
+      const allies = (battleState?.allies||[]).filter(a=>!a.dead);
+      allies.forEach(a => {
+        a.buffs.push({ type:'hit_up', val:eff.nightHitUp||30, turns:eff.nightHitTurns||3, icon:'🎯命中↑', cssClass:'atk-up' });
+        spawnFloatNum(a.uid, `🎯命中+${eff.nightHitUp||30}%`, 'float-buff');
+      });
+      c.buffs.push({ type:'hate_up', val:eff.nightHateUp||500, turns:99, icon:'🔥ヘイト↑', cssClass:'atk-up' });
+      c.hate = (c.hate || 0) + (eff.nightHateUp||500);
+      addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🌙夜戦: 自身回避+${eff.evadeUp||10}% / 味方全体🎯命中+${eff.nightHitUp||30}% / 自身ヘイト+${eff.nightHateUp||500}`, 'trigger');
+    }
+    Audio.buff(); return;
   }
 
   // ===== プロフェッサー: バトルオーダー（味方ATK/SPDバフ部分。敵デバフは fireOpeningSkills 側で処理）=====
@@ -19053,10 +19178,15 @@ function applyNightModifiers() {
         c.nightDamageMult = 1.35;
         addLog(`${c.name}: 夜戦 ダメージ+35%`, 'trigger');
       }
-      // パッシブ: 夜の狩人（アサシン: 夜戦ATK+20%・CRI+15%・SPD+15%）
+      // パッシブ: 夜の狩人（アサシン: 夜戦ATK+30%・CRI+20・SPD+20、昼戦中ATK-20%は解除）
       const nightPass = (cls?.passiveSkills||[]).find(p=>p.effect?.type==='night_bonus');
       if (nightPass) {
         const np = nightPass.effect;
+        // 昼戦ATKペナルティを解除
+        if (c._dayAtkPenalty) {
+          c.atk = Math.floor(c.atk / (1 - c._dayAtkPenalty / 100));
+          c._dayAtkPenalty = 0;
+        }
         c.atk = Math.floor(c.atk * (1 + (np.atk||0)/100));
         c.cri += (np.cri||0);
         c.spd += (np.spd||0);
