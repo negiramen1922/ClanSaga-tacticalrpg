@@ -5203,33 +5203,30 @@ const CLASS_DATA = {
     baseStats: { atk:880, hp:2200, mp:2600, pres:5, mres:16, bres:3, lres:0, spd:72, cri:10, cridam:155, evade:5 },
     baseSearch: 18, baseStealth: 6, baseHate: 220,
     openingSkill: {
-      id:'cs_open_charge', name:'魔力充填', type:'buff', target:'self',
-      desc:'MP+30%回復 ＋ 次のスキルPw+50%（1T）',
-      effect:{ type:'mp_regen_and_pw_boost', mpRatio:30, pwBoost:50, turns:1 }
+      id:'cs_open_multicast', name:'マルチキャスト', type:'spec', attr:'魔', target:'all',
+      power:1.0, hits:2, cd:0,
+      desc:'全体 ✨魔 Pw:1.0 × 2連続'
     },
     activeSkills: [
-      { id:'cs_chain', name:'チェインマジック', type:'spec', attr:'魔', target:'all',
-        power:1.5, cd:8, desc:'全体 ⚔️（魔法）Pw:1.5 ＋ チェイン追撃Pw:0.8',
-        chainHit:{ power:0.8 } },
-      { id:'cs_burst', name:'エレメントバースト', type:'spec', attr:'爆', target:'single',
-        power:3.0, cd:6, desc:'単体 ✨ Pw:3.0 ＋ 属性耐性-25% 3T',
-        debuff:{ type:'all_res_down', val:-25, turns:3 } },
+      { id:'cs_chain_lightning', name:'チェインライトニング', type:'spec', attr:'魔', target:'single',
+        power:2.0, cd:4, hits:2, desc:'単体 ✨魔 Pw:2.0 ＋ 隣接1体にPw:1.5の連鎖',
+        chainAdjacent:{ power:1.5 } },
+      { id:'cs_rock_bullet', name:'ロックバレット', type:'spec', attr:'魔', target:'random_multi',
+        power:1.2, hits:5, cd:4, desc:'ランダム敵に ✨魔 Pw:1.2 × 5発' },
     ],
     passiveSkills: [
-      { id:'cs_pas_amp', name:'魔力増幅', type:'passive',
-        desc:'スキル使用のたびATK+12%スタック（最大4、WAVE後リセット）',
-        effect:{ type:'atk_stack_on_skill', val:12, maxStacks:4 } },
-      { id:'cs_pas_accel', name:'呪文加速', type:'passive',
-        desc:'CDが奇数のスキルの再使用ターン-1',
-        effect:{ type:'odd_cd_reduction', val:1 } },
+      { id:'cs_pas_multihit', name:'マルチヒットマスタリー', type:'passive',
+        desc:'スキルのヒット数が多いほど与ダメ+%（ヒット数×5%）',
+        effect:{ type:'multi_hit_mastery', val:5 } },
+      { id:'cs_pas_echo', name:'マジックエコー', type:'passive',
+        desc:'スキル使用時、15%確率でCDが0になる',
+        effect:{ type:'cd_reset_chance', rate:15 } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'csu_catastrophe', name:'カタストロフィ',
-        effect:'全体 ⚔️（魔法）Pw:4.0 ＋ 全耐性-30% 3T。奇襲時強制会心',
-        power:4.0, type:'spec', attr:'爆', target:'all',
-        debuff:{ type:'all_res_down', val:-30, turns:3 },
-        surpriseForceCrit:true },
+      { id:'csu_arcane_storm', name:'アーケインストーム',
+        effect:'全体 ✨魔 Pw:1.0 × 5回連続ヒット',
+        power:1.0, hits:5, type:'spec', attr:'魔', target:'all_multi' },
     ],
   },
 
@@ -12420,6 +12417,14 @@ function launchApp() {
         wz_pas_bigcd:      'wz_pas_resonance',
         wu_starcurse:      'wu_arcane_nova',
       },
+      caster: {
+        cs_open_charge:    'cs_open_multicast',
+        cs_chain:          'cs_chain_lightning',
+        cs_burst:          'cs_rock_bullet',
+        cs_pas_amp:        'cs_pas_multihit',
+        cs_pas_accel:      'cs_pas_echo',
+        csu_catastrophe:   'csu_arcane_storm',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -15205,6 +15210,12 @@ function executeManualSkill(uid, skillId) {
   const sk = allSkills.find(s => s.id === skillId);
   if (!sk) return;
   c.skillCDs[sk.id] = sk.cd;
+  // パッシブ: マジックエコー（確率でCDリセット）
+  const echoPass = (c.classPassives||[]).find(p=>p.effect?.type==='cd_reset_chance');
+  if (echoPass && sk.cd > 0 && Math.random() * 100 < (echoPass.effect.rate||15)) {
+    c.skillCDs[sk.id] = 0;
+    addLog(`${c.name} <span class="tag tag-buff">マジックエコー</span> ${sk.name} CD即解除！`, 'trigger');
+  }
   if (sk.type === 'buff') {
     const buffTargets = resolveBuffTargets(sk, c, allies, enemies);
     addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${buffTargets.map(t=>t.name).join('・')}`, 'trigger');
@@ -16049,6 +16060,12 @@ function combatantAct(c, bs) {
       if (!checkTrigger(tac.trigger || sk.trigger || 'none', c, enemies, allies, bs)) continue;
       // 発動
       c.skillCDs[sk.id] = sk.cd;
+      // パッシブ: マジックエコー（確率でCDリセット）
+      const echoPass = (c.classPassives||[]).find(p=>p.effect?.type==='cd_reset_chance');
+      if (echoPass && sk.cd > 0 && Math.random() * 100 < (echoPass.effect.rate||15)) {
+        c.skillCDs[sk.id] = 0;
+        addLog(`${c.name} <span class="tag tag-buff">マジックエコー</span> ${sk.name} CD即解除！`, 'trigger');
+      }
       if (tac.trigger && tac.trigger !== 'none') {
         addLog(`<span class="tag tag-trigger">INTERRUPT</span> ${c.name}: トリガー[${TRIGGER_OPTIONS.find(t=>t.value===tac.trigger)?.label||tac.trigger}]`, 'trigger');
       }
@@ -16521,6 +16538,13 @@ function playAttrEffect(attacker, target, skill) {
 }
 
 function doAttack(attacker, targets, skill) {
+  // 全体多段攻撃（target='all' && hits>1）: hits回ループ
+  if (skill.target === 'all' && skill.hits > 1 && !skill._processedAllMulti) {
+    for (let i = 0; i < skill.hits; i++) {
+      doAttack(attacker, targets, { ...skill, hits:1, _processedAllMulti:true });
+    }
+    return;
+  }
   let targetList;
   if (skill.target === 'lowest_hp') {
     const alive = targets.filter(t=>!t.dead);
@@ -16938,6 +16962,25 @@ function doAttack(attacker, targets, skill) {
       applyShield(attacker, shieldAmt);
     }
 
+    // チェインライトニング (隣接1体に連鎖、減衰Pw)
+    if (skill.chainAdjacent && !skill._isChain && !target.dead && totalDmg > 0) {
+      const enemiesList = target.isEnemy ? (battleState?.enemies || []) : (battleState?.allies || []);
+      const targetIdx = enemiesList.indexOf(target);
+      const candidates = [];
+      if (targetIdx > 0 && enemiesList[targetIdx-1] && !enemiesList[targetIdx-1].dead) candidates.push(enemiesList[targetIdx-1]);
+      if (targetIdx >= 0 && enemiesList[targetIdx+1] && !enemiesList[targetIdx+1].dead) candidates.push(enemiesList[targetIdx+1]);
+      if (candidates.length) {
+        const chainTarget = candidates[Math.floor(Math.random() * candidates.length)];
+        const chainSkill = { ...skill, power: skill.chainAdjacent.power, _isChain: true, chainAdjacent: undefined, debuff: undefined };
+        setTimeout(() => {
+          if (!attacker.dead && !chainTarget.dead) {
+            addLog(`⚡ ${attacker.name} <span class="tag tag-trigger">チェイン</span> → ${chainTarget.name}`, 'trigger');
+            doAttack(attacker, [chainTarget], chainSkill);
+          }
+        }, 280);
+      }
+    }
+
     // カウンター反撃（被攻撃側に counter バフがあれば自動反撃）
     if (!skill._isCounter && !target.dead && target.hp > 0 && !attacker.dead) {
       const counterBuff = (target.buffs||[]).find(b => b.type === 'counter');
@@ -17198,6 +17241,45 @@ function performUlt(c, enemies, allies) {
       }, delay + 300);
     }
     addLog(`${c.name} 【ヒーリングレイン】→ 最低HP%の味方を10回回復 + ATK強化`, 'trigger');
+    return;
+  }
+
+  // ── キャスター: アーケインストーム（全体多段連射）──
+  if (ult.target === 'all_multi' && liveEnemies.length > 0) {
+    const hits = ult.hits || 5;
+    let delay = 0;
+    for (let h = 0; h < hits; h++) {
+      const aliveNow = enemies.filter(e=>!e.dead);
+      if (!aliveNow.length) break;
+      aliveNow.forEach(t => {
+        if (t.dead) return;
+        let { hpDmg: dmg, dmgType } = computeDmg(c, t, ult);
+        const isCrit = ult.forceCrit ? true : rollCrit(c);
+        if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
+        dmg = Math.max(1, dmg);
+        t.hp -= dmg;
+        if (dmg > 0) wakeFromSilence(t);
+        battleStats.totalDmg += dmg;
+        if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + dmg;
+        if (!t.isEnemy) battleStats.unitTaken[t.uid] = (battleStats.unitTaken[t.uid]||0) + dmg;
+        spawnBall(c.uid, t.uid, 'ult');
+        const dmgSnap = dmg, crtSnap = isCrit;
+        const clrSnap = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
+        setTimeout(() => {
+          flashCard(t.uid, 'hit');
+          spawnFloatNum(t.uid, crtSnap ? `${dmgSnap}<span class="crit-label">CRITICAL</span>` : String(dmgSnap), crtSnap ? clrSnap+' crit' : clrSnap);
+        }, delay + 120);
+        if (t.hp <= 0 && !t.dead) {
+          t.dead = true;
+          setTimeout(() => {
+            spawnFloatNum(t.uid, 'DEFEAT', 'float-defeat');
+            addLog(`${t.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+          }, delay + 200);
+        }
+      });
+      delay += 200;
+    }
+    addLog(`${c.name} 【${ult.name}】→ 全体に ×${hits}連射`, 'damage');
     return;
   }
 
@@ -18093,6 +18175,11 @@ function computeDmg(attacker, target, skill) {
   const insightPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='dmg_vs_debuffed');
   if (insightPass && (target.debuffs||[]).length > 0) {
     base *= (1 + (insightPass.effect.val||20)/100);
+  }
+  // パッシブ: マルチヒットマスタリー（スキルのヒット数×%与ダメボーナス）
+  const multiHitPass = (attacker.classPassives||[]).find(p=>p.effect?.type==='multi_hit_mastery');
+  if (multiHitPass && skill.hits && skill.hits > 1) {
+    base *= (1 + (skill.hits * (multiHitPass.effect.val||5)) / 100);
   }
 
   // スタッガーボーナス
