@@ -5427,35 +5427,41 @@ const CLASS_DATA = {
     baseStats: { atk:680, hp:2900, mp:2400, pres:6, mres:16, bres:8, lres:0, spd:76, cri:6, cridam:140, evade:5 },
     baseSearch: 12, baseStealth: 6, baseHate: 180,
     openingSkill: {
-      id:'mn_open_inspire', name:'鼓舞の歌', type:'buff', target:'all_ally',
-      desc:'味方全体ATK+15%・SPD+10 3T',
-      effect:{ type:'multi_buff_all', buffs:[
+      id:'mn_open_battle_anthem', name:'バトルアンセム', type:'buff', target:'all_ally',
+      desc:'味方全体ATK+15%・SPD+15（3T）',
+      effect:{ type:'multi_buff', buffs:[
         { type:'atk_up', val:15, turns:3 },
-        { type:'spd_up', val:10, turns:3 },
+        { type:'spd_up', val:15, turns:3 },
       ]}
     },
     activeSkills: [
-      { id:'mn_hero_song', name:'英雄の調べ', type:'buff', target:'all_ally',
-        power:0, cd:6, desc:'味方全体ATK+20%・CRI+10% ＋ HP回復×0.8',
-        effect:{ type:'buff_and_heal_all', atkVal:20, atkTurns:3, criVal:10, criTurns:3, healRatio:0.8 } },
-      { id:'mn_rest_melody', name:'安息の旋律', type:'buff', target:'all_ally',
-        power:0, cd:8, desc:'味方全体デバフ解除 ＋ HP再生×0.15/T 3T',
-        effect:{ type:'cleanse_and_regen', regenRatio:0.15, turns:3 } },
+      { id:'mn_orchestral_chant', name:'オーケストラルチャント', type:'buff', target:'all_ally',
+        power:0, cd:8, desc:'味方全体のスキルCD-2',
+        effect:{ type:'cd_reduce_all', val:2 } },
+      { id:'mn_healing_melody', name:'ヒーリングメロディ', type:'buff', target:'all_ally',
+        power:0, cd:7, desc:'味方全体リジェネ（毎T HP+10%、4T）＋ 即時HP+5%',
+        effect:{ type:'heal_and_regen_all', healRatio:0.05, regenVal:10, regenTurns:4 } },
     ],
     passiveSkills: [
-      { id:'mn_pas_resonance', name:'戦歌の共鳴', type:'passive',
-        desc:'味方がスキルを使うたびMP+5%回復（全員）',
-        effect:{ type:'team_mp_on_skill', val:5 } },
-      { id:'mn_pas_ballad', name:'バラードの加護', type:'passive',
-        desc:'味方全体SPD+8（常時）',
-        effect:{ type:'team_spd_bonus', val:8 } },
+      { id:'mn_pas_melody', name:'メロディ', type:'passive',
+        desc:'バフ/回復スキル使用でメロディスタック+1（最大5）。スタック数×10%でバフ・回復の効果が増加',
+        effect:{ type:'melody_stack', maxStacks:5, valBoost:10 } },
+      { id:'mn_pas_polyrhythm', name:'ポリリズム', type:'passive',
+        desc:'バフ/回復スキル使用時、味方全員のATB+10',
+        effect:{ type:'atb_on_buff_skill', val:10 } },
     ],
     skillPool: [],
     ultimates: [
       { id:'mnu_symphony', name:'凱旋の交響曲',
-        effect:'味方全体ATK+40%・全耐性+20%・CRI+20% 3T ＋ 全デバフ解除',
+        effect:'味方全体ATK+30%・CRI+40〜70%(Lvスケール)・被ダメ-20%（3T）＋ リジェネ(3T) ＋ 全デバフ解除',
         power:0, type:'buff', target:'all_ally',
-        buffs:[ { type:'atk_up', val:40, turns:3 }, { type:'all_res_up', val:20, turns:3 }, { type:'cri_up', val:20, turns:3 } ],
+        symphonyBuff:true,
+        buffs:[
+          { type:'atk_up', val:30, turns:3 },
+          { type:'cri_up', val:40, valMax:70, turns:3 },
+          { type:'damage_reduce', val:20, turns:3 },
+          { type:'regen', val:12, turns:3 },
+        ],
         dispelAll:true },
     ],
   },
@@ -5503,36 +5509,39 @@ const CLASS_DATA = {
   // ── アルケミスト（ヒューム・サポート）★3 ──
   alchemist: {
     name: 'アルケミスト', icon: '⚗️',
-    role: 'サポート', species: 'hume', attackTypes: ['魔'],
+    role: 'トリックスター', species: 'hume', attackTypes: ['魔'],
     baseStats: { atk:700, hp:3100, mp:2600, pres:6, mres:14, bres:6, lres:0, spd:74, cri:5, cridam:140, evade:4 },
     baseSearch: 14, baseStealth: 6, baseHate: 190,
     openingSkill: {
-      id:'ac_open_brew', name:'賢者の調合', type:'buff', target:'all_ally',
-      desc:'味方全体HP+15%回復 ＋ ATK+10% 3T',
-      effect:{ type:'heal_and_atk_all', healRatio:0.15, atkVal:10, atkTurns:3 }
+      id:'ac_open_buff_potion', name:'バフポーション', type:'buff', target:'all_ally',
+      desc:'味方全体ATK+15%・SPD+10・被ダメ-10%(3T)',
+      effect:{ type:'multi_buff', buffs:[
+        { type:'atk_up', val:15, turns:3 },
+        { type:'spd_up', val:10, turns:3 },
+        { type:'damage_reduce', val:10, turns:3 },
+      ]}
     },
     activeSkills: [
-      { id:'ac_transmute', name:'変成術', type:'buff', target:'single_enemy',
-        power:0, cd:6, desc:'敵のバフを全解除し、解除数×ATK×0.5を味方単体HP回復',
-        effect:{ type:'dispel_and_convert_heal', healPerBuff:0.5 } },
-      { id:'ac_elixir', name:'エリクサー散布', type:'buff', target:'all_ally',
-        power:0, cd:8, desc:'味方全体HP回復×1.2 ＋ 全耐性+15% 2T',
-        effect:{ type:'heal_and_res_all', healRatio:1.2, resVal:15, resTurns:2 } },
+      { id:'ac_summon_golem', name:'ゴーレム召喚', type:'buff', target:'self',
+        power:0, cd:10, desc:'ゴーレム1体召喚（HP=自身ATK×15）。味方全員を80%で庇う',
+        effect:{ type:'summon_golem', hpMult:15, coverRatio:80, atkScale:0.5 } },
+      { id:'ac_random_potion', name:'ランダムポーション', type:'spec', attr:'魔', target:'single',
+        power:0, cd:3, desc:'単体敵に毒/✨ダメージ/回復阻害のいずれかをランダム発動',
+        effect:{ type:'random_potion' } },
     ],
     passiveSkills: [
       { id:'ac_pas_stone', name:'賢者の石', type:'passive',
-        desc:'毎ターン味方全体HP回復（ATK×5%）',
+        desc:'毎ターン味方全体HP回復（自身ATKの5%）',
         effect:{ type:'team_regen_per_turn', ratio:5 } },
-      { id:'ac_pas_refine', name:'精製術', type:'passive',
-        desc:'回復量+15% ＋ 味方全体状態異常耐性+20%（常時）',
-        effect:{ type:'heal_and_status_res', healBonus:15, statusRes:20 } },
+      { id:'ac_pas_refine', name:'多重錬成', type:'passive',
+        desc:'スキル発動時、20%確率で同じスキルがもう一度発動',
+        effect:{ type:'skill_double_chance', rate:20 } },
     ],
     skillPool: [],
     ultimates: [
-      { id:'acu_transmutation', name:'完全変成',
-        effect:'敵全体のバフを全解除しバフ数×Pw:0.5ダメージ ＋ 味方全体HP完全回復',
-        power:0.5, type:'spec', attr:'爆', target:'all',
-        dispelAndDamage:true, allyFullHeal:true },
+      { id:'acu_transmutation', name:'完全錬成',
+        effect:'全敵 ✨魔 Pw:3.0 ＋ 敵ごとに別々のランダムデバフ ＋ 味方全体HP完全回復',
+        power:3.0, type:'spec', attr:'魔', target:'transmutation_complete' },
     ],
   },
 
@@ -5543,36 +5552,37 @@ const CLASS_DATA = {
     baseStats: { atk:870, hp:2100, mp:1800, pres:5, mres:6, bres:8, lres:0, spd:112, cri:18, cridam:178, evade:8 },
     baseSearch: 44, baseStealth: 40, baseHate: 160,
     openingSkill: {
-      id:'th_open_shadow_run', name:'影走り', type:'opening', target:'self',
-      desc:'奇襲判定 ＋ SPD+30・回避+20% 2T',
-      effect:{ type:'shadow_dash', spdVal:30, evasion:20, turns:2 },
-      guaranteeSurprise:true
+      id:'th_open_shadow_run', name:'影走り', type:'buff', target:'self',
+      desc:'自身SPD+30・回避+20%（3T）＋ 奇襲判定',
+      guaranteeSurprise:true,
+      effect:{ type:'shadow_dash', spdVal:30, evasion:20, turns:3 }
     },
     activeSkills: [
-      { id:'th_steal', name:'盗む', type:'phys', attr:'裂', target:'single',
-        power:0.8, cd:5, desc:'単体 ✨ Pw:0.8 ＋ 対象バフを1つ奪取（自身に付与）',
-        effect:{ type:'steal_buff', count:1 } },
-      { id:'th_decoy', name:'陽動作戦', type:'buff', target:'all_enemy',
-        power:0, cd:7, desc:'敵全体のターゲットをランダム変更 ＋ ATK-10% 3T',
-        effect:{ type:'multi_debuff_all', debuffs:[
-          { type:'hate_shuffle', val:1, turns:1 },
-          { type:'atk_down', val:-10, turns:3 },
-        ]}},
+      { id:'th_steal_weapon', name:'武器奪取', type:'phys', attr:'裂', target:'single',
+        power:1.2, cd:4, desc:'単体 ⚔️ Pw:1.2 ＋ 対象ATK-30%（3T）',
+        debuff:{ type:'atk_down', val:-30, turns:3 } },
+      { id:'th_steal_armor', name:'防具剥ぎ', type:'phys', attr:'裂', target:'single',
+        power:1.2, cd:6, desc:'単体 ⚔️ Pw:1.2 ＋ 対象pdef-25%/mdef-25%（3T）＋ バフ1個奪取',
+        effect:{ type:'steal_buff', count:1,
+          extraDebuffs:[
+            { type:'pdef_down', val:-25, turns:3 },
+            { type:'mdef_down', val:-25, turns:3 },
+          ]} },
     ],
     passiveSkills: [
       { id:'th_pas_evade', name:'盗賊の身のこなし', type:'passive',
         desc:'回避率+15%（常時）',
         effect:{ type:'evasion_bonus', val:15 } },
-      { id:'th_pas_trophy', name:'財宝荒らし', type:'passive',
-        desc:'CRI+10%（常時）＋ 敵撃破時ゴールド獲得+50%',
-        effect:{ type:'cri_and_gold_bonus', cri:10, goldBonus:50 } },
+      { id:'th_pas_counter_step', name:'カウンターステップ', type:'passive',
+        desc:'回避成功時、攻撃してきた敵に自動反撃 Pw:1.0',
+        effect:{ type:'counter_on_evade', power:1.0 } },
     ],
     skillPool: [],
     ultimates: [
       { id:'thu_grand_thief', name:'大盗賊の舞い',
-        effect:'ランダム敵×8 ✨ Pw:1.0（各攻撃時バフ奪取）＋ 奪ったバフを全て自身に付与',
-        power:1.0, type:'phys', attr:'裂', target:'random_multi', hits:8,
-        stealBuff:true, applyStolen:true },
+        effect:'ランダム敵×6 ⚔️ Pw:1.5（各ヒットでバフ1個奪取し自身に付与）',
+        power:1.5, type:'phys', attr:'裂', target:'random_multi', hits:6,
+        stealBuff:true, stealCount:1 },
     ],
   },
 };
@@ -12579,6 +12589,24 @@ function launchApp() {
         cs_pas_accel:      'cs_pas_echo',
         csu_catastrophe:   'csu_arcane_storm',
       },
+      minstrel: {
+        mn_open_inspire:   'mn_open_battle_anthem',
+        mn_hero_song:      'mn_orchestral_chant',
+        mn_rest_melody:    'mn_healing_melody',
+        mn_pas_resonance:  'mn_pas_melody',
+        mn_pas_ballad:     'mn_pas_polyrhythm',
+      },
+      alchemist: {
+        ac_open_brew:      'ac_open_buff_potion',
+        ac_transmute:      'ac_summon_golem',
+        ac_elixir:         'ac_random_potion',
+        ac_pas_refine:     'ac_pas_refine',
+      },
+      thief: {
+        th_steal:          'th_steal_weapon',
+        th_decoy:          'th_steal_armor',
+        th_pas_trophy:     'th_pas_counter_step',
+      },
     };
     const _skMap = _classSkillMaps[u.classId];
     if (_skMap) {
@@ -14651,6 +14679,39 @@ function processShieldDamage(target, rawDmg, hpDmg) {
   return { hpDmg: remainHpDmg, shieldBroke: true };
 }
 
+// ミンストレル: メロディスタック増加（自身がバフ/回復スキルを使った時に+1）
+function triggerMelodyStack(caster) {
+  if (!caster || caster.isEnemy) return;
+  const pass = (caster.classPassives||[]).find(p => p.effect?.type === 'melody_stack');
+  if (!pass) return;
+  const maxSt = pass.effect.maxStacks || 5;
+  caster._melodyStacks = Math.min(maxSt, (caster._melodyStacks || 0) + 1);
+  addLog(`${caster.name} <span class="tag tag-buff">メロディ ×${caster._melodyStacks}</span>`, 'trigger');
+}
+
+// ミンストレル: ポリリズム（バフ/回復スキル使用時、味方全員ATB+10）
+function triggerPolyrhythm(caster, allies) {
+  if (!caster || caster.isEnemy) return;
+  const pass = (caster.classPassives||[]).find(p => p.effect?.type === 'atb_on_buff_skill');
+  if (!pass) return;
+  const val = pass.effect.val || 10;
+  (allies||[]).forEach(a => {
+    if (a.dead) return;
+    a.atb = Math.min(100, (a.atb || 0) + val);
+  });
+  addLog(`${caster.name} <span class="tag tag-buff">ポリリズム</span> 味方全員ATB+${val}`, 'trigger');
+}
+
+// メロディスタックによるバフ効果値スケーリング
+function applyMelodyScale(sourceUnit, baseVal) {
+  if (!sourceUnit || sourceUnit.isEnemy) return baseVal;
+  const pass = (sourceUnit.classPassives||[]).find(p => p.effect?.type === 'melody_stack');
+  if (!pass) return baseVal;
+  const stacks = sourceUnit._melodyStacks || 0;
+  const boostPct = stacks * (pass.effect.valBoost || 10);
+  return Math.round(baseVal * (1 + boostPct / 100));
+}
+
 // 回復処理ヘルパー: heal_block デバフで回復量を減らす
 function healUnit(c, amt) {
   if (!c || c.dead || amt <= 0) return 0;
@@ -14796,7 +14857,8 @@ function resolveCoverTarget(target, bs) {
     target.buffs = (target.buffs||[]).filter(b => b !== coverBuff);
     return { primaryTarget: target, coverTarget: null };
   }
-  return { primaryTarget: target, coverTarget: coverSource, coverRatio: 0.8 };
+  const ratio = coverBuff.ratio || (coverBuff.val ? coverBuff.val / 100 : 0.8);
+  return { primaryTarget: target, coverTarget: coverSource, coverRatio: ratio };
 }
 
 /** シールドブレイク時のパッシブ発動（反撃の盾） */
@@ -15373,6 +15435,10 @@ function executeManualSkill(uid, skillId) {
   if (sk.type === 'buff') {
     const buffTargets = resolveBuffTargets(sk, c, allies, enemies);
     addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${buffTargets.map(t=>t.name).join('・')}`, 'trigger');
+    // ミンストレル: メロディスタック+1（バフ/回復系スキル使用時）
+    triggerMelodyStack(c);
+    // ミンストレル: ポリリズム（バフ系スキル使用時、味方全員ATB+10）
+    triggerPolyrhythm(c, allies);
     buffTargets.forEach(tgt => applyBuff(tgt, sk, c));
     gainUltGauge(c, 10);
   } else if (sk.effect?.type === 'debuff_all') {
@@ -15383,6 +15449,31 @@ function executeManualSkill(uid, skillId) {
   } else {
     addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${sk.target==='all'?'敵全体':(enemies[0]?.name||'敵')}`, 'damage');
     doAttack(c, enemies, sk);
+  }
+  // アルケミスト: 多重錬成（20%で同じスキルがもう一度発動）
+  if (!sk._doubledOnce) {
+    const doublePass = (c.classPassives||[]).find(p => p.effect?.type === 'skill_double_chance');
+    if (doublePass && Math.random() * 100 < (doublePass.effect.rate || 20)) {
+      addLog(`${c.name} <span class="tag tag-buff">多重錬成</span> ${sk.name} 連続発動！`, 'trigger');
+      const skClone = { ...sk, _doubledOnce: true };
+      setTimeout(() => {
+        if (!c.dead && battleState && battleRunning) {
+          const enemies2 = bs.enemies.filter(e=>!e.dead);
+          const allies2 = bs.allies.filter(a=>!a.dead);
+          if (skClone.type === 'buff') {
+            const buffTargets = resolveBuffTargets(skClone, c, allies2, enemies2);
+            triggerMelodyStack(c);
+            triggerPolyrhythm(c, allies2);
+            buffTargets.forEach(tgt => applyBuff(tgt, skClone, c));
+          } else if (skClone.effect?.type === 'debuff_all') {
+            enemies2.forEach(e => { applyDebuffDirect(e, skClone.effect.debuff); spawnFloatNum(e.uid,'🌫️','float-debuff'); });
+          } else {
+            doAttack(c, enemies2, skClone);
+          }
+          renderBattle();
+        }
+      }, 500);
+    }
   }
   renderBattle();
 }
@@ -16003,6 +16094,16 @@ function tickBattle() {
       // ターン制パッシブのリセット
       c._critChainUsedThisTurn = false;
     });
+    // アルケミスト: 賢者の石（毎ターン味方全体HP回復）
+    (bs.allies||[]).filter(a => !a.dead && !a.isGolem).forEach(alchemist => {
+      const pass = (alchemist.classPassives||[]).find(p => p.effect?.type === 'team_regen_per_turn');
+      if (!pass) return;
+      const healVal = Math.floor(alchemist.atk * (pass.effect.ratio || 5) / 100);
+      (bs.allies||[]).filter(a => !a.dead && !a.isGolem).forEach(target => {
+        const actual = healUnit(target, healVal);
+        if (actual > 0) spawnFloatNum(target.uid, `💚+${actual}`, 'float-heal');
+      });
+    });
     tickShields(all);
     // プリースト: 聖なる怒りパッシブチェック
     checkPriestPassives(bs);
@@ -16059,7 +16160,8 @@ function tickBattle() {
   }
 
   // Check win/lose
-  const alliesAlive = bs.allies.filter(c=>!c.dead);
+  // 敗北判定: ゴーレムは生存判定から除外（召喚物はパーティの一員ではない）
+  const alliesAlive = bs.allies.filter(c=>!c.dead && !c.isGolem);
   const enemiesAlive = bs.enemies.filter(c=>!c.dead);
 
   if (!enemiesAlive.length) {
@@ -16094,6 +16196,8 @@ function tickBattle() {
               a._momentumStacks = 0;
               a.buffs = (a.buffs||[]).filter(b => b._tag !== 'momentum');
             }
+            // ミンストレル: メロディスタックをWAVEリセット
+            if (a._melodyStacks) a._melodyStacks = 0;
           });
           updateTimer();
           renderBattle();
@@ -16227,6 +16331,9 @@ function combatantAct(c, bs) {
         const buffTargets = resolveBuffTargets(sk, c, allies, enemies);
         const tNames = buffTargets.map(t=>t.name).join('・');
         addLog(`${c.name} <span class="tag tag-skill">${sk.name}</span> → ${tNames}`, 'trigger');
+        // ミンストレル: メロディスタック・ポリリズム
+        triggerMelodyStack(c);
+        triggerPolyrhythm(c, allies);
         buffTargets.forEach(tgt => applyBuff(tgt, sk, c));
         gainUltGauge(c, 10);
       }
@@ -16692,6 +16799,25 @@ function playAttrEffect(attacker, target, skill) {
 }
 
 function doAttack(attacker, targets, skill) {
+  // アルケミスト: ランダムポーション（毒/直接ダメ/回復阻害をランダム抽選）
+  if (skill.effect?.type === 'random_potion' && !skill._potionRolled) {
+    const roll = Math.floor(Math.random() * 3);
+    const rolled = { ...skill, _potionRolled: true, effect: { ...skill.effect, _resolvedType: roll } };
+    if (roll === 0) {
+      rolled.power = 0.4;
+      rolled.debuff = { type: 'poison', val: 10, turns: 3 };
+      rolled.name = (skill.name||'ポーション') + '（毒）';
+    } else if (roll === 1) {
+      rolled.power = 1.5;
+      rolled.name = (skill.name||'ポーション') + '（ダメージ）';
+    } else {
+      rolled.power = 0.4;
+      rolled.debuff = { type: 'heal_block', val: 80, turns: 3 };
+      rolled.name = (skill.name||'ポーション') + '（回復阻害）';
+    }
+    doAttack(attacker, targets, rolled);
+    return;
+  }
   // 全体多段攻撃（target='all' && hits>1）: hits回ループ
   if (skill.target === 'all' && skill.hits > 1 && !skill._processedAllMulti) {
     for (let i = 0; i < skill.hits; i++) {
@@ -16740,7 +16866,10 @@ function doAttack(attacker, targets, skill) {
         targetList = [tops[Math.floor(Math.random() * tops.length)]];
       } else { targetList = [...targets]; }
     } else {
-      targetList = isSingle ? [targets[Math.floor(Math.random()*targets.length)]] : [...targets];
+      // 敵が味方を狙う時はゴーレムを直接狙わない（cover_target経由で受けるため）
+      const filtered = attacker.isEnemy ? targets.filter(t => !t.isGolem) : targets;
+      const pickList = filtered.length ? filtered : targets;
+      targetList = isSingle ? [pickList[Math.floor(Math.random()*pickList.length)]] : [...pickList];
     }
   }
 
@@ -16786,6 +16915,22 @@ function doAttack(attacker, targets, skill) {
         setTimeout(() => spawnFloatNum(target.uid, 'MISS', 'float-debuff'), 200);
         addLog(`${attacker.name} → ${target.name}: <span class="tag tag-resist">MISS</span>`, 'damage');
         gainUltGauge(attacker, 2);
+        // パッシブ: カウンターステップ（回避時に自動反撃）
+        const evadeCounterPass = (target.classPassives||[]).find(p => p.effect?.type === 'counter_on_evade');
+        if (evadeCounterPass && !attacker.dead && !skill._isCounter && !skill._isFollowUp) {
+          const power = evadeCounterPass.effect.power || 1.0;
+          const firstAttr = target.attackTypes?.[0] || '裂';
+          const counterType = (firstAttr === '魔' || firstAttr === '聖' || firstAttr === '闇') ? 'spec' : 'phys';
+          setTimeout(() => {
+            if (!attacker.dead && !target.dead) {
+              addLog(`${target.name} <span class="tag tag-trigger">↩カウンターステップ</span> → ${attacker.name}`, 'trigger');
+              doAttack(target, [attacker], {
+                name: 'カウンターステップ', type: counterType, attr: firstAttr,
+                target: 'single', power, _isCounter: true,
+              });
+            }
+          }, 280);
+        }
         return;
       }
     }
@@ -17073,6 +17218,26 @@ function doAttack(attacker, targets, skill) {
       setTimeout(() => spawnFloatNum(target.uid, debuffLabel, 'float-debuff'), hitDelay + 100);
     }
 
+    // シーフ: バフ奪取（steal_buff）
+    if (skill.effect?.type === 'steal_buff' && !target.dead && totalDmg > 0) {
+      const count = skill.effect.count || 1;
+      let stolen = 0;
+      for (let i = 0; i < count; i++) {
+        const stealable = (target.buffs||[]).filter(b => !b.isPassive && b.turns < 9999);
+        if (!stealable.length) break;
+        const buff = stealable[Math.floor(Math.random() * stealable.length)];
+        target.buffs = target.buffs.filter(b => b !== buff);
+        attacker.buffs = attacker.buffs || [];
+        attacker.buffs.push({ ...buff });
+        stolen++;
+        addLog(`${attacker.name} <span class="tag tag-buff">バフ奪取</span> ${target.name} の ${buff.icon||buff.type}`, 'trigger');
+      }
+      if (stolen > 0) spawnFloatNum(attacker.uid, `🃏奪取×${stolen}`, 'float-buff');
+      if (skill.effect.extraDebuffs) {
+        skill.effect.extraDebuffs.forEach(db => applyDebuffDirect(target, db));
+      }
+    }
+
     // 複数デバフ同時付与（弱点狙い等）
     if (skill.effect?.type === 'multi_debuff') {
       (skill.effect.debuffs||[]).forEach(db => {
@@ -17291,6 +17456,50 @@ function performUlt(c, enemies, allies) {
     return;
   }
 
+  // ── ミンストレル: 凱旋の交響曲（味方全体バフ＋リジェネ＋デバフ解除、CRI率Lvスケール） ──
+  if (ult.target === 'all_ally' && ult.symphonyBuff) {
+    const liveAllies = allies.filter(a => !a.dead);
+    // メロディスタック+2（必殺発動でスタック増加）
+    triggerMelodyStack(c);
+    triggerMelodyStack(c);
+    triggerPolyrhythm(c, liveAllies);
+    const ultLv = c.ultLv || 1;
+    const interp = (b) => {
+      if (b.valMax === undefined) return b.val;
+      const t = Math.max(0, Math.min(1, (ultLv - 1) / 9));
+      return Math.round(b.val + (b.valMax - b.val) * t);
+    };
+    const iconMap = {
+      atk_up:'⬆ATK', cri_up:'⬆CRI', damage_reduce:'🔽被ダメ↓', regen:'💚再生',
+      spd_up:'⬆SPD', pdef_up:'⬆物理耐性', mdef_up:'⬆特殊耐性',
+    };
+    const cssMap = {
+      atk_up:'atk-up', cri_up:'atk-up', damage_reduce:'hp-up', regen:'hp-up',
+      spd_up:'atk-up', pdef_up:'pdef-up', mdef_up:'mdef-up',
+    };
+    liveAllies.forEach(a => {
+      // デバフ解除
+      if (ult.dispelAll) a.debuffs = (a.debuffs||[]).filter(d => ['max_hp_down'].includes(d.type));
+      (ult.buffs||[]).forEach(b => {
+        const baseVal = interp(b);
+        const scaledVal = applyMelodyScale(c, baseVal);
+        a.buffs.push({
+          type:b.type, val:scaledVal, turns:b.turns,
+          icon: iconMap[b.type]||'⬆', cssClass: cssMap[b.type]||'hp-up',
+        });
+      });
+      spawnBall(c.uid, a.uid, 'ult');
+      setTimeout(() => {
+        flashCard(a.uid, 'buff');
+        spawnFloatNum(a.uid, '🎵交響曲！', 'float-buff');
+      }, 250);
+    });
+    const criBuff = (ult.buffs||[]).find(b => b.type === 'cri_up');
+    const criNow = criBuff ? interp(criBuff) : 0;
+    addLog(`${c.name} 【${ult.name}】味方全体バフ＋CRI+${criNow}%(Lv${ultLv}) ＋ リジェネ ＋ 浄化`, 'trigger');
+    return;
+  }
+
   // ── アイアンフォートレス（味方全体シールド + 自身挑発）──
   if (ult.target === 'all_ally') {
     const liveAllies = allies.filter(a => !a.dead);
@@ -17318,6 +17527,54 @@ function performUlt(c, enemies, allies) {
       const bonusDesc = resBuff ? `全耐性+${resBuff}%` : (ult.selfAtkUp ? `ATK+${ult.selfAtkUp}%` : '');
       addLog(`${c.name}: 完全挑発（${ult.tauntTurns}T）+ ${bonusDesc}`, 'trigger');
     }
+    return;
+  }
+
+  // ── シーフ: 大盗賊の舞い（ランダム×6 + バフ奪取）──
+  if (ult.target === 'random_multi' && ult.stealBuff) {
+    const hits = ult.hits || 6;
+    let delay = 0;
+    for (let i = 0; i < hits; i++) {
+      const alive = enemies.filter(e => !e.dead);
+      if (alive.length === 0) break;
+      const t = alive[Math.floor(Math.random() * alive.length)];
+      let { hpDmg: dmg, dmgType } = computeDmg(c, t, ult);
+      const isCrit = ult.forceCrit ? true : rollCrit(c);
+      if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
+      dmg = Math.max(1, dmg);
+      t.hp -= dmg;
+      if (dmg > 0) wakeFromSilence(t);
+      battleStats.totalDmg += dmg;
+      if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + dmg;
+      if (!t.isEnemy) battleStats.unitTaken[t.uid] = (battleStats.unitTaken[t.uid]||0) + dmg;
+      spawnBall(c.uid, t.uid, 'ult');
+      const dmgSnap = dmg, crtSnap = isCrit;
+      const clrSnap = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
+      setTimeout(() => {
+        flashCard(t.uid, 'hit');
+        spawnFloatNum(t.uid, crtSnap ? `${dmgSnap}<span class="crit-label">CRITICAL</span>` : String(dmgSnap), crtSnap ? clrSnap+' crit' : clrSnap);
+      }, delay + 100);
+      // バフ奪取
+      const stealCount = ult.stealCount || 1;
+      for (let s = 0; s < stealCount; s++) {
+        const stealable = (t.buffs||[]).filter(b => !b.isPassive && b.turns < 9999);
+        if (!stealable.length) break;
+        const buff = stealable[Math.floor(Math.random() * stealable.length)];
+        t.buffs = t.buffs.filter(b => b !== buff);
+        c.buffs = c.buffs || [];
+        c.buffs.push({ ...buff });
+        addLog(`${c.name} <span class="tag tag-buff">バフ奪取</span> ${t.name} の ${buff.icon||buff.type}`, 'trigger');
+      }
+      delay += 150;
+      if (t.hp <= 0 && !t.dead) {
+        t.dead = true;
+        setTimeout(() => {
+          spawnFloatNum(t.uid, 'DEFEAT', 'float-defeat');
+          addLog(`${t.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+        }, delay + 200);
+      }
+    }
+    addLog(`${c.name} 【${ult.name}】→ ランダム敵に×${hits}連射＋バフ奪取`, 'damage');
     return;
   }
 
@@ -17479,6 +17736,61 @@ function performUlt(c, enemies, allies) {
       }
       addLog(`${c.name} 【${ult.name}】→ ${t.name}（${distSnap===0?'中心':distSnap===1?'隣接':'隣々接'} Pw:${pw}）: <span class="tag tag-dmg">${dmgSnap}</span>`, 'damage');
     });
+    return;
+  }
+
+  // ── アルケミスト: 完全錬成（全敵爆ダメ＋ランダムデバフ＋味方完全回復）──
+  if (ult.target === 'transmutation_complete' && liveEnemies.length > 0) {
+    const debuffPool = [
+      { type:'poison', val:10, turns:3, label:'☠毒' },
+      { type:'heal_block', val:80, turns:3, label:'🚫回復阻害' },
+      { type:'max_hp_down', val:10, turns:99999, maxStacks:1, label:'💀最大HP-10%' },
+      { type:'atk_down', val:-30, turns:3, label:'⚔️ATK-30%' },
+    ];
+    let delay = 0;
+    enemies.forEach(t => {
+      if (t.dead) return;
+      let { hpDmg: dmg, dmgType } = computeDmg(c, t, ult);
+      const isCrit = ult.forceCrit ? true : rollCrit(c);
+      if (isCrit) { dmg = Math.floor(dmg * (c.cridam || 150) / 100); battleStats.crits++; }
+      dmg = Math.max(1, dmg);
+      t.hp -= dmg;
+      if (dmg > 0) wakeFromSilence(t);
+      battleStats.totalDmg += dmg;
+      if (!c.isEnemy) battleStats.unitDmg[c.uid] = (battleStats.unitDmg[c.uid]||0) + dmg;
+      if (!t.isEnemy) battleStats.unitTaken[t.uid] = (battleStats.unitTaken[t.uid]||0) + dmg;
+      spawnBall(c.uid, t.uid, 'ult');
+      const dmgSnap = dmg, crtSnap = isCrit;
+      const clrSnap = dmgType === 'spec' ? 'float-dmg-spec' : 'float-dmg-phys';
+      setTimeout(() => {
+        flashCard(t.uid, 'hit');
+        spawnFloatNum(t.uid, crtSnap ? `${dmgSnap}<span class="crit-label">CRITICAL</span>` : String(dmgSnap), crtSnap ? clrSnap+' crit' : clrSnap);
+      }, delay + 130);
+      // ランダムデバフを敵ごとに抽選
+      const db = debuffPool[Math.floor(Math.random() * debuffPool.length)];
+      applyDebuffDirect(t, { type:db.type, val:db.val, turns:db.turns, maxStacks:db.maxStacks });
+      setTimeout(() => spawnFloatNum(t.uid, db.label, 'float-debuff'), delay + 200);
+      delay += 120;
+      if (t.hp <= 0 && !t.dead) {
+        t.dead = true;
+        setTimeout(() => {
+          spawnFloatNum(t.uid, 'DEFEAT', 'float-defeat');
+          addLog(`${t.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
+        }, delay + 200);
+      }
+    });
+    // 味方全体HP完全回復
+    (allies||[]).filter(a => !a.dead && !a.isGolem).forEach(a => {
+      const heal = a.maxHp - a.hp;
+      if (heal > 0) {
+        const actual = healUnit(a, heal);
+        if (actual > 0) {
+          battleStats.unitHeal[c.uid] = (battleStats.unitHeal[c.uid]||0) + actual;
+          spawnFloatNum(a.uid, `💚+${fmt(actual)}`, 'float-heal');
+        }
+      }
+    });
+    addLog(`${c.name} 【${ult.name}】全敵に爆ダメージ＋ランダムデバフ ＋ 味方全体HP完全回復`, 'trigger');
     return;
   }
 
@@ -18010,8 +18322,9 @@ function applyBuff(c, skill, sourceUnit) {
   if (eff.type === 'multi_buff') {
     const buffTypeLabel = { pdef_up:'物理耐性↑', mdef_up:'特殊耐性↑', atk_up:'ATK↑', spd_up:'SPD↑' };
     const details = (eff.buffs||[]).map(b => {
-      (c.buffs=c.buffs||[]).push({ type:b.type, val:b.val, turns:b.turns, icon: iconMap[b.type]||'⬆', cssClass: cssMap[b.type]||'hp-up' });
-      return `${buffTypeLabel[b.type]||b.type}+${b.val} (${b.turns}T)`;
+      const scaledVal = applyMelodyScale(sourceUnit, b.val);
+      (c.buffs=c.buffs||[]).push({ type:b.type, val:scaledVal, turns:b.turns, icon: iconMap[b.type]||'⬆', cssClass: cssMap[b.type]||'hp-up' });
+      return `${buffTypeLabel[b.type]||b.type}+${scaledVal} (${b.turns}T)`;
     }).join(' / ');
     flashCard(c.uid, 'buff');
     spawnSkillNamePop(c.uid, skill.name, 'buff');
@@ -18019,6 +18332,91 @@ function applyBuff(c, skill, sourceUnit) {
     addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> ${details}`, 'trigger');
     Audio.buff();
     return;
+  }
+
+  // シーフ: 影走り（自身SPD+回避バフ）
+  if (eff.type === 'shadow_dash') {
+    const spdVal = eff.spdVal || 30;
+    const evVal = eff.evasion || 20;
+    const turns = eff.turns || 3;
+    c.buffs.push({ type:'spd_up', val:spdVal, turns, icon:'⬆SPD', cssClass:'atk-up' });
+    c.buffs.push({ type:'evade_up', val:evVal, turns, icon:'👁回避↑', cssClass:'atk-up' });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `👤影走り SPD+${spdVal}/回避+${evVal}%`, 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> SPD+${spdVal} / 回避+${evVal}%(${turns}T)`, 'trigger');
+    Audio.buff(); return;
+  }
+
+  // アルケミスト: ゴーレム召喚（味方側召喚、味方全員に cover_target 付与）
+  if (eff.type === 'summon_golem') {
+    if (!battleState) return;
+    const hpMult = eff.hpMult || 15;
+    const coverRatio = eff.coverRatio || 80;
+    const golemHp = Math.floor((sourceUnit?.atk || c.atk) * hpMult);
+    // 既存ゴーレムがいれば除去（同時に1体のみ）
+    battleState.allies = (battleState.allies||[]).filter(a => !a.isGolem || a.dead);
+    // ゴーレム生成
+    const golem = {
+      uid: 'golem_' + Math.random().toString(36).slice(2),
+      name: 'ゴーレム', icon: '🗿',
+      classId: null, species: 'construct',
+      attackTypes: ['打'],
+      maxHp: golemHp, hp: golemHp,
+      atk: 0, pdef: 30, mdef: 20, spd: 0, cri: 0, cridam: 100,
+      evade: 0, atb: 0,
+      isEnemy: false, dead: false,
+      isGolem: true, _summonerUid: sourceUnit?.uid || c.uid,
+      staggered: false, staggerUsed: false,
+      skills: [], skillCDs: {}, usedOnce: {},
+      ultimate: null, ultGauge: 0,
+      buffs: [], debuffs: [],
+      classPassives: [],
+      hate: 50,
+    };
+    battleState.allies.push(golem);
+    // 既存の cover_target を解除してから新規付与
+    battleState.allies.forEach(a => {
+      if (a.uid === golem.uid) return;
+      if (a.dead) return;
+      a.buffs = (a.buffs||[]).filter(b => b.type !== 'cover_target' || !(b._tag === 'golem'));
+      a.buffs.push({
+        type:'cover_target', val:coverRatio, turns:99999,
+        sourceUid:golem.uid, ratio:coverRatio/100,
+        icon:'🤝庇う', cssClass:'hp-up', _tag:'golem',
+      });
+    });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, '🗿ゴーレム召喚', 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 🗿ゴーレム召喚 HP:${fmt(golemHp)} / 味方全員を${coverRatio}%で庇う`, 'trigger');
+    if (typeof renderBattle === 'function') setTimeout(() => renderBattle(), 50);
+    Audio.buff(); return;
+  }
+
+  // ミンストレル: オーケストラルチャント（味方全体のスキルCD-N）
+  if (eff.type === 'cd_reduce_all') {
+    const reduceVal = eff.val || 2;
+    (c.skillCDs = c.skillCDs || {});
+    Object.keys(c.skillCDs).forEach(k => {
+      if (c.skillCDs[k] > 0) c.skillCDs[k] = Math.max(0, c.skillCDs[k] - reduceVal);
+    });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `🎵CD-${reduceVal}`, 'float-buff');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> スキルCD-${reduceVal}`, 'trigger');
+    Audio.buff(); return;
+  }
+
+  // ミンストレル: ヒーリングメロディ（味方全体に即時HP+リジェネ）
+  if (eff.type === 'heal_and_regen_all') {
+    const healAmt = Math.floor(c.maxHp * (eff.healRatio || 0.05) * _slMult);
+    const scaledHeal = applyMelodyScale(sourceUnit, healAmt);
+    const actualHeal = healUnit(c, scaledHeal);
+    if (actualHeal > 0) battleStats.unitHeal[sourceUnit?.uid||c.uid] = (battleStats.unitHeal[sourceUnit?.uid||c.uid]||0) + actualHeal;
+    const regenVal = applyMelodyScale(sourceUnit, eff.regenVal || 10);
+    c.buffs.push({ type:'regen', val:regenVal, turns:eff.regenTurns||4, icon:'💚再生', cssClass:'hp-up' });
+    flashCard(c.uid, 'buff');
+    spawnFloatNum(c.uid, `💚+${fmt(actualHeal)}`, 'float-heal');
+    addLog(`${c.name} <span class="tag tag-buff">${skill.name}</span> 💚HP+${fmt(actualHeal)} ＋ 💚再生${regenVal}%/T(${eff.regenTurns||4}T)`, 'trigger');
+    Audio.buff(); return;
   }
 
   // HP回復+シールド同時付与（不滅の要塞）
