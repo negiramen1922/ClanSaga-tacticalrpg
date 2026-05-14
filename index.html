@@ -2062,6 +2062,24 @@ img.item-icon {
 .imagine-milestone.reached { color: var(--gold); border-color: rgba(201,168,76,0.4); background: rgba(201,168,76,0.08); }
 .imagine-milestone.locked  { color: var(--text3); border-color: var(--border); }
 
+/* イマジン詳細モーダル */
+.im-detail-section { margin-bottom: 10px; }
+.im-detail-label   { font-size: 10px; color: var(--text3); letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+.im-detail-skill   {
+  display: flex; gap: 6px; align-items: flex-start; font-size: 11px;
+  padding: 6px 8px; background: var(--bg3); border: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.im-detail-skill.is-active   { border-color: rgba(120,200,140,0.5); background: rgba(120,200,140,0.06); }
+.im-detail-skill.is-inactive { opacity: 0.6; }
+.im-skill-status { flex-shrink: 0; color: var(--text3); width: 12px; }
+.im-detail-skill.is-active .im-skill-status { color: var(--accent2); }
+.im-skill-name   { font-weight: 700; color: var(--gold); flex-shrink: 0; }
+.im-skill-cond   { color: var(--text3); flex-shrink: 0; }
+.im-skill-desc   { color: var(--text2); }
+.im-active-active { background: rgba(180,125,255,0.06); border: 1px solid rgba(180,125,255,0.3); padding: 6px 8px; }
+.im-active-active .im-skill-name { color: var(--purple); }
+
 /* イマジン選択モーダル */
 .imagine-select-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 2px;
@@ -5008,7 +5026,7 @@ const CLASS_DATA = {
   priest: {
     name: 'プリースト',
     icon: '✨',
-    role: 'ヒーラー',
+    role: 'サポート',
     species: 'celestia',
     attackTypes: ['魔'],
     baseStats: { atk:700, hp:3000, pdef:5, mdef:18, spd:70, cri:5, cridam:140, evade:3 },
@@ -13994,7 +14012,7 @@ const IMAGINES = [
     baseHp: 210, baseAtk: 110,
     activeSkill: { name:'混沌爆発', desc:'全体 ATK+15% / スキルPw+20% (2T)', effect:{ atkBuff:15, skillPwBuff:20, turns:2 } },
     imagineSkills: [
-      { condLabel: 'コントロール1人以上', cond: 'role_gte:control:1', effectLabel: 'デバフ付与率+10%',
+      { condLabel: 'トリックスター1人以上', cond: 'role_gte:trickster:1', effectLabel: 'デバフ付与率+10%',
         effect: { type:'all_skillPw', val:5 } },
       { condLabel: '常時', cond: 'always', effectLabel: '全体ATK+5%',
         effect: { type:'all_atk_pct', val:5 } },
@@ -14049,6 +14067,20 @@ function getPresetImagineState(preset) {
   return (gState.imagines||[]).find(s=>s.id===preset.imagineId) || null;
 }
 
+// イマジン条件マッチ用のロール名 JP→EN マッピング
+function imagineRoleKey(jpRole) {
+  switch (jpRole) {
+    case 'アタッカー':       return 'attacker';
+    case 'タンク':           return 'tank';
+    case 'サポート':         return 'support';
+    case 'ヒーラー':         return 'support'; // ヒーラー廃止→サポートに統合
+    case 'スカウト':         return 'scout';
+    case 'レンジ':           return 'range';
+    case 'トリックスター':   return 'trickster';
+    default: return null;
+  }
+}
+
 // presetsのimagineバフを計算 (static conditions, no night check)
 function getImagineBuffs(preset, partyUnits) {
   const res = {atkPct:0, hpPct:0, spd:0, cri:0, dmgReduce:0, skillPw:0, healUp:0,
@@ -14078,12 +14110,13 @@ function getImagineBuffs(preset, partyUnits) {
     }
   }
 
-  // 役割カウント
+  // 役割カウント（イマジン条件用にJP→ENマッピングで集計）
   const roleCounts = {};
   let uniqueRoles = new Set();
   (partyUnits||[]).forEach(u => {
     const cls = CLASS_DATA[u.classId];
-    const role = cls?.role || '';
+    const role = imagineRoleKey(cls?.role);
+    if (!role) return;
     roleCounts[role] = (roleCounts[role]||0) + 1;
     uniqueRoles.add(role);
   });
@@ -14197,49 +14230,27 @@ function renderImagineSection(preset) {
     const baseHpNow  = Math.round(imagineDef.baseHp  * (1 + (lv-1)*9/99));
     const baseAtkNow = Math.round(imagineDef.baseAtk * (1 + (lv-1)*9/99));
     const resPct = Math.min(100, Math.round(res / 10));
+    const act = imagineDef.activeSkill;
 
     html += `<div class="imagine-card" onclick="openImagineSelect()">
       <div class="imagine-icon">${imagineDef.icon}</div>
       <div class="imagine-info">
         <div class="imagine-name">${imagineDef.name} <span style="font-size:10px;color:var(--text3)">Lv${lv}</span></div>
-        <div class="imagine-flavor">${imagineDef.flavor}</div>
         <div class="imagine-stats">HP+${baseHpNow} / ATK+${baseAtkNow} (共鳴: ${res}%)</div>
         <div class="imagine-resonance-bar">
           <div class="imagine-resonance-fill" style="width:${resPct}%"></div>
         </div>
       </div>
-      <button class="btn btn-outline btn-sm" style="font-size:10px;" onclick="event.stopPropagation();openImagineManage('${preset.id}')">管理</button>
     </div>`;
 
-    // アクティブスキル表示
-    html += '<div class="imagine-skills">';
-    const partyUnits = (preset.formation?.slots||[]).filter(Boolean).map(uid=>gState.ownedUnits.find(u=>u.uid===uid)).filter(Boolean);
-    const buffs = getImagineBuffs(preset, partyUnits);
-    const roleCounts = {};
-    let uniqueRoles = new Set();
-    partyUnits.forEach(u=>{ const r=CLASS_DATA[u.classId]?.role||''; roleCounts[r]=(roleCounts[r]||0)+1; uniqueRoles.add(r); });
-    (imagineDef.imagineSkills||[]).forEach(sk => {
-      let active = false;
-      const c = sk.cond||'';
-      if (c==='always') active=true;
-      else if (c.startsWith('role_gte:')) { const p=c.split(':'); active=(roleCounts[p[1]]||0)>=parseInt(p[2]||'1'); }
-      else if (c.startsWith('roles_gte:')) { active=uniqueRoles.size>=parseInt(c.split(':')[1]||'1'); }
-      const color = active ? 'var(--accent2)' : 'var(--text3)';
-      html += `<div class="imagine-skill-row">
-        <span class="imagine-skill-cond" style="color:${color}">${active?'✓':'○'}</span>
-        <span class="imagine-skill-cond">[${sk.condLabel}]</span>
-        <span class="imagine-skill-eff">${sk.effectLabel}</span>
+    if (act) {
+      html += `<div class="im-active-active" style="margin-top:8px">
+        <div style="font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:2px">アクティブ <span style="color:var(--text3);font-weight:400">（1戦闘1回）</span></div>
+        <div style="font-size:12px"><span class="im-skill-name">${act.name}</span> <span class="im-skill-desc">${act.desc}</span></div>
       </div>`;
-    });
-    html += '</div>';
+    }
 
-    // 共鳴マイルストーン
-    html += '<div class="imagine-resonance-milestones">';
-    (imagineDef.resonanceSkills||[]).forEach(rs => {
-      const reached = res >= rs.threshold;
-      html += `<div class="imagine-milestone ${reached?'reached':'locked'}">${rs.threshold}%: ${rs.label}</div>`;
-    });
-    html += '</div>';
+    html += `<div style="text-align:right;margin-top:6px"><button class="btn btn-outline btn-sm" style="font-size:10px" onclick="openImagineDetail('${imagineDef.id}')">詳細を見る</button></div>`;
   }
   html += '</div>';
   el.innerHTML = html;
@@ -14259,19 +14270,16 @@ function openImagineSelect() {
     const res = state?.resonance||0;
     const sel = preset.imagineId === im.id;
     if (!isUnlocked) {
-      const unlockInfo = IMAGINE_AREA_UNLOCKS.find(u=>u.imagineId===im.id);
-      const hint = unlockInfo ? `${unlockInfo.areaName}クリアで入手` : '特定条件で入手';
-      return `<div class="imagine-select-card" style="opacity:0.45;cursor:not-allowed;pointer-events:none">
+      return `<div class="imagine-select-card" onclick="this.closest('.modal-overlay').remove();openImagineDetail('${im.id}', true)" style="opacity:0.6">
         <div class="isc-icon" style="filter:grayscale(1)">${im.icon}</div>
         <div class="isc-name" style="color:var(--text3)">${im.name}</div>
         <div class="isc-lv" style="color:var(--text3)">🔒 未入手</div>
-        <div class="isc-res" style="color:var(--text3);font-size:8px">${hint}</div>
       </div>`;
     }
-    return `<div class="imagine-select-card ${sel?'selected':''}" onclick="equipImagine('${im.id}');this.closest('.modal-overlay').remove();renderFormationTab()">
+    return `<div class="imagine-select-card ${sel?'selected':''}" onclick="this.closest('.modal-overlay').remove();openImagineDetail('${im.id}', true)">
       <div class="isc-icon">${im.icon}</div>
       <div class="isc-name">${im.name}</div>
-      <div class="isc-lv">Lv${lv}</div>
+      <div class="isc-lv">Lv${lv}${sel?' <span style=color:var(--accent2)>✓装備中</span>':''}</div>
       <div class="isc-res">${res>0?'共鳴'+res+'%':''}</div>
     </div>`;
   }).join('');
@@ -14282,7 +14290,7 @@ function openImagineSelect() {
       <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
     </div>
     <div class="modal-body">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">パーティに1体の守護精霊を設定できます。</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">カードをタップで詳細表示・装備変更ができます。</div>
       <div class="imagine-select-grid">${cards}</div>
       ${preset.imagineId?`<button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px" onclick="equipImagine(null);this.closest('.modal-overlay').remove();renderFormationTab()">✕ 設定を解除</button>`:''}
     </div>
@@ -14304,47 +14312,136 @@ function equipImagine(imagineId) {
   renderFormationTab();
 }
 
-function openImagineManage(presetId) {
+// イマジン詳細モーダル（アクティブ/編成パッシブ/共鳴/Lv up/装備）
+function openImagineDetail(imagineId, fromSelect = false) {
+  const imagineDef = getImagineEntry(imagineId);
+  if (!imagineDef) return;
   const preset = gState.presets[gState.activePreset];
-  const imagineState = getPresetImagineState(preset);
-  const imagineDef   = imagineState ? getImagineEntry(imagineState.id) : null;
-  if (!imagineDef || !imagineState) return;
+  const isEquipped = preset.imagineId === imagineId;
+  const stateOwned = (gState.imagines||[]).find(s => s.id === imagineId);
+  const isOwned = !!stateOwned;
+  const imagineState = stateOwned || { id: imagineId, level: 1, resonance: 0 };
 
-  const lv = imagineState.level||1;
+  const lv  = imagineState.level || 1;
+  const res = imagineState.resonance || 0;
+  const baseHpNow  = Math.round(imagineDef.baseHp  * (1 + (lv-1)*9/99));
+  const baseAtkNow = Math.round(imagineDef.baseAtk * (1 + (lv-1)*9/99));
+
   const soul1 = gState.player.cryptoSoulT1||0;
   const soul2 = gState.player.cryptoSoulT2||0;
   const soul3 = gState.player.cryptoSoulT3||0;
   const lvUpCost = lv < 30 ? {t:1,n:3} : lv < 60 ? {t:2,n:3} : lv < 100 ? {t:3,n:3} : null;
-  const canUp = lvUpCost && (lvUpCost.t===1?soul1:lvUpCost.t===2?soul2:soul3) >= lvUpCost.n;
+  const canUp = isOwned && lvUpCost && (lvUpCost.t===1?soul1:lvUpCost.t===2?soul2:soul3) >= lvUpCost.n;
+
+  // 現在の編成からロールカウント（パッシブ条件判定用）
+  const partyUnits = (preset.formation?.slots||[]).filter(Boolean)
+    .map(uid => gState.ownedUnits.find(u => u.uid === uid)).filter(Boolean);
+  const roleCounts = {};
+  let uniqueRoles = new Set();
+  partyUnits.forEach(u => {
+    const r = imagineRoleKey(CLASS_DATA[u.classId]?.role);
+    if (!r) return;
+    roleCounts[r] = (roleCounts[r]||0) + 1;
+    uniqueRoles.add(r);
+  });
+
+  // アクティブスキル
+  const act = imagineDef.activeSkill;
+  const activeHtml = act ? `
+    <div class="im-detail-section">
+      <div class="im-detail-label">アクティブスキル <span style="text-transform:none;color:var(--text3);font-weight:400">（1戦闘1回 / 戦闘中に手動発動）</span></div>
+      <div class="im-detail-skill im-active-active">
+        <span class="im-skill-name">${act.name}</span>
+        <span class="im-skill-desc">${act.desc}</span>
+      </div>
+    </div>` : '';
+
+  // 編成条件パッシブ
+  const passivesHtml = (imagineDef.imagineSkills||[]).map(sk => {
+    let active = false;
+    const c = sk.cond || '';
+    if (c === 'always') active = true;
+    else if (c.startsWith('role_gte:')) { const p = c.split(':'); active = (roleCounts[p[1]]||0) >= parseInt(p[2]||'1'); }
+    else if (c.startsWith('roles_gte:')) { active = uniqueRoles.size >= parseInt(c.split(':')[1]||'1'); }
+    return `<div class="im-detail-skill ${active?'is-active':'is-inactive'}">
+      <span class="im-skill-status">${active?'✓':'○'}</span>
+      <span class="im-skill-cond">[${sk.condLabel}]</span>
+      <span class="im-skill-desc">${sk.effectLabel}</span>
+    </div>`;
+  }).join('');
+
+  // 共鳴マイルストーン
+  const milestonesHtml = (imagineDef.resonanceSkills||[]).map(rs => {
+    const reached = res >= rs.threshold;
+    return `<div class="im-detail-skill ${reached?'is-active':'is-inactive'}">
+      <span class="im-skill-status">${reached?'✓':'○'}</span>
+      <span class="im-skill-cond">[共鳴${rs.threshold}%]</span>
+      <span class="im-skill-desc">${rs.label}</span>
+    </div>`;
+  }).join('');
+
+  // 装備ボタン
+  let actionBtn = '';
+  if (!isOwned) {
+    const unlockInfo = IMAGINE_AREA_UNLOCKS.find(u => u.imagineId === imagineId);
+    actionBtn = `<div style="text-align:center;color:var(--text3);font-size:11px;padding:10px;background:var(--bg3);border:1px dashed var(--border)">🔒 未入手 — ${unlockInfo ? unlockInfo.areaName + 'クリアで入手' : '特定条件で入手'}</div>`;
+  } else if (isEquipped) {
+    actionBtn = `<button class="btn btn-outline" style="width:100%" disabled>✓ 装備中</button>`;
+  } else {
+    actionBtn = `<button class="btn btn-gold" style="width:100%" onclick="equipImagine('${imagineId}');this.closest('.modal-overlay').remove();renderFormationTab()">装備する</button>`;
+  }
+
+  // Lv up ボタン
+  const lvUpBtn = isOwned && lvUpCost && lv < 100 ? `
+    <button class="btn ${canUp?'btn-blue':'btn-outline'}" style="width:100%;margin-top:8px" ${canUp?'':'disabled'} onclick="levelUpImagine('${imagineId}');this.closest('.modal-overlay').remove();openImagineDetail('${imagineId}', ${fromSelect})">
+      レベルアップ (T${lvUpCost.t}×${lvUpCost.n} 消費)
+    </button>` : (isOwned && lv>=100 ? '<div style="text-align:center;color:var(--gold);font-size:12px;margin-top:8px">MAX LEVEL</div>' : '');
+
+  const backBtn = fromSelect
+    ? `<button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px" onclick="this.closest('.modal-overlay').remove();openImagineSelect()">← 選択画面に戻る</button>`
+    : '';
 
   const ov = document.createElement('div');
   ov.className = 'modal-overlay open';
-  ov.style.zIndex = '700';
-  ov.innerHTML = `<div class="modal-panel" style="max-width:400px">
+  ov.style.zIndex = '720';
+  ov.innerHTML = `<div class="modal-panel" style="max-width:420px">
     <div class="modal-header">
       <h3>${imagineDef.icon} ${imagineDef.name}</h3>
       <button class="close-btn" onclick="this.closest('.modal-overlay').remove();renderFormationTab()">✕</button>
     </div>
     <div class="modal-body">
       <div style="font-size:12px;color:var(--text3);margin-bottom:12px">${imagineDef.flavor}</div>
-      <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="display:flex;gap:10px;margin-bottom:10px">
         <div style="flex:1;text-align:center;background:var(--bg3);padding:8px;border:1px solid var(--border)">
           <div style="font-size:10px;color:var(--text3)">レベル</div>
           <div style="font-size:22px;font-weight:700;color:var(--gold)">${lv}</div>
         </div>
         <div style="flex:1;text-align:center;background:var(--bg3);padding:8px;border:1px solid var(--border)">
           <div style="font-size:10px;color:var(--text3)">共鳴度</div>
-          <div style="font-size:22px;font-weight:700;color:var(--purple)">${imagineState.resonance||0}%</div>
+          <div style="font-size:22px;font-weight:700;color:var(--purple)">${res}%</div>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:6px">素材 — ${itemIconHTML('cryptoT1','13px')}T1×${soul1} / ${itemIconHTML('cryptoT2','13px')}T2×${soul2} / ${itemIconHTML('cryptoT3','13px')}T3×${soul3}</div>
-      ${lvUpCost && lv < 100 ? `
-      <button class="btn btn-gold" style="width:100%" ${canUp?'':'disabled'} onclick="levelUpImagine('${imagineDef.id}');this.closest('.modal-overlay').remove();openImagineManage(null)">
-        レベルアップ (T${lvUpCost.t}×${lvUpCost.n} 消費)
-      </button>` : lv>=100?'<div style="text-align:center;color:var(--gold);font-size:12px">MAX LEVEL</div>':''}
+      <div style="font-size:11px;color:var(--text2);margin-bottom:12px">編成時加算: HP+${baseHpNow} / ATK+${baseAtkNow}</div>
+      ${activeHtml}
+      ${passivesHtml ? `<div class="im-detail-section">
+        <div class="im-detail-label">編成条件パッシブ</div>${passivesHtml}
+      </div>` : ''}
+      ${milestonesHtml ? `<div class="im-detail-section">
+        <div class="im-detail-label">共鳴マイルストーン</div>${milestonesHtml}
+      </div>` : ''}
+      ${isOwned ? `<div style="font-size:11px;color:var(--text2);margin:12px 0 6px">素材 — ${itemIconHTML('cryptoT1','13px')}T1×${soul1} / ${itemIconHTML('cryptoT2','13px')}T2×${soul2} / ${itemIconHTML('cryptoT3','13px')}T3×${soul3}</div>` : ''}
+      ${actionBtn}
+      ${lvUpBtn}
+      ${backBtn}
     </div>
   </div>`;
   document.body.appendChild(ov);
+}
+
+// 旧API互換（残存呼び出しから）
+function openImagineManage(presetId) {
+  const preset = gState.presets[gState.activePreset];
+  if (preset?.imagineId) openImagineDetail(preset.imagineId);
 }
 
 function levelUpImagine(imagineId) {
