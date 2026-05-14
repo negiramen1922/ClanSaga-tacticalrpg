@@ -20656,16 +20656,6 @@ function renderCharGachaTab(el) {
 function renderArtifactGachaTab(el) {
   const crystal = gState.player.starCrystal || 0;
   const afMileage = gState.player.afMileage || 0;
-  const ssrPool = ARTIFACT_POOL.filter(d => d.rarity === 'SSR');
-
-  // ピックアップ選択
-  let pickupHtml = `<div style="font-size:11px;color:var(--text3);margin-bottom:6px">ピックアップ選択</div>
-    <div class="af2-pickup-row" style="flex-wrap:wrap;gap:4px;display:flex;margin-bottom:10px">
-      <button class="af2-pickup-btn ${af2Pickup===null?'active':''}" onclick="af2Pickup=null;renderArtifactGachaTab(document.getElementById('gacha-tab-content'))">なし</button>`;
-  ssrPool.forEach(d => {
-    pickupHtml += `<button class="af2-pickup-btn ${af2Pickup===d.id?'active':''}" onclick="af2Pickup='${d.id}';renderArtifactGachaTab(document.getElementById('gacha-tab-content'))">${d.icon}${d.name}</button>`;
-  });
-  pickupHtml += `</div>`;
 
   el.innerHTML = `
     <div style="background:linear-gradient(135deg,rgba(138,154,181,0.12),rgba(74,127,255,0.06));border:1px solid rgba(138,154,181,0.3);padding:12px;margin-bottom:12px;border-radius:6px">
@@ -20681,7 +20671,6 @@ function renderArtifactGachaTab(el) {
         <div style="height:100%;width:${Math.min(100,(afMileage/AF_MILEAGE_CAP*100)).toFixed(1)}%;background:linear-gradient(90deg,var(--silver),#c8d8f0);border-radius:3px;transition:width 0.3s"></div>
       </div>
     </div>
-    ${pickupHtml}
     <div class="gacha-btns" style="margin-bottom:10px">
       <button class="gacha-btn gacha-btn-1" onclick="doArtifactGachaFromPanel(1)" ${crystal<200?'disabled':''} style="flex:1;padding:10px;cursor:${crystal>=200?'pointer':'default'};opacity:${crystal>=200?1:0.4}">
         1回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 200</span>
@@ -21439,13 +21428,7 @@ function _showFirstBattleAFGacha() {
     if (roll < 5) rarity = 'SSR';
     else if (roll < 30) rarity = 'SR';
     else rarity = 'N';
-    let pool;
-    if (rarity === 'SSR' && af2Pickup) {
-      pool = [ARTIFACT_POOL.find(d => d.id === af2Pickup)].filter(Boolean);
-    } else {
-      pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
-    }
-    if (!pool.length) pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
+    const pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
     const def = pool[Math.floor(Math.random() * pool.length)];
     if (!def) continue;
     if (!gState.artifacts) gState.artifacts = [];
@@ -21604,13 +21587,7 @@ function doArtifactGachaFromPanel(count) {
       continue;
     }
 
-    let pool;
-    if (rarity === 'SSR' && af2Pickup) {
-      pool = [ARTIFACT_POOL.find(d => d.id === af2Pickup)].filter(Boolean);
-    } else {
-      pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
-    }
-    if (!pool.length) pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
+    const pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
     const def = pool[Math.floor(Math.random() * pool.length)];
     if (!def) continue;
 
