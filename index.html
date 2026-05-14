@@ -10476,7 +10476,17 @@ function normalizeState() {
 
   // アーティファクトインスタンスのフォーマット正規化（旧フォーマット→新フォーマット）
   if (Array.isArray(gState.artifacts)) {
+    // 旧ID→新IDマイグレーション（リネーム適用：プレイヤー資産保護）
+    const ARTIFACT_ID_MIGRATION = {
+      'minotaur_shield': 'minotaur',
+      'artemis_bow':     'chimera',
+      'hermes_cloak':    'unicorn',
+      'caladbolg':       'gae_bolg',
+    };
     gState.artifacts = gState.artifacts.map(af => {
+      if (af && ARTIFACT_ID_MIGRATION[af.id]) {
+        af.id = ARTIFACT_ID_MIGRATION[af.id];
+      }
       // 旧フォーマット（enhance番号のみ）を新フォーマットに変換
       if (typeof af.enhance === 'number' && af.level === undefined) {
         return { uid: af.uid, id: af.id, level: af.enhance || 0, rank: 0 };
@@ -13899,6 +13909,8 @@ function calcStats(unit) {
   let cri    = base.cri;
   let cridam = base.cridam;
   let evade  = base.evade || 0;
+  let search  = cls.baseSearch  ?? 10;
+  let stealth = cls.baseStealth ?? 5;
   // パッシブ加算（すべてフラットまたは%）
   (unit.passives||[]).forEach(p => {
     const pd = PASSIVE_POOL.find(x=>x.id===p.id);
@@ -13921,6 +13933,9 @@ function calcStats(unit) {
   cridam += af.cridam || 0;
   pdef   += (af.pres || af.pdef || 0) + (af.bres || 0);
   mdef   += (af.mres || af.mdef || 0) + (af.lres || 0);
+  evade  += af.evade   || 0;
+  search  += af.search  || 0;
+  stealth += af.stealth || 0;
   // アクセサリー加算
   const ac = getAccessoryStats(unit);
   if (ac.atkPct) atk = Math.floor(atk * (1 + ac.atkPct / 100));
@@ -13946,6 +13961,9 @@ function calcStats(unit) {
     cri,
     cridam,
     evade,
+    search,
+    stealth,
+    dmgReduce: af.dmgReduce || 0,
   };
 }
 
@@ -15834,8 +15852,8 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       atk, pdef, mdef,
       spd, cri: stats.cri + passiveCri, cridam: stats.cridam,
       evade: stats.evade || 0,
-      search:  cls2?.baseSearch  ?? 10,
-      stealth: (cls2?.baseStealth ?? 5) + passiveStealth,
+      search:  stats.search ?? (cls2?.baseSearch ?? 10),
+      stealth: (stats.stealth ?? (cls2?.baseStealth ?? 5)) + passiveStealth,
       hate:    isLeader ? Math.floor((cls2?.baseHate ?? 400) * 1.5) : (cls2?.baseHate ?? 400),
       atb: 0, isEnemy: false, dead: false,
       staggered: false, staggerUsed: false,
@@ -25310,183 +25328,360 @@ const CLASS_TAGS = {
 // ============================================================
 const ARTIFACT_POOL = [
 
-  // ===== SSR 近接アタッカー向け =====
-  { id:'gram', name:'グラム', icon:'⚔️', kind:'大剣', rarity:'SSR',
-    mainStat:{ atk:130, hp:60 },
-    conditions:[
-      { type:'A', req:null,       desc:'全キャラ ATK+10~20%',
-        stats:[{key:'atkPct',min:10,max:20}] },
-      { type:'B', req:'アタッカー', desc:'アタッカー ATK+10~20%・CRI+5~10%',
-        stats:[{key:'atkPct',min:10,max:20},{key:'cri',min:5,max:10}] },
-      { type:'E', req:'斬',       desc:'斬タグ スキルPw+8~15%・CRIDAM+10~20%',
-        stats:[{key:'skillPw',min:8,max:15},{key:'cridam',min:10,max:20}] },
-    ]},
-
-  { id:'durandal', name:'デュランダル', icon:'🗡️', kind:'大剣', rarity:'SSR',
-    mainStat:{ atk:140, hp:40 },
-    conditions:[
-      { type:'A', req:null,        desc:'全キャラ ATK+8~16%・CRI+3~8%',
-        stats:[{key:'atkPct',min:8,max:16},{key:'cri',min:3,max:8}] },
-      { type:'C', req:'warrior',   desc:'ウォリアー専用 スタック上限+2~4・スタック時ATK追加+2~4%',
-        stats:[{key:'atkPct',min:2,max:4}] },
-      { type:'F', req:'hp_below50',desc:'HP50%以下 ATK+15~25%・スキルPw+10~18%',
-        stats:[{key:'atkPct',min:15,max:25},{key:'skillPw',min:10,max:18}] },
-    ]},
-
-  { id:'caladbolg', name:'カラドボルグ', icon:'🌀', kind:'大剣', rarity:'SSR',
-    mainStat:{ atk:125, hp:50 },
-    conditions:[
-      { type:'A', req:null,        desc:'全キャラ 複数回攻撃スキルPw+8~15%',
-        stats:[{key:'skillPw',min:8,max:15}] },
-      { type:'B', req:'アタッカー', desc:'アタッカー 攻撃ヒットでATK+2~4%スタック（最大5）',
-        stats:[{key:'atkPct',min:2,max:4}] },
-      { type:'E', req:'裂',        desc:'裂タグ 出血ダメ+15~25%・CRIDAM+5~10%',
-        stats:[{key:'cridam',min:5,max:10}] },
-    ]},
-
-  // ===== SSR タンク向け =====
-  { id:'aegis', name:'イージス', icon:'🛡️', kind:'大盾', rarity:'SSR',
-    mainStat:{ atk:40, hp:200 },
-    conditions:[
-      { type:'A', req:null,        desc:'全キャラ HP+8~15%・全耐性+3~8',
-        stats:[{key:'hpPct',min:8,max:15},{key:'pres',min:3,max:8},{key:'mres',min:3,max:8},{key:'bres',min:3,max:8}] },
-      { type:'B', req:'タンク',     desc:'タンク 被ダメ-8~15%・ヘイト+100~300',
-        stats:[{key:'dmgReduce',min:8,max:15}] },
-      { type:'D', req:'celestia',  desc:'セレスティア シールド量+15~25%・特殊耐性+8~15',
-        stats:[{key:'mres',min:8,max:15}] },
-    ]},
-
-  { id:'dainsleif', name:'ダインスレイフ', icon:'🔱', kind:'大盾', rarity:'SSR',
-    mainStat:{ atk:60, hp:180 },
-    conditions:[
-      { type:'A', req:null,        desc:'全キャラ 被ダメ時カウンターゲージ+5~10',
-        stats:[{key:'hpPct',min:3,max:5}] },
-      { type:'C', req:'vanguard',  desc:'ヴァンガード専用 カウンターダメ×1.2~1.5',
-        stats:[{key:'atkPct',min:5,max:15}] },
-      { type:'F', req:'taunting',  desc:'挑発中 ATK+15~25%・反撃Pw+0.3~0.6',
-        stats:[{key:'atkPct',min:15,max:25}] },
-    ]},
-
-  // ===== SSR レンジ向け =====
-  { id:'gungnir', name:'ガンニョール', icon:'🏹', kind:'弓槍', rarity:'SSR',
-    mainStat:{ atk:150, hp:40 },
-    conditions:[
-      { type:'A', req:null,       desc:'全キャラ ATK+8~15%・CRI+3~8%',
-        stats:[{key:'atkPct',min:8,max:15},{key:'cri',min:3,max:8}] },
-      { type:'B', req:'レンジ',    desc:'レンジ 後衛配置時ATK追加+10~20%・スキルPw+8~15%',
-        stats:[{key:'atkPct',min:10,max:20},{key:'skillPw',min:8,max:15}] },
-      { type:'E', req:'貫',        desc:'貫タグ 物理耐性無視+10~20%・対象物理耐性-5~10%',
-        stats:[{key:'atkPct',min:5,max:10}] },
-    ]},
-
-  { id:'caduceus', name:'カドゥケウス', icon:'🪄', kind:'杖', rarity:'SSR',
-    mainStat:{ atk:80, hp:120 },
-    conditions:[
-      { type:'A', req:null,       desc:'全キャラ 回復効果+10~20%・MP回復効果+10~20%',
-        stats:[{key:'hpPct',min:5,max:10}] },
-      { type:'B', req:'サポート',  desc:'サポート ヘイト発生-10~20%・全スキルCD-1~2',
-        stats:[{key:'mres',min:5,max:10}] },
-      { type:'E', req:'魔',        desc:'魔タグ 魔法スキルPw+8~15%・特殊耐性-5~10%付与',
-        stats:[{key:'skillPw',min:8,max:15},{key:'mres',min:3,max:8}] },
-    ]},
-
-  // ===== SSR スカウト向け =====
-  { id:'sleipnir', name:'スレイプニル', icon:'🐎', kind:'軽鎧', rarity:'SSR',
-    mainStat:{ atk:100, hp:80 },
-    conditions:[
-      { type:'A', req:null,       desc:'全キャラ SPD+10~20・索敵+8~15',
-        stats:[{key:'spd',min:10,max:20}] },
-      { type:'B', req:'スカウト',  desc:'スカウト 奇襲時ダメ+15~30%・夜戦ATK+10~20%',
-        stats:[{key:'atkPct',min:10,max:20},{key:'skillPw',min:8,max:15}] },
-      { type:'D', req:'specter',  desc:'スペクター 隠密+15~25%・夜戦スキルPw+8~15%',
-        stats:[{key:'atkPct',min:8,max:15},{key:'spd',min:5,max:10}] },
-    ]},
-
-  // ===== SSR コントロール向け =====
-  { id:'morrigan', name:'モリガン', icon:'🌑', kind:'大鎌', rarity:'SSR',
-    mainStat:{ atk:110, hp:70 },
-    conditions:[
-      { type:'A', req:null,          desc:'全キャラ デバフ付与率+10~20%・状態異常時間+1T',
-        stats:[{key:'atkPct',min:5,max:10}] },
-      { type:'B', req:'コントロール', desc:'コントロール 呪い系スキルPw+10~18%・特殊耐性-5~10%付与',
-        stats:[{key:'skillPw',min:10,max:18},{key:'bres',min:3,max:8}] },
-      { type:'E', req:'呪',           desc:'呪タグ 敵の特殊耐性スタック（最大3・命中時）',
-        stats:[{key:'mres',min:5,max:10}] },
-    ]},
-
-  // ===== SR =====
-  { id:'caliburn', name:'カリバーン', icon:'⚔️', kind:'大剣', rarity:'SR',
-    mainStat:{ atk:80, hp:30 },
-    conditions:[
-      { type:'A', req:null,         desc:'全キャラ ATK+5~12%',
-        stats:[{key:'atkPct',min:5,max:12}] },
-      { type:'B', req:'アタッカー', desc:'アタッカー CRI+5~10%・CRIDAM+10~18%',
-        stats:[{key:'cri',min:5,max:10},{key:'cridam',min:10,max:18}] },
-    ]},
-
-  { id:'minotaur_shield', name:'ミノタウロスの盾', icon:'🛡️', kind:'大盾', rarity:'SR',
-    mainStat:{ atk:25, hp:110 },
-    conditions:[
-      { type:'A', req:null,     desc:'全キャラ HP+5~12%・PRES+3~8',
-        stats:[{key:'hpPct',min:5,max:12},{key:'pres',min:3,max:8}] },
-      { type:'B', req:'タンク', desc:'タンク PRES+8~15・被ダメ-5~10%',
-        stats:[{key:'pres',min:8,max:15},{key:'dmgReduce',min:5,max:10}] },
-    ]},
-
-  { id:'artemis_bow', name:'アルテミスの弓', icon:'🎯', kind:'弓', rarity:'SR',
-    mainStat:{ atk:90, hp:25 },
-    conditions:[
-      { type:'A', req:null,     desc:'全キャラ ATK+5~10%・CRI+3~6%',
-        stats:[{key:'atkPct',min:5,max:10},{key:'cri',min:3,max:6}] },
-      { type:'B', req:'レンジ', desc:'レンジ ATK+8~16%・スキルPw+5~10%',
-        stats:[{key:'atkPct',min:8,max:16},{key:'skillPw',min:5,max:10}] },
-    ]},
-
-  { id:'shadow_dagger', name:'シャドウダガー', icon:'🗡️', kind:'短刀', rarity:'SR',
-    mainStat:{ atk:85, hp:20 },
-    conditions:[
-      { type:'A', req:null,      desc:'全キャラ SPD+8~15・CRI+3~6%',
-        stats:[{key:'spd',min:8,max:15},{key:'cri',min:3,max:6}] },
-      { type:'B', req:'スカウト', desc:'スカウト ATK+8~15%・CRIDAM+8~15%',
-        stats:[{key:'atkPct',min:8,max:15},{key:'cridam',min:8,max:15}] },
-    ]},
-
-  { id:'hermes_cloak', name:'ヘルメスのマント', icon:'🧥', kind:'軽鎧', rarity:'SR',
-    mainStat:{ atk:40, hp:70 },
-    conditions:[
-      { type:'A', req:null,       desc:'全キャラ HP+5~10%・MRES+3~8',
-        stats:[{key:'hpPct',min:5,max:10},{key:'mres',min:3,max:8}] },
-      { type:'B', req:'サポート', desc:'サポート MRES+8~15・HP+5~10%',
-        stats:[{key:'mres',min:8,max:15},{key:'hpPct',min:5,max:10}] },
-    ]},
-
-  // ===== N =====
-  { id:'iron_sword', name:'鉄の直剣', icon:'⚔️', kind:'直剣', rarity:'N',
+  // ============================================================
+  //  N (4本) — 全キャラ向け基本装備
+  // ============================================================
+  { id:'iron_sword', name:'グラディウス', icon:'⚔️', kind:'直剣', rarity:'N',
     mainStat:{ atk:40, hp:10 },
     conditions:[
       { type:'A', req:null, desc:'全キャラ ATK+3~8%',
         stats:[{key:'atkPct',min:3,max:8}] },
     ]},
 
-  { id:'leather_shield', name:'革の円盾', icon:'🛡️', kind:'盾', rarity:'N',
+  { id:'leather_shield', name:'アスピス', icon:'🛡️', kind:'盾', rarity:'N',
     mainStat:{ atk:10, hp:60 },
     conditions:[
       { type:'A', req:null, desc:'全キャラ HP+3~8%',
         stats:[{key:'hpPct',min:3,max:8}] },
     ]},
 
-  { id:'wooden_bow', name:'木の弓', icon:'🏹', kind:'弓', rarity:'N',
+  { id:'wooden_bow', name:'アルコ', icon:'🏹', kind:'弓', rarity:'N',
     mainStat:{ atk:35, hp:10 },
     conditions:[
       { type:'A', req:null, desc:'全キャラ CRI+2~5%',
         stats:[{key:'cri',min:2,max:5}] },
     ]},
 
-  { id:'travel_robe', name:'旅人のローブ', icon:'👘', kind:'軽鎧', rarity:'N',
+  { id:'travel_robe', name:'ペプロス', icon:'👘', kind:'軽鎧', rarity:'N',
     mainStat:{ atk:15, hp:50 },
     conditions:[
-      { type:'A', req:null, desc:'全キャラ MRES+3~8',
-        stats:[{key:'mres',min:3,max:8}] },
+      { type:'A', req:null, desc:'全キャラ MRES+3~6',
+        stats:[{key:'mres',min:3,max:6}] },
+    ]},
+
+  // ============================================================
+  //  SR (7本) — ロール特化の中位装備
+  // ============================================================
+  { id:'caliburn', name:'カリバーン', icon:'⚔️', kind:'大剣', rarity:'SR',
+    mainStat:{ atk:80, hp:30 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+5~10%',
+        stats:[{key:'atkPct',min:5,max:10}] },
+      { type:'B', req:'アタッカー', desc:'アタッカー ATK+8~15%',
+        stats:[{key:'atkPct',min:8,max:15}] },
+    ]},
+
+  { id:'minotaur', name:'ミノタウロス', icon:'🛡️', kind:'大盾', rarity:'SR',
+    mainStat:{ atk:25, hp:110 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ HP+5~10%',
+        stats:[{key:'hpPct',min:5,max:10}] },
+      { type:'B', req:'タンク', desc:'タンク 物理耐性+5~10',
+        stats:[{key:'pres',min:5,max:10}] },
+    ]},
+
+  { id:'chimera', name:'キマイラ', icon:'🎯', kind:'弓', rarity:'SR',
+    mainStat:{ atk:90, hp:25 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+5~10%',
+        stats:[{key:'atkPct',min:5,max:10}] },
+      { type:'B', req:'レンジ', desc:'レンジ CRI+5~10%',
+        stats:[{key:'cri',min:5,max:10}] },
+    ]},
+
+  { id:'shadow_dagger', name:'シャドウダガー', icon:'🗡️', kind:'短刀', rarity:'SR',
+    mainStat:{ atk:85, hp:20 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ SPD+5~10',
+        stats:[{key:'spd',min:5,max:10}] },
+      { type:'B', req:'スカウト', desc:'スカウト ATK+8~15%',
+        stats:[{key:'atkPct',min:8,max:15}] },
+    ]},
+
+  { id:'unicorn', name:'ユニコーン', icon:'🦄', kind:'軽鎧', rarity:'SR',
+    mainStat:{ atk:40, hp:70 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ HP+5~10%',
+        stats:[{key:'hpPct',min:5,max:10}] },
+      { type:'B', req:'サポート', desc:'サポート 特殊耐性+5~10',
+        stats:[{key:'mres',min:5,max:10}] },
+    ]},
+
+  { id:'pegasus', name:'ペガサス', icon:'🐎', kind:'ローブ', rarity:'SR',
+    mainStat:{ atk:30, hp:100 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ 特殊耐性+3~6',
+        stats:[{key:'mres',min:3,max:6}] },
+      { type:'B', req:'サポート', desc:'サポート HP+8~15%',
+        stats:[{key:'hpPct',min:8,max:15}] },
+    ]},
+
+  { id:'satyr', name:'サテュロス', icon:'🐐', kind:'軽鎧', rarity:'SR',
+    mainStat:{ atk:60, hp:60 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+5~10%',
+        stats:[{key:'atkPct',min:5,max:10}] },
+      { type:'B', req:'トリックスター', desc:'トリックスター SPD+8~15',
+        stats:[{key:'spd',min:8,max:15}] },
+    ]},
+
+  // ============================================================
+  //  SSR ロール枠 (6本) — 各ロール代表装備
+  // ============================================================
+  { id:'gram', name:'グラム', icon:'⚔️', kind:'大剣', rarity:'SSR',
+    mainStat:{ atk:130, hp:60 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'アタッカー', desc:'アタッカー ATK+15~25%',
+        stats:[{key:'atkPct',min:15,max:25}] },
+      { type:'E', req:'斬', desc:'斬タグ クリダメ+10~20%',
+        stats:[{key:'cridam',min:10,max:20}] },
+    ]},
+
+  { id:'aegis', name:'イージス', icon:'🛡️', kind:'大盾', rarity:'SSR',
+    mainStat:{ atk:40, hp:200 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ HP+10~20%',
+        stats:[{key:'hpPct',min:10,max:20}] },
+      { type:'B', req:'タンク', desc:'タンク HP+15~25%',
+        stats:[{key:'hpPct',min:15,max:25}] },
+      { type:'B', req:'タンク', desc:'タンク 物理耐性+8~15',
+        stats:[{key:'pres',min:8,max:15}] },
+    ]},
+
+  { id:'gungnir', name:'ガンニョール', icon:'🏹', kind:'弓槍', rarity:'SSR',
+    mainStat:{ atk:150, hp:40 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'レンジ', desc:'レンジ ATK+15~25%',
+        stats:[{key:'atkPct',min:15,max:25}] },
+      { type:'E', req:'貫', desc:'貫タグ CRI+5~15%',
+        stats:[{key:'cri',min:5,max:15}] },
+    ]},
+
+  { id:'caduceus', name:'カドゥケウス', icon:'🪄', kind:'杖', rarity:'SSR',
+    mainStat:{ atk:80, hp:120 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ HP+10~20%',
+        stats:[{key:'hpPct',min:10,max:20}] },
+      { type:'B', req:'サポート', desc:'サポート 特殊耐性+8~15',
+        stats:[{key:'mres',min:8,max:15}] },
+      { type:'E', req:'魔', desc:'魔タグ 特殊耐性+5~15',
+        stats:[{key:'mres',min:5,max:15}] },
+    ]},
+
+  { id:'sleipnir', name:'スレイプニル', icon:'🐎', kind:'軽鎧', rarity:'SSR',
+    mainStat:{ atk:100, hp:80 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ SPD+10~20',
+        stats:[{key:'spd',min:10,max:20}] },
+      { type:'B', req:'スカウト', desc:'スカウト SPD+15~25',
+        stats:[{key:'spd',min:15,max:25}] },
+      { type:'E', req:'斬', desc:'斬タグ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+    ]},
+
+  { id:'hecate', name:'ヘカテー', icon:'🌙', kind:'触媒', rarity:'SSR',
+    mainStat:{ atk:90, hp:100 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'トリックスター', desc:'トリックスター HP+15~25%',
+        stats:[{key:'hpPct',min:15,max:25}] },
+      { type:'A', req:null, desc:'全キャラ 回避+5~10',
+        stats:[{key:'evade',min:5,max:10}] },
+    ]},
+
+  // ============================================================
+  //  SSR クラス専用 (17本) — クラスの強み・特徴を強化
+  // ============================================================
+  { id:'durandal', name:'デュランダル', icon:'🗡️', kind:'大剣', rarity:'SSR',
+    mainStat:{ atk:140, hp:40 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'アタッカー', desc:'アタッカー ATK+15~25%',
+        stats:[{key:'atkPct',min:15,max:25}] },
+      { type:'C', req:'warrior', desc:'ウォリアー専用 ATK+20~30%',
+        stats:[{key:'atkPct',min:20,max:30}] },
+    ]},
+
+  { id:'berserk', name:'ベルセルク', icon:'🪓', kind:'戦斧', rarity:'SSR',
+    mainStat:{ atk:150, hp:30 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'アタッカー', desc:'アタッカー ATK+15~25%',
+        stats:[{key:'atkPct',min:15,max:25}] },
+      { type:'C', req:'berserker', desc:'バーサーカー専用 クリダメ+20~30%',
+        stats:[{key:'cridam',min:20,max:30}] },
+    ]},
+
+  { id:'gae_bolg', name:'ゲイ・ボルグ', icon:'🔱', kind:'長槍', rarity:'SSR',
+    mainStat:{ atk:135, hp:55 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'アタッカー', desc:'アタッカー SPD+15~25',
+        stats:[{key:'spd',min:15,max:25}] },
+      { type:'C', req:'lancer', desc:'ランサー専用 SPD+20~30',
+        stats:[{key:'spd',min:20,max:30}] },
+    ]},
+
+  { id:'dainsleif', name:'ダインスレイフ', icon:'🛡️', kind:'大盾', rarity:'SSR',
+    mainStat:{ atk:60, hp:180 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ HP+10~20%',
+        stats:[{key:'hpPct',min:10,max:20}] },
+      { type:'B', req:'タンク', desc:'タンク HP+15~25%',
+        stats:[{key:'hpPct',min:15,max:25}] },
+      { type:'C', req:'vanguard', desc:'ヴァンガード専用 HP+20~30%',
+        stats:[{key:'hpPct',min:20,max:30}] },
+    ]},
+
+  { id:'galahad', name:'ガラハッド', icon:'🔱', kind:'聖槍', rarity:'SSR',
+    mainStat:{ atk:90, hp:160 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ HP+10~20%',
+        stats:[{key:'hpPct',min:10,max:20}] },
+      { type:'B', req:'タンク', desc:'タンク HP+15~25%',
+        stats:[{key:'hpPct',min:15,max:25}] },
+      { type:'C', req:'paladin', desc:'パラディン専用 特殊耐性+10~20',
+        stats:[{key:'mres',min:10,max:20}] },
+    ]},
+
+  { id:'heimdall', name:'ヘイムダル', icon:'🛡️', kind:'大盾', rarity:'SSR',
+    mainStat:{ atk:70, hp:170 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ HP+10~20%',
+        stats:[{key:'hpPct',min:10,max:20}] },
+      { type:'B', req:'タンク', desc:'タンク HP+15~25%',
+        stats:[{key:'hpPct',min:15,max:25}] },
+      { type:'C', req:'sentinel', desc:'センチネル専用 ATK+20~30%',
+        stats:[{key:'atkPct',min:20,max:30}] },
+    ]},
+
+  { id:'michael', name:'ミカエル', icon:'✨', kind:'杖', rarity:'SSR',
+    mainStat:{ atk:70, hp:160 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ HP+10~20%',
+        stats:[{key:'hpPct',min:10,max:20}] },
+      { type:'B', req:'サポート', desc:'サポート 特殊耐性+8~15',
+        stats:[{key:'mres',min:8,max:15}] },
+      { type:'C', req:'priest', desc:'プリースト専用 ATK+20~30%',
+        stats:[{key:'atkPct',min:20,max:30}] },
+    ]},
+
+  { id:'morrigan', name:'モリガン', icon:'🌑', kind:'大鎌', rarity:'SSR',
+    mainStat:{ atk:110, hp:70 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'サポート', desc:'サポート ATK+15~25%',
+        stats:[{key:'atkPct',min:15,max:25}] },
+      { type:'C', req:'shaman', desc:'シャーマン専用 ATK+20~30%',
+        stats:[{key:'atkPct',min:20,max:30}] },
+    ]},
+
+  { id:'orpheus', name:'オルフェウス', icon:'🎵', kind:'楽器', rarity:'SSR',
+    mainStat:{ atk:80, hp:120 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ HP+10~20%',
+        stats:[{key:'hpPct',min:10,max:20}] },
+      { type:'B', req:'サポート', desc:'サポート SPD+15~25',
+        stats:[{key:'spd',min:15,max:25}] },
+      { type:'C', req:'minstrel', desc:'ミンストレル専用 SPD+20~30',
+        stats:[{key:'spd',min:20,max:30}] },
+    ]},
+
+  { id:'nyx', name:'ニュクス', icon:'🌑', kind:'短剣', rarity:'SSR',
+    mainStat:{ atk:140, hp:35 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ SPD+10~20',
+        stats:[{key:'spd',min:10,max:20}] },
+      { type:'B', req:'スカウト', desc:'スカウト ATK+15~25%',
+        stats:[{key:'atkPct',min:15,max:25}] },
+      { type:'C', req:'assassin', desc:'アサシン専用 ATK+20~30%',
+        stats:[{key:'atkPct',min:20,max:30}] },
+    ]},
+
+  { id:'loki', name:'ロキ', icon:'🃏', kind:'短剣', rarity:'SSR',
+    mainStat:{ atk:110, hp:70 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ SPD+10~20',
+        stats:[{key:'spd',min:10,max:20}] },
+      { type:'B', req:'スカウト', desc:'スカウト SPD+15~25',
+        stats:[{key:'spd',min:15,max:25}] },
+      { type:'C', req:'thief', desc:'シーフ専用 回避+10~20',
+        stats:[{key:'evade',min:10,max:20}] },
+    ]},
+
+  { id:'apollon', name:'アポロン', icon:'☀️', kind:'長弓', rarity:'SSR',
+    mainStat:{ atk:155, hp:35 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'レンジ', desc:'レンジ CRI+8~15%',
+        stats:[{key:'cri',min:8,max:15}] },
+      { type:'C', req:'archer', desc:'アーチャー専用 索敵+20~30',
+        stats:[{key:'search',min:20,max:30}] },
+    ]},
+
+  { id:'merlin', name:'マーリン', icon:'🔮', kind:'杖', rarity:'SSR',
+    mainStat:{ atk:145, hp:45 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'レンジ', desc:'レンジ クリダメ+15~25%',
+        stats:[{key:'cridam',min:15,max:25}] },
+      { type:'C', req:'wizard', desc:'ウィザード専用 クリダメ+20~30%',
+        stats:[{key:'cridam',min:20,max:30}] },
+    ]},
+
+  { id:'hades', name:'ハデス', icon:'⚰️', kind:'銃', rarity:'SSR',
+    mainStat:{ atk:150, hp:30 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'レンジ', desc:'レンジ ATK+15~25%',
+        stats:[{key:'atkPct',min:15,max:25}] },
+      { type:'C', req:'shooter', desc:'シューター専用 ATK+20~30%',
+        stats:[{key:'atkPct',min:20,max:30}] },
+    ]},
+
+  { id:'thor', name:'トール', icon:'⚡', kind:'触媒', rarity:'SSR',
+    mainStat:{ atk:140, hp:40 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'レンジ', desc:'レンジ SPD+15~25',
+        stats:[{key:'spd',min:15,max:25}] },
+      { type:'C', req:'caster', desc:'キャスター専用 SPD+20~30',
+        stats:[{key:'spd',min:20,max:30}] },
+    ]},
+
+  { id:'ganesha', name:'ガネーシャ', icon:'📖', kind:'書', rarity:'SSR',
+    mainStat:{ atk:90, hp:110 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ HP+10~20%',
+        stats:[{key:'hpPct',min:10,max:20}] },
+      { type:'B', req:'レンジ', desc:'レンジ SPD+15~25',
+        stats:[{key:'spd',min:15,max:25}] },
+      { type:'C', req:'professor', desc:'プロフェッサー専用 索敵+20~30',
+        stats:[{key:'search',min:20,max:30}] },
+    ]},
+
+  { id:'pandora', name:'パンドラ', icon:'📦', kind:'触媒', rarity:'SSR',
+    mainStat:{ atk:100, hp:100 },
+    conditions:[
+      { type:'A', req:null, desc:'全キャラ ATK+10~20%',
+        stats:[{key:'atkPct',min:10,max:20}] },
+      { type:'B', req:'トリックスター', desc:'トリックスター HP+15~25%',
+        stats:[{key:'hpPct',min:15,max:25}] },
+      { type:'C', req:'alchemist', desc:'アルケミスト専用 HP+20~30%',
+        stats:[{key:'hpPct',min:20,max:30}] },
     ]},
 ];
 
@@ -25708,11 +25903,11 @@ function _buildAfDetailHTML(uid) {
   ).join('');
   const condTypeLabel = { A:'全キャラ', B:'ロール', C:'クラス', D:'種族', E:'攻撃タイプ', F:'戦況', G:'編成' };
   const condColors    = { A:'var(--accent2)', B:'var(--orange)', C:'var(--gold)', D:'var(--green)', E:'var(--purple)', F:'var(--text3)', G:'var(--text3)' };
-  const statKeyLbl    = { atkPct:'ATK%', hpPct:'HP%', spd:'SPD', cri:'CRI%', cridam:'CRIDAM%', pres:'物理耐性', mres:'特殊耐性', bres:'物理耐性', lres:'特殊耐性', skillPw:'スキルPw', dmgReduce:'被ダメ減%' };
+  const statKeyLbl    = { atkPct:'ATK%', hpPct:'HP%', spd:'SPD', cri:'CRI%', cridam:'CRIDAM%', pres:'物理耐性', mres:'特殊耐性', bres:'物理耐性', lres:'特殊耐性', skillPw:'スキルPw', dmgReduce:'被ダメ減%', search:'索敵', stealth:'隠密', evade:'回避' };
   const conditionsHTML = (def.conditions||[]).map(cond => {
     const cc = condColors[cond.type] || 'var(--text2)';
     const inactive = (cond.type === 'F' || cond.type === 'G');
-    const reqDisp = cond.req ? (SPECIES_LABELS?.[cond.req] || cond.req) : '';
+    const reqDisp = cond.req ? (SPECIES_LABELS?.[cond.req] || CLASS_DATA?.[cond.req]?.name || cond.req) : '';
     const statsVals = (cond.stats||[]).map(s => `${statKeyLbl[s.key]||s.key} +${afCondValue(s,lv)}`).join(' · ');
     return `<div style="background:var(--bg2);border:1px solid ${inactive?'var(--border)':cc+'44'};border-radius:5px;padding:8px 10px;margin-bottom:6px;${inactive?'opacity:0.65':''}">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
@@ -27053,7 +27248,8 @@ function afMainScale(baseVal, level, conste) {
 function getArtifactStats(unit) {
   const r = { atkFlat:0, hpFlat:0, atkPct:0, hpPct:0,
               spd:0, cri:0, cridam:0, pres:0, mres:0, bres:0, lres:0,
-              skillPw:0, dmgReduce:0 };
+              skillPw:0, dmgReduce:0,
+              search:0, stealth:0, evade:0 };
   if (!unit.equippedArtifact) return r;
   const inst = (gState.artifacts||[]).find(a => a.uid === unit.equippedArtifact);
   if (!inst) return r;
@@ -27082,6 +27278,9 @@ function getArtifactStats(unit) {
       else if (s.key === 'lres')     r.lres     += v;
       else if (s.key === 'skillPw')  r.skillPw  += v;
       else if (s.key === 'dmgReduce')r.dmgReduce+= v;
+      else if (s.key === 'search')   r.search   += v;
+      else if (s.key === 'stealth')  r.stealth  += v;
+      else if (s.key === 'evade')    r.evade    += v;
     });
   });
   return r;
@@ -27092,8 +27291,11 @@ function artifactCondLabel(cond, level) {
   const typeLabel = { A:'全キャラ', B:'ロール', C:'クラス', D:'種族', E:'攻撃タイプ', F:'戦況', G:'編成' };
   const statKeyLabel = { atkPct:'ATK%', hpPct:'HP%', spd:'SPD', cri:'CRI%', cridam:'CRIDAM%',
     pres:'物理耐性', mres:'特殊耐性', bres:'物理耐性', lres:'特殊耐性',
-    skillPw:'スキルPw%', dmgReduce:'被ダメ減%' };
-  const reqDisplay = cond.req ? (SPECIES_LABELS[cond.req] || cond.req) : '—';
+    skillPw:'スキルPw%', dmgReduce:'被ダメ減%',
+    search:'索敵', stealth:'隠密', evade:'回避' };
+  const reqDisplay = cond.req
+    ? (SPECIES_LABELS[cond.req] || CLASS_DATA?.[cond.req]?.name || cond.req)
+    : '—';
   const lv = level || 0;
   const statsStr = (cond.stats||[]).map(s => {
     const v = afCondValue(s, lv);
