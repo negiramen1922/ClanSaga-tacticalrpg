@@ -13944,9 +13944,9 @@ const IMAGINES = [
     baseHp: 280, baseAtk: 60,
     activeSkill: { name:'聖なる光', desc:'全体 HP を最大値の15%回復', effect:{ healPct:15 } },
     imagineSkills: [
-      { condLabel: 'サポート1人以上', cond: 'role_gte:support:1', effectLabel: '回復効果+10%',
+      { condLabel: 'サポート2人以上', cond: 'role_gte:support:2', effectLabel: '回復効果+10%',
         effect: { type:'all_healUp', val:10 } },
-      { condLabel: 'タンク1人以上', cond: 'role_gte:tank:1', effectLabel: '全体被ダメ-5%',
+      { condLabel: 'タンク2人以上', cond: 'role_gte:tank:2', effectLabel: '全体被ダメ-5%',
         effect: { type:'all_dmgReduce', val:5 } },
     ],
     resonanceSkills: [
@@ -13963,8 +13963,8 @@ const IMAGINES = [
     imagineSkills: [
       { condLabel: '3ロール以上混成', cond: 'roles_gte:3', effectLabel: '全体ATK+3% / HP+3%',
         effect: { type:'all_atk_hp_pct', atk:3, hp:3 } },
-      { condLabel: '常時', cond: 'always', effectLabel: 'スキルPw+5%',
-        effect: { type:'all_skillPw', val:5 } },
+      { condLabel: '常時', cond: 'always', effectLabel: '全体CRI+5%',
+        effect: { type:'all_cri', val:5 } },
     ],
     resonanceSkills: [
       { threshold:100,  label: '全体ATK+2% / HP+2%',           effect:{atkPct:2, hpPct:2} },
@@ -13978,7 +13978,7 @@ const IMAGINES = [
     baseHp: 350, baseAtk: 40,
     activeSkill: { name:'鉄壁の鱗', desc:'全体 被ダメ-40% (2T)', effect:{ dmgReduceBuff:40, turns:2 } },
     imagineSkills: [
-      { condLabel: 'タンク1人以上', cond: 'role_gte:tank:1', effectLabel: '全体被ダメ-8%',
+      { condLabel: 'タンク2人以上', cond: 'role_gte:tank:2', effectLabel: '全体被ダメ-8%',
         effect: { type:'all_dmgReduce', val:8 } },
       { condLabel: '常時', cond: 'always', effectLabel: '全体HP+5%',
         effect: { type:'all_hp_pct', val:5 } },
@@ -13995,7 +13995,7 @@ const IMAGINES = [
     baseHp: 180, baseAtk: 130,
     activeSkill: { name:'疾風', desc:'全体 SPD+60 (2T)', effect:{ spdBuff:60, turns:2 } },
     imagineSkills: [
-      { condLabel: 'スカウト1人以上', cond: 'role_gte:scout:1', effectLabel: '全体SPD+12 / 索敵+15',
+      { condLabel: 'スカウト2人以上', cond: 'role_gte:scout:2', effectLabel: '全体SPD+12',
         effect: { type:'all_spd', val:12 } },
       { condLabel: '常時', cond: 'always', effectLabel: '全体SPD+8',
         effect: { type:'all_spd', val:8 } },
@@ -14010,17 +14010,17 @@ const IMAGINES = [
     id: 'chimera', name: 'キメラ', icon: '🦁',
     flavor: '異形の幻獣。様々な力を組み合わせてパーティを支援する。',
     baseHp: 210, baseAtk: 110,
-    activeSkill: { name:'混沌爆発', desc:'全体 ATK+15% / スキルPw+20% (2T)', effect:{ atkBuff:15, skillPwBuff:20, turns:2 } },
+    activeSkill: { name:'混沌爆発', desc:'全体 ATK+15% / SPD+20 (2T)', effect:{ atkBuff:15, spdBuff:20, turns:2 } },
     imagineSkills: [
-      { condLabel: 'トリックスター1人以上', cond: 'role_gte:trickster:1', effectLabel: 'デバフ付与率+10%',
-        effect: { type:'all_skillPw', val:5 } },
+      { condLabel: 'トリックスター2人以上', cond: 'role_gte:trickster:2', effectLabel: '全体SPD+10',
+        effect: { type:'all_spd', val:10 } },
       { condLabel: '常時', cond: 'always', effectLabel: '全体ATK+5%',
         effect: { type:'all_atk_pct', val:5 } },
     ],
     resonanceSkills: [
-      { threshold:100,  label: '全体ATK+2%',                          effect:{atkPct:2} },
-      { threshold:500,  label: '全体ATK+5% / スキルPw+5%',           effect:{atkPct:5, skillPw:5} },
-      { threshold:1000, label: '全体ATK+10% / スキルPw+10% / CRI+3%', effect:{atkPct:10, skillPw:10, cri:3} },
+      { threshold:100,  label: '全体ATK+2%',                       effect:{atkPct:2} },
+      { threshold:500,  label: '全体ATK+5% / SPD+10',              effect:{atkPct:5, spd:10} },
+      { threshold:1000, label: '全体ATK+10% / SPD+15 / CRI+3%',    effect:{atkPct:10, spd:15, cri:3} },
     ],
   },
 ];
@@ -15805,6 +15805,7 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
 
     // イマジンバフ適用
     let atk = stats.atk, hp = stats.hp, spd = stats.spd, pdef = stats.pdef, mdef = stats.mdef;
+    let imagineCri = 0, imagineCridam = 0, imagineDmgReduce = 0, imagineHealUp = 0;
     if (imagineBuffs) {
       const role = CLASS_DATA[unit.classId]?.role || '';
       const ib = imagineBuffs;
@@ -15819,6 +15820,10 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       if (ib.atkPct)    atk = Math.floor(atk * (1 + ib.atkPct/100));
       if (ib.hpPct)     hp  = Math.floor(hp  * (1 + ib.hpPct/100));
       if (ib.spd)       spd += ib.spd;
+      if (ib.cri)       imagineCri      = ib.cri;
+      if (ib.cridam)    imagineCridam   = ib.cridam;
+      if (ib.dmgReduce) imagineDmgReduce = ib.dmgReduce;
+      if (ib.healUp)    imagineHealUp   = ib.healUp;
       if (ib.roleAtkPct && ib.roleAtkPct[role]) atk = Math.floor(atk * (1 + ib.roleAtkPct[role]/100));
     }
 
@@ -15871,7 +15876,8 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       attackTypes: cls.attackTypes || [],
       maxHp: hp, hp: hp,
       atk, pdef, mdef,
-      spd, cri: stats.cri + passiveCri, cridam: stats.cridam,
+      spd, cri: stats.cri + passiveCri + imagineCri, cridam: stats.cridam + imagineCridam,
+      imagineHealUp,
       evade: stats.evade || 0,
       search:  stats.search ?? (cls2?.baseSearch ?? 10),
       stealth: (stats.stealth ?? (cls2?.baseStealth ?? 5)) + passiveStealth,
@@ -15896,6 +15902,10 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
         combatant.buffs.push({ type:'damage_reduce', val:ps.effect.val, turns:99999, icon:'🔽被ダメ↓', cssClass:'hp-up', isPassive:true });
       }
     });
+    // イマジン: 常時被ダメ軽減
+    if (imagineDmgReduce > 0) {
+      combatant.buffs.push({ type:'damage_reduce', val:imagineDmgReduce, turns:99999, icon:'🔽被ダメ↓', cssClass:'hp-up', isPassive:true });
+    }
     (cls.passiveSkills||[]).forEach(ps => {
       if (ps.effect?.type === 'atk_stack_on_attack') {
         combatant._passiveFightingSpirit = { stacks:0, maxStacks:ps.effect.maxStacks||5, val:ps.effect.val||3 };
@@ -18073,6 +18083,8 @@ function getBattleHealBonus(sourceUnit) {
   let bonus = 1.0;
   // パッシブスキル: 聖なる加護 (+20%)
   if (sourceUnit._passiveHealBonus) bonus += sourceUnit._passiveHealBonus;
+  // イマジン: 回復効果UP
+  if (sourceUnit.imagineHealUp) bonus += sourceUnit.imagineHealUp / 100;
   // 慈愛のオーラ: passiveカードのheal_bonusを確認
   (sourceUnit.equippedCards||[]).forEach(slot => {
     if (!slot) return;
