@@ -2062,6 +2062,24 @@ img.item-icon {
 .imagine-milestone.reached { color: var(--gold); border-color: rgba(201,168,76,0.4); background: rgba(201,168,76,0.08); }
 .imagine-milestone.locked  { color: var(--text3); border-color: var(--border); }
 
+/* イマジン詳細モーダル */
+.im-detail-section { margin-bottom: 10px; }
+.im-detail-label   { font-size: 10px; color: var(--text3); letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+.im-detail-skill   {
+  display: flex; gap: 6px; align-items: flex-start; font-size: 11px;
+  padding: 6px 8px; background: var(--bg3); border: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.im-detail-skill.is-active   { border-color: rgba(120,200,140,0.5); background: rgba(120,200,140,0.06); }
+.im-detail-skill.is-inactive { opacity: 0.6; }
+.im-skill-status { flex-shrink: 0; color: var(--text3); width: 12px; }
+.im-detail-skill.is-active .im-skill-status { color: var(--accent2); }
+.im-skill-name   { font-weight: 700; color: var(--gold); flex-shrink: 0; }
+.im-skill-cond   { color: var(--text3); flex-shrink: 0; }
+.im-skill-desc   { color: var(--text2); }
+.im-active-active { background: rgba(180,125,255,0.06); border: 1px solid rgba(180,125,255,0.3); padding: 6px 8px; }
+.im-active-active .im-skill-name { color: var(--purple); }
+
 /* イマジン選択モーダル */
 .imagine-select-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 2px;
@@ -5008,7 +5026,7 @@ const CLASS_DATA = {
   priest: {
     name: 'プリースト',
     icon: '✨',
-    role: 'ヒーラー',
+    role: 'サポート',
     species: 'celestia',
     attackTypes: ['魔'],
     baseStats: { atk:700, hp:3000, pdef:5, mdef:18, spd:70, cri:5, cridam:140, evade:3 },
@@ -6979,6 +6997,12 @@ const BABEL_AREAS = [
          {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'集団突撃', type:'phys', target:'single', power:1.5, cd:6},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
       { id:'a2s2', name:'弓兵の伏兵', waves:1, enemies:[
@@ -6986,6 +7010,10 @@ const BABEL_AREAS = [
           enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'狙い撃ち', type:'phys', target:'single', power:1.8, cd:5},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンアーチャー', icon:'🏹', hp:1800, mp:400, atk:220, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
           enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'狙い撃ち', type:'phys', target:'single', power:1.8, cd:5},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリンアーチャー', icon:'🏹', hp:1800, mp:400, atk:220, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
+          enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
@@ -6996,6 +7024,12 @@ const BABEL_AREAS = [
           enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'slow', val:1, turns:1}},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:340, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
           enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'slow', val:1, turns:1}},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:340, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5, debuff:{type:'slow', val:1, turns:1}},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
@@ -7010,6 +7044,10 @@ const BABEL_AREAS = [
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリンアーチャー', icon:'🏹', hp:1800, mp:400, atk:220, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
+          enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンアーチャー', icon:'🏹', hp:1800, mp:400, atk:220, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
           enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
@@ -7023,6 +7061,12 @@ const BABEL_AREAS = [
          {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
       { id:'a2s6', name:'精鋭ゴブリン隊', waves:2, enemies:[
@@ -7030,8 +7074,12 @@ const BABEL_AREAS = [
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンアーチャー', icon:'🏹', hp:1800, mp:400, atk:220, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
           enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'狙い撃ち', type:'phys', target:'single', power:1.8, cd:5},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリンアーチャー', icon:'🏹', hp:1800, mp:400, atk:220, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
+          enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンアーチャー', icon:'🏹', hp:1800, mp:400, atk:220, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
           enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]}],
         [{name:'ホブゴブリン', icon:'👹', hp:10500, mp:4000, atk:500, pres:12, mres:5, bres:0, lres:0, spd:78, cri:9,
@@ -7043,7 +7091,13 @@ const BABEL_AREAS = [
          {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:340, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
           enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:340, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
-          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]}]
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:340, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
       { id:'a2s7', name:'ホブゴブリンの猛攻', waves:2, enemies:[
         [{name:'ホブゴブリン', icon:'👹', hp:10500, mp:4000, atk:520, pres:12, mres:5, bres:0, lres:0, spd:78, cri:9,
@@ -7061,7 +7115,11 @@ const BABEL_AREAS = [
          {name:'ゴブリンアーチャー', icon:'🏹', hp:1800, mp:400, atk:220, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
           enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンアーチャー', icon:'🏹', hp:1800, mp:400, atk:220, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
-          enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]}],
+          enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]}],
         [{name:'ホブゴブリン', icon:'👹', hp:10500, mp:4000, atk:520, pres:12, mres:5, bres:0, lres:0, spd:78, cri:9,
           enemySkills:[
             {name:'群れへの鼓舞', type:'buff', target:'all_ally', power:0, cd:8, effect:{type:'atk_up',val:18,turns:2}},
@@ -7070,6 +7128,10 @@ const BABEL_AREAS = [
             {name:'殴打',         type:'phys',  target:'single',  power:1.0, cd:0}]},
          {name:'アイアンホーン', icon:'🦬', hp:14000, mp:5000, atk:680, pres:35, mres:15, bres:5, lres:0, spd:62, cri:4,
           enemySkills:[{name:'鉄角突撃', type:'phys', target:'single', power:2.0, cd:6},{name:'踏み荒らし', type:'phys', target:'all', power:0.8, cd:8},{name:'体当たり', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:340, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:340, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
           enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:280, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
@@ -7085,6 +7147,8 @@ const BABEL_AREAS = [
          {name:'ゴブリンアーチャー', icon:'🏹', hp:1800, mp:400, atk:260, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
           enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:380, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:380, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
           enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]}],
         [{name:'ホブゴブリン', icon:'👹', hp:12000, mp:5000, atk:600, pres:12, mres:5, bres:0, lres:0, spd:78, cri:9,
           enemySkills:[
@@ -7099,7 +7163,13 @@ const BABEL_AREAS = [
             {name:'豪腕殴打',     type:'phys',  target:'single',  power:1.6, cd:4},
             {name:'殴打',         type:'phys',  target:'single',  power:1.0, cd:0}]},
          {name:'アイアンホーン', icon:'🦬', hp:16000, mp:6000, atk:740, pres:35, mres:15, bres:5, lres:0, spd:62, cri:4,
-          enemySkills:[{name:'鉄角突撃', type:'phys', target:'single', power:2.0, cd:6},{name:'踏み荒らし', type:'phys', target:'all', power:0.8, cd:8},{name:'体当たり', type:'phys', target:'single', power:1.0, cd:0}]}]
+          enemySkills:[{name:'鉄角突撃', type:'phys', target:'single', power:2.0, cd:6},{name:'踏み荒らし', type:'phys', target:'all', power:0.8, cd:8},{name:'体当たり', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:380, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:380, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:2600, mp:500, atk:350, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
       { id:'a2s9', name:'族長の親衛隊', waves:2, enemies:[
         [{name:'ホブゴブリン', icon:'👹', hp:12000, mp:5000, atk:620, pres:12, mres:5, bres:0, lres:0, spd:78, cri:9,
@@ -7124,7 +7194,9 @@ const BABEL_AREAS = [
          {name:'ゴブリンアーチャー', icon:'🏹', hp:1800, mp:400, atk:260, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
           enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'狙い撃ち', type:'phys', target:'single', power:1.8, cd:5},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンアーチャー', icon:'🏹', hp:1800, mp:400, atk:260, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
-          enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]}],
+          enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:380, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]}],
         [{name:'ホブゴブリン', icon:'👹', hp:12000, mp:5000, atk:680, pres:12, mres:5, bres:0, lres:0, spd:78, cri:9,
           enemySkills:[
             {name:'群れへの鼓舞', type:'buff', target:'all_ally', power:0, cd:8, effect:{type:'atk_up',val:18,turns:2}},
@@ -7134,7 +7206,17 @@ const BABEL_AREAS = [
          {name:'アイアンホーン', icon:'🦬', hp:16000, mp:6000, atk:740, pres:35, mres:15, bres:5, lres:0, spd:62, cri:4,
           enemySkills:[{name:'鉄角突撃', type:'phys', target:'single', power:2.0, cd:6},{name:'踏み荒らし', type:'phys', target:'all', power:0.8, cd:8},{name:'体当たり', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'アイアンホーン', icon:'🦬', hp:16000, mp:6000, atk:740, pres:35, mres:15, bres:5, lres:0, spd:62, cri:4,
-          enemySkills:[{name:'鉄角突撃', type:'phys', target:'single', power:2.0, cd:6},{name:'踏み荒らし', type:'phys', target:'all', power:0.8, cd:8},{name:'体当たり', type:'phys', target:'single', power:1.0, cd:0}]}]
+          enemySkills:[{name:'鉄角突撃', type:'phys', target:'single', power:2.0, cd:6},{name:'踏み荒らし', type:'phys', target:'all', power:0.8, cd:8},{name:'体当たり', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ホブゴブリン', icon:'👹', hp:12000, mp:5000, atk:680, pres:12, mres:5, bres:0, lres:0, spd:78, cri:9,
+          enemySkills:[
+            {name:'群れへの鼓舞', type:'buff', target:'all_ally', power:0, cd:8, effect:{type:'atk_up',val:18,turns:2}},
+            {name:'激怒の一撃',   type:'phys',  target:'single',  power:2.4, cd:6},
+            {name:'豪腕殴打',     type:'phys',  target:'single',  power:1.8, cd:4},
+            {name:'殴打',         type:'phys',  target:'single',  power:1.0, cd:0}]},
+         {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:380, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリンライダー', icon:'🐺', hp:3200, mp:600, atk:380, pres:8, mres:0, bres:0, lres:0, spd:95, cri:10,
+          enemySkills:[{name:'騎乗突進', type:'phys', target:'single', power:2.0, cd:5},{name:'石投げ', type:'phys', target:'single', power:1.3, cd:4},{name:'爪撃', type:'phys', target:'single', power:1.0, cd:0}]}]
       ]},
       { id:'a2s10', name:'覇者の試練', waves:2, enemies:[
         [{name:'ゴブリン', icon:'👺', hp:4000, atk:400, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
@@ -7146,7 +7228,9 @@ const BABEL_AREAS = [
          {name:'ゴブリンアーチャー', icon:'🏹', hp:2800, atk:320, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
           enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
          {name:'ゴブリンアーチャー', icon:'🏹', hp:2800, atk:320, pres:0, mres:5, bres:0, lres:0, spd:82, cri:12,
-          enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]}],
+          enemySkills:[{name:'狙撃', type:'phys', target:'single', power:1.4, cd:6},{name:'牽制射', type:'phys', target:'single', power:1.0, cd:0}]},
+         {name:'ゴブリン', icon:'👺', hp:4000, atk:400, pres:5, mres:0, bres:0, lres:0, spd:75, cri:6,
+          enemySkills:[{name:'石投げ', type:'phys', target:'single', power:1.2, cd:4},{name:'殴打', type:'phys', target:'single', power:1.0, cd:0}]}],
         [{name:'ゴブリンチャンピオン', icon:'👑', atk:920, pres:20, mres:10, bres:8, lres:5, spd:85, cri:14,
           passive:{type:'ally_count_atk', bonusPerAlly:12, maxBonus:48},
           phases:[
@@ -9601,6 +9685,7 @@ const SHRINE_STAGES = [
 const DAILY_DUNGEON_STAGES = [
   { id:'dd_lv1', name:'ユグドラシル試練 Lv.1', recLv:10,  waves:1,
     drops:{ t1:1, t2:0, t3:0, eiyuutan:0 },
+    cryptoSouls:{ t1:4, t2:0, t3:0 },
     enemies:[
       [{name:'若木の試錬体',  icon:'🌱', atk:290,  hp:12000,  pres:8,  mres:5,  spd:25, cri:4},
        {name:'若木の試錬体',  icon:'🌱', atk:290,  hp:12000,  pres:8,  mres:5,  spd:25, cri:4}]
@@ -9608,6 +9693,7 @@ const DAILY_DUNGEON_STAGES = [
   },
   { id:'dd_lv2', name:'ユグドラシル試練 Lv.2', recLv:30,  waves:2,
     drops:{ t1:2, t2:0, t3:0, eiyuutan:0 },
+    cryptoSouls:{ t1:6, t2:2, t3:0 },
     enemies:[
       [{name:'木霊の試錬体', icon:'🌿', atk:520,  hp:36000,  pres:15, mres:10, spd:34, cri:6},
        {name:'木霊の試錬体', icon:'🌿', atk:520,  hp:36000,  pres:15, mres:10, spd:34, cri:6}],
@@ -9618,6 +9704,7 @@ const DAILY_DUNGEON_STAGES = [
   },
   { id:'dd_lv3', name:'ユグドラシル試練 Lv.3', recLv:50,  waves:3,
     drops:{ t1:1, t2:1, t3:0, eiyuutan:0 },
+    cryptoSouls:{ t1:4, t2:4, t3:0 },
     enemies:[
       [{name:'石樹の試錬体',  icon:'🪨', atk:820,  hp:75000,  pres:22, mres:15, spd:38, cri:8},
        {name:'石樹の試錬体',  icon:'🪨', atk:820,  hp:75000,  pres:22, mres:15, spd:38, cri:8}],
@@ -9629,6 +9716,7 @@ const DAILY_DUNGEON_STAGES = [
   },
   { id:'dd_lv4', name:'ユグドラシル試練 Lv.4', recLv:70,  waves:4,
     drops:{ t1:2, t2:2, t3:0, eiyuutan:0 },
+    cryptoSouls:{ t1:0, t2:6, t3:2 },
     enemies:[
       [{name:'古樹の番人',    icon:'🌳', atk:1250, hp:150000, pres:33, mres:27, spd:45, cri:10},
        {name:'古樹の番人',    icon:'🌳', atk:1250, hp:150000, pres:33, mres:27, spd:45, cri:10}],
@@ -9642,6 +9730,7 @@ const DAILY_DUNGEON_STAGES = [
   },
   { id:'dd_lv5', name:'ユグドラシル試練 Lv.5', recLv:100, waves:5,
     drops:{ t1:1, t2:2, t3:1, eiyuutan:0.3 },
+    cryptoSouls:{ t1:0, t2:4, t3:6 },
     enemies:[
       [{name:'霊樹の守護者',   icon:'🌲', atk:1800, hp:260000, pres:45, mres:38, spd:50, cri:14},
        {name:'霊樹の守護者',   icon:'🌲', atk:1800, hp:260000, pres:45, mres:38, spd:50, cri:14}],
@@ -14002,9 +14091,9 @@ const IMAGINES = [
     baseHp: 280, baseAtk: 60,
     activeSkill: { name:'聖なる光', desc:'全体 HP を最大値の15%回復', effect:{ healPct:15 } },
     imagineSkills: [
-      { condLabel: 'サポート1人以上', cond: 'role_gte:support:1', effectLabel: '回復効果+10%',
+      { condLabel: 'サポート2人以上', cond: 'role_gte:support:2', effectLabel: '回復効果+10%',
         effect: { type:'all_healUp', val:10 } },
-      { condLabel: 'タンク1人以上', cond: 'role_gte:tank:1', effectLabel: '全体被ダメ-5%',
+      { condLabel: 'タンク2人以上', cond: 'role_gte:tank:2', effectLabel: '全体被ダメ-5%',
         effect: { type:'all_dmgReduce', val:5 } },
     ],
     resonanceSkills: [
@@ -14021,8 +14110,8 @@ const IMAGINES = [
     imagineSkills: [
       { condLabel: '3ロール以上混成', cond: 'roles_gte:3', effectLabel: '全体ATK+3% / HP+3%',
         effect: { type:'all_atk_hp_pct', atk:3, hp:3 } },
-      { condLabel: '常時', cond: 'always', effectLabel: 'スキルPw+5%',
-        effect: { type:'all_skillPw', val:5 } },
+      { condLabel: '常時', cond: 'always', effectLabel: '全体CRI+5%',
+        effect: { type:'all_cri', val:5 } },
     ],
     resonanceSkills: [
       { threshold:100,  label: '全体ATK+2% / HP+2%',           effect:{atkPct:2, hpPct:2} },
@@ -14036,7 +14125,7 @@ const IMAGINES = [
     baseHp: 350, baseAtk: 40,
     activeSkill: { name:'鉄壁の鱗', desc:'全体 被ダメ-40% (2T)', effect:{ dmgReduceBuff:40, turns:2 } },
     imagineSkills: [
-      { condLabel: 'タンク1人以上', cond: 'role_gte:tank:1', effectLabel: '全体被ダメ-8%',
+      { condLabel: 'タンク2人以上', cond: 'role_gte:tank:2', effectLabel: '全体被ダメ-8%',
         effect: { type:'all_dmgReduce', val:8 } },
       { condLabel: '常時', cond: 'always', effectLabel: '全体HP+5%',
         effect: { type:'all_hp_pct', val:5 } },
@@ -14053,7 +14142,7 @@ const IMAGINES = [
     baseHp: 180, baseAtk: 130,
     activeSkill: { name:'疾風', desc:'全体 SPD+60 (2T)', effect:{ spdBuff:60, turns:2 } },
     imagineSkills: [
-      { condLabel: 'スカウト1人以上', cond: 'role_gte:scout:1', effectLabel: '全体SPD+12 / 索敵+15',
+      { condLabel: 'スカウト2人以上', cond: 'role_gte:scout:2', effectLabel: '全体SPD+12',
         effect: { type:'all_spd', val:12 } },
       { condLabel: '常時', cond: 'always', effectLabel: '全体SPD+8',
         effect: { type:'all_spd', val:8 } },
@@ -14068,17 +14157,17 @@ const IMAGINES = [
     id: 'chimera', name: 'キメラ', icon: '🦁',
     flavor: '異形の幻獣。様々な力を組み合わせてパーティを支援する。',
     baseHp: 210, baseAtk: 110,
-    activeSkill: { name:'混沌爆発', desc:'全体 ATK+15% / スキルPw+20% (2T)', effect:{ atkBuff:15, skillPwBuff:20, turns:2 } },
+    activeSkill: { name:'混沌爆発', desc:'全体 ATK+15% / SPD+20 (2T)', effect:{ atkBuff:15, spdBuff:20, turns:2 } },
     imagineSkills: [
-      { condLabel: 'コントロール1人以上', cond: 'role_gte:control:1', effectLabel: 'デバフ付与率+10%',
-        effect: { type:'all_skillPw', val:5 } },
+      { condLabel: 'トリックスター2人以上', cond: 'role_gte:trickster:2', effectLabel: '全体SPD+10',
+        effect: { type:'all_spd', val:10 } },
       { condLabel: '常時', cond: 'always', effectLabel: '全体ATK+5%',
         effect: { type:'all_atk_pct', val:5 } },
     ],
     resonanceSkills: [
-      { threshold:100,  label: '全体ATK+2%',                          effect:{atkPct:2} },
-      { threshold:500,  label: '全体ATK+5% / スキルPw+5%',           effect:{atkPct:5, skillPw:5} },
-      { threshold:1000, label: '全体ATK+10% / スキルPw+10% / CRI+3%', effect:{atkPct:10, skillPw:10, cri:3} },
+      { threshold:100,  label: '全体ATK+2%',                       effect:{atkPct:2} },
+      { threshold:500,  label: '全体ATK+5% / SPD+10',              effect:{atkPct:5, spd:10} },
+      { threshold:1000, label: '全体ATK+10% / SPD+15 / CRI+3%',    effect:{atkPct:10, spd:15, cri:3} },
     ],
   },
 ];
@@ -14125,6 +14214,20 @@ function getPresetImagineState(preset) {
   return (gState.imagines||[]).find(s=>s.id===preset.imagineId) || null;
 }
 
+// イマジン条件マッチ用のロール名 JP→EN マッピング
+function imagineRoleKey(jpRole) {
+  switch (jpRole) {
+    case 'アタッカー':       return 'attacker';
+    case 'タンク':           return 'tank';
+    case 'サポート':         return 'support';
+    case 'ヒーラー':         return 'support'; // ヒーラー廃止→サポートに統合
+    case 'スカウト':         return 'scout';
+    case 'レンジ':           return 'range';
+    case 'トリックスター':   return 'trickster';
+    default: return null;
+  }
+}
+
 // presetsのimagineバフを計算 (static conditions, no night check)
 function getImagineBuffs(preset, partyUnits) {
   const res = {atkPct:0, hpPct:0, spd:0, cri:0, dmgReduce:0, skillPw:0, healUp:0,
@@ -14154,12 +14257,13 @@ function getImagineBuffs(preset, partyUnits) {
     }
   }
 
-  // 役割カウント
+  // 役割カウント（イマジン条件用にJP→ENマッピングで集計）
   const roleCounts = {};
   let uniqueRoles = new Set();
   (partyUnits||[]).forEach(u => {
     const cls = CLASS_DATA[u.classId];
-    const role = cls?.role || '';
+    const role = imagineRoleKey(cls?.role);
+    if (!role) return;
     roleCounts[role] = (roleCounts[role]||0) + 1;
     uniqueRoles.add(role);
   });
@@ -14273,49 +14377,27 @@ function renderImagineSection(preset) {
     const baseHpNow  = Math.round(imagineDef.baseHp  * (1 + (lv-1)*9/99));
     const baseAtkNow = Math.round(imagineDef.baseAtk * (1 + (lv-1)*9/99));
     const resPct = Math.min(100, Math.round(res / 10));
+    const act = imagineDef.activeSkill;
 
     html += `<div class="imagine-card" onclick="openImagineSelect()">
       <div class="imagine-icon">${imagineDef.icon}</div>
       <div class="imagine-info">
         <div class="imagine-name">${imagineDef.name} <span style="font-size:10px;color:var(--text3)">Lv${lv}</span></div>
-        <div class="imagine-flavor">${imagineDef.flavor}</div>
         <div class="imagine-stats">HP+${baseHpNow} / ATK+${baseAtkNow} (共鳴: ${res}%)</div>
         <div class="imagine-resonance-bar">
           <div class="imagine-resonance-fill" style="width:${resPct}%"></div>
         </div>
       </div>
-      <button class="btn btn-outline btn-sm" style="font-size:10px;" onclick="event.stopPropagation();openImagineManage('${preset.id}')">管理</button>
     </div>`;
 
-    // アクティブスキル表示
-    html += '<div class="imagine-skills">';
-    const partyUnits = (preset.formation?.slots||[]).filter(Boolean).map(uid=>gState.ownedUnits.find(u=>u.uid===uid)).filter(Boolean);
-    const buffs = getImagineBuffs(preset, partyUnits);
-    const roleCounts = {};
-    let uniqueRoles = new Set();
-    partyUnits.forEach(u=>{ const r=CLASS_DATA[u.classId]?.role||''; roleCounts[r]=(roleCounts[r]||0)+1; uniqueRoles.add(r); });
-    (imagineDef.imagineSkills||[]).forEach(sk => {
-      let active = false;
-      const c = sk.cond||'';
-      if (c==='always') active=true;
-      else if (c.startsWith('role_gte:')) { const p=c.split(':'); active=(roleCounts[p[1]]||0)>=parseInt(p[2]||'1'); }
-      else if (c.startsWith('roles_gte:')) { active=uniqueRoles.size>=parseInt(c.split(':')[1]||'1'); }
-      const color = active ? 'var(--accent2)' : 'var(--text3)';
-      html += `<div class="imagine-skill-row">
-        <span class="imagine-skill-cond" style="color:${color}">${active?'✓':'○'}</span>
-        <span class="imagine-skill-cond">[${sk.condLabel}]</span>
-        <span class="imagine-skill-eff">${sk.effectLabel}</span>
+    if (act) {
+      html += `<div class="im-active-active" style="margin-top:8px">
+        <div style="font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:2px">アクティブ <span style="color:var(--text3);font-weight:400">（1戦闘1回）</span></div>
+        <div style="font-size:12px"><span class="im-skill-name">${act.name}</span> <span class="im-skill-desc">${act.desc}</span></div>
       </div>`;
-    });
-    html += '</div>';
+    }
 
-    // 共鳴マイルストーン
-    html += '<div class="imagine-resonance-milestones">';
-    (imagineDef.resonanceSkills||[]).forEach(rs => {
-      const reached = res >= rs.threshold;
-      html += `<div class="imagine-milestone ${reached?'reached':'locked'}">${rs.threshold}%: ${rs.label}</div>`;
-    });
-    html += '</div>';
+    html += `<div style="text-align:right;margin-top:6px"><button class="btn btn-outline btn-sm" style="font-size:10px" onclick="openImagineDetail('${imagineDef.id}')">詳細を見る</button></div>`;
   }
   html += '</div>';
   el.innerHTML = html;
@@ -14335,19 +14417,16 @@ function openImagineSelect() {
     const res = state?.resonance||0;
     const sel = preset.imagineId === im.id;
     if (!isUnlocked) {
-      const unlockInfo = IMAGINE_AREA_UNLOCKS.find(u=>u.imagineId===im.id);
-      const hint = unlockInfo ? `${unlockInfo.areaName}クリアで入手` : '特定条件で入手';
-      return `<div class="imagine-select-card" style="opacity:0.45;cursor:not-allowed;pointer-events:none">
+      return `<div class="imagine-select-card" onclick="this.closest('.modal-overlay').remove();openImagineDetail('${im.id}', true)" style="opacity:0.6">
         <div class="isc-icon" style="filter:grayscale(1)">${im.icon}</div>
         <div class="isc-name" style="color:var(--text3)">${im.name}</div>
         <div class="isc-lv" style="color:var(--text3)">🔒 未入手</div>
-        <div class="isc-res" style="color:var(--text3);font-size:8px">${hint}</div>
       </div>`;
     }
-    return `<div class="imagine-select-card ${sel?'selected':''}" onclick="equipImagine('${im.id}');this.closest('.modal-overlay').remove();renderFormationTab()">
+    return `<div class="imagine-select-card ${sel?'selected':''}" onclick="this.closest('.modal-overlay').remove();openImagineDetail('${im.id}', true)">
       <div class="isc-icon">${im.icon}</div>
       <div class="isc-name">${im.name}</div>
-      <div class="isc-lv">Lv${lv}</div>
+      <div class="isc-lv">Lv${lv}${sel?' <span style=color:var(--accent2)>✓装備中</span>':''}</div>
       <div class="isc-res">${res>0?'共鳴'+res+'%':''}</div>
     </div>`;
   }).join('');
@@ -14358,7 +14437,7 @@ function openImagineSelect() {
       <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">✕</button>
     </div>
     <div class="modal-body">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">パーティに1体の守護精霊を設定できます。</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">カードをタップで詳細表示・装備変更ができます。</div>
       <div class="imagine-select-grid">${cards}</div>
       ${preset.imagineId?`<button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px" onclick="equipImagine(null);this.closest('.modal-overlay').remove();renderFormationTab()">✕ 設定を解除</button>`:''}
     </div>
@@ -14380,47 +14459,152 @@ function equipImagine(imagineId) {
   renderFormationTab();
 }
 
-function openImagineManage(presetId) {
+// イマジン詳細モーダル（アクティブ/編成パッシブ/共鳴/Lv up/装備）
+function openImagineDetail(imagineId, fromSelect = false) {
+  const imagineDef = getImagineEntry(imagineId);
+  if (!imagineDef) return;
   const preset = gState.presets[gState.activePreset];
-  const imagineState = getPresetImagineState(preset);
-  const imagineDef   = imagineState ? getImagineEntry(imagineState.id) : null;
-  if (!imagineDef || !imagineState) return;
+  const isEquipped = preset.imagineId === imagineId;
+  const stateOwned = (gState.imagines||[]).find(s => s.id === imagineId);
+  const isOwned = !!stateOwned;
+  const imagineState = stateOwned || { id: imagineId, level: 1, resonance: 0 };
 
-  const lv = imagineState.level||1;
+  const lv  = imagineState.level || 1;
+  const res = imagineState.resonance || 0;
+  const baseHpNow  = Math.round(imagineDef.baseHp  * (1 + (lv-1)*9/99));
+  const baseAtkNow = Math.round(imagineDef.baseAtk * (1 + (lv-1)*9/99));
+
   const soul1 = gState.player.cryptoSoulT1||0;
   const soul2 = gState.player.cryptoSoulT2||0;
   const soul3 = gState.player.cryptoSoulT3||0;
-  const lvUpCost = lv < 30 ? {t:1,n:3} : lv < 60 ? {t:2,n:3} : lv < 100 ? {t:3,n:3} : null;
-  const canUp = lvUpCost && (lvUpCost.t===1?soul1:lvUpCost.t===2?soul2:soul3) >= lvUpCost.n;
+  const lvUpCosts = isOwned ? getImagineLevelUpCosts(lv) : null;
+  const canUp = lvUpCosts && lvUpCosts.every(c => {
+    const have = c.t===1?soul1 : c.t===2?soul2 : soul3;
+    return have >= c.n;
+  });
+  const lvUpCostLabel = lvUpCosts
+    ? lvUpCosts.map(c => `T${c.t}×${c.n}`).join(' + ')
+    : '';
+
+  // 現在の編成からロールカウント（パッシブ条件判定用）
+  const partyUnits = (preset.formation?.slots||[]).filter(Boolean)
+    .map(uid => gState.ownedUnits.find(u => u.uid === uid)).filter(Boolean);
+  const roleCounts = {};
+  let uniqueRoles = new Set();
+  partyUnits.forEach(u => {
+    const r = imagineRoleKey(CLASS_DATA[u.classId]?.role);
+    if (!r) return;
+    roleCounts[r] = (roleCounts[r]||0) + 1;
+    uniqueRoles.add(r);
+  });
+
+  // アクティブスキル
+  const act = imagineDef.activeSkill;
+  const activeHtml = act ? `
+    <div class="im-detail-section">
+      <div class="im-detail-label">アクティブスキル <span style="text-transform:none;color:var(--text3);font-weight:400">（1戦闘1回 / 戦闘中に手動発動）</span></div>
+      <div class="im-detail-skill im-active-active">
+        <span class="im-skill-name">${act.name}</span>
+        <span class="im-skill-desc">${act.desc}</span>
+      </div>
+    </div>` : '';
+
+  // 編成条件パッシブ
+  const passivesHtml = (imagineDef.imagineSkills||[]).map(sk => {
+    let active = false;
+    const c = sk.cond || '';
+    if (c === 'always') active = true;
+    else if (c.startsWith('role_gte:')) { const p = c.split(':'); active = (roleCounts[p[1]]||0) >= parseInt(p[2]||'1'); }
+    else if (c.startsWith('roles_gte:')) { active = uniqueRoles.size >= parseInt(c.split(':')[1]||'1'); }
+    return `<div class="im-detail-skill ${active?'is-active':'is-inactive'}">
+      <span class="im-skill-status">${active?'✓':'○'}</span>
+      <span class="im-skill-cond">[${sk.condLabel}]</span>
+      <span class="im-skill-desc">${sk.effectLabel}</span>
+    </div>`;
+  }).join('');
+
+  // 共鳴マイルストーン
+  const milestonesHtml = (imagineDef.resonanceSkills||[]).map(rs => {
+    const reached = res >= rs.threshold;
+    return `<div class="im-detail-skill ${reached?'is-active':'is-inactive'}">
+      <span class="im-skill-status">${reached?'✓':'○'}</span>
+      <span class="im-skill-cond">[共鳴${rs.threshold}%]</span>
+      <span class="im-skill-desc">${rs.label}</span>
+    </div>`;
+  }).join('');
+
+  // 装備ボタン
+  let actionBtn = '';
+  if (!isOwned) {
+    const unlockInfo = IMAGINE_AREA_UNLOCKS.find(u => u.imagineId === imagineId);
+    actionBtn = `<div style="text-align:center;color:var(--text3);font-size:11px;padding:10px;background:var(--bg3);border:1px dashed var(--border)">🔒 未入手 — ${unlockInfo ? unlockInfo.areaName + 'クリアで入手' : '特定条件で入手'}</div>`;
+  } else if (isEquipped) {
+    actionBtn = `<button class="btn btn-outline" style="width:100%" disabled>✓ 装備中</button>`;
+  } else {
+    actionBtn = `<button class="btn btn-gold" style="width:100%" onclick="equipImagine('${imagineId}');this.closest('.modal-overlay').remove();renderFormationTab()">装備する</button>`;
+  }
+
+  // Lv up ボタン
+  const lvUpBtn = isOwned && lvUpCosts ? `
+    <button class="btn ${canUp?'btn-blue':'btn-outline'}" style="width:100%;margin-top:8px" ${canUp?'':'disabled'} onclick="levelUpImagine('${imagineId}');this.closest('.modal-overlay').remove();openImagineDetail('${imagineId}', ${fromSelect})">
+      レベルアップ (${lvUpCostLabel} 消費)
+    </button>` : (isOwned && lv>=100 ? '<div style="text-align:center;color:var(--gold);font-size:12px;margin-top:8px">MAX LEVEL</div>' : '');
+
+  const backBtn = fromSelect
+    ? `<button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px" onclick="this.closest('.modal-overlay').remove();openImagineSelect()">← 選択画面に戻る</button>`
+    : '';
 
   const ov = document.createElement('div');
   ov.className = 'modal-overlay open';
-  ov.style.zIndex = '700';
-  ov.innerHTML = `<div class="modal-panel" style="max-width:400px">
+  ov.style.zIndex = '720';
+  ov.innerHTML = `<div class="modal-panel" style="max-width:420px">
     <div class="modal-header">
       <h3>${imagineDef.icon} ${imagineDef.name}</h3>
       <button class="close-btn" onclick="this.closest('.modal-overlay').remove();renderFormationTab()">✕</button>
     </div>
     <div class="modal-body">
       <div style="font-size:12px;color:var(--text3);margin-bottom:12px">${imagineDef.flavor}</div>
-      <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="display:flex;gap:10px;margin-bottom:10px">
         <div style="flex:1;text-align:center;background:var(--bg3);padding:8px;border:1px solid var(--border)">
           <div style="font-size:10px;color:var(--text3)">レベル</div>
           <div style="font-size:22px;font-weight:700;color:var(--gold)">${lv}</div>
         </div>
         <div style="flex:1;text-align:center;background:var(--bg3);padding:8px;border:1px solid var(--border)">
           <div style="font-size:10px;color:var(--text3)">共鳴度</div>
-          <div style="font-size:22px;font-weight:700;color:var(--purple)">${imagineState.resonance||0}%</div>
+          <div style="font-size:22px;font-weight:700;color:var(--purple)">${res}%</div>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:6px">素材 — ${itemIconHTML('cryptoT1','13px')}T1×${soul1} / ${itemIconHTML('cryptoT2','13px')}T2×${soul2} / ${itemIconHTML('cryptoT3','13px')}T3×${soul3}</div>
-      ${lvUpCost && lv < 100 ? `
-      <button class="btn btn-gold" style="width:100%" ${canUp?'':'disabled'} onclick="levelUpImagine('${imagineDef.id}');this.closest('.modal-overlay').remove();openImagineManage(null)">
-        レベルアップ (T${lvUpCost.t}×${lvUpCost.n} 消費)
-      </button>` : lv>=100?'<div style="text-align:center;color:var(--gold);font-size:12px">MAX LEVEL</div>':''}
+      <div style="font-size:11px;color:var(--text2);margin-bottom:12px">編成時加算: HP+${baseHpNow} / ATK+${baseAtkNow}</div>
+      ${activeHtml}
+      ${passivesHtml ? `<div class="im-detail-section">
+        <div class="im-detail-label">編成条件パッシブ</div>${passivesHtml}
+      </div>` : ''}
+      ${milestonesHtml ? `<div class="im-detail-section">
+        <div class="im-detail-label">共鳴マイルストーン</div>${milestonesHtml}
+      </div>` : ''}
+      ${isOwned ? `<div style="font-size:11px;color:var(--text2);margin:12px 0 6px">素材 — ${itemIconHTML('cryptoT1','13px')}T1×${soul1} / ${itemIconHTML('cryptoT2','13px')}T2×${soul2} / ${itemIconHTML('cryptoT3','13px')}T3×${soul3}</div>` : ''}
+      ${actionBtn}
+      ${lvUpBtn}
+      ${backBtn}
     </div>
   </div>`;
   document.body.appendChild(ov);
+}
+
+// 旧API互換（残存呼び出しから）
+function openImagineManage(presetId) {
+  const preset = gState.presets[gState.activePreset];
+  if (preset?.imagineId) openImagineDetail(preset.imagineId);
+}
+
+// イマジンのレベルアップに必要な素材を返す（複数Tier対応）
+// Lv1-30: T1×3 / Lv30-60: T1×3 + T2×3 / Lv60-100: T1×3 + T2×3 + T3×3
+function getImagineLevelUpCosts(lv) {
+  if (lv >= 100) return null;
+  const costs = [{ t:1, n:3 }];
+  if (lv >= 30) costs.push({ t:2, n:3 });
+  if (lv >= 60) costs.push({ t:3, n:3 });
+  return costs;
 }
 
 function levelUpImagine(imagineId) {
@@ -14428,24 +14612,53 @@ function levelUpImagine(imagineId) {
   if (!state) return;
   const lv = state.level||1;
   if (lv >= 100) return;
-  const cost = lv < 30 ? {t:1,n:3} : lv < 60 ? {t:2,n:3} : {t:3,n:3};
-  const key = `cryptoSoulT${cost.t}`;
-  if ((gState.player[key]||0) < cost.n) { toast('クリプトソウルが不足しています'); return; }
-  gState.player[key] -= cost.n;
+  const costs = getImagineLevelUpCosts(lv);
+  if (!costs) return;
+  // 不足チェック
+  for (const c of costs) {
+    const key = `cryptoSoulT${c.t}`;
+    if ((gState.player[key]||0) < c.n) { toast('クリプトソウルが不足しています'); return; }
+  }
+  // 消費
+  for (const c of costs) {
+    gState.player[`cryptoSoulT${c.t}`] -= c.n;
+  }
   state.level = lv + 1;
   saveState();
   updateTopBar();
   toast(`${getImagineEntry(imagineId)?.name||'イマジン'} Lv${state.level}にアップ！`);
 }
 
-// バトル後に共鳴度を増加（勝利時+10、撤退時+3）
+// バトル後に共鳴度を増加（勝利時+1）。閾値到達でクリプトソウル報酬
 function addImagineResonance(amount) {
   const preset = gState.presets[gState.activePreset];
   if (!preset.imagineId) return;
   const state = (gState.imagines||[]).find(s=>s.id===preset.imagineId);
   if (!state) return;
-  state.resonance = Math.min(1000, (state.resonance||0) + amount);
-  saveState();
+  const oldRes = state.resonance || 0;
+  state.resonance = Math.min(1000, oldRes + amount);
+  const newRes = state.resonance;
+  // マイルストーン到達ボーナス（100/500/1000 各1回限り、stateに記録）
+  const milestones = [
+    { th:100,  key:'rew100',  t1:5, t2:0, t3:0 },
+    { th:500,  key:'rew500',  t1:0, t2:3, t3:0 },
+    { th:1000, key:'rew1000', t1:0, t2:0, t3:2 },
+  ];
+  if (!state.milestoneRewarded) state.milestoneRewarded = {};
+  for (const m of milestones) {
+    if (newRes >= m.th && !state.milestoneRewarded[m.key]) {
+      state.milestoneRewarded[m.key] = true;
+      if (m.t1) gState.player.cryptoSoulT1 = (gState.player.cryptoSoulT1||0) + m.t1;
+      if (m.t2) gState.player.cryptoSoulT2 = (gState.player.cryptoSoulT2||0) + m.t2;
+      if (m.t3) gState.player.cryptoSoulT3 = (gState.player.cryptoSoulT3||0) + m.t3;
+      const parts = [];
+      if (m.t1) parts.push(`T1×${m.t1}`);
+      if (m.t2) parts.push(`T2×${m.t2}`);
+      if (m.t3) parts.push(`T3×${m.t3}`);
+      const imName = getImagineEntry(state.id)?.name || 'イマジン';
+      if (typeof showBonusToast === 'function') showBonusToast(`✨ ${imName} 共鳴度${m.th}達成！クリプトソウル ${parts.join(' / ')}`, true);
+    }
+  }
 }
 
 
@@ -15784,6 +15997,7 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
 
     // イマジンバフ適用
     let atk = stats.atk, hp = stats.hp, spd = stats.spd, pdef = stats.pdef, mdef = stats.mdef;
+    let imagineCri = 0, imagineCridam = 0, imagineDmgReduce = 0, imagineHealUp = 0;
     if (imagineBuffs) {
       const role = CLASS_DATA[unit.classId]?.role || '';
       const ib = imagineBuffs;
@@ -15798,6 +16012,10 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       if (ib.atkPct)    atk = Math.floor(atk * (1 + ib.atkPct/100));
       if (ib.hpPct)     hp  = Math.floor(hp  * (1 + ib.hpPct/100));
       if (ib.spd)       spd += ib.spd;
+      if (ib.cri)       imagineCri      = ib.cri;
+      if (ib.cridam)    imagineCridam   = ib.cridam;
+      if (ib.dmgReduce) imagineDmgReduce = ib.dmgReduce;
+      if (ib.healUp)    imagineHealUp   = ib.healUp;
       if (ib.roleAtkPct && ib.roleAtkPct[role]) atk = Math.floor(atk * (1 + ib.roleAtkPct[role]/100));
     }
 
@@ -15850,7 +16068,8 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       attackTypes: cls.attackTypes || [],
       maxHp: hp, hp: hp,
       atk, pdef, mdef,
-      spd, cri: stats.cri + passiveCri, cridam: stats.cridam,
+      spd, cri: stats.cri + passiveCri + imagineCri, cridam: stats.cridam + imagineCridam,
+      imagineHealUp,
       evade: stats.evade || 0,
       search:  stats.search ?? (cls2?.baseSearch ?? 10),
       stealth: (stats.stealth ?? (cls2?.baseStealth ?? 5)) + passiveStealth,
@@ -15875,6 +16094,10 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
         combatant.buffs.push({ type:'damage_reduce', val:ps.effect.val, turns:99999, icon:'🔽被ダメ↓', cssClass:'hp-up', isPassive:true });
       }
     });
+    // イマジン: 常時被ダメ軽減
+    if (imagineDmgReduce > 0) {
+      combatant.buffs.push({ type:'damage_reduce', val:imagineDmgReduce, turns:99999, icon:'🔽被ダメ↓', cssClass:'hp-up', isPassive:true });
+    }
     (cls.passiveSkills||[]).forEach(ps => {
       if (ps.effect?.type === 'atk_stack_on_attack') {
         combatant._passiveFightingSpirit = { stacks:0, maxStacks:ps.effect.maxStacks||5, val:ps.effect.val||3 };
@@ -18052,6 +18275,8 @@ function getBattleHealBonus(sourceUnit) {
   let bonus = 1.0;
   // パッシブスキル: 聖なる加護 (+20%)
   if (sourceUnit._passiveHealBonus) bonus += sourceUnit._passiveHealBonus;
+  // イマジン: 回復効果UP
+  if (sourceUnit.imagineHealUp) bonus += sourceUnit.imagineHealUp / 100;
   // 慈愛のオーラ: passiveカードのheal_bonusを確認
   (sourceUnit.equippedCards||[]).forEach(slot => {
     if (!slot) return;
@@ -19394,8 +19619,37 @@ function endBattle(victory) {
             const _newIm = checkImagineAreaUnlock(battleContext.areaId);
             if (_newIm) {
               drops.push({ name:`✨ 守護精霊【${_newIm.icon} ${_newIm.name}】を入手！（エリアクリア報酬）` });
-              saveState();
             }
+            // エリア初回全クリアでイマジン強化素材（クリプトソウル）配布
+            const _areaSoulRewards = {
+              area1:  { t1:5,  t2:0,  t3:0 },
+              area2:  { t1:10, t2:0,  t3:0 },
+              area2b: { t1:10, t2:3,  t3:0 },
+              area2c: { t1:10, t2:5,  t3:0 },
+              area3:  { t1:10, t2:5,  t3:0 },
+              area4:  { t1:0,  t2:10, t3:0 },
+              area7:  { t1:0,  t2:10, t3:3 },
+              area8:  { t1:0,  t2:0,  t3:10 },
+            };
+            const _asr = _areaSoulRewards[battleContext.areaId];
+            // 初回クリアフラグ（イマジン素材は1エリア1回限り）
+            if (_asr && !gState.progress.babel.areaSoulRewarded) gState.progress.babel.areaSoulRewarded = {};
+            if (_asr && !gState.progress.babel.areaSoulRewarded[battleContext.areaId]) {
+              gState.progress.babel.areaSoulRewarded[battleContext.areaId] = true;
+              if (_asr.t1) {
+                gState.player.cryptoSoulT1 = (gState.player.cryptoSoulT1||0) + _asr.t1;
+                drops.push({ name:`${itemIconHTML('cryptoT1','14px')} クリプトソウルT1 ×${_asr.t1}（エリア初回クリア）` });
+              }
+              if (_asr.t2) {
+                gState.player.cryptoSoulT2 = (gState.player.cryptoSoulT2||0) + _asr.t2;
+                drops.push({ name:`${itemIconHTML('cryptoT2','14px')} クリプトソウルT2 ×${_asr.t2}（エリア初回クリア）` });
+              }
+              if (_asr.t3) {
+                gState.player.cryptoSoulT3 = (gState.player.cryptoSoulT3||0) + _asr.t3;
+                drops.push({ name:`${itemIconHTML('cryptoT3','14px')} クリプトソウルT3 ×${_asr.t3}（エリア初回クリア）` });
+              }
+            }
+            if (_newIm || _asr) saveState();
           }
         }
       }
@@ -19531,6 +19785,20 @@ function endBattle(victory) {
         const _r = _pickRole();
         _p.eiyuutan[_r.key] = (_p.eiyuutan[_r.key]||0) + 1;
         drops.push({ name:`${itemIconHTML('eiyuutan'+_cap(_r.key),'18px')} ${_r.name}の英雄譚 ×1` });
+      }
+      // クリプトソウル（イマジン強化素材）ドロップ
+      const _cs = _ddStage.cryptoSouls || {};
+      if (_cs.t1 > 0) {
+        _p.cryptoSoulT1 = (_p.cryptoSoulT1||0) + _cs.t1;
+        drops.push({ name:`${itemIconHTML('cryptoT1','18px')} クリプトソウルT1 ×${_cs.t1}` });
+      }
+      if (_cs.t2 > 0) {
+        _p.cryptoSoulT2 = (_p.cryptoSoulT2||0) + _cs.t2;
+        drops.push({ name:`${itemIconHTML('cryptoT2','18px')} クリプトソウルT2 ×${_cs.t2}` });
+      }
+      if (_cs.t3 > 0) {
+        _p.cryptoSoulT3 = (_p.cryptoSoulT3||0) + _cs.t3;
+        drops.push({ name:`${itemIconHTML('cryptoT3','18px')} クリプトソウルT3 ×${_cs.t3}` });
       }
     }
     if (battleContext.type==='abyss') {
@@ -20732,16 +21000,6 @@ function renderCharGachaTab(el) {
 function renderArtifactGachaTab(el) {
   const crystal = gState.player.starCrystal || 0;
   const afMileage = gState.player.afMileage || 0;
-  const ssrPool = ARTIFACT_POOL.filter(d => d.rarity === 'SSR');
-
-  // ピックアップ選択
-  let pickupHtml = `<div style="font-size:11px;color:var(--text3);margin-bottom:6px">ピックアップ選択</div>
-    <div class="af2-pickup-row" style="flex-wrap:wrap;gap:4px;display:flex;margin-bottom:10px">
-      <button class="af2-pickup-btn ${af2Pickup===null?'active':''}" onclick="af2Pickup=null;renderArtifactGachaTab(document.getElementById('gacha-tab-content'))">なし</button>`;
-  ssrPool.forEach(d => {
-    pickupHtml += `<button class="af2-pickup-btn ${af2Pickup===d.id?'active':''}" onclick="af2Pickup='${d.id}';renderArtifactGachaTab(document.getElementById('gacha-tab-content'))">${d.icon}${d.name}</button>`;
-  });
-  pickupHtml += `</div>`;
 
   el.innerHTML = `
     <div style="background:linear-gradient(135deg,rgba(138,154,181,0.12),rgba(74,127,255,0.06));border:1px solid rgba(138,154,181,0.3);padding:12px;margin-bottom:12px;border-radius:6px">
@@ -20757,7 +21015,6 @@ function renderArtifactGachaTab(el) {
         <div style="height:100%;width:${Math.min(100,(afMileage/AF_MILEAGE_CAP*100)).toFixed(1)}%;background:linear-gradient(90deg,var(--silver),#c8d8f0);border-radius:3px;transition:width 0.3s"></div>
       </div>
     </div>
-    ${pickupHtml}
     <div class="gacha-btns" style="margin-bottom:10px">
       <button class="gacha-btn gacha-btn-1" onclick="doArtifactGachaFromPanel(1)" ${crystal<200?'disabled':''} style="flex:1;padding:10px;cursor:${crystal>=200?'pointer':'default'};opacity:${crystal>=200?1:0.4}">
         1回ガチャ<br><span style="font-size:10px">${itemIconHTML('crystal','11px')} 200</span>
@@ -21515,13 +21772,7 @@ function _showFirstBattleAFGacha() {
     if (roll < 5) rarity = 'SSR';
     else if (roll < 30) rarity = 'SR';
     else rarity = 'N';
-    let pool;
-    if (rarity === 'SSR' && af2Pickup) {
-      pool = [ARTIFACT_POOL.find(d => d.id === af2Pickup)].filter(Boolean);
-    } else {
-      pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
-    }
-    if (!pool.length) pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
+    const pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
     const def = pool[Math.floor(Math.random() * pool.length)];
     if (!def) continue;
     if (!gState.artifacts) gState.artifacts = [];
@@ -21680,13 +21931,7 @@ function doArtifactGachaFromPanel(count) {
       continue;
     }
 
-    let pool;
-    if (rarity === 'SSR' && af2Pickup) {
-      pool = [ARTIFACT_POOL.find(d => d.id === af2Pickup)].filter(Boolean);
-    } else {
-      pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
-    }
-    if (!pool.length) pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
+    const pool = ARTIFACT_POOL.filter(d => d.rarity === rarity);
     const def = pool[Math.floor(Math.random() * pool.length)];
     if (!def) continue;
 
