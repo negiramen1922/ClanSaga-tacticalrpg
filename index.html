@@ -15067,7 +15067,7 @@ function healUnit(c, amt) {
     amt = Math.floor(amt * (1 - Math.min(99, reduction) / 100));
     if (amt < 1) amt = 1;
   }
-  healUnit(c, amt);
+  c.hp = Math.min(c.maxHp || c.hp, (c.hp || 0) + amt);
   return amt;
 }
 
