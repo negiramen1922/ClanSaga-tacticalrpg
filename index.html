@@ -16248,8 +16248,14 @@ function startBattle(scoutResult) {
   // チームパッシブ（味方全体に常時バフ）
   if (battleState) applyTeamPassives(battleState.allies);
   // 開幕スキル発動
-  if (battleState) fireOpeningSkills(battleState.allies, battleState.enemies);
+  try {
+    if (battleState) fireOpeningSkills(battleState.allies, battleState.enemies);
+  } catch (e) {
+    console.error('[fireOpeningSkills] error:', e);
+  }
 
+  // セーフネット: 開幕処理中に battleRunning が落ちていても再保証してループ開始
+  battleRunning = true;
   runBattleLoop();
   // ボスステージなら重厚BGMに切り替え
   if (isBossStage()) setTimeout(() => Audio.playBoss(), 300);
@@ -16470,9 +16476,12 @@ function tickBattle() {
               battleState.allies.forEach(a => {
                 if (a._passiveFightingSpirit) a._passiveFightingSpirit.stacks = 0;
               });
-              fireOpeningSkills(battleState.allies, battleState.enemies);
+              try { fireOpeningSkills(battleState.allies, battleState.enemies); }
+              catch (e) { console.error('[fireOpeningSkills wave] error:', e); }
             }
-            resumeBattle();
+            // セーフネット: WAVE切替時に確実にループ再開
+            battleRunning = true;
+            runBattleLoop();
           });
         });
       } else {
