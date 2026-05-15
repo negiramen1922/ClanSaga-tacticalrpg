@@ -16070,15 +16070,24 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
     const phase0 = enemyData.phases?.[0];
     const effectiveHp = phase0 ? phase0.hp : enemyData.hp;
     const effectiveSkills = (phase0?.skills) ? phase0.skills : rawSkills;
+    // 個体差ジッター（±10%）: 同名モンスター複数体で同時行動にならないように、HP/ATK/SPDをずらす
+    // ボス（phases持ち）は据え置き
+    const jitter = () => 0.9 + Math.random() * 0.2;
+    const hpJ  = phase0 ? 1.0 : jitter();
+    const atkJ = phase0 ? 1.0 : jitter();
+    const spdJ = phase0 ? 1.0 : jitter();
+    const jHp  = Math.max(1, Math.floor(effectiveHp * hpJ));
+    const jAtk = Math.max(1, Math.floor(enemyData.atk * atkJ));
+    const jSpd = Math.max(1, Math.floor((enemyData.spd || 1) * spdJ));
     return {
       uid: 'e_' + Math.random().toString(36).slice(2),
       name: enemyData.name, icon: enemyData.icon,
       species: enemyData.species || ENEMY_SPECIES_MAP[enemyData.name] || null,
-      maxHp: effectiveHp, hp: effectiveHp,
-      atk: enemyData.atk,
+      maxHp: jHp, hp: jHp,
+      atk: jAtk,
       pdef: enemyData.pdef || enemyData.pres || 0,
       mdef: enemyData.mdef || enemyData.mres || 0,
-      spd: enemyData.spd, cri: enemyData.cri||3, cridam: 150,
+      spd: jSpd, cri: enemyData.cri||3, cridam: 150,
       hit: enemyData.hit||0, immune: enemyData.immune||0,
       atb: 0, isEnemy: true, dead: false,
       staggered: false, staggerUsed: false,
@@ -16092,9 +16101,9 @@ function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
       passive: enemyData.passive || null,
       passive2: enemyData.passive2 || null,
       hate: enemyData.hate || 100,
-      _baseAtk: enemyData.atk,
+      _baseAtk: jAtk,
       _basePres: enemyData.pres || 0,
-      _baseSpd: enemyData.spd || 0,
+      _baseSpd: jSpd,
       isWorm: enemyData.isWorm || false,
       burrowSpawns: enemyData.burrowSpawns || null,
       _wormActCount: 0,
