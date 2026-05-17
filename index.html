@@ -20156,11 +20156,8 @@ function endBattle(victory) {
           _refundMsgs.push('🌳 デイリーダンジョン挑戦回数 +1（撤退返却）');
         }
       } else if (battleContext?.type === 'colosseum') {
-        const _col = gState.progress.colosseum;
-        if (_col && (_col.dailyChallenges||0) > 0) {
-          _col.dailyChallenges = Math.max(0, (_col.dailyChallenges||0) - 1);
-          _refundMsgs.push('⚔️ 戦闘演習挑戦回数 +1（撤退返却）');
-        }
+        // コロシアム（戦闘演習）は撤退でも挑戦回数を返却しない
+        // ※返却すると無限に再挑戦できる悪用が可能になるため
       }
     }
     // 撤退報酬：少量のゴールド（アビスは撤退報酬なし）
@@ -20640,12 +20637,18 @@ function endBattle(victory) {
         <button class="btn btn-gold" style="width:100%" onclick="exitBattle()">確認</button>`;
     }
   } else {
-    resultBtnsEl.innerHTML = `
-      <button class="btn btn-outline" onclick="exitBattleToList()">一覧へ</button>
-      <button class="btn btn-gold" onclick="retryBattle()">もう一度</button>
-      <button class="btn btn-blue" id="next-stage-btn" onclick="nextStage()">次へ▶</button>`;
-    const nextBtn = document.getElementById('next-stage-btn');
-    if (nextBtn) nextBtn.style.display = victory && hasNextStage() ? '' : 'none';
+    if (battleContext.type === 'colosseum') {
+      // コロシアムは「もう一度」「次へ」が無効（同一相手の再戦は不可、次ステージ概念もなし）
+      resultBtnsEl.innerHTML = `
+        <button class="btn btn-gold" style="width:100%" onclick="exitBattleToList()">一覧へ戻る</button>`;
+    } else {
+      resultBtnsEl.innerHTML = `
+        <button class="btn btn-outline" onclick="exitBattleToList()">一覧へ</button>
+        <button class="btn btn-gold" onclick="retryBattle()">もう一度</button>
+        <button class="btn btn-blue" id="next-stage-btn" onclick="nextStage()">次へ▶</button>`;
+      const nextBtn = document.getElementById('next-stage-btn');
+      if (nextBtn) nextBtn.style.display = victory && hasNextStage() ? '' : 'none';
+    }
   }
 
   document.getElementById('battle-result').classList.add('active');
