@@ -1091,12 +1091,15 @@ img.item-icon {
 .tag-resist { background: rgba(155,107,222,0.2); color: var(--purple); }
 
 /* STATUS EFFECTS */
-.status-icons { display: flex; gap: 2px; flex-wrap: wrap; margin-top: 3px; }
+.status-icons { display: flex; gap: 2px; flex-wrap: wrap; margin-top: 3px; min-height: 14px; }
 .status-icon {
   font-size: 10px; background: var(--bg2); padding: 1px 3px;
   border: 1px solid var(--border); font-family: 'Rajdhani'; color: var(--text2);
 }
 .status-icon .si-count { font-size: 9px; opacity: 0.8; margin-left: 1px; }
+/* バフ=青枠 / デバフ=赤枠 を全タイプで統一表示 */
+.status-icon.is-buff   { border-color: #4a7fff !important; color: #88bbff !important; background: rgba(74,127,255,0.10); }
+.status-icon.is-debuff { border-color: #ff5544 !important; color: #ff8866 !important; background: rgba(255,85,68,0.10); }
 .status-icon.atk-up { border-color: var(--orange); color: var(--orange); }
 .status-icon.hp-up { border-color: var(--green); color: var(--green); }
 /* 物理バフ: オレンジ系 */
@@ -16279,15 +16282,20 @@ function renderBattle() {
 }
 
 function buildBuffHtml(buffs, debuffs) {
-  const all = [...(buffs||[]), ...(debuffs||[])];
+  // バフを先に、デバフを後に積むことで左→右の表示順を保証
   const map = new Map();
-  all.forEach(b => {
-    const key = b.type || b.icon || '?';
+  (buffs || []).forEach(b => {
+    const key = (b.type || b.icon || '?') + '|buff';
     if (map.has(key)) map.get(key).count++;
-    else map.set(key, { b, count: 1 });
+    else map.set(key, { b, count: 1, isBuff: true });
   });
-  return [...map.values()].map(({ b, count }) =>
-    `<div class="status-icon ${b.cssClass||''}">${b.icon||'?'}${count > 1 ? `<span class="si-count">×${count}</span>` : ''}</div>`
+  (debuffs || []).forEach(b => {
+    const key = (b.type || b.icon || '?') + '|debuff';
+    if (map.has(key)) map.get(key).count++;
+    else map.set(key, { b, count: 1, isBuff: false });
+  });
+  return [...map.values()].map(({ b, count, isBuff }) =>
+    `<div class="status-icon ${isBuff?'is-buff':'is-debuff'} ${b.cssClass||''}">${b.icon||'?'}${count > 1 ? `<span class="si-count">×${count}</span>` : ''}</div>`
   ).join('');
 }
 
@@ -16337,7 +16345,7 @@ function combatantCardHTML(c) {
         ${isBoss ? `<div class="boss-phase-dots">${c.phases.map((_,i)=>`<div class="phase-dot${i<(c.phaseIdx||0)?' cleared':i===(c.phaseIdx||0)?' active':''}"></div>`).join('')}</div>` : ''}
         <div class="atb-bar"><div class="atb-fill" style="width:${atbPct}%"></div></div>
         ${ultSection}
-        ${buffHtml ? `<div class="status-icons">${buffHtml}</div>` : ''}
+        <div class="status-icons">${buffHtml}</div>
       </div>
     </div>`;
 }
