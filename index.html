@@ -11562,6 +11562,11 @@ function normalizeState() {
     if (!u) return;
     if (!u.uid) u.uid = 'u_' + Math.random().toString(36).slice(2);
     if (!u.classId) return;
+    // 既存セーブ救済: 覚醒済み(>=1)なのにタレント空のユニットは初回覚醒時の解放を遡及付与
+    const _prog = gState.unitProgress?.[u.uid];
+    if (_prog && (_prog.awakeCount || 0) >= 1 && (!u.passives || u.passives.length === 0)) {
+      if (typeof rollPassives === 'function') u.passives = rollPassives();
+    }
 
     const cls = CLASS_DATA[u.classId];
     if (!cls) return;
@@ -14268,7 +14273,7 @@ function openUnitDetail(uid) {
     : `<div style="background:var(--bg2);border:1px dashed var(--border);border-radius:6px;padding:14px;text-align:center;grid-column:1/-1">
         <div style="font-size:22px;margin-bottom:5px">🔒</div>
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:3px">タレント未解放</div>
-        <div style="font-size:11px;color:var(--text3)">Lv.40 に到達すると解放されます</div>
+        <div style="font-size:11px;color:var(--text3)">初回覚醒で解放されます</div>
       </div>`;
 
   const inner = document.getElementById('udp-inner');
@@ -14644,9 +14649,22 @@ function awakenUnit(uid) {
   const nextLimit = [59, 79, 99, 100][Math.min(prog.awakeCount, 3)];
   if (!confirm(`覚醒ポット ×${cost} を消費してレベル上限を ${limit} → ${nextLimit} に解放しますか？`)) return;
   gState.player.awakePot -= cost;
+  const wasFirstAwaken = prog.awakeCount === 0;
   prog.awakeCount++;
   gState.unitProgress[uid] = prog;
   Audio.awaken();
+  // 初回覚醒時にタレント（パッシブ）解放
+  if (wasFirstAwaken && (!u.passives || u.passives.length === 0)) {
+    u.passives = rollPassives();
+    Audio.talentUnlock && Audio.talentUnlock();
+    setTimeout(() => {
+      if (!gState.tutorial?.passiveDone && typeof startPassiveTutorial === 'function') {
+        startPassiveTutorial();
+      } else {
+        showBonusToast && showBonusToast('✨ タレントが解放されました！');
+      }
+    }, 500);
+  }
   saveState();
   updateTopBar();
   openUnitDetail(uid);
@@ -14681,14 +14699,9 @@ function levelUpUnit(uid, times) {
     }
     return;
   }
-  // Lv.40到達でパッシブ解放
-  const crossedLv40 = prevLevel < 40 && prog.level >= 40;
-  if (crossedLv40 && (!u.passives || u.passives.length === 0)) {
-    u.passives = rollPassives();
-  }
+  // タレント解放は awakenUnit (初回覚醒時) で行う - Lv40トリガーは廃止
   gState.unitProgress[u.uid] = prog;
-  if (crossedLv40) Audio.talentUnlock();
-  else Audio.buff();
+  Audio.buff();
   // デイリーミッション: クラス強化カウント
   gState.missions.daily.classUpgrade = (gState.missions.daily.classUpgrade||0) + 1;
   checkAchievements();
@@ -14697,14 +14710,6 @@ function levelUpUnit(uid, times) {
   renderCharaTab();
   openUnitDetail(uid);
   flowTutAdvance('level_up_unit');
-  // パッシブ解放チュートリアル
-  if (crossedLv40) {
-    if (!gState.tutorial.passiveDone) {
-      setTimeout(() => startPassiveTutorial(), 800);
-    } else {
-      setTimeout(() => showBonusToast('✨ タレントが解放されました！'), 500);
-    }
-  }
 }
 
 function toggleSkill(uid, skillId, rowEl) {
@@ -14756,7 +14761,7 @@ function rerollPassives(uid) {
   const REROLL_COST = 1000;
   const u = gState.ownedUnits.find(x=>x.uid===uid);
   if (!u) return;
-  if (!u.passives || u.passives.length === 0) { showBonusToast('Lv.40 でタレントが解放されます'); return; }
+  if (!u.passives || u.passives.length === 0) { showBonusToast('初回覚醒でタレントが解放されます'); return; }
   const locked = (u.passives||[]).filter(pa=>pa.locked);
   const keysNeeded = locked.length;
   if (p.gold < REROLL_COST) { showBonusToast(`ゴールドが不足しています（必要: ${REROLL_COST}）`); return; }
@@ -20232,11 +20237,8 @@ function endBattle(victory) {
           _refundMsgs.push('🌳 デイリーダンジョン挑戦回数 +1（撤退返却）');
         }
       } else if (battleContext?.type === 'colosseum') {
-        const _col = gState.progress.colosseum;
-        if (_col && (_col.dailyChallenges||0) > 0) {
-          _col.dailyChallenges = Math.max(0, (_col.dailyChallenges||0) - 1);
-          _refundMsgs.push('⚔️ 戦闘演習挑戦回数 +1（撤退返却）');
-        }
+        // コロシアム（戦闘演習）は撤退でも挑戦回数を返却しない
+        // ※返却すると無限に再挑戦できる悪用が可能になるため
       }
     }
     // 撤退報酬：少量のゴールド（アビスは撤退報酬なし）
@@ -20716,12 +20718,18 @@ function endBattle(victory) {
         <button class="btn btn-gold" style="width:100%" onclick="exitBattle()">確認</button>`;
     }
   } else {
-    resultBtnsEl.innerHTML = `
-      <button class="btn btn-outline" onclick="exitBattleToList()">一覧へ</button>
-      <button class="btn btn-gold" onclick="retryBattle()">もう一度</button>
-      <button class="btn btn-blue" id="next-stage-btn" onclick="nextStage()">次へ▶</button>`;
-    const nextBtn = document.getElementById('next-stage-btn');
-    if (nextBtn) nextBtn.style.display = victory && hasNextStage() ? '' : 'none';
+    if (battleContext.type === 'colosseum') {
+      // コロシアムは「もう一度」「次へ」が無効（同一相手の再戦は不可、次ステージ概念もなし）
+      resultBtnsEl.innerHTML = `
+        <button class="btn btn-gold" style="width:100%" onclick="exitBattleToList()">一覧へ戻る</button>`;
+    } else {
+      resultBtnsEl.innerHTML = `
+        <button class="btn btn-outline" onclick="exitBattleToList()">一覧へ</button>
+        <button class="btn btn-gold" onclick="retryBattle()">もう一度</button>
+        <button class="btn btn-blue" id="next-stage-btn" onclick="nextStage()">次へ▶</button>`;
+      const nextBtn = document.getElementById('next-stage-btn');
+      if (nextBtn) nextBtn.style.display = victory && hasNextStage() ? '' : 'none';
+    }
   }
 
   document.getElementById('battle-result').classList.add('active');
@@ -31660,7 +31668,7 @@ const PASSIVE_TUT_STEPS = [
   {
     id: 'pt_unlocked', type: 'info', icon: '✨',
     title: 'タレント解放！',
-    getText: () => 'Lv.40 に到達しました！\n\n「タレント」が解放されました。\n\nタレントは戦闘中つねに効果を発揮する\n永続的な強化スキルです。\n3種類がランダムで付与されます。',
+    getText: () => '初回覚醒を達成しました！\n\n「タレント」が解放されました。\n\nタレントは戦闘中つねに効果を発揮する\n永続的な強化スキルです。\n3種類がランダムで付与されます。',
     btnText: '次へ',
     spotlight: null,
   },
