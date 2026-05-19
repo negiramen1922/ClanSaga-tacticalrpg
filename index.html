@@ -28995,58 +28995,59 @@ const ABYSS_FLOOR_BUFFS = [
   { id:'mdef15',    label:'魔法防御+15%', icon:'🔮', effect:{type:'mdef',     val:15} },
 ];
 
-// 15層定義 (areaId → BABEL_AREAS.id, statMult = 通常敵スケール, bossMult = ボス敵スケール)
-// statMult・bossMult は各エリアのベースATKに乗算。エリアをまたいでも実効難易度が下がらないよう調整済み。
-// accRarity: 1=N 2=R 3=SR 4=SSR (SSRは14層以降のみ)
+// 40層定義 (areaId → BABEL_AREAS.id, statMult = 通常敵スケール, bossMult = ボス敵スケール)
+// bossMult/statMult 比はエリアごとのボス基礎値の薄さで補正（area2c/area7/area8 はボス基礎が薄いため比高め、area3 は厚いため比低め）
+// エリア境界の実効ATK段差を ±15% 以内、同エリア内は ~1.55x 成長で揃えて滑らかな上昇曲線にしている
+// accRarity: 1=N 2=R 3=SR 4=SSR (SSRは19層以降のみ)
 const ABYSS_LAYERS = [
   // 翠緑の草原 (area1) 推奨Lv10〜
-  {id:1,  name:'第一層',    icon:'🌱', areaId:'area1',  statMult:1.5,  bossMult:0.8,  accRarity:1, rec:'推奨 Lv10〜'},
-  {id:2,  name:'第二層',    icon:'🌿', areaId:'area1',  statMult:2.0,  bossMult:1.0,  accRarity:1, rec:'推奨 Lv12〜'},
-  {id:3,  name:'第三層',    icon:'🍃', areaId:'area1',  statMult:2.8,  bossMult:1.4,  accRarity:1, rec:'推奨 Lv14〜'},
-  {id:4,  name:'第四層',    icon:'🌾', areaId:'area1',  statMult:3.6,  bossMult:1.8,  accRarity:1, rec:'推奨 Lv17〜'},
-  {id:5,  name:'第五層',    icon:'⚔️', areaId:'area1',  statMult:4.5,  bossMult:2.3,  accRarity:2, rec:'推奨 Lv20〜', milestone:true},
+  {id:1,  name:'第一層',    icon:'🌱', areaId:'area1',  statMult:1.5,  bossMult:0.9,  accRarity:1, rec:'推奨 Lv10〜'},
+  {id:2,  name:'第二層',    icon:'🌿', areaId:'area1',  statMult:2.0,  bossMult:1.2,  accRarity:1, rec:'推奨 Lv12〜'},
+  {id:3,  name:'第三層',    icon:'🍃', areaId:'area1',  statMult:2.7,  bossMult:1.6,  accRarity:1, rec:'推奨 Lv14〜'},
+  {id:4,  name:'第四層',    icon:'🌾', areaId:'area1',  statMult:3.5,  bossMult:2.1,  accRarity:1, rec:'推奨 Lv17〜'},
+  {id:5,  name:'第五層',    icon:'⚔️', areaId:'area1',  statMult:4.5,  bossMult:2.7,  accRarity:2, rec:'推奨 Lv20〜', milestone:true},
   // ゴブリン集落 (area2) 推奨Lv20〜
-  {id:6,  name:'第六層',    icon:'👺', areaId:'area2',  statMult:1.8,  bossMult:1.0,  accRarity:2, rec:'推奨 Lv22〜'},
-  {id:7,  name:'第七層',    icon:'🗡️', areaId:'area2',  statMult:2.2,  bossMult:1.2,  accRarity:2, rec:'推奨 Lv24〜'},
-  {id:8,  name:'第八層',    icon:'🪓', areaId:'area2',  statMult:2.6,  bossMult:1.4,  accRarity:2, rec:'推奨 Lv26〜'},
-  {id:9,  name:'第九層',    icon:'🏹', areaId:'area2',  statMult:3.1,  bossMult:1.7,  accRarity:2, rec:'推奨 Lv28〜'},
-  {id:10, name:'第十層',    icon:'💥', areaId:'area2',  statMult:3.6,  bossMult:2.0,  accRarity:2, rec:'推奨 Lv30〜', milestone:true},
+  {id:6,  name:'第六層',    icon:'👺', areaId:'area2',  statMult:2.3,  bossMult:1.4,  accRarity:2, rec:'推奨 Lv22〜'},
+  {id:7,  name:'第七層',    icon:'🗡️', areaId:'area2',  statMult:2.8,  bossMult:1.7,  accRarity:2, rec:'推奨 Lv24〜'},
+  {id:8,  name:'第八層',    icon:'🪓', areaId:'area2',  statMult:3.3,  bossMult:2.0,  accRarity:2, rec:'推奨 Lv26〜'},
+  {id:9,  name:'第九層',    icon:'🏹', areaId:'area2',  statMult:3.9,  bossMult:2.4,  accRarity:2, rec:'推奨 Lv28〜'},
+  {id:10, name:'第十層',    icon:'💥', areaId:'area2',  statMult:4.5,  bossMult:2.7,  accRarity:2, rec:'推奨 Lv30〜', milestone:true},
   // 深緑の森林 (area2b) 推奨Lv30〜
-  {id:11, name:'第十一層',  icon:'🌲', areaId:'area2b', statMult:2.9,  bossMult:1.4,  accRarity:3, rec:'推奨 Lv32〜'},
-  {id:12, name:'第十二層',  icon:'🍀', areaId:'area2b', statMult:3.4,  bossMult:1.6,  accRarity:3, rec:'推奨 Lv34〜'},
-  {id:13, name:'第十三層',  icon:'🦋', areaId:'area2b', statMult:3.9,  bossMult:1.9,  accRarity:3, rec:'推奨 Lv36〜'},
-  {id:14, name:'第十四層',  icon:'🌙', areaId:'area2b', statMult:4.4,  bossMult:2.1,  accRarity:3, rec:'推奨 Lv38〜'},
-  {id:15, name:'第十五層',  icon:'🌳', areaId:'area2b', statMult:5.0,  bossMult:2.5,  accRarity:3, rec:'推奨 Lv40〜', milestone:true},
-  // 菌糸の深奥 (area2c) 推奨Lv40〜
-  {id:16, name:'第十六層',  icon:'🍄', areaId:'area2c', statMult:3.5,  bossMult:1.4,  accRarity:3, rec:'推奨 Lv42〜'},
-  {id:17, name:'第十七層',  icon:'🌑', areaId:'area2c', statMult:4.0,  bossMult:1.6,  accRarity:3, rec:'推奨 Lv44〜'},
-  {id:18, name:'第十八層',  icon:'🕸️', areaId:'area2c', statMult:4.5,  bossMult:1.8,  accRarity:3, rec:'推奨 Lv46〜'},
-  {id:19, name:'第十九層',  icon:'🦠', areaId:'area2c', statMult:5.1,  bossMult:2.1,  accRarity:4, rec:'推奨 Lv48〜'},
-  {id:20, name:'第二十層',  icon:'👾', areaId:'area2c', statMult:5.8,  bossMult:2.4,  accRarity:4, rec:'推奨 Lv50〜', milestone:true},
-  // 峡谷 (area3) 推奨Lv50〜
-  {id:21, name:'第二十一層',icon:'🏔️', areaId:'area3',  statMult:4.3,  bossMult:1.6,  accRarity:4, rec:'推奨 Lv52〜'},
-  {id:22, name:'第二十二層',icon:'⛰️', areaId:'area3',  statMult:4.8,  bossMult:1.8,  accRarity:4, rec:'推奨 Lv54〜'},
-  {id:23, name:'第二十三層',icon:'🌪️', areaId:'area3',  statMult:5.4,  bossMult:2.0,  accRarity:4, rec:'推奨 Lv56〜'},
-  {id:24, name:'第二十四層',icon:'⚡', areaId:'area3',  statMult:6.0,  bossMult:2.3,  accRarity:4, rec:'推奨 Lv58〜'},
-  {id:25, name:'第二十五層',icon:'💀', areaId:'area3',  statMult:6.8,  bossMult:2.6,  accRarity:4, rec:'推奨 Lv60〜', milestone:true},
+  {id:11, name:'第十一層',  icon:'🌲', areaId:'area2b', statMult:3.4,  bossMult:1.9,  accRarity:3, rec:'推奨 Lv32〜'},
+  {id:12, name:'第十二層',  icon:'🍀', areaId:'area2b', statMult:3.9,  bossMult:2.2,  accRarity:3, rec:'推奨 Lv34〜'},
+  {id:13, name:'第十三層',  icon:'🦋', areaId:'area2b', statMult:4.4,  bossMult:2.5,  accRarity:3, rec:'推奨 Lv36〜'},
+  {id:14, name:'第十四層',  icon:'🌙', areaId:'area2b', statMult:5.0,  bossMult:2.9,  accRarity:3, rec:'推奨 Lv38〜'},
+  {id:15, name:'第十五層',  icon:'🌳', areaId:'area2b', statMult:5.7,  bossMult:3.3,  accRarity:3, rec:'推奨 Lv40〜', milestone:true},
+  // 菌糸の深奥 (area2c) 推奨Lv40〜 — ボス基礎値が薄いため bossMult 比を高めに設定
+  {id:16, name:'第十六層',  icon:'🍄', areaId:'area2c', statMult:4.2,  bossMult:3.5,  accRarity:3, rec:'推奨 Lv42〜'},
+  {id:17, name:'第十七層',  icon:'🌑', areaId:'area2c', statMult:4.8,  bossMult:4.0,  accRarity:3, rec:'推奨 Lv44〜'},
+  {id:18, name:'第十八層',  icon:'🕸️', areaId:'area2c', statMult:5.4,  bossMult:4.5,  accRarity:3, rec:'推奨 Lv46〜'},
+  {id:19, name:'第十九層',  icon:'🦠', areaId:'area2c', statMult:6.0,  bossMult:5.0,  accRarity:4, rec:'推奨 Lv48〜'},
+  {id:20, name:'第二十層',  icon:'👾', areaId:'area2c', statMult:6.7,  bossMult:5.6,  accRarity:4, rec:'推奨 Lv50〜', milestone:true},
+  // 峡谷 (area3) 推奨Lv50〜 — ボス基礎値が厚いため bossMult 比を低めに設定
+  {id:21, name:'第二十一層',icon:'🏔️', areaId:'area3',  statMult:5.0,  bossMult:2.2,  accRarity:4, rec:'推奨 Lv52〜'},
+  {id:22, name:'第二十二層',icon:'⛰️', areaId:'area3',  statMult:5.6,  bossMult:2.4,  accRarity:4, rec:'推奨 Lv54〜'},
+  {id:23, name:'第二十三層',icon:'🌪️', areaId:'area3',  statMult:6.3,  bossMult:2.7,  accRarity:4, rec:'推奨 Lv56〜'},
+  {id:24, name:'第二十四層',icon:'⚡', areaId:'area3',  statMult:7.0,  bossMult:3.0,  accRarity:4, rec:'推奨 Lv58〜'},
+  {id:25, name:'第二十五層',icon:'💀', areaId:'area3',  statMult:7.8,  bossMult:3.4,  accRarity:4, rec:'推奨 Lv60〜', milestone:true},
   // 遺跡 (area4) 推奨Lv60〜
-  {id:26, name:'第二十六層',icon:'🏛️', areaId:'area4',  statMult:5.5,  bossMult:1.8,  accRarity:4, rec:'推奨 Lv62〜'},
-  {id:27, name:'第二十七層',icon:'🗿', areaId:'area4',  statMult:6.2,  bossMult:2.0,  accRarity:4, rec:'推奨 Lv64〜'},
-  {id:28, name:'第二十八層',icon:'⚙️', areaId:'area4',  statMult:7.0,  bossMult:2.3,  accRarity:4, rec:'推奨 Lv66〜'},
-  {id:29, name:'第二十九層',icon:'🔩', areaId:'area4',  statMult:7.9,  bossMult:2.6,  accRarity:4, rec:'推奨 Lv68〜'},
-  {id:30, name:'第三十層',  icon:'👁️', areaId:'area4',  statMult:8.9,  bossMult:2.9,  accRarity:4, rec:'推奨 Lv70〜', milestone:true},
-  // 荒野 (area7) 推奨Lv70〜
-  {id:31, name:'第三十一層',icon:'🌵', areaId:'area7',  statMult:6.7,  bossMult:2.0,  accRarity:4, rec:'推奨 Lv72〜'},
-  {id:32, name:'第三十二層',icon:'🏜️', areaId:'area7',  statMult:7.5,  bossMult:2.3,  accRarity:4, rec:'推奨 Lv74〜'},
-  {id:33, name:'第三十三層',icon:'🦂', areaId:'area7',  statMult:8.5,  bossMult:2.6,  accRarity:4, rec:'推奨 Lv76〜'},
-  {id:34, name:'第三十四層',icon:'🌩️', areaId:'area7',  statMult:9.6,  bossMult:2.9,  accRarity:4, rec:'推奨 Lv78〜'},
-  {id:35, name:'第三十五層',icon:'☠️', areaId:'area7',  statMult:10.8, bossMult:3.2,  accRarity:4, rec:'推奨 Lv80〜', milestone:true},
-  // 火山 (area8) 推奨Lv80〜
-  {id:36, name:'第三十六層',icon:'🌋', areaId:'area8',  statMult:8.0,  bossMult:2.2,  accRarity:4, rec:'推奨 Lv82〜'},
-  {id:37, name:'第三十七層',icon:'🔥', areaId:'area8',  statMult:9.0,  bossMult:2.5,  accRarity:4, rec:'推奨 Lv84〜'},
-  {id:38, name:'第三十八層',icon:'💎', areaId:'area8',  statMult:10.2, bossMult:2.8,  accRarity:4, rec:'推奨 Lv86〜'},
-  {id:39, name:'第三十九層',icon:'🐉', areaId:'area8',  statMult:11.5, bossMult:3.2,  accRarity:4, rec:'推奨 Lv88〜'},
-  {id:40, name:'第四十層',  icon:'👑', areaId:'area8',  statMult:13.0, bossMult:3.6,  accRarity:4, rec:'推奨 Lv90〜', milestone:true},
+  {id:26, name:'第二十六層',icon:'🏛️', areaId:'area4',  statMult:6.5,  bossMult:3.9,  accRarity:4, rec:'推奨 Lv62〜'},
+  {id:27, name:'第二十七層',icon:'🗿', areaId:'area4',  statMult:7.3,  bossMult:4.4,  accRarity:4, rec:'推奨 Lv64〜'},
+  {id:28, name:'第二十八層',icon:'⚙️', areaId:'area4',  statMult:8.1,  bossMult:4.9,  accRarity:4, rec:'推奨 Lv66〜'},
+  {id:29, name:'第二十九層',icon:'🔩', areaId:'area4',  statMult:9.0,  bossMult:5.4,  accRarity:4, rec:'推奨 Lv68〜'},
+  {id:30, name:'第三十層',  icon:'👁️', areaId:'area4',  statMult:10.0, bossMult:6.0,  accRarity:4, rec:'推奨 Lv70〜', milestone:true},
+  // 荒野 (area7) 推奨Lv70〜 — ボス基礎値が薄いため bossMult 比を高めに
+  {id:31, name:'第三十一層',icon:'🌵', areaId:'area7',  statMult:6.5,  bossMult:5.4,  accRarity:4, rec:'推奨 Lv72〜'},
+  {id:32, name:'第三十二層',icon:'🏜️', areaId:'area7',  statMult:7.3,  bossMult:6.0,  accRarity:4, rec:'推奨 Lv74〜'},
+  {id:33, name:'第三十三層',icon:'🦂', areaId:'area7',  statMult:8.2,  bossMult:6.8,  accRarity:4, rec:'推奨 Lv76〜'},
+  {id:34, name:'第三十四層',icon:'🌩️', areaId:'area7',  statMult:9.1,  bossMult:7.5,  accRarity:4, rec:'推奨 Lv78〜'},
+  {id:35, name:'第三十五層',icon:'☠️', areaId:'area7',  statMult:10.2, bossMult:8.5,  accRarity:4, rec:'推奨 Lv80〜', milestone:true},
+  // 火山 (area8) 推奨Lv80〜 — 最終エリア、ボス基礎値が薄いため bossMult 比を高めに
+  {id:36, name:'第三十六層',icon:'🌋', areaId:'area8',  statMult:8.5,  bossMult:7.2,  accRarity:4, rec:'推奨 Lv82〜'},
+  {id:37, name:'第三十七層',icon:'🔥', areaId:'area8',  statMult:9.5,  bossMult:8.1,  accRarity:4, rec:'推奨 Lv84〜'},
+  {id:38, name:'第三十八層',icon:'💎', areaId:'area8',  statMult:10.7, bossMult:9.1,  accRarity:4, rec:'推奨 Lv86〜'},
+  {id:39, name:'第三十九層',icon:'🐉', areaId:'area8',  statMult:12.0, bossMult:10.2, accRarity:4, rec:'推奨 Lv88〜'},
+  {id:40, name:'第四十層',  icon:'👑', areaId:'area8',  statMult:13.5, bossMult:11.5, accRarity:4, rec:'推奨 Lv90〜', milestone:true},
 ];
 
 const ABYSS_RARITY_LABEL  = ['','N','R','SR','SSR'];
