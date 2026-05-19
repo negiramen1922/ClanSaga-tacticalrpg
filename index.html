@@ -836,28 +836,90 @@ img.item-icon {
 .float-ult      { font-size: 22px; color: #c084fc; }
 
 /* スキル名ポップ */
-.skill-name-pop {
+/* スキル名ポップ（アイコン付き豪華版） */
+.skill-namepop-v2 {
   position: absolute; pointer-events: none; z-index: 205;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px 3px 4px; border-radius: 14px;
   font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700;
-  white-space: nowrap; padding: 3px 8px;
-  border-radius: 2px; letter-spacing: 0.5px;
-  animation: skillNamePop 1.2s ease-out forwards;
+  letter-spacing: 1px; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+  animation: skillNamePopV2 1.0s ease-out forwards;
 }
-@keyframes skillNamePop {
-  0%   { transform: translateY(0) scale(0.8); opacity: 0; }
-  15%  { transform: translateY(-6px) scale(1.05); opacity: 1; }
-  70%  { transform: translateY(-14px) scale(1); opacity: 1; }
-  100% { transform: translateY(-24px) scale(0.9); opacity: 0; }
+.skill-namepop-v2 .snp-icon {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.35), rgba(0,0,0,0.2));
+  display: inline-flex; align-items: center; justify-content: center;
+  overflow: hidden; flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.45);
 }
-.skill-name-pop.phys  { background: rgba(224,122,58,0.85);  color: #fff; }
-.skill-name-pop.spec  { background: rgba(80,140,230,0.85);  color: #fff; }
-.skill-name-pop.red   { background: rgba(224,122,58,0.85);  color: #fff; }
-.skill-name-pop.white { background: rgba(80,140,230,0.85);  color: #fff; }
-.skill-name-pop.black { background: rgba(224,122,58,0.85);  color: #fff; }
-.skill-name-pop.blue  { background: rgba(80,140,230,0.85);  color: #fff; }
-.skill-name-pop.buff  { background: rgba(76,175,110,0.85);  color: #fff; }
-.skill-name-pop.magic { background: rgba(80,140,230,0.85);  color: #fff; }
-.skill-name-pop.ult   { background: rgba(192,132,252,0.9);  color: #fff; border: 1px solid #c084fc; }
+.skill-namepop-v2 .snp-icon img { width: 100%; height: 100%; object-fit: cover; }
+.skill-namepop-v2 .snp-icon-emoji { font-size: 15px; line-height: 1; }
+.skill-namepop-v2.phys   { background: linear-gradient(90deg, rgba(224,122,58,0.92), rgba(196,90,40,0.95));  color:#fff; }
+.skill-namepop-v2.spec   { background: linear-gradient(90deg, rgba(80,140,230,0.92), rgba(50,100,200,0.95)); color:#fff; }
+.skill-namepop-v2.buff   { background: linear-gradient(90deg, rgba(76,175,110,0.92), rgba(50,140,90,0.95));  color:#fff; }
+.skill-namepop-v2.debuff { background: linear-gradient(90deg, rgba(210,80,80,0.92), rgba(170,55,55,0.95));   color:#fff; }
+.skill-namepop-v2.ult    { background: linear-gradient(90deg, rgba(192,132,252,0.95), rgba(155,80,230,0.95));color:#fff; border: 1px solid #d4a3ff; }
+@keyframes skillNamePopV2 {
+  0%   { transform: translateX(-50%) translateY(0)   scale(0.55); opacity: 0; }
+  20%  { transform: translateX(-50%) translateY(-12px) scale(1.08); opacity: 1; }
+  72%  { transform: translateX(-50%) translateY(-18px) scale(1.0);  opacity: 1; }
+  100% { transform: translateX(-50%) translateY(-30px) scale(0.92); opacity: 0; }
+}
+
+/* 必殺技カットイン（斜めスラッシュバナー） */
+.ult-cutin-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 500; }
+.ult-cutin-band {
+  position: absolute; left: -10%; top: 36%; width: 120%; height: 90px;
+  transform: skewY(-8deg) translateX(-110%);
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(80,30,120,0.95) 22%, rgba(192,132,252,0.95) 50%, rgba(80,30,120,0.95) 78%, rgba(0,0,0,0.85) 100%);
+  border-top: 2px solid #d4a3ff; border-bottom: 2px solid #d4a3ff;
+  box-shadow: 0 0 24px rgba(192,132,252,0.6);
+  animation: ultCutinBand 1.15s cubic-bezier(0.18,0.95,0.3,1) forwards;
+}
+.ult-cutin-band.cutin-phys   { background: linear-gradient(90deg, rgba(0,0,0,0.85), rgba(120,50,20,0.95), rgba(224,122,58,0.95), rgba(120,50,20,0.95), rgba(0,0,0,0.85)); border-color: #ffb785; box-shadow: 0 0 24px rgba(224,122,58,0.55); }
+.ult-cutin-band.cutin-spec   { background: linear-gradient(90deg, rgba(0,0,0,0.85), rgba(30,60,160,0.95), rgba(80,140,230,0.95), rgba(30,60,160,0.95), rgba(0,0,0,0.85)); border-color: #a3c8ff; box-shadow: 0 0 24px rgba(80,140,230,0.55); }
+@keyframes ultCutinBand {
+  0%   { transform: skewY(-8deg) translateX(-110%); }
+  18%  { transform: skewY(-8deg) translateX(0); }
+  70%  { transform: skewY(-8deg) translateX(0); }
+  100% { transform: skewY(-8deg) translateX(110%); }
+}
+.ult-cutin-content { display: flex; align-items: center; gap: 12px; transform: skewY(8deg); padding: 0 16px; }
+.ult-cutin-icon {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.55), rgba(255,200,255,0.2) 60%, transparent);
+  display: inline-flex; align-items: center; justify-content: center;
+  overflow: hidden; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.85);
+  box-shadow: 0 0 18px rgba(255,255,255,0.7);
+}
+.ult-cutin-icon img { width: 100%; height: 100%; object-fit: cover; }
+.ult-cutin-icon-emoji { font-size: 36px; line-height: 1; }
+.ult-cutin-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.ult-cutin-label {
+  font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 4px;
+  color: #ffd700; text-shadow: 0 0 6px rgba(255,215,0,0.7);
+}
+.ult-cutin-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700;
+  letter-spacing: 2px; color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.85), 0 0 12px rgba(192,132,252,0.65);
+}
+
+/* ターゲットへのズーム枠 */
+.target-cutin-frame {
+  position: absolute; pointer-events: none; z-index: 250;
+  border: 3px solid #ffd700;
+  box-shadow: 0 0 14px rgba(255,215,0,0.75), inset 0 0 14px rgba(255,215,0,0.45);
+  animation: targetCutinFrame 0.6s ease-out forwards;
+}
+@keyframes targetCutinFrame {
+  0%   { transform: scale(1.7); opacity: 0; }
+  35%  { transform: scale(1.0); opacity: 1; }
+  100% { transform: scale(1.0); opacity: 0; }
+}
 
 /* FLASH on card when hit */
 @keyframes hitFlash {
@@ -3564,6 +3626,7 @@ img.item-icon {
       <div class="battle-mode-bar">
         <button id="btn-skill-mode" class="mode-btn mode-auto" onclick="toggleBattleSkillMode()">スキル AUTO</button>
         <button id="btn-ult-mode"   class="mode-btn mode-auto" onclick="toggleBattleUltMode()">ULT AUTO</button>
+        <button id="btn-cutin-mode" class="mode-btn mode-auto" onclick="toggleBattleCutinMode()">演出 FULL</button>
         <button id="imagine-active-btn" class="imagine-active-btn" onclick="useImagineActiveSkill()" style="display:none">—</button>
       </div>
       <!-- 手動スキル選択パネル -->
@@ -11432,7 +11495,8 @@ function normalizeState() {
   // tickets / missions
   if (!gState.tickets)  gState.tickets  = { sweep:0, timeSkip:0 };
   if (!gState.settings) gState.settings = {};
-  if (!gState.settings.battleMode) gState.settings.battleMode = { ultAuto: true, skillAuto: true };
+  if (!gState.settings.battleMode) gState.settings.battleMode = { ultAuto: true, skillAuto: true, cutinMode: 'full' };
+  if (!gState.settings.battleMode.cutinMode) gState.settings.battleMode.cutinMode = 'full';
   if (!gState.missions || typeof gState.missions !== 'object') {
     gState.missions = {
       daily:{ loginBonus:0, babelClears:0, mineCollect:0, classUpgrade:0, gachaPulls:0 },
@@ -16686,6 +16750,16 @@ function toggleBattleUltMode() {
   updateBattleModeUI();
 }
 
+function toggleBattleCutinMode() {
+  if (!gState.settings) gState.settings = {};
+  if (!gState.settings.battleMode) gState.settings.battleMode = { ultAuto:true, skillAuto:true, cutinMode:'full' };
+  const order = ['full', 'minimal', 'off'];
+  const cur = gState.settings.battleMode.cutinMode || 'full';
+  const next = order[(order.indexOf(cur) + 1) % order.length];
+  gState.settings.battleMode.cutinMode = next;
+  updateBattleModeUI();
+}
+
 function updateBattleModeUI() {
   const bm = gState.settings?.battleMode || {};
   const skillBtn = document.getElementById('btn-skill-mode');
@@ -16697,6 +16771,13 @@ function updateBattleModeUI() {
   if (ultBtn) {
     ultBtn.textContent = bm.ultAuto !== false ? 'ULT AUTO' : 'ULT MANUAL';
     ultBtn.className = 'mode-btn' + (bm.ultAuto !== false ? ' mode-auto' : ' mode-manual');
+  }
+  const cutinBtn = document.getElementById('btn-cutin-mode');
+  if (cutinBtn) {
+    const cm = bm.cutinMode || 'full';
+    const label = cm === 'full' ? '演出 FULL' : cm === 'minimal' ? '演出 MIN' : '演出 OFF';
+    cutinBtn.textContent = label;
+    cutinBtn.className = 'mode-btn' + (cm === 'off' ? ' mode-manual' : ' mode-auto');
   }
   // イマジンボタン更新
   updateImagineActiveBtn();
@@ -17807,27 +17888,109 @@ function spawnBall(fromUid, toUid, type) {
   requestAnimationFrame(animate);
 }
 
-// スキル名ポップ演出（使用者の頭上に）
+// カットイン演出: 演出レベル取得
+function _cutinMode() { return gState.settings?.battleMode?.cutinMode || 'full'; }
+
+// uid → combatant 検索
+function _combatantByUid(uid) {
+  const bs = battleState; if (!bs) return null;
+  return (bs.allies||[]).find(a => a.uid === uid) || (bs.enemies||[]).find(e => e.uid === uid) || null;
+}
+
+// combatant → アイコンHTML（クラス画像 or モンスター画像 or 絵文字）
+function _cutinIconHtml(c, emojiClass) {
+  const emoCls = emojiClass || 'snp-icon-emoji';
+  if (!c) return `<span class="${emoCls}">⚔️</span>`;
+  if (c.isEnemy) {
+    if (typeof MONSTER_ICONS !== 'undefined' && MONSTER_ICONS[c.name]) {
+      return `<img src="${MONSTER_ICONS[c.name]}" alt="">`;
+    }
+    return `<span class="${emoCls}">${c.icon || '👹'}</span>`;
+  }
+  if (typeof CLASS_ICONS !== 'undefined' && CLASS_ICONS[c.classId]) {
+    return `<img src="${CLASS_ICONS[c.classId]}" alt="">`;
+  }
+  return `<span class="${emoCls}">${c.icon || '⚔️'}</span>`;
+}
+
+// スキル名ポップ演出（使用者の頭上にアイコン+名前を表示）
 function spawnSkillNamePop(uid, skillName, type) {
+  if (_cutinMode() === 'off') return;
   const el = document.getElementById('cc-' + uid);
   if (!el) return;
   const arena = document.getElementById('battle-arena');
   const arenaRect = arena.getBoundingClientRect();
   const elRect = el.getBoundingClientRect();
 
-  const pop = document.createElement('div');
-  const cls = type === 'buff' ? 'buff'
-    : type === 'ult'   ? 'ult'
-    : type === 'spec'  ? 'magic'
+  const cls = type === 'buff'   ? 'buff'
+    : type === 'debuff' ? 'debuff'
+    : type === 'ult'    ? 'ult'
+    : type === 'spec'   ? 'spec'
+    : type === 'magic'  ? 'spec'
     : 'phys';
-  pop.className = `skill-name-pop ${cls}`;
-  pop.textContent = skillName;
-  // カードの上端中央に配置
+  const c = _combatantByUid(uid);
+  const pop = document.createElement('div');
+  pop.className = `skill-namepop-v2 ${cls}`;
+  pop.innerHTML = `<span class="snp-icon">${_cutinIconHtml(c)}</span><span class="snp-name">${skillName}</span>`;
   pop.style.left = (elRect.left - arenaRect.left + elRect.width/2) + 'px';
   pop.style.top  = (elRect.top  - arenaRect.top  - 4) + 'px';
-  pop.style.transform = 'translateX(-50%)';
   arena.appendChild(pop);
-  setTimeout(() => pop.remove(), 1200);
+  setTimeout(() => pop.remove(), 1050);
+}
+
+// 必殺技カットイン（斜めスラッシュバナー）
+function spawnUltCutin(uid, ultName) {
+  const mode = _cutinMode();
+  if (mode === 'off') return;
+  // minimal: 通常ポップにフォールバック
+  if (mode === 'minimal') {
+    spawnSkillNamePop(uid, '【'+ultName+'】', 'ult');
+    return;
+  }
+  const arena = document.getElementById('battle-arena');
+  if (!arena) return;
+  const c = _combatantByUid(uid);
+  const overlay = document.createElement('div');
+  overlay.className = 'ult-cutin-overlay';
+  overlay.innerHTML = `
+    <div class="ult-cutin-band">
+      <div class="ult-cutin-content">
+        <span class="ult-cutin-icon">${_cutinIconHtml(c, 'ult-cutin-icon-emoji')}</span>
+        <div class="ult-cutin-text">
+          <span class="ult-cutin-label">ULTIMATE</span>
+          <span class="ult-cutin-name">${ultName}</span>
+        </div>
+      </div>
+    </div>`;
+  arena.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 1250);
+
+  // ターゲットへのズーム枠（バナー通過後）
+  const targets = c && c.isEnemy ? (battleState?.allies||[]) : (battleState?.enemies||[]);
+  setTimeout(() => {
+    targets.filter(t => !t.dead).slice(0, 5).forEach((t, i) => {
+      setTimeout(() => spawnTargetCutin(t.uid), i * 55);
+    });
+  }, 450);
+}
+
+// 単体ターゲットへのズーム枠（必殺技の決め画）
+function spawnTargetCutin(uid) {
+  if (_cutinMode() !== 'full') return;
+  const el = document.getElementById('cc-' + uid);
+  if (!el) return;
+  const arena = document.getElementById('battle-arena');
+  if (!arena) return;
+  const arenaRect = arena.getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
+  const frame = document.createElement('div');
+  frame.className = 'target-cutin-frame';
+  frame.style.left   = (elRect.left   - arenaRect.left)   + 'px';
+  frame.style.top    = (elRect.top    - arenaRect.top)    + 'px';
+  frame.style.width  = elRect.width   + 'px';
+  frame.style.height = elRect.height  + 'px';
+  arena.appendChild(frame);
+  setTimeout(() => frame.remove(), 650);
 }
 
 function flashCard(uid, type) {
@@ -18569,7 +18732,7 @@ function performUlt(c, enemies, allies) {
     : c.ultimate;
   addLog(`${c.name} 【${ult.name}】発動！ <span class="tag tag-ult">ULTIMATE</span>`, 'all');
   flashCard(c.uid, 'ult');
-  spawnSkillNamePop(c.uid, '【'+ult.name+'】', 'ult');
+  spawnUltCutin(c.uid, ult.name);
   spawnFloatNum(c.uid, 'ULTIMATE!', 'float-ult');
   Audio.ult();
 
