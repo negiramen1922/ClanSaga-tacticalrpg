@@ -29060,18 +29060,22 @@ function scaleAbyssEnemy(e, mult) {
   return c;
 }
 
+// 層内ステージ進行係数（C案: 後半急峻）— 各stageクリアでバフを1つ取得するため、敵側も後段ほど強化して互角を維持
+const ABYSS_STAGE_MULT = [null, 0.90, 1.00, 1.12, 1.28, 1.50, 1.70];
+
 function getAbyssStageEnemies(layerId, stage) {
   const layer   = ABYSS_LAYERS.find(l => l.id === layerId);
   const area    = BABEL_AREAS.find(a => a.id === layer.areaId);
   const nonBoss = area.stages.slice(0, area.stages.length - 1);
+  const stageMult = ABYSS_STAGE_MULT[stage] || 1.0;
   if (stage === 6) {
     const last     = area.stages[area.stages.length - 1];
     const bossWave = last.enemies[last.enemies.length - 1];
-    return [bossWave.map(e => scaleAbyssEnemy(e, layer.bossMult))];
+    return [bossWave.map(e => scaleAbyssEnemy(e, layer.bossMult * stageMult))];
   }
   const idx    = (stage - 1) % nonBoss.length;
   const picked = nonBoss[idx];
-  return picked.enemies.map(wave => wave.map(e => scaleAbyssEnemy(e, layer.statMult)));
+  return picked.enemies.map(wave => wave.map(e => scaleAbyssEnemy(e, layer.statMult * stageMult)));
 }
 
 function abyssSweepCost(layerId) {
