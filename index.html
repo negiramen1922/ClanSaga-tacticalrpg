@@ -16386,7 +16386,7 @@ function initBattle(waveEnemies, stageName) {
     allies: units.map(u => makeCombatant(u, false, null, null, 'member', imagineBuffs)),
     waveIdx: 0,
     waveEnemies,
-    enemies: waveEnemies[0].map(e => makeCombatant(null, true, e)),
+    enemies: applyEnemyNameSuffixes(waveEnemies[0].map(e => makeCombatant(null, true, e))),
     startTime: Date.now(),
     elapsed: 0,
     running: false,
@@ -16970,6 +16970,35 @@ function getFormationUnits() {
   return uids.map(uid => gState.ownedUnits.find(u=>u.uid===uid)).filter(Boolean);
 }
 
+// 同名モンスターの個体識別: 2体以上いるときに名前末尾へ A/B/C... を付与。
+// 既に付与済みの個体は変更せず、新たに加わった同名敵にだけ次の未使用文字を割当てる（途中スポーン対応）。
+function applyEnemyNameSuffixes(enemies) {
+  if (!enemies || enemies.length === 0) return enemies;
+  enemies.forEach(e => { if (e._origName === undefined) e._origName = e.name; });
+  const groups = {};
+  enemies.forEach(e => {
+    if (!groups[e._origName]) groups[e._origName] = [];
+    groups[e._origName].push(e);
+  });
+  Object.values(groups).forEach(group => {
+    if (group.length < 2) return;
+    const used = new Set();
+    group.forEach(e => { if (e._suffixLetter) used.add(e._suffixLetter); });
+    let code = 65; // 'A'
+    group.forEach(e => {
+      if (e._suffixLetter) return;
+      while (code <= 90 && used.has(String.fromCharCode(code))) code++;
+      if (code > 90) return; // Zまで埋まったら諦める
+      const letter = String.fromCharCode(code);
+      e._suffixLetter = letter;
+      e.name = e._origName + letter;
+      used.add(letter);
+      code++;
+    });
+  });
+  return enemies;
+}
+
 function makeCombatant(unit, isEnemy, enemyData, ft, pos, imagineBuffs) {
   if (!isEnemy) {
     const cls = CLASS_DATA[unit.classId];
@@ -17502,6 +17531,7 @@ function tickBattle() {
           bs.enemies = nextEnemyData.map((e) => {
             return makeCombatant(null, true, e);
           });
+          applyEnemyNameSuffixes(bs.enemies);
           // 味方のATBをリセット（ULT/HP/MPは引き継ぎ）
           bs.allies.forEach(a => {
             a.atb = 0;
@@ -17773,6 +17803,7 @@ function combatantAct(c, bs) {
             const newEnemy = makeCombatant(null, true, template);
             battleState.enemies.push(newEnemy);
           }
+          applyEnemyNameSuffixes(battleState.enemies);
           addLog(`${c.icon||''} <b>${c.name}</b>: <span class="tag tag-skill">${sk.name}</span> <span class="tag tag-buff">召喚 ×${count}</span>`, 'trigger');
           setTimeout(() => { battleState.enemies.forEach(e => spawnFloatNum(e.uid, '', '')); renderBattle(); }, 300);
         }
@@ -21180,6 +21211,7 @@ function triggerWormBurrow(worm, bs) {
   if (worm.burrowSpawns) {
     const spawns = worm.burrowSpawns.map(s => makeCombatant(null, true, s));
     bs.enemies.push(...spawns);
+    applyEnemyNameSuffixes(bs.enemies);
   }
   setTimeout(() => {
     renderBattle();
@@ -21290,6 +21322,7 @@ function triggerBossPhaseTransition(boss, bs) {
         bs.enemies.push(newEnemy);
       }
     });
+    applyEnemyNameSuffixes(bs.enemies);
   }
 
   // フェーズ移行スキル（バフまたは攻撃を即時発動）
