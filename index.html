@@ -28867,7 +28867,8 @@ function openAccessoryEquip(uid, slot) {
   const owned=allOwned.filter(a=>!a.partId||a.partId===(part&&part.id));
   const ov=document.createElement('div');
   ov.className='modal-overlay open';
-  ov.style.zIndex='1200';
+  // キャラ詳細モーダル(#unit-detail-modal: z-index 2700)より前面に出すため 2800 を指定
+  ov.style.zIndex='2800';
 
   const ea=u.equippedAccessories||{};
   const currentUid=ea[slot];
@@ -28913,7 +28914,7 @@ function equipAccessory(uid, slot, accUid) {
   gState.missions.daily.itemEquipped = (gState.missions.daily.itemEquipped||0) + 1;
   saveState();
   Audio.equip();
-  document.querySelectorAll('.modal-overlay[style*="z-index: 700"], .modal-overlay[style*="z-index:700"]').forEach(el=>el.remove());
+  document.querySelectorAll('.modal-overlay[style*="z-index: 2800"], .modal-overlay[style*="z-index:2800"]').forEach(el=>el.remove());
   refreshUnitAccessoryUI(uid);
 }
 
@@ -28922,7 +28923,7 @@ function unequipAccessory(uid, slot) {
   if (!u||!u.equippedAccessories) return;
   u.equippedAccessories[slot]=null;
   saveState();
-  document.querySelectorAll('.modal-overlay[style*="z-index: 700"], .modal-overlay[style*="z-index:700"]').forEach(el=>el.remove());
+  document.querySelectorAll('.modal-overlay[style*="z-index: 2800"], .modal-overlay[style*="z-index:2800"]').forEach(el=>el.remove());
   refreshUnitAccessoryUI(uid);
 }
 
