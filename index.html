@@ -5476,14 +5476,14 @@ const CLASS_DATA = {
     baseSearch: 8, baseStealth: 3, baseHate: 350,
     openingSkill: {
       id:'lc_open_charge_lance', name:'チャージランス', type:'phys', attr:'貫', target:'single',
-      power:5.0, cd:0,
-      desc:'単体 ⚔️ Pw:5.0 ＋ 物理耐性-30%（3T）',
+      power:3.5, cd:0,
+      desc:'単体 ⚔️ Pw:3.5 ＋ 物理耐性-30%（3T）',
       debuff:{ type:'pdef_down', val:-30, turns:3 }
     },
     activeSkills: [
       { id:'lc_dragon_pierce', name:'ドラゴンピアス', type:'phys', attr:'貫', target:'single',
-        power:3.0, cd:5, armorPierce:40,
-        desc:'単体 ⚔️ Pw:3.0 ＋ 物理防御-40%無視' },
+        power:2.5, cd:5, armorPierce:25,
+        desc:'単体 ⚔️ Pw:2.5 ＋ 物理防御-25%無視' },
       { id:'lc_moon_slash', name:'円月槍', type:'phys', attr:'斬', target:'random2',
         power:1.2, cd:7, desc:'ランダム敵2体 ⚔️ Pw:1.2 ＋ ATK-15%（2T）',
         debuff:{ type:'atk_down', val:-15, turns:2 } },
@@ -5493,14 +5493,14 @@ const CLASS_DATA = {
         desc:'行動するたびSPD+5（最大4スタック・WAVE後リセット）',
         effect:{ type:'spd_stack_on_action', val:5, maxStacks:4 } },
       { id:'lc_pas_velocity', name:'ヴェロシティブースト', type:'passive',
-        desc:'SPDが高いほど攻撃力が上昇',
-        effect:{ type:'spd_to_atk', threshold:80, ratio:1.0 } },
+        desc:'SPDが90を超えた分だけ攻撃力が上昇（超過SPD×0.6%）',
+        effect:{ type:'spd_to_atk', threshold:90, ratio:0.6 } },
     ],
     skillPool: [],
     ultimates: [
       { id:'lcu_heaven_thrust', name:'皇槍天衝',
-        effect:'敵全体 ⚔️（貫）Pw:3.0 ＋ 物理防御-40%無視',
-        power:3.0, type:'phys', attr:'貫', target:'all', armorPierce:40 },
+        effect:'敵全体 ⚔️（貫）Pw:2.4 ＋ 物理防御-25%無視',
+        power:2.4, type:'phys', attr:'貫', target:'all', armorPierce:25 },
     ],
   },
 
