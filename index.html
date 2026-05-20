@@ -18474,6 +18474,18 @@ function doAttack(attacker, targets, skill) {
       else        Audio.hit();
     }, hitDelay);
 
+    // ダメージログ（撃破時もログに残るよう、死亡判定より前に必ず出力）
+    {
+      const dmgTag = dmgType === 'spec' ? 'tag-dmg-spec' : 'tag-dmg-phys';
+      const dmgTypeIcon = dmgType === 'spec' ? '✨' : '⚔️';
+      const dmgLabel = `<span class="tag ${dmgTag}">${mainHpDmg}</span>`;
+      addLog(
+        `${attacker.name} <span class="tag tag-skill">${skill.name}</span> → ${target.name}: ${dmgTypeIcon}${dmgLabel}` +
+        (isCrit ? ' <span class="tag tag-crit">CRIT!</span>' : ''),
+        'damage'
+      );
+    }
+
     if (target.hp <= 0) {
       // センチネル: ヴァンガーディアン（味方致死ダメ庇い、戦闘中1回）
       if (!target.isEnemy) {
@@ -18526,14 +18538,6 @@ function doAttack(attacker, targets, skill) {
         addLog(`${target.name} <span class="tag tag-defeat">DEFEAT</span>`, 'all');
       }
     } else {
-      const dmgTag = dmgType === 'spec' ? 'tag-dmg-spec' : 'tag-dmg-phys';
-      const dmgTypeIcon = dmgType === 'spec' ? '✨' : '⚔️';
-      const dmgLabel = `<span class="tag ${dmgTag}">${mainHpDmg}</span>`;
-      addLog(
-        `${attacker.name} <span class="tag tag-skill">${skill.name}</span> → ${target.name}: ${dmgTypeIcon}${dmgLabel}` +
-        (isCrit ? ' <span class="tag tag-crit">CRIT!</span>' : ''),
-        'damage'
-      );
       setTimeout(() => checkPassiveCardTrigger(target, attacker, totalDmg, battleState), hitDelay + 100);
     }
 
